@@ -1,0 +1,93 @@
+// Mock data for authentication
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  role: "user" | "mentor";
+  avatar: string | null;
+}
+
+export interface MentorRegistration {
+  status: "pending" | "approved" | "rejected";
+  submittedAt: string;
+  reviewedAt: string | null;
+}
+
+export const mockUser: User = {
+  id: "1",
+  email: "user@example.com",
+  fullName: "Nguyễn Văn A",
+  phone: "0912345678",
+  role: "user",
+  avatar: null,
+};
+
+export const mockMentorRegistration: MentorRegistration = {
+  status: "pending",
+  submittedAt: "2025-10-20T10:00:00Z",
+  reviewedAt: null,
+};
+
+// Mock login function
+export const mockLogin = async (
+  email: string,
+  _password: string
+): Promise<{ success: boolean; user?: User; error?: string }> => {
+  await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
+
+  if (email === "user@example.com") {
+    return { success: true, user: mockUser };
+  }
+
+  return { success: false, error: "Email hoặc mật khẩu không đúng" };
+};
+
+// Mock signup function
+export const mockSignup = async (data: {
+  fullName: string;
+  email: string;
+  phone: string;
+  birthday: string;
+  password: string;
+}): Promise<{ success: boolean; user?: User; error?: string }> => {
+  await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
+
+  const newUser: User = {
+    id: Date.now().toString(),
+    email: data.email,
+    fullName: data.fullName,
+    phone: data.phone,
+    role: "user",
+    avatar: null,
+  };
+
+  return { success: true, user: newUser };
+};
+
+// Mock mentor registration function
+export const mockMentorRegister = async (data: {
+  fullName: string;
+  email: string;
+  phone: string;
+  yearsOfExperience: string;
+  company: string;
+  position: string;
+  expertise: string;
+  cvFile?: File;
+  certificateFile?: File;
+  idCardFile?: File;
+}): Promise<{ success: boolean; registration?: MentorRegistration; error?: string }> => {
+  await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
+
+  // Use the data parameter to satisfy TypeScript
+  void data;
+
+  const registration: MentorRegistration = {
+    status: "pending",
+    submittedAt: new Date().toISOString(),
+    reviewedAt: null,
+  };
+
+  return { success: true, registration };
+};

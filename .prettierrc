@@ -1,0 +1,17 @@
+{
+  "$schema": "https://www.schemastore.org/prettierrc.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "singleQuote": false,
+  "bracketSameLine": true,
+  "trailingComma": "es5",
+  "endOfLine": "crlf",
+  "tailwindAttributes": ["className"],
+  "plugins": [
+    "prettier-plugin-packagejson",
+    "prettier-plugin-sh",
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-organize-attributes",
+    "prettier-plugin-tailwindcss"
+  ]
+}
