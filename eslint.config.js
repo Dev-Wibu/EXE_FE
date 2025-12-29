@@ -8,7 +8,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(["dist", "EXAMPLE/**"]),
   eslintPluginPrettierRecommended,
   ...pluginQuery.configs["flat/recommended"],
   {
@@ -27,6 +27,12 @@ export default defineConfig([
       "react/no-unescaped-entities": "off",
       "no-undef": "off",
       "linebreak-style": ["error", "windows"],
+    },
+  },
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
 ]);
