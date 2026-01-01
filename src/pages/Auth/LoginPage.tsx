@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { mockLogin } from "@/mocks/auth.mock";
+import { DemoLoginButton } from "@/components/DemoLoginButton";
+import { authManager } from "@/services/auth.manager";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -15,11 +16,16 @@ export function LoginPage() {
     setIsLoading(true);
     setError("");
 
-    const result = await mockLogin(email, password);
+    const result = await authManager.login({ email, password });
 
-    if (result.success) {
-      // Navigate to select role page after successful login
-      navigate("/select-role");
+    if (result.success && result.data?.user) {
+      // Navigate based on user role
+      const userRole = result.data.user.role;
+      if (userRole === "admin") {
+        navigate("/manager");
+      } else {
+        navigate("/select-role");
+      }
     } else {
       setError(result.error || "Đăng nhập thất bại");
     }
@@ -30,6 +36,13 @@ export function LoginPage() {
   const handleGoogleLogin = () => {
     // Mock Google login - redirect to select role
     navigate("/select-role");
+  };
+
+  // Handler for demo account selection - auto-fills credentials
+  const handleDemoAccountSelect = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError("");
   };
 
   return (
@@ -128,6 +141,9 @@ export function LoginPage() {
             {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
+
+        {/* Demo Login Button - Remove this component and its import when real accounts are available */}
+        <DemoLoginButton onSelectAccount={handleDemoAccountSelect} />
 
         {/* Signup Link */}
         <p className="mt-6 text-center">
