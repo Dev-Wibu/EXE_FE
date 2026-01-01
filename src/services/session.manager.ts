@@ -1,0 +1,281 @@
+/**
+ * Session Manager
+ * Handles session CRUD operations for admin management
+ * Based on schema-from-be.d.ts API specification
+ */
+
+import type {
+  ApiResponse,
+  BaseManager,
+  PaginatedResponse,
+  PaginationParams,
+  Session,
+} from "@/interfaces";
+
+import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import * as sessionMock from "@/mocks/sessions.mock";
+import axios from "axios";
+
+// Re-export Session type for convenience
+export type { Session } from "@/interfaces";
+
+/**
+ * Session creation request (matches backend schema)
+ */
+export interface SessionCreationRequest {
+  dailyCoCreationRequest?: {
+    name?: string;
+    privacy?: string;
+    properties?: {
+      max_participants?: number;
+      start_video_off?: boolean;
+      start_audio_off?: boolean;
+      enable_screenshare?: boolean;
+      exp?: number;
+      enable_recording?: string;
+    };
+  };
+  userId?: number;
+  mentorId?: number;
+}
+
+export class SessionManager implements BaseManager<Session> {
+  private mode = MANAGER_MODE;
+  private api = axios.create(apiConfig);
+
+  /**
+   * Get all sessions
+   * GET /api/sessions
+   */
+  async getAll(
+    _params?: PaginationParams
+  ): Promise<ApiResponse<PaginatedResponse<Session> | Session[]>> {
+    if (this.mode === "mock") {
+      const sessions = await sessionMock.fetchSessions();
+      return {
+        success: true,
+        data: sessions,
+      };
+    }
+
+    try {
+      const response = await this.api.get(API_ENDPOINTS.SESSIONS.LIST, { params: _params });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch sessions",
+      };
+    }
+  }
+
+  /**
+   * Get session by ID
+   * GET /api/sessions/{id}
+   */
+  async getById(id: string | number): Promise<ApiResponse<Session>> {
+    if (this.mode === "mock") {
+      const session = await sessionMock.fetchSession(Number(id));
+      if (!session) {
+        return {
+          success: false,
+          error: "Session not found",
+        };
+      }
+      return {
+        success: true,
+        data: session,
+      };
+    }
+
+    try {
+      const endpoint = buildEndpoint(API_ENDPOINTS.SESSIONS.DETAIL, { id });
+      const response = await this.api.get(endpoint);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch session",
+      };
+    }
+  }
+
+  /**
+   * Get sessions by user ID
+   * GET /api/sessions/{userId}/by-user
+   */
+  async getByUserId(userId: string | number): Promise<ApiResponse<Session[]>> {
+    if (this.mode === "mock") {
+      const sessions = await sessionMock.fetchSessionsByUserId(Number(userId));
+      return {
+        success: true,
+        data: sessions,
+      };
+    }
+
+    try {
+      const endpoint = buildEndpoint(API_ENDPOINTS.SESSIONS.BY_USER, { userId });
+      const response = await this.api.get(endpoint);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch user sessions",
+      };
+    }
+  }
+
+  /**
+   * Create new session
+   * POST /api/sessions/create-session (JSON body with SessionCreationRequest)
+   */
+  async create(_data: Partial<Session> | SessionCreationRequest): Promise<ApiResponse<Session>> {
+    if (this.mode === "mock") {
+      // In mock mode, simulate creating a session with robust ID generation
+      const newId = Date.now() + Math.floor(Math.random() * 1000);
+      const sessionData = _data as Partial<Session>;
+      const newSession: Session = {
+        id: newId,
+        roomName: sessionData.roomName || `interview-room-${newId}`,
+        userId: sessionData.userId,
+        userId2: sessionData.userId2,
+        status: "SCHEDULED",
+        roomUrl: `https://meeting.example.com/room-${newId}`,
+      };
+      sessionMock.mockSessions.push(newSession);
+      return {
+        success: true,
+        data: newSession,
+      };
+    }
+
+    try {
+      // According to schema, createSession is POST /api/sessions/create-session
+      // with SessionCreationRequest body
+      let requestData: SessionCreationRequest;
+      
+      // Type guard: check if the data has SessionCreationRequest specific property
+      const isSessionCreationRequest = (data: unknown): data is SessionCreationRequest => {
+        return typeof data === 'object' && data !== null && 'dailyCoCreationRequest' in data;
+      };
+      
+      if (isSessionCreationRequest(_data)) {
+        // If it's already a SessionCreationRequest
+        requestData = _data;
+      } else {
+        // Convert from Session partial to SessionCreationRequest
+        const sessionData = _data as Partial<Session>;
+        requestData = {
+          userId: sessionData.userId,
+          mentorId: sessionData.userId2, // userId2 is the mentor
+          dailyCoCreationRequest: {
+            name: sessionData.roomName,
+            privacy: "public",
+            properties: {
+              max_participants: 2,
+              start_video_off: false,
+              start_audio_off: false,
+              enable_screenshare: true,
+              enable_recording: "cloud",
+            },
+          },
+        };
+      }
+      
+      const response = await this.api.post(API_ENDPOINTS.SESSIONS.CREATE, requestData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create session",
+      };
+    }
+  }
+
+  /**
+   * Update session
+   * PUT /api/sessions (JSON body with Session object)
+   */
+  async update(_id: string | number, _data: Partial<Session>): Promise<ApiResponse<Session>> {
+    if (this.mode === "mock") {
+      // In mock mode, simulate updating a session
+      const index = sessionMock.mockSessions.findIndex((s) => s.id === Number(_id));
+      if (index === -1) {
+        return {
+          success: false,
+          error: "Session not found",
+        };
+      }
+      sessionMock.mockSessions[index] = { ...sessionMock.mockSessions[index], ..._data };
+      return {
+        success: true,
+        data: sessionMock.mockSessions[index],
+      };
+    }
+
+    try {
+      // According to schema, updateSession is PUT /api/sessions with JSON body
+      const sessionData: Session = { ..._data, id: Number(_id) };
+      const response = await this.api.put(API_ENDPOINTS.SESSIONS.UPDATE, sessionData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update session",
+      };
+    }
+  }
+
+  /**
+   * Delete session (cancel session)
+   * Note: Sessions typically can't be deleted, only canceled via update
+   */
+  async delete(_id: string | number): Promise<ApiResponse<void>> {
+    if (this.mode === "mock") {
+      // In mock mode, simulate canceling a session
+      const index = sessionMock.mockSessions.findIndex((s) => s.id === Number(_id));
+      if (index === -1) {
+        return {
+          success: false,
+          error: "Session not found",
+        };
+      }
+      sessionMock.mockSessions[index].status = "CANCELED";
+      return {
+        success: true,
+      };
+    }
+
+    try {
+      // Cancel session by updating its status to CANCELED
+      const sessionData: Session = { id: Number(_id), status: "CANCELED" };
+      await this.api.put(API_ENDPOINTS.SESSIONS.UPDATE, sessionData);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to cancel session",
+      };
+    }
+  }
+}
+
+// Export singleton instance
+export const sessionManager = new SessionManager();
