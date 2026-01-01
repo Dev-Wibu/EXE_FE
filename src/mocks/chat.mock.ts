@@ -67,9 +67,10 @@ export const fetchChatSessions = async (): Promise<ChatSession[]> => {
   return mockChatSessions;
 };
 
-export const fetchChatMessages = async (_sessionId: number): Promise<ChatMessage[]> => {
+export const fetchChatMessages = async (sessionId: number): Promise<ChatMessage[]> => {
   await new Promise((resolve) => setTimeout(resolve, 300));
   // In a real app, we would filter by sessionId
+  void sessionId;
   return mockChatMessages;
 };
 
@@ -78,11 +79,9 @@ export const fetchChatSession = async (sessionId: number): Promise<ChatSession |
   return mockChatSessions.find((session) => session.id === sessionId);
 };
 
-export const sendChatMessage = async (
-  _sessionId: number,
-  content: string
-): Promise<ChatMessage> => {
+export const sendChatMessage = async (sessionId: number, content: string): Promise<ChatMessage> => {
   await new Promise((resolve) => setTimeout(resolve, 500));
+  void sessionId;
   return {
     id: Date.now(),
     sender: "user",
@@ -95,8 +94,9 @@ export const sendChatMessage = async (
   };
 };
 
-export const getAIResponse = async (_sessionId: number): Promise<ChatMessage> => {
+export const getAIResponse = async (sessionId: number): Promise<ChatMessage> => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
+  void sessionId;
   const responses = [
     "Câu trả lời rất tốt! Bạn có thể giải thích thêm về performance considerations không?",
     "Đúng rồi! Bây giờ, hãy nói về cách bạn xử lý thread safety trong Java.",

@@ -149,9 +149,10 @@ export const fetchAIInterviews = async (): Promise<AIInterview[]> => {
   return mockAIInterviews;
 };
 
-export const fetchInterviewResult = async (_id: number): Promise<InterviewResult> => {
+export const fetchInterviewResult = async (id: number): Promise<InterviewResult> => {
   await new Promise((resolve) => setTimeout(resolve, 300));
   // In a real app, we would filter by id
+  void id;
   return mockInterviewResult;
 };
 

@@ -131,10 +131,12 @@ export const updateUserProfile = async (
 };
 
 export const updatePassword = async (
-  _currentPassword: string,
-  _newPassword: string
+  currentPassword: string,
+  newPassword: string
 ): Promise<{ success: boolean; message: string }> => {
   await new Promise((resolve) => setTimeout(resolve, 500));
+  void currentPassword;
+  void newPassword;
   return { success: true, message: "Đổi mật khẩu thành công" };
 };
 

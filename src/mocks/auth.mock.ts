@@ -4,7 +4,7 @@ export interface User {
   email: string;
   fullName: string;
   phone: string;
-  role: "user" | "mentor";
+  role: "user" | "mentor" | "admin";
   avatar: string | null;
 }
 
@@ -23,6 +23,15 @@ export const mockUser: User = {
   avatar: null,
 };
 
+export const mockAdmin: User = {
+  id: "2",
+  email: "admin@example.com",
+  fullName: "Admin",
+  phone: "0987654321",
+  role: "admin",
+  avatar: null,
+};
+
 export const mockMentorRegistration: MentorRegistration = {
   status: "pending",
   submittedAt: "2025-10-20T10:00:00Z",
@@ -30,14 +39,22 @@ export const mockMentorRegistration: MentorRegistration = {
 };
 
 // Mock login function
+// NOTE: These demo credentials are intentionally hard-coded for development/testing purposes only.
+// They are only used when VITE_MANAGER_MODE=mock. In production (api mode), real authentication is used.
 export const mockLogin = async (
   email: string,
-  _password: string
+  password: string
 ): Promise<{ success: boolean; user?: User; error?: string }> => {
   await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
 
-  if (email === "user@example.com") {
+  // Demo user account
+  if (email === "user@example.com" && password === "user123") {
     return { success: true, user: mockUser };
+  }
+
+  // Demo admin account
+  if (email === "admin@example.com" && password === "admin123") {
+    return { success: true, user: mockAdmin };
   }
 
   return { success: false, error: "Email hoặc mật khẩu không đúng" };
