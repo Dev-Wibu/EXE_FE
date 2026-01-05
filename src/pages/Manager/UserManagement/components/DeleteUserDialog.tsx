@@ -25,8 +25,8 @@ export function DeleteUserDialog({ isOpen, onOpenChange, user, onConfirm }: Dele
         <AlertDialogHeader>
           <AlertDialogTitle>Delete User</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete user &quot;{user?.name}&quot;? This action cannot be undone
-            and will deactivate the user account.
+            Are you sure you want to delete user &quot;{user?.name}&quot;? This action cannot be
+            undone and will deactivate the user account.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

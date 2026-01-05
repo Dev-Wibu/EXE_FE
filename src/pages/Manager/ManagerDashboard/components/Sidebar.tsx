@@ -20,7 +20,7 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
     <div className="flex h-full w-64 flex-col border-r bg-white">
       {/* Logo */}
       <div className="flex items-center gap-3 border-b px-4 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+        <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-lg">
           <LayoutDashboard className="h-6 w-6 text-white" />
         </div>
         <div>
@@ -31,7 +31,7 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <p className="mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
           Management
         </p>
         {MENU_ITEMS.map((item) => (

@@ -3,8 +3,8 @@ import { useCallback, useState } from "react";
 import { MentorManagementPage } from "../MentorManagement";
 import { SessionManagementPage } from "../SessionManagement";
 import { UserManagementPage } from "../UserManagement";
-import { ChromeTabs, Sidebar } from "./components";
 import type { Tab, TabType } from "./components";
+import { ChromeTabs, Sidebar } from "./components";
 
 // Generate unique tab ID
 const generateTabId = () => `tab-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;

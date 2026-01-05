@@ -64,9 +64,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             <TableCell className="font-medium">{user.name}</TableCell>
             <TableCell className="text-muted-foreground">{user.email}</TableCell>
             <TableCell>
-              <Badge
-                variant="default"
-                className={`text-white ${getRoleBadgeClass(user.role)}`}>
+              <Badge variant="default" className={`text-white ${getRoleBadgeClass(user.role)}`}>
                 {user.role}
               </Badge>
             </TableCell>

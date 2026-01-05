@@ -1,4 +1,4 @@
-import { Plus, Users, Video, X, UserCog } from "lucide-react";
+import { Plus, UserCog, Users, Video, X } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ export function ChromeTabs({
               key={tab.id}
               onClick={() => onTabSelect(tab.id)}
               className={cn(
-                "group flex min-w-[120px] max-w-[200px] cursor-pointer items-center gap-2 rounded-t-lg border-x border-t px-3 py-2 transition-all",
+                "group flex max-w-[200px] min-w-[120px] cursor-pointer items-center gap-2 rounded-t-lg border-x border-t px-3 py-2 transition-all",
                 isActive
                   ? "border-gray-300 bg-white"
                   : "border-transparent bg-gray-200 hover:bg-gray-100"
@@ -65,7 +65,7 @@ export function ChromeTabs({
                     e.stopPropagation();
                     onTabClose(tab.id);
                   }}
-                  className="flex-shrink-0 rounded-full p-0.5 opacity-0 transition-opacity hover:bg-gray-300 group-hover:opacity-100">
+                  className="flex-shrink-0 rounded-full p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-300">
                   <X className="h-3 w-3" />
                 </button>
               )}
@@ -75,21 +75,18 @@ export function ChromeTabs({
       </div>
 
       {/* New Tab Button */}
-      <div className="relative ml-1 mb-1">
+      <div className="relative mb-1 ml-1">
         <button
           onClick={() => setShowNewTabMenu(!showNewTabMenu)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors">
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-200 transition-colors hover:bg-gray-300">
           <Plus className="h-4 w-4" />
         </button>
 
         {/* New Tab Menu */}
         {showNewTabMenu && (
           <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setShowNewTabMenu(false)}
-            />
-            <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-lg border bg-white py-1 shadow-lg">
+            <div className="fixed inset-0 z-10" onClick={() => setShowNewTabMenu(false)} />
+            <div className="absolute top-full left-0 z-20 mt-1 w-48 rounded-lg border bg-white py-1 shadow-lg">
               <button
                 onClick={() => {
                   onNewTab("users");

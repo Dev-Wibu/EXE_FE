@@ -87,7 +87,9 @@ export function SessionFormDialog({
             <Label htmlFor="status">Status</Label>
             <Select
               value={formData.status || "SCHEDULED"}
-              onValueChange={(value) => onFormChange({ ...formData, status: value as SessionStatus })}>
+              onValueChange={(value) =>
+                onFormChange({ ...formData, status: value as SessionStatus })
+              }>
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
