@@ -1,6 +1,14 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  BookOpen,
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Target,
+} from "lucide-react";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CalendarEvent } from "@/mocks/overview.mock";
 import { mockCalendarEvents, mockDashboardStats } from "@/mocks/overview.mock";
 
@@ -34,7 +42,7 @@ const getMonthName = (month: number): string => {
 // Map color to Tailwind classes
 const getEventColorClasses = (color: CalendarEvent["color"]): { bg: string; text: string } => {
   const colorMap: Record<CalendarEvent["color"], { bg: string; text: string }> = {
-    green: { bg: "bg-green-600", text: "text-white" },
+    green: { bg: "bg-green-500", text: "text-white" },
     sky: { bg: "bg-sky-500", text: "text-white" },
     purple: { bg: "bg-purple-500", text: "text-white" },
     orange: { bg: "bg-orange-400", text: "text-white" },
@@ -120,126 +128,134 @@ export function OverviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-background min-h-screen p-8">
       {/* Top Stats Section */}
-      <div className="flex gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Today's Plan Card */}
-        <div className="h-56 w-96 overflow-hidden rounded-[30px] bg-sky-100">
-          <div className="p-7">
-            <h2 className="font-['Open_Sans'] text-3xl leading-8 font-semibold text-blue-800">
-              Kế hoạch của hôm nay
-            </h2>
-            <p className="mt-2 font-['Open_Sans'] text-base leading-5 font-normal text-black">
+        <Card className="col-span-1 overflow-hidden border-0 bg-gradient-to-br from-[#007BFF] to-[#0047AB] md:col-span-1">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <Target className="h-6 w-6 text-white" />
+              <CardTitle className="text-xl text-white">Kế hoạch của hôm nay</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <CardDescription className="text-base text-white/90">
               {mockDashboardStats.todayPlan}
-            </p>
-          </div>
-          <div className="mt-4 px-7">
-            <button className="font-['Open_Sans'] text-2xl leading-5 font-semibold text-blue-800 hover:text-blue-900">
+            </CardDescription>
+            <Button variant="secondary" className="mt-2">
               Thực hành ngay
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Questions Card */}
-        <div className="relative h-56 w-72 overflow-hidden rounded-[30px] bg-sky-100">
-          <div className="p-7">
-            <h2 className="font-['Open_Sans'] text-3xl leading-10 font-semibold text-blue-800">
-              Câu hỏi{" "}
-            </h2>
-          </div>
-          <div className="absolute right-7 bottom-10">
-            <span className="font-['Open_Sans'] text-6xl leading-10 font-normal text-black">
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#66B2FF] to-[#005B9A]">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-white" />
+              <CardTitle className="text-xl text-white">Câu hỏi đã làm</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between">
+            <CardDescription className="text-white/80">Số câu hỏi đã hoàn thành</CardDescription>
+            <span className="text-6xl font-bold text-white">
               {mockDashboardStats.totalQuestions}
             </span>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Interviews Card */}
-        <div className="relative h-56 w-72 overflow-hidden rounded-[30px] bg-sky-100">
-          <div className="p-7">
-            <h2 className="font-['Open_Sans'] text-3xl leading-10 font-semibold text-blue-800">
-              Buổi phỏng vấn
-            </h2>
-          </div>
-          <div className="absolute right-7 bottom-10">
-            <span className="font-['Open_Sans'] text-6xl leading-10 font-normal text-black">
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-emerald-400 to-emerald-600">
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-white" />
+              <CardTitle className="text-xl text-white">Buổi phỏng vấn</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="flex items-end justify-between">
+            <CardDescription className="text-white/80">Tổng số buổi đã tham gia</CardDescription>
+            <span className="text-6xl font-bold text-white">
               {mockDashboardStats.totalInterviews}
             </span>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Calendar Section */}
-      <div className="mt-8 bg-white px-12 py-12">
-        {/* Calendar Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-['Inter'] text-4xl font-bold text-zinc-800 uppercase">
-            {getMonthName(currentMonth)} {currentYear}
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={handlePrevMonth}
-              className="rounded-lg p-2 hover:bg-gray-100"
-              aria-label="Previous month">
-              <ChevronLeft className="h-6 w-6 text-zinc-800" />
-            </button>
-            <button
-              onClick={handleNextMonth}
-              className="rounded-lg p-2 hover:bg-gray-100"
-              aria-label="Next month">
-              <ChevronRight className="h-6 w-6 text-zinc-800" />
-            </button>
+      <Card className="mt-8">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <div>
+            <CardTitle className="text-2xl font-bold uppercase">
+              {getMonthName(currentMonth)} {currentYear}
+            </CardTitle>
+            <CardDescription>Lịch hoạt động của bạn</CardDescription>
           </div>
-        </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePrevMonth}
+              aria-label="Previous month">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Week Days Header */}
+          <div className="grid grid-cols-7 gap-1 border-b pb-2">
+            {weekDays.map((day, index) => (
+              <div
+                key={index}
+                className="text-muted-foreground text-center text-sm font-medium uppercase">
+                {day}
+              </div>
+            ))}
+          </div>
 
-        {/* Week Days Header */}
-        <div className="flex overflow-hidden">
-          {weekDays.map((day, index) => (
-            <div
-              key={index}
-              className="h-6 w-40 font-['Inter'] text-sm font-medium text-zinc-800 uppercase">
-              {day}
-            </div>
-          ))}
-        </div>
+          {/* Calendar Grid */}
+          <div className="mt-2">
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="grid grid-cols-7 gap-1">
+                {week.map((day, dayIndex) => {
+                  const { event, colorClasses } = getDayEventInfo(day);
 
-        {/* Calendar Grid */}
-        <div className="mt-4 flex flex-col">
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex overflow-hidden">
-              {week.map((day, dayIndex) => {
-                const { event, colorClasses } = getDayEventInfo(day);
-
-                return (
-                  <div
-                    key={dayIndex}
-                    className={`relative h-32 w-40 outline outline-1 outline-offset-[-0.5px] outline-neutral-200 ${
-                      colorClasses ? colorClasses.bg : ""
-                    }`}>
-                    {day !== null && (
-                      <>
-                        <div
-                          className={`absolute top-[10px] left-[8px] font-['Inter'] text-sm font-medium ${
-                            colorClasses ? "text-white opacity-70" : "text-neutral-400"
-                          }`}>
-                          {String(day).padStart(2, "0")}
-                        </div>
-                        {event && (
-                          <div className="absolute top-[42px] left-[11px] flex flex-col items-center gap-1.5 overflow-hidden">
-                            <div className="w-36 truncate text-center font-['Inter'] text-sm font-bold text-white">
-                              {event.title}
-                            </div>
+                  return (
+                    <div
+                      key={dayIndex}
+                      className={`relative min-h-[100px] rounded-lg border p-2 transition-colors ${
+                        colorClasses
+                          ? `${colorClasses.bg} border-transparent`
+                          : "border-border hover:bg-muted/50"
+                      }`}>
+                      {day !== null && (
+                        <>
+                          <div
+                            className={`text-sm font-medium ${
+                              colorClasses ? "text-white/70" : "text-muted-foreground"
+                            }`}>
+                            {String(day).padStart(2, "0")}
                           </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
+                          {event && (
+                            <div className="mt-2 text-center">
+                              <p className="line-clamp-2 text-xs font-semibold text-white">
+                                {event.title}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

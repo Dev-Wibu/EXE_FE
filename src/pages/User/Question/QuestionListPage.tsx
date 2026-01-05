@@ -1,7 +1,18 @@
-import { Filter, Search } from "lucide-react";
+import { BookOpen, Filter, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   fetchQuestionSets,
   mockIndustries,
@@ -9,12 +20,12 @@ import {
   type QuestionSet,
 } from "@/mocks/questions.mock";
 
-// Map level to Tailwind color classes
-const levelColorMap: Record<string, string> = {
-  blue: "bg-blue-600",
-  green: "bg-green-600",
-  yellow: "bg-yellow-400",
-  red: "bg-red-600",
+// Map level to badge variant and colors
+const levelBadgeMap: Record<string, { className: string }> = {
+  Fresher: { className: "bg-blue-100 text-blue-700 hover:bg-blue-100" },
+  "Junior/Mid": { className: "bg-green-100 text-green-700 hover:bg-green-100" },
+  "Mid-level": { className: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100" },
+  Senior: { className: "bg-red-100 text-red-700 hover:bg-red-100" },
 };
 
 export function QuestionListPage() {
@@ -66,85 +77,94 @@ export function QuestionListPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="font-['Inter'] text-lg text-gray-500">Đang tải...</div>
+      <div className="bg-background flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+          <p className="text-muted-foreground">Đang tải...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-background min-h-screen p-8">
       {/* Top Banner */}
-      <div className="mb-8 h-56 overflow-hidden rounded-[30px] bg-indigo-100 px-8 py-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-['Open_Sans'] text-3xl leading-5 font-normal text-blue-800">
-            Hãy thử luyện tập trước với bộ câu hỏi trước nhé !
-          </h1>
-          <p className="font-['Open_Sans'] text-base leading-5 font-normal text-black">
-            Bạn làm rất tốt, hãy giữ vững phong độ nhé !
-          </p>
-        </div>
-      </div>
+      <Card className="mb-8 overflow-hidden border-0 bg-gradient-to-r from-[#0047AB] to-[#007BFF] py-0">
+        <CardContent className="flex items-center justify-between p-8">
+          <div className="flex flex-col gap-3">
+            <h1 className="text-3xl font-bold text-white">Ngân hàng câu hỏi</h1>
+            <p className="max-w-lg text-lg text-white/90">
+              Hãy thử luyện tập trước với bộ câu hỏi để chuẩn bị tốt nhất cho buổi phỏng vấn!
+            </p>
+          </div>
+          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+            <BookOpen className="h-14 w-14 text-white" />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Content Section */}
-      <div className="px-10">
+      <div className="space-y-6">
         {/* Title */}
-        <h2 className="mb-4 font-['Inter'] text-3xl font-bold text-zinc-800">Bộ Câu Hỏi</h2>
+        <h2 className="text-foreground text-2xl font-bold">Bộ Câu Hỏi</h2>
 
         {/* Filter Bar */}
-        <div className="mb-8 flex h-20 items-center gap-4 rounded-[10px] bg-white px-5 shadow-[0px_2px_5px_0px_rgba(0,0,0,0.05)]">
-          {/* Search Input */}
-          <div className="relative h-10 w-[455px]">
-            <input
-              type="text"
-              placeholder="Tìm kiếm bộ câu hỏi, ví dụ: Java, React, SQL..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-full w-full rounded-md bg-white px-4 font-['Inter'] text-sm font-normal text-black outline outline-1 outline-offset-[-1px] outline-stone-300 placeholder:text-neutral-500 focus:outline-indigo-500"
-            />
+        <Card className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Search Input */}
+            <div className="relative min-w-[300px] flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Input
+                type="text"
+                placeholder="Tìm kiếm bộ câu hỏi, ví dụ: Java, React, SQL..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Industry Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm font-medium whitespace-nowrap">
+                Ngành:
+              </span>
+              <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockIndustries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>
+                      {industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Level Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm font-medium whitespace-nowrap">
+                Cấp độ:
+              </span>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockLevels.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-
-          {/* Industry Filter Label */}
-          <span className="font-['Inter'] text-sm font-bold text-neutral-600">Lọc theo Ngành:</span>
-
-          {/* Industry Dropdown */}
-          <div className="relative h-10 w-48">
-            <select
-              value={selectedIndustry}
-              onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="h-full w-full appearance-none rounded-md bg-white px-5 pr-10 font-['Inter'] text-sm leading-4 font-normal text-black outline outline-1 outline-offset-[-1px] outline-stone-300 focus:outline-indigo-500">
-              {mockIndustries.map((industry) => (
-                <option key={industry} value={industry}>
-                  {industry}
-                </option>
-              ))}
-            </select>
-            <Filter className="pointer-events-none absolute top-3 right-3 h-4 w-4 text-gray-500" />
-          </div>
-
-          {/* Level Filter Label */}
-          <span className="font-['Inter'] text-sm font-bold text-neutral-600">
-            Lọc theo Cấp độ:
-          </span>
-
-          {/* Level Dropdown */}
-          <div className="relative h-10 w-36">
-            <select
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
-              className="h-full w-full appearance-none rounded-md bg-white px-5 pr-10 font-['Inter'] text-sm leading-4 font-normal text-black outline outline-1 outline-offset-[-1px] outline-stone-300 focus:outline-indigo-500">
-              {mockLevels.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-            <Filter className="pointer-events-none absolute top-3 right-3 h-4 w-4 text-gray-500" />
-          </div>
-        </div>
+        </Card>
 
         {/* Question Set Cards Grid */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {filteredQuestionSets.map((questionSet) => (
             <QuestionSetCard
               key={questionSet.id}
@@ -156,21 +176,27 @@ export function QuestionListPage() {
 
         {/* Empty State */}
         {filteredQuestionSets.length === 0 && (
-          <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-[10px] bg-gray-50">
-            <Search className="h-12 w-12 text-gray-400" />
-            <p className="font-['Inter'] text-lg text-gray-500">
-              Không tìm thấy bộ câu hỏi nào phù hợp
-            </p>
-            <button
+          <Card className="flex h-64 flex-col items-center justify-center gap-4">
+            <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-full">
+              <Search className="text-muted-foreground h-8 w-8" />
+            </div>
+            <div className="text-center">
+              <p className="text-foreground font-medium">Không tìm thấy bộ câu hỏi nào phù hợp</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Hãy thử điều chỉnh bộ lọc để tìm kết quả khác
+              </p>
+            </div>
+            <Button
+              variant="outline"
               onClick={() => {
                 setSearchQuery("");
                 setSelectedIndustry("Tất cả Ngành");
                 setSelectedLevel("Tất cả Cấp độ");
-              }}
-              className="rounded-md bg-indigo-500 px-4 py-2 font-['Inter'] text-sm font-bold text-white hover:bg-indigo-600">
+              }}>
+              <Filter className="mr-2 h-4 w-4" />
               Xóa bộ lọc
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
       </div>
     </div>
@@ -184,53 +210,39 @@ interface QuestionSetCardProps {
 }
 
 function QuestionSetCard({ questionSet, onClick }: QuestionSetCardProps) {
+  const levelStyle = levelBadgeMap[questionSet.level] || { className: "bg-gray-100 text-gray-700" };
+
   return (
-    <div className="relative h-72 rounded-[10px] bg-white p-5 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.08)]">
-      {/* Title and Tags Row */}
-      <div className="mb-2 flex items-start justify-between">
-        <h3 className="w-52 font-['Inter'] text-lg leading-6 font-bold text-indigo-500">
-          {questionSet.title}
-        </h3>
-        <div className="flex flex-wrap gap-1">
-          {questionSet.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-sm bg-slate-200 px-2 py-1 font-['Inter'] text-xs font-bold text-indigo-600">
-              {tag}
-            </span>
-          ))}
+    <Card
+      className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-lg"
+      onClick={onClick}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-4">
+          <CardTitle className="text-primary text-lg">{questionSet.title}</CardTitle>
+          <div className="flex flex-wrap gap-1">
+            {questionSet.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
         </div>
-      </div>
+        <div className="flex items-center gap-2">
+          <Badge className={levelStyle.className}>{questionSet.level}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <CardDescription className="line-clamp-2">{questionSet.description}</CardDescription>
 
-      {/* Level Badge */}
-      <div className="mb-4">
-        <span
-          className={`inline-block rounded-sm px-2 py-1 font-['Inter'] text-xs font-bold text-white ${levelColorMap[questionSet.levelColor]}`}>
-          {questionSet.level}
-        </span>
-      </div>
+        {/* Metadata Row */}
+        <div className="text-muted-foreground flex items-center gap-6 border-t pt-4 text-sm">
+          <span>📝 {questionSet.questionCount} câu hỏi</span>
+          <span>🏢 {questionSet.industry}</span>
+        </div>
 
-      {/* Description */}
-      <p className="mb-4 font-['Inter'] text-sm font-normal text-stone-500">
-        {questionSet.description}
-      </p>
-
-      {/* Metadata Row */}
-      <div className="mb-4 flex items-center gap-8 border-t border-zinc-100 pt-4">
-        <span className="font-['Inter'] text-xs font-normal text-neutral-400">
-          Số lượng: {questionSet.questionCount} câu
-        </span>
-        <span className="font-['Inter'] text-xs font-normal text-neutral-400">
-          Ngành: {questionSet.industry}
-        </span>
-      </div>
-
-      {/* View Detail Button */}
-      <button
-        onClick={onClick}
-        className="h-11 w-28 rounded-md bg-indigo-500 font-['Inter'] text-sm font-bold text-white hover:bg-indigo-600">
-        Xem Chi tiết
-      </button>
-    </div>
+        {/* View Detail Button */}
+        <Button className="w-full">Xem Chi tiết</Button>
+      </CardContent>
+    </Card>
   );
 }

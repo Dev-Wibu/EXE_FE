@@ -76,7 +76,7 @@ export function AccountPage() {
       {/* Avatar Section */}
       <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
         <div className="relative">
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-indigo-100">
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-[#DCEEFF]">
             {userProfile.avatar ? (
               <img
                 src={userProfile.avatar}
@@ -84,10 +84,10 @@ export function AccountPage() {
                 className="h-full w-full rounded-full object-cover"
               />
             ) : (
-              <User className="h-16 w-16 text-indigo-500" />
+              <User className="h-16 w-16 text-[#0047AB]" />
             )}
           </div>
-          <button className="absolute right-0 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-violet-500 text-white hover:bg-violet-600">
+          <button className="absolute right-0 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-[#0047AB] text-white hover:bg-[#005B9A]">
             <Camera className="h-5 w-5" />
           </button>
         </div>
@@ -107,7 +107,7 @@ export function AccountPage() {
           <h3 className="font-['Inter'] text-xl font-semibold text-zinc-800">Thông tin cá nhân</h3>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="font-['Inter'] text-base font-medium text-violet-500 hover:text-violet-600">
+            className="font-['Inter'] text-base font-medium text-[#0047AB] hover:text-[#005B9A]">
             {isEditing ? "Hủy" : "Chỉnh sửa"}
           </button>
         </div>
@@ -115,8 +115,8 @@ export function AccountPage() {
         <div className="flex flex-col gap-4">
           {/* Full Name */}
           <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
-              <User className="h-5 w-5 text-indigo-500" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF]">
+              <User className="h-5 w-5 text-[#0047AB]" />
             </div>
             <div className="flex-1">
               <p className="font-['Inter'] text-sm font-normal text-gray-500">Họ và tên</p>
@@ -124,7 +124,7 @@ export function AccountPage() {
                 <input
                   type="text"
                   defaultValue={userProfile.fullName}
-                  className="w-full rounded border border-gray-300 px-2 py-1 font-['Inter'] text-base focus:border-violet-500 focus:outline-none"
+                  className="w-full rounded border border-gray-300 px-2 py-1 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none"
                 />
               ) : (
                 <p className="font-['Inter'] text-base font-medium text-zinc-800">
@@ -158,7 +158,7 @@ export function AccountPage() {
                 <input
                   type="tel"
                   defaultValue={userProfile.phone}
-                  className="w-full rounded border border-gray-300 px-2 py-1 font-['Inter'] text-base focus:border-violet-500 focus:outline-none"
+                  className="w-full rounded border border-gray-300 px-2 py-1 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none"
                 />
               ) : (
                 <p className="font-['Inter'] text-base font-medium text-zinc-800">
@@ -181,7 +181,7 @@ export function AccountPage() {
                 setIsEditing(false);
                 handleRefreshData();
               }}
-              className="rounded-lg bg-violet-500 px-6 py-2 font-['Inter'] text-base font-medium text-white hover:bg-violet-600">
+              className="rounded-lg bg-[#0047AB] px-6 py-2 font-['Inter'] text-base font-medium text-white hover:bg-[#005B9A]">
               Lưu thay đổi
             </button>
           </div>
@@ -202,7 +202,7 @@ export function AccountPage() {
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 font-['Inter'] text-base font-medium text-violet-500 hover:text-violet-600">
+          <button className="flex items-center gap-2 font-['Inter'] text-base font-medium text-[#0047AB] hover:text-[#005B9A]">
             Thay đổi
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -317,7 +317,7 @@ export function AccountPage() {
           </div>
           <select
             value={settings.language}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 font-['Inter'] text-base focus:border-violet-500 focus:outline-none">
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none">
             <option value="vi">Tiếng Việt</option>
             <option value="en">English</option>
           </select>
@@ -327,8 +327,8 @@ export function AccountPage() {
       {/* Notification Settings */}
       <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
         <div className="mb-4 flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100">
-            <Bell className="h-5 w-5 text-violet-500" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF]">
+            <Bell className="h-5 w-5 text-[#0047AB]" />
           </div>
           <div>
             <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800">Thông báo</h3>
@@ -372,7 +372,7 @@ export function AccountPage() {
       </div>
       <button
         className={`relative h-7 w-12 rounded-full transition-colors ${
-          enabled ? "bg-violet-500" : "bg-gray-300"
+          enabled ? "bg-[#0047AB]" : "bg-gray-300"
         }`}>
         <span
           className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-transform ${
@@ -386,7 +386,7 @@ export function AccountPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Top Banner */}
-      <div className="flex h-56 items-center justify-between rounded-[30px] bg-indigo-100 px-10">
+      <div className="flex h-56 items-center justify-between rounded-[30px] bg-[#DCEEFF] px-10">
         <div className="flex flex-col gap-4">
           <h1 className="font-['Open_Sans'] text-3xl leading-tight font-bold text-blue-800">
             Tài khoản của bạn
@@ -396,7 +396,7 @@ export function AccountPage() {
           </p>
         </div>
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/50">
-          <User className="h-12 w-12 text-indigo-500" />
+          <User className="h-12 w-12 text-[#0047AB]" />
         </div>
       </div>
 
@@ -406,7 +406,7 @@ export function AccountPage() {
           onClick={() => setActiveTab("profile")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "profile"
-              ? "border-b-2 border-violet-500 text-violet-500"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB]"
               : "text-gray-500 hover:text-gray-700"
           }`}>
           Thông tin cá nhân
@@ -415,7 +415,7 @@ export function AccountPage() {
           onClick={() => setActiveTab("wallet")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "wallet"
-              ? "border-b-2 border-violet-500 text-violet-500"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB]"
               : "text-gray-500 hover:text-gray-700"
           }`}>
           Ví tiền
@@ -424,7 +424,7 @@ export function AccountPage() {
           onClick={() => setActiveTab("settings")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "settings"
-              ? "border-b-2 border-violet-500 text-violet-500"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB]"
               : "text-gray-500 hover:text-gray-700"
           }`}>
           Cài đặt

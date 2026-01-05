@@ -4,9 +4,10 @@ import { mockInterviewResult } from "@/mocks/interviews.mock";
 
 export function AIInterviewResultPage() {
   const navigate = useNavigate();
-  const { id: _id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
 
   // In a real app, we would fetch the result based on id
+  void id;
   const result = mockInterviewResult;
 
   return (
