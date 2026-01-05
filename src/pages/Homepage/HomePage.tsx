@@ -1,10 +1,10 @@
 import {
+  ArrowRight,
   BarChart3,
   Bot,
   Briefcase,
-  ChevronDown,
+  CheckCircle2,
   Code,
-  Cpu,
   Database,
   FileText,
   Linkedin,
@@ -12,503 +12,408 @@ import {
   MessageSquare,
   Mic,
   Palette,
-  User,
+  Play,
+  Sparkles,
+  Star,
   Video,
+  Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { Footer, Header } from "@/components/layouts";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   mockFeatures,
-  mockFooterLinks,
   mockInterviewModes,
   mockJobRoles,
   mockStats,
   mockTestimonials,
 } from "@/mocks/homepage.mock";
 
-// Icon mapping for job roles
+// Icon mapping for job roles - using blue color from color.md
 const jobRoleIcons: Record<string, React.ReactNode> = {
-  code: <Code className="h-9 w-9 text-violet-600" />,
-  database: <Database className="h-9 w-9 text-violet-600" />,
-  megaphone: <Megaphone className="h-9 w-9 text-violet-600" />,
-  briefcase: <Briefcase className="h-9 w-9 text-violet-600" />,
-  palette: <Palette className="h-9 w-9 text-violet-600" />,
-  chart: <BarChart3 className="h-9 w-9 text-violet-600" />,
-};
-
-// Icon mapping for interview modes
-const modeIcons: Record<string, React.ReactNode> = {
-  text: <FileText className="h-24 w-28 text-violet-600" />,
-  mic: <Mic className="h-24 w-24 text-violet-600" />,
-  video: <Video className="h-24 w-28 text-violet-600" />,
+  code: <Code className="h-9 w-9 text-[#0047AB]" />,
+  database: <Database className="h-9 w-9 text-[#0047AB]" />,
+  megaphone: <Megaphone className="h-9 w-9 text-[#0047AB]" />,
+  briefcase: <Briefcase className="h-9 w-9 text-[#0047AB]" />,
+  palette: <Palette className="h-9 w-9 text-[#0047AB]" />,
+  chart: <BarChart3 className="h-9 w-9 text-[#0047AB]" />,
 };
 
 export function HomePage() {
   return (
     <div className="relative w-full overflow-hidden bg-white">
-      {/* Header */}
-      <header className="h-40 w-full overflow-hidden bg-gradient-to-r from-white via-slate-50 to-sky-100">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
-          {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-28 w-40 items-center justify-center">
-              <Cpu className="h-12 w-12 text-blue-800" />
-            </div>
-            <span className="font-['Orelega_One'] text-2xl font-normal text-blue-800">
-              AI INTERVIEW
-            </span>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="flex items-center gap-6">
-            <div className="flex items-center gap-1 font-['Open_Sans'] text-xl font-normal text-neutral-900">
-              <span>Câu hỏi</span>
-              <ChevronDown className="h-5 w-5" />
-            </div>
-            <div className="flex items-center gap-1 font-['Open_Sans'] text-xl font-normal text-neutral-900">
-              <span>Tính năng</span>
-              <ChevronDown className="h-5 w-5" />
-            </div>
-            <div className="flex items-center gap-1 font-['Open_Sans'] text-xl font-normal text-neutral-900">
-              <span>Tài nguyên</span>
-              <ChevronDown className="h-5 w-5" />
-            </div>
-          </nav>
-
-          {/* Auth Buttons */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/login"
-              className="flex h-12 w-36 items-center justify-center rounded-2xl border border-black/20 bg-white font-['Open_Sans'] text-xl font-normal text-neutral-900">
-              Đăng nhập
-            </Link>
-            <Link
-              to="/signup"
-              className="flex h-12 w-44 items-center justify-center rounded-2xl bg-violet-600 font-['Open_Sans'] text-xl font-normal text-white">
-              Bắt đầu
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Header - Using shared component */}
+      <Header />
 
       {/* Hero Section */}
-      <section className="relative h-[792px] w-full overflow-hidden bg-gradient-to-l from-white via-slate-50 to-indigo-100">
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
-          {/* Left Content */}
-          <div className="flex flex-col items-start gap-8">
-            {/* Badge */}
-            <div className="inline-flex items-center justify-center gap-2.5 rounded-full border border-violet-300 px-6 py-4 backdrop-blur-sm">
-              <span className="font-['Manrope'] text-lg font-semibold text-neutral-900">
-                Hơn 30.000 lời mời nhận được | Hơn 160.000 cuộc phỏng vấn thành công
-              </span>
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-[#DCEEFF]/30 py-20 lg:py-32">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-20 left-1/4 h-72 w-72 rounded-full bg-[#66B2FF]/30 blur-3xl" />
+          <div className="absolute right-1/4 bottom-20 h-72 w-72 rounded-full bg-[#A5C8F2]/30 blur-3xl" />
+        </div>
+
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col items-center gap-16 lg:flex-row lg:justify-between">
+            {/* Left Content */}
+            <div className="flex max-w-2xl flex-col items-center text-center lg:items-start lg:text-left">
+              {/* Badge */}
+              <Badge
+                variant="secondary"
+                className="mb-6 gap-2 rounded-full bg-[#DCEEFF] px-4 py-2 text-sm text-[#0047AB]">
+                <Sparkles className="h-4 w-4" />
+                Hơn 160.000 cuộc phỏng vấn thành công
+              </Badge>
+
+              {/* Title */}
+              <h1 className="mb-6 text-4xl font-bold tracking-tight text-slate-900 lg:text-6xl">
+                Phỏng vấn thành công với{" "}
+                <span className="bg-gradient-to-r from-[#0047AB] to-[#007BFF] bg-clip-text text-transparent">
+                  Chuyên gia AI
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="mb-8 max-w-xl text-lg leading-relaxed text-slate-600">
+                Chuẩn bị thông minh với các câu hỏi phỏng vấn thực tế, AI phản hồi tức thì và phản
+                hồi chi tiết từ các mô hình AI tiên tiến.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Button
+                  size="lg"
+                  className="h-14 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8 text-base shadow-lg hover:shadow-xl"
+                  asChild>
+                  <Link to="/signup">
+                    <Play className="mr-2 h-5 w-5" />
+                    Thử phỏng vấn miễn phí
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 rounded-full px-8" asChild>
+                  <Link to="/login">Xem demo</Link>
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="mt-12 flex flex-wrap justify-center gap-8 lg:justify-start">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-slate-900">{mockStats.offers}</p>
+                    <p className="text-sm text-slate-500">Lời mời làm việc</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF]">
+                    <Zap className="h-5 w-5 text-[#0047AB]" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-slate-900">{mockStats.accuracy}</p>
+                    <p className="text-sm text-slate-500">Độ chính xác AI</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Title */}
-            <div className="max-w-xl">
-              <span className="font-['Manrope'] text-5xl leading-[81px] font-bold text-neutral-900">
-                Phỏng vấn Ace với
-                <br />
-              </span>
-              <span className="font-['Manrope'] text-5xl leading-[81px] font-bold text-indigo-500">
-                Chuyên gia AI
-              </span>
+            {/* Right Content - Hero Image */}
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#66B2FF]/20 to-[#A5C8F2]/20 blur-2xl" />
+              <Card className="relative w-[400px] overflow-hidden border-slate-200/50 shadow-2xl lg:w-[500px]">
+                <div className="flex h-[400px] items-center justify-center bg-gradient-to-br from-[#F0F8FF] to-[#DCEEFF]">
+                  <div className="relative">
+                    <div className="absolute -inset-8 rounded-full bg-[#007BFF]/10 blur-xl" />
+                    <Bot className="relative h-32 w-32 text-[#0047AB]" />
+                  </div>
+                </div>
+                <CardContent className="border-t bg-white p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#0047AB] to-[#007BFF]">
+                      <Bot className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">AI Interviewer</p>
+                      <p className="text-sm text-slate-500">Sẵn sàng phỏng vấn...</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-
-            {/* Subtitle */}
-            <p className="max-w-lg font-['Manrope'] text-lg leading-7 font-semibold text-gray-400">
-              Chuẩn bị thông minh với các câu hỏi phỏng vấn thực tế, hình đại diện AI chân thực và
-              phản hồi hữu ích, được hỗ trợ bởi các mô hình AI do các nhà nghiên cứu Stanford đào
-              tạo.
-            </p>
-
-            {/* CTA Button */}
-            <Link
-              to="/signup"
-              className="flex h-24 w-96 items-center justify-center rounded-[70px] bg-violet-600 shadow-md">
-              <span className="font-['Manrope'] text-base font-semibold text-white">
-                Hãy thử một cuộc phỏng vấn thử miễn phí ngay bây giờ
-              </span>
-            </Link>
-          </div>
-
-          {/* Right Content - Hero Image */}
-          <div className="flex h-[543px] w-[600px] items-center justify-center rounded-2xl bg-indigo-100 opacity-80">
-            <Bot className="h-48 w-48 text-indigo-400" />
           </div>
         </div>
       </section>
 
       {/* Job Roles Section */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-b from-sky-50 via-indigo-50 to-indigo-100 py-20">
+      <section className="relative w-full bg-white py-20">
         <div className="mx-auto max-w-7xl px-6">
-          {/* Company Logos Text */}
-          <div className="mb-8 text-center">
-            <p className="font-['Open_Sans'] text-lg leading-7 font-semibold text-gray-950">
-              Hơn 1000 câu hỏi phỏng vấn thực tế - Từ hơn 530 công ty và công ty khởi nghiệp hàng
-              đầu!
+          {/* Section Header */}
+          <div className="mb-12 text-center">
+            <Badge variant="outline" className="mb-4">
+              Đa dạng vị trí
+            </Badge>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-900">
+              Chuẩn bị cho mọi vị trí công việc
+            </h2>
+            <p className="mx-auto max-w-2xl text-slate-600">
+              Hơn 1000 câu hỏi phỏng vấn thực tế từ hơn 530 công ty hàng đầu
             </p>
           </div>
 
-          {/* Company Logos Placeholder */}
-          <div className="mb-12 flex justify-center gap-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="h-12 w-32 rounded-lg bg-gray-200/50"
-                aria-label={`Company logo ${i}`}
-              />
-            ))}
-          </div>
-
           {/* Job Role Cards */}
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
             {mockJobRoles.map((role) => (
-              <div
+              <Card
                 key={role.id}
-                className="flex h-44 w-40 flex-col items-center justify-center gap-4 rounded-2xl bg-white outline outline-1 outline-neutral-200">
-                <div className="flex h-9 w-9 items-center justify-center">
-                  {jobRoleIcons[role.icon]}
-                </div>
-                <span className="text-center font-['Open_Sans'] text-base font-bold text-neutral-900">
-                  {role.name}
-                </span>
-              </div>
+                className="group cursor-pointer border-slate-200 transition-all hover:border-[#007BFF]/50 hover:shadow-lg">
+                <CardContent className="flex flex-col items-center justify-center p-6">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-[#DCEEFF] transition-colors group-hover:bg-[#A5C8F2]">
+                    {jobRoleIcons[role.icon]}
+                  </div>
+                  <span className="text-center text-sm font-semibold text-slate-700">
+                    {role.name}
+                  </span>
+                </CardContent>
+              </Card>
             ))}
-
-            {/* View All Roles */}
-            <div className="flex h-44 w-32 flex-col items-center justify-center">
-              <span className="text-center font-['Open_Sans'] text-base font-bold text-neutral-900">
-                Xem tất cả
-                <br />
-                vai trò
-              </span>
-            </div>
+            <Card className="group cursor-pointer border-dashed border-slate-300 transition-all hover:border-[#007BFF]">
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100">
+                  <ArrowRight className="h-6 w-6 text-slate-400 group-hover:text-[#0047AB]" />
+                </div>
+                <span className="text-center text-sm font-semibold text-slate-500 group-hover:text-[#0047AB]">
+                  Xem tất cả
+                </span>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Statistics Section */}
-      <section className="relative w-full bg-gradient-to-b from-slate-50 to-white py-20">
-        <div className="mx-auto max-w-7xl px-6">
+      <section className="relative overflow-hidden bg-gradient-to-r from-[#0047AB] to-[#007BFF] py-20">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIwOSAxLjc5MS00IDQtNHM0IDEuNzkxIDQgNC0xLjc5MSA0LTQgNC00LTEuNzkxLTQtNHptLTI0IDBjMC0yLjIwOSAxLjc5MS00IDQtNHM0IDEuNzkxIDQgNC0xLjc5MSA0LTQgNC00LTEuNzkxLTQtNHptMTItMTJjMC0yLjIwOSAxLjc5MS00IDQtNHM0IDEuNzkxIDQgNC0xLjc5MSA0LTQgNC00LTEuNzkxLTQtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
+        <div className="relative mx-auto max-w-7xl px-6">
           {/* Title */}
-          <div className="mb-16 text-center">
-            <h2 className="font-['Open_Sans'] text-3xl leading-[48px] font-bold text-violet-500">
-              Nhận được lời mời làm việc mơ ước nhanh hơn gấp 3,5 lần
-              <br />
-              với INBLUE Interview
+          <div className="mb-12 text-center">
+            <h2 className="text-3xl font-bold text-white lg:text-4xl">
+              Nhận được lời mời làm việc nhanh hơn gấp 3,5 lần
             </h2>
+            <p className="mt-4 text-lg text-[#A5C8F2]">với INBLUE AI Interview</p>
           </div>
 
           {/* Stats Grid */}
-          <div className="flex flex-wrap justify-center gap-16">
-            {/* Stat 1 */}
-            <div className="flex flex-col items-center">
-              <span className="font-['Manrope'] text-3xl font-bold text-violet-500">
-                {mockStats.offers}
-              </span>
-              <span className="font-['Manrope'] text-lg text-gray-950">Lời đề nghị</span>
+          <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+              <span className="text-4xl font-bold text-white">{mockStats.offers}</span>
+              <span className="mt-2 text-[#A5C8F2]">Lời đề nghị</span>
             </div>
-
-            {/* Stat 2 */}
-            <div className="flex flex-col items-center">
-              <span className="font-['Manrope'] text-3xl font-bold text-violet-500">
+            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+              <span className="text-4xl font-bold text-white">
                 Tiết kiệm {mockStats.costSaving}
               </span>
-              <span className="font-['Manrope'] text-lg text-black">Chi phí huấn luyện</span>
+              <span className="mt-2 text-[#A5C8F2]">Chi phí huấn luyện</span>
             </div>
-
-            {/* Stat 3 */}
-            <div className="flex flex-col items-center">
-              <span className="font-['Manrope'] text-3xl font-bold text-violet-500">
-                {mockStats.accuracy} Độ chính xác
-              </span>
-              <span className="font-['Manrope'] text-lg text-gray-950">AI Phản hồi tức thì</span>
+            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+              <span className="text-4xl font-bold text-white">{mockStats.accuracy}</span>
+              <span className="mt-2 text-[#A5C8F2]">Độ chính xác AI</span>
             </div>
-
-            {/* Stat 4 */}
-            <div className="flex flex-col items-center">
-              <span className="font-['Manrope'] text-3xl font-bold text-violet-500">
-                {mockStats.availability} Truy cập
-              </span>
-              <span className="font-['Manrope'] text-lg text-gray-950">Với hỗ trợ khách hàng</span>
+            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+              <span className="text-4xl font-bold text-white">{mockStats.availability}</span>
+              <span className="mt-2 text-[#A5C8F2]">Hỗ trợ khách hàng</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="relative w-full bg-white py-20">
+      <section className="relative w-full bg-slate-50 py-20">
         <div className="mx-auto max-w-7xl px-6">
-          {/* Feature 1 - AI Simulation */}
-          <div className="mb-24 flex items-center justify-between gap-12">
-            {/* Image */}
-            <div className="flex h-96 w-[524px] items-center justify-center rounded-lg bg-indigo-100/50 shadow-lg">
-              <Bot className="h-32 w-32 text-indigo-400" />
-            </div>
-
-            {/* Content */}
-            <div className="flex max-w-xl flex-col gap-6">
-              <span className="font-['Manrope'] text-lg font-semibold text-violet-600">
-                {mockFeatures[0].title}
-              </span>
-              <h3 className="font-['Manrope'] text-3xl leading-[48px] font-bold text-neutral-900">
-                {mockFeatures[0].headline}
-              </h3>
-              <p className="font-['Manrope'] text-base text-black">{mockFeatures[0].description}</p>
-              <Link
-                to="/signup"
-                className="flex h-14 w-56 items-center justify-center rounded-full bg-gradient-to-r from-purple-800 via-violet-700 to-indigo-500">
-                <span className="font-['Manrope'] text-base font-semibold text-white">
-                  {mockFeatures[0].cta}
-                </span>
-              </Link>
-            </div>
+          <div className="mb-16 text-center">
+            <Badge variant="outline" className="mb-4">
+              Tính năng
+            </Badge>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">
+              Mọi thứ bạn cần để thành công
+            </h2>
           </div>
 
-          {/* Feature 2 - Trending Questions */}
-          <div className="mb-24 flex items-center justify-between gap-12">
-            {/* Content */}
-            <div className="flex max-w-xl flex-col gap-6">
-              <span className="font-['Manrope'] text-lg font-semibold text-violet-600">
-                {mockFeatures[1].title}
-              </span>
-              <h3 className="font-['Manrope'] text-3xl leading-[48px] font-bold text-neutral-900">
-                {mockFeatures[1].headline}
-              </h3>
-              <p className="font-['Manrope'] text-base text-black">{mockFeatures[1].description}</p>
-              <Link
-                to="/signup"
-                className="flex h-16 w-48 items-center justify-center rounded-full bg-gradient-to-r from-purple-800 via-violet-700 to-indigo-500">
-                <span className="font-['Manrope'] text-base font-semibold text-white">
-                  {mockFeatures[1].cta}
-                </span>
-              </Link>
+          <div className="space-y-20">
+            {/* Feature 1 - AI Simulation */}
+            <div className="flex flex-col items-center gap-12 lg:flex-row">
+              <div className="relative flex-1">
+                <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#DCEEFF] to-[#A5C8F2] blur-xl" />
+                <Card className="relative overflow-hidden">
+                  <CardContent className="flex h-80 items-center justify-center bg-gradient-to-br from-[#F0F8FF] to-[#DCEEFF] p-0">
+                    <Bot className="h-24 w-24 text-[#0047AB]" />
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex-1 space-y-4">
+                <Badge className="bg-[#DCEEFF] text-[#0047AB]">{mockFeatures[0].title}</Badge>
+                <h3 className="text-2xl font-bold text-slate-900">{mockFeatures[0].headline}</h3>
+                <p className="text-slate-600">{mockFeatures[0].description}</p>
+                <Button
+                  className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
+                  asChild>
+                  <Link to="/signup">
+                    {mockFeatures[0].cta}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
 
-            {/* Image */}
-            <div className="flex h-80 w-[525px] items-center justify-center rounded-lg bg-indigo-100/50 shadow-lg">
-              <MessageSquare className="h-32 w-32 text-indigo-400" />
+            {/* Feature 2 - Trending Questions */}
+            <div className="flex flex-col-reverse items-center gap-12 lg:flex-row">
+              <div className="flex-1 space-y-4">
+                <Badge className="bg-green-100 text-green-700">{mockFeatures[1].title}</Badge>
+                <h3 className="text-2xl font-bold text-slate-900">{mockFeatures[1].headline}</h3>
+                <p className="text-slate-600">{mockFeatures[1].description}</p>
+                <Button
+                  className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
+                  asChild>
+                  <Link to="/signup">
+                    {mockFeatures[1].cta}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="relative flex-1">
+                <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-green-100 to-emerald-100 blur-xl" />
+                <Card className="relative overflow-hidden">
+                  <CardContent className="flex h-80 items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 p-0">
+                    <MessageSquare className="h-24 w-24 text-green-500" />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
 
-          {/* Feature 3 - LinkedIn Integration */}
-          <div className="flex items-center justify-between gap-12">
-            {/* Image */}
-            <div className="flex h-96 w-[524px] items-center justify-center rounded-lg bg-indigo-100/50 shadow-lg">
-              <Linkedin className="h-32 w-32 text-indigo-400" />
-            </div>
-
-            {/* Content */}
-            <div className="flex max-w-xl flex-col gap-6">
-              <span className="font-['Manrope'] text-lg font-semibold text-violet-600">
-                {mockFeatures[2].title}
-              </span>
-              <h3 className="font-['Manrope'] text-3xl leading-[48px] font-bold text-neutral-900">
-                {mockFeatures[2].headline}
-              </h3>
-              <p className="font-['Manrope'] text-base text-black">{mockFeatures[2].description}</p>
-              <Link
-                to="/signup"
-                className="flex h-12 w-32 items-center justify-center rounded-full bg-gradient-to-r from-purple-800 via-violet-700 to-indigo-500">
-                <span className="font-['Manrope'] text-base font-semibold text-white">
-                  {mockFeatures[2].cta}
-                </span>
-              </Link>
+            {/* Feature 3 - LinkedIn Integration */}
+            <div className="flex flex-col items-center gap-12 lg:flex-row">
+              <div className="relative flex-1">
+                <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#66B2FF]/30 to-[#A5C8F2]/30 blur-xl" />
+                <Card className="relative overflow-hidden">
+                  <CardContent className="flex h-80 items-center justify-center bg-gradient-to-br from-[#F0F8FF] to-[#DCEEFF] p-0">
+                    <Linkedin className="h-24 w-24 text-[#007BFF]" />
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex-1 space-y-4">
+                <Badge className="bg-[#DCEEFF] text-[#0047AB]">{mockFeatures[2].title}</Badge>
+                <h3 className="text-2xl font-bold text-slate-900">{mockFeatures[2].headline}</h3>
+                <p className="text-slate-600">{mockFeatures[2].description}</p>
+                <Button
+                  className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
+                  asChild>
+                  <Link to="/signup">
+                    {mockFeatures[2].cta}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Interview Styles Section */}
-      <section className="relative w-full overflow-hidden bg-stone-200/20 py-20">
+      <section className="relative w-full bg-white py-20">
         <div className="mx-auto max-w-7xl px-6">
-          {/* Title */}
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 font-['Manrope'] text-4xl font-semibold text-violet-600">
-              Luyện tập theo cách của bạn
-            </h2>
-            <h3 className="mb-8 font-['Manrope'] text-4xl font-extrabold text-black">
+          <div className="mb-12 text-center">
+            <Badge variant="outline" className="mb-4">
+              Chế độ phỏng vấn
+            </Badge>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-900">
               Chọn phong cách phỏng vấn của bạn
-            </h3>
-            <p className="mx-auto max-w-4xl font-['Manjari'] text-xl text-black/60">
+            </h2>
+            <p className="mx-auto max-w-2xl text-slate-600">
               Thực hành phỏng vấn theo cách phù hợp nhất với bạn. Tất cả các chế độ đều cung cấp
-              phản hồi chất lượng và chấm điểm cá nhân hóa như nhau.
+              phản hồi chất lượng như nhau.
             </p>
           </div>
 
           {/* Mode Cards */}
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="grid gap-6 md:grid-cols-3">
             {mockInterviewModes.map((mode) => (
-              <div
+              <Card
                 key={mode.id}
-                className="flex h-[452px] w-96 flex-col gap-4 overflow-hidden rounded-3xl bg-white p-8 outline outline-1 outline-black/10">
-                {/* Icon */}
-                <div className="flex h-24 w-28 items-center justify-center rounded-[20px] bg-indigo-50">
-                  {modeIcons[mode.icon]}
-                </div>
-
-                {/* Title */}
-                <h4 className="font-['Manrope'] text-3xl font-semibold text-black">{mode.title}</h4>
-
-                {/* Description and Benefits */}
-                <div className="font-['Manrope'] text-xl font-medium text-black">
-                  <p className="mb-4">{mode.description}</p>
-                  <ul className="list-inside list-disc">
+                className="group cursor-pointer transition-all hover:border-[#007BFF]/50 hover:shadow-xl">
+                <CardHeader className="pb-4">
+                  <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#DCEEFF] transition-colors group-hover:bg-[#A5C8F2]">
+                    {mode.icon === "text" && <FileText className="h-8 w-8 text-[#0047AB]" />}
+                    {mode.icon === "mic" && <Mic className="h-8 w-8 text-[#0047AB]" />}
+                    {mode.icon === "video" && <Video className="h-8 w-8 text-[#0047AB]" />}
+                  </div>
+                  <CardTitle className="text-xl">{mode.title}</CardTitle>
+                  <CardDescription className="text-sm">{mode.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
                     {mode.benefits.map((benefit, index) => (
-                      <li key={index}>{benefit}</li>
+                      <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
+                        {benefit}
+                      </li>
                     ))}
                   </ul>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative w-full bg-gradient-to-b from-slate-50 to-white py-20">
+      <section className="relative w-full bg-slate-50 py-20">
         <div className="mx-auto max-w-7xl px-6">
-          {/* Title */}
-          <div className="mb-16 text-center">
-            <h2 className="font-['Inter'] text-4xl font-extrabold text-black">
+          <div className="mb-12 text-center">
+            <Badge variant="outline" className="mb-4">
+              Đánh giá
+            </Badge>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">
               Mọi người nói gì về chúng tôi
             </h2>
           </div>
 
           {/* Testimonial Cards */}
-          <div className="flex flex-wrap justify-center gap-6">
-            {mockTestimonials.map((testimonial, index) => (
-              <div
-                key={testimonial.id}
-                className={`size-96 overflow-hidden rounded-[30px] p-6 ${
-                  index <= 1
-                    ? "bg-gradient-to-br from-white/80 via-slate-50/80 to-sky-100/80"
-                    : "bg-gradient-to-br from-sky-100/0 via-sky-100/10 to-sky-100/60"
-                }`}>
-                {/* Avatar and Name */}
-                <div className="mb-8 flex items-center gap-4">
-                  <div className="flex h-20 w-16 items-center justify-center overflow-hidden rounded-full bg-indigo-100">
-                    <User className="h-12 w-12 text-indigo-400" />
+          <div className="grid gap-6 md:grid-cols-3">
+            {mockTestimonials.map((testimonial) => (
+              <Card key={testimonial.id} className="border-slate-200 bg-white/50 backdrop-blur-sm">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12 border-2 border-[#DCEEFF]">
+                      <AvatarFallback className="bg-gradient-to-br from-[#0047AB] to-[#007BFF] text-white">
+                        {testimonial.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-base font-semibold">{testimonial.name}</CardTitle>
+                      <CardDescription className="text-sm">{testimonial.role}</CardDescription>
+                    </div>
                   </div>
-                </div>
-
-                {/* Name */}
-                <h4 className="mb-2 font-['Inknut_Antiqua'] text-lg font-extrabold text-gray-950">
-                  {testimonial.name}
-                </h4>
-
-                {/* Role */}
-                <p className="mb-6 font-['Inter'] text-lg font-semibold text-gray-950/70">
-                  {testimonial.role}
-                </p>
-
-                {/* Content */}
-                <p className="font-['Inter'] text-lg text-black">{testimonial.content}</p>
-              </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-3 flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                    ))}
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-600">"{testimonial.content}"</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Footer Section */}
-      <footer className="relative w-full overflow-hidden bg-gradient-to-r from-white via-violet-100/90 to-violet-500/20 py-12">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex justify-between">
-            {/* Brand Section */}
-            <div className="max-w-xs">
-              <h3 className="mb-4 font-['Open_Sans'] text-2xl leading-[48.5px] font-bold text-neutral-900">
-                InBlue Interview
-              </h3>
-              <p className="mb-6 font-['Manrope'] text-base font-semibold text-slate-500">
-                Nền tảng chuẩn bị cho phỏng vấn
-              </p>
-              {/* Social Icons */}
-              <div className="flex gap-4">
-                <div className="flex h-5 w-5 items-center justify-center text-indigo-600">
-                  <Linkedin className="h-5 w-5" />
-                </div>
-                <div className="flex h-5 w-5 items-center justify-center text-indigo-600">
-                  <MessageSquare className="h-5 w-5" />
-                </div>
-              </div>
-            </div>
-
-            {/* Links Sections */}
-            <div className="flex gap-20">
-              {/* Product Links */}
-              <div>
-                <h4 className="mb-4 font-['Open_Sans'] text-xl font-bold text-indigo-950">
-                  Product
-                </h4>
-                <ul className="space-y-4">
-                  {mockFooterLinks.product.map((link) => (
-                    <li key={link.name}>
-                      <a
-                        href={link.href}
-                        className="font-['Manrope'] text-sm font-semibold text-slate-500 hover:text-indigo-600">
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Resources Links */}
-              <div>
-                <h4 className="mb-4 font-['Open_Sans'] text-xl font-bold text-indigo-950">
-                  Resources
-                </h4>
-                <ul className="space-y-4">
-                  {mockFooterLinks.resources.map((link) => (
-                    <li key={link.name}>
-                      <a
-                        href={link.href}
-                        className="font-['Manrope'] text-sm font-semibold text-slate-500 hover:text-indigo-600">
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Company Links */}
-              <div>
-                <h4 className="mb-4 font-['Open_Sans'] text-xl font-bold text-indigo-950">
-                  Company
-                </h4>
-                <ul className="space-y-4">
-                  {mockFooterLinks.company.map((link) => (
-                    <li key={link.name}>
-                      <a
-                        href={link.href}
-                        className="font-['Manrope'] text-sm font-semibold text-slate-500 hover:text-indigo-600">
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Footer */}
-          <div className="mt-12 flex items-center justify-between border-t border-gray-200 pt-10">
-            <span className="font-['Manrope'] text-sm font-semibold text-slate-500">
-              Copyright © 2025 INLUE AI
-            </span>
-            <div className="font-['Manrope'] text-sm font-semibold">
-              <span className="text-slate-500">All Rights Reserved | </span>
-              <Link to="/terms" className="text-indigo-600 hover:underline">
-                Terms and Conditions
-              </Link>
-              <span className="text-slate-500"> | </span>
-              <Link to="/privacy" className="text-indigo-600 hover:underline">
-                Privacy Policy
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Footer - Using shared component */}
+      <Footer />
     </div>
   );
 }
