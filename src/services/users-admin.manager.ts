@@ -42,6 +42,99 @@ export interface CreateUserData extends UserInfo {
   cvFile?: File;
 }
 
+/**
+ * Type guard to check if a value is a plain object (not array, not null)
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Creates an empty file placeholder for multipart/form-data requests
+ * Used as workaround for backend null pointer issues with optional file fields
+ */
+function createEmptyFilePlaceholder(): File {
+  return new File([], "empty.txt", { type: "text/plain" });
+}
+
+/**
+ * Serialize params for Spring Boot query parameter binding
+ * Converts nested objects to dot notation query string format
+ *
+ * Spring Boot uses @ModelAttribute binding with dot notation:
+ * user.id=1&user.name=John (NOT JSON string as parameter value)
+ *
+ * Example output: PUT /api/users?user.id=1&user.name=John&user.email=john@test.com
+ *
+ * @param prefix - The prefix for parameter names (e.g., "user")
+ * @param obj - The object to serialize
+ * @returns Array of URL-encoded parameter strings like ["user.id=1", "user.name=John"]
+ */
+function serializeParamsWithDotNotation(prefix: string, obj: Record<string, unknown>): string[] {
+  const params: string[] = [];
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined || value === null) continue;
+
+    const paramKey = `${prefix}.${key}`;
+
+    if (isPlainObject(value)) {
+      // Recursively handle nested objects
+      params.push(...serializeParamsWithDotNotation(paramKey, value));
+    } else if (Array.isArray(value)) {
+      // Handle arrays with indexed notation: user.items[0], user.items[1], etc.
+      value.forEach((item, index) => {
+        if (isPlainObject(item)) {
+          params.push(...serializeParamsWithDotNotation(`${paramKey}[${index}]`, item));
+        } else {
+          params.push(
+            `${encodeURIComponent(`${paramKey}[${index}]`)}=${encodeURIComponent(String(item))}`
+          );
+        }
+      });
+    } else {
+      params.push(`${encodeURIComponent(paramKey)}=${encodeURIComponent(String(value))}`);
+    }
+  }
+
+  return params;
+}
+
+/**
+ * Main serializer function for axios paramsSerializer
+ * Converts { user: { id: 1, name: "John" } } to "user.id=1&user.name=John"
+ *
+ * @param params - The parameters object to serialize
+ * @returns URL-encoded query string
+ */
+function serializeParams(params: Record<string, unknown>): string {
+  const allParams: string[] = [];
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null) continue;
+
+    if (isPlainObject(value)) {
+      // Use dot notation for nested objects (e.g., user object)
+      allParams.push(...serializeParamsWithDotNotation(key, value));
+    } else if (Array.isArray(value)) {
+      // Handle top-level arrays
+      value.forEach((item, index) => {
+        if (isPlainObject(item)) {
+          allParams.push(...serializeParamsWithDotNotation(`${key}[${index}]`, item));
+        } else {
+          allParams.push(
+            `${encodeURIComponent(`${key}[${index}]`)}=${encodeURIComponent(String(item))}`
+          );
+        }
+      });
+    } else {
+      allParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+    }
+  }
+
+  return allParams.join("&");
+}
+
 export class UsersAdminManager implements BaseManager<User> {
   private mode = MANAGER_MODE;
   private api = axios.create(apiConfig);
@@ -173,17 +266,33 @@ export class UsersAdminManager implements BaseManager<User> {
       // The Blob with type "application/json" tells the server this part is JSON
       formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
 
-      // Add optional file fields
+      // Add file fields - always send placeholder files to avoid backend NullPointerException
+      // Backend code calls file.isEmpty() without null check first, causing 500 error
+      // By sending empty files as placeholders, we prevent null pointer exceptions
       const createData = _data as CreateUserData;
+
+      // Always send avatar to avoid "avatar is null" NullPointerException
       if (createData.avatar) {
         formData.append("avatar", createData.avatar);
-      }
-      if (createData.cvFile) {
-        formData.append("cvFile", createData.cvFile);
+      } else {
+        // Send an empty file as placeholder to avoid backend NullPointerException
+        formData.append("avatar", createEmptyFilePlaceholder());
       }
 
-      // Let axios set Content-Type automatically with proper boundary for multipart/form-data
-      const response = await this.api.post(API_ENDPOINTS.USERS.CREATE, formData);
+      // Always send cvFile to avoid "cvFile is null" NullPointerException
+      if (createData.cvFile) {
+        formData.append("cvFile", createData.cvFile);
+      } else {
+        // Send an empty file as placeholder to avoid backend NullPointerException
+        formData.append("cvFile", createEmptyFilePlaceholder());
+      }
+
+      // Remove default Content-Type header to let axios set multipart boundary automatically
+      const response = await this.api.post(API_ENDPOINTS.USERS.CREATE, formData, {
+        headers: {
+          "Content-Type": undefined,
+        },
+      });
       return {
         success: true,
         data: response.data,
@@ -198,8 +307,13 @@ export class UsersAdminManager implements BaseManager<User> {
 
   /**
    * Update user
-   * PUT /api/users (query param: user)
+   * PUT /api/users (query param: user with dot notation)
    * According to schema: uses query parameter with User object
+   *
+   * Spring Boot @ModelAttribute binding requires dot notation format:
+   * PUT /api/users?user.id=1&user.name=John&user.email=john@test.com
+   *
+   * NOT JSON string format (which causes "Failed to convert String to User" error)
    */
   async update(_id: string | number, _data: Partial<User>): Promise<ApiResponse<User>> {
     if (this.mode === "mock") {
@@ -219,10 +333,14 @@ export class UsersAdminManager implements BaseManager<User> {
     }
 
     try {
-      // According to schema, updateUser uses query parameter
-      const userData: User = { ..._data, id: Number(_id) };
+      // Build the user object with id included
+      const userData: Partial<User> = { ..._data, id: Number(_id) };
+
+      // Send user object using dot notation in query parameters
+      // Format: PUT /api/users?user.id=1&user.name=John&user.email=john@test.com
       const response = await this.api.put(API_ENDPOINTS.USERS.UPDATE, null, {
-        params: { user: JSON.stringify(userData) },
+        params: { user: userData },
+        paramsSerializer: serializeParams,
       });
       return {
         success: true,
@@ -239,7 +357,7 @@ export class UsersAdminManager implements BaseManager<User> {
   /**
    * Delete user
    * Note: Backend schema does not define DELETE for /api/users
-   * This is a soft delete by setting isActive to false
+   * This is a soft delete by setting isActive to false via PUT with dot notation
    */
   async delete(_id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -259,9 +377,12 @@ export class UsersAdminManager implements BaseManager<User> {
 
     try {
       // Backend doesn't have DELETE endpoint, use soft delete via update
-      const userData: User = { id: Number(_id), isActive: false };
+      // Send user object with isActive: false using dot notation in query parameters
+      // Format: PUT /api/users?user.id=1&user.isActive=false
+      const userData: Partial<User> = { id: Number(_id), isActive: false };
       await this.api.put(API_ENDPOINTS.USERS.UPDATE, null, {
-        params: { user: JSON.stringify(userData) },
+        params: { user: userData },
+        paramsSerializer: serializeParams,
       });
       return {
         success: true,
