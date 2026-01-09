@@ -74,9 +74,9 @@ export function AccountPage() {
   const renderProfileTab = () => (
     <div className="flex flex-col gap-6">
       {/* Avatar Section */}
-      <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
+      <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
         <div className="relative">
-          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-[#DCEEFF]">
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-[#DCEEFF] dark:bg-[#0047AB]/30">
             {userProfile.avatar ? (
               <img
                 src={userProfile.avatar}
@@ -84,7 +84,7 @@ export function AccountPage() {
                 className="h-full w-full rounded-full object-cover"
               />
             ) : (
-              <User className="h-16 w-16 text-[#0047AB]" />
+              <User className="h-16 w-16 text-[#0047AB] dark:text-[#66B2FF]" />
             )}
           </div>
           <button className="absolute right-0 bottom-0 flex h-10 w-10 items-center justify-center rounded-full bg-[#0047AB] text-white hover:bg-[#005B9A]">
@@ -92,42 +92,46 @@ export function AccountPage() {
           </button>
         </div>
         <div className="text-center">
-          <h2 className="font-['Inter'] text-2xl font-bold text-zinc-800">
+          <h2 className="font-['Inter'] text-2xl font-bold text-zinc-800 dark:text-white">
             {userProfile.fullName}
           </h2>
-          <p className="font-['Inter'] text-base font-normal text-gray-500">
+          <p className="font-['Inter'] text-base font-normal text-gray-500 dark:text-slate-400">
             Thành viên từ {formatDate(userProfile.createdAt)}
           </p>
         </div>
       </div>
 
       {/* User Info Section */}
-      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
+      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-['Inter'] text-xl font-semibold text-zinc-800">Thông tin cá nhân</h3>
+          <h3 className="font-['Inter'] text-xl font-semibold text-zinc-800 dark:text-white">
+            Thông tin cá nhân
+          </h3>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="font-['Inter'] text-base font-medium text-[#0047AB] hover:text-[#005B9A]">
+            className="font-['Inter'] text-base font-medium text-[#0047AB] hover:text-[#005B9A] dark:text-[#66B2FF] dark:hover:text-[#A5C8F2]">
             {isEditing ? "Hủy" : "Chỉnh sửa"}
           </button>
         </div>
 
         <div className="flex flex-col gap-4">
           {/* Full Name */}
-          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF]">
-              <User className="h-5 w-5 text-[#0047AB]" />
+          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF] dark:bg-[#0047AB]/30">
+              <User className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
             </div>
             <div className="flex-1">
-              <p className="font-['Inter'] text-sm font-normal text-gray-500">Họ và tên</p>
+              <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
+                Họ và tên
+              </p>
               {isEditing ? (
                 <input
                   type="text"
                   defaultValue={userProfile.fullName}
-                  className="w-full rounded border border-gray-300 px-2 py-1 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none"
+                  className="w-full rounded border border-gray-300 bg-white px-2 py-1 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                 />
               ) : (
-                <p className="font-['Inter'] text-base font-medium text-zinc-800">
+                <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
                   {userProfile.fullName}
                 </p>
               )}
@@ -135,33 +139,37 @@ export function AccountPage() {
           </div>
 
           {/* Email */}
-          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
               <Mail className="h-5 w-5 text-blue-500" />
             </div>
             <div className="flex-1">
-              <p className="font-['Inter'] text-sm font-normal text-gray-500">Email</p>
-              <p className="font-['Inter'] text-base font-medium text-zinc-800">
+              <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
+                Email
+              </p>
+              <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
                 {userProfile.email}
               </p>
             </div>
           </div>
 
           {/* Phone */}
-          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
               <Phone className="h-5 w-5 text-emerald-500" />
             </div>
             <div className="flex-1">
-              <p className="font-['Inter'] text-sm font-normal text-gray-500">Số điện thoại</p>
+              <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
+                Số điện thoại
+              </p>
               {isEditing ? (
                 <input
                   type="tel"
                   defaultValue={userProfile.phone}
-                  className="w-full rounded border border-gray-300 px-2 py-1 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none"
+                  className="w-full rounded border border-gray-300 bg-white px-2 py-1 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                 />
               ) : (
-                <p className="font-['Inter'] text-base font-medium text-zinc-800">
+                <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
                   {userProfile.phone}
                 </p>
               )}
@@ -173,7 +181,7 @@ export function AccountPage() {
           <div className="mt-6 flex justify-end gap-4">
             <button
               onClick={() => setIsEditing(false)}
-              className="rounded-lg border border-gray-300 bg-white px-6 py-2 font-['Inter'] text-base font-medium text-gray-700 hover:bg-gray-50">
+              className="rounded-lg border border-gray-300 bg-white px-6 py-2 font-['Inter'] text-base font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
               Hủy
             </button>
             <button
@@ -189,20 +197,22 @@ export function AccountPage() {
       </div>
 
       {/* Change Password Section */}
-      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
+      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <Lock className="h-5 w-5 text-amber-500" />
             </div>
             <div>
-              <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800">Đổi mật khẩu</h3>
-              <p className="font-['Inter'] text-sm font-normal text-gray-500">
+              <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800 dark:text-white">
+                Đổi mật khẩu
+              </h3>
+              <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
                 Đổi mật khẩu để bảo mật tài khoản
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 font-['Inter'] text-base font-medium text-[#0047AB] hover:text-[#005B9A]">
+          <button className="flex items-center gap-2 font-['Inter'] text-base font-medium text-[#0047AB] hover:text-[#005B9A] dark:text-[#66B2FF] dark:hover:text-[#A5C8F2]">
             Thay đổi
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -214,10 +224,10 @@ export function AccountPage() {
   const renderWalletTab = () => (
     <div className="flex flex-col gap-6">
       {/* Wallet Balance Card */}
-      <div className="rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-600 p-8 text-white shadow-lg">
+      <div className="rounded-2xl bg-gradient-to-r from-[#0047AB] to-[#007BFF] p-8 text-white shadow-lg">
         <div className="mb-4 flex items-center gap-3">
           <WalletIcon className="h-8 w-8" />
-          <span className="font-['Inter'] text-lg font-medium">Ví INTELITE</span>
+          <span className="font-['Inter'] text-lg font-medium">Ví INBLUE</span>
         </div>
         <div className="mb-6">
           <p className="font-['Inter'] text-sm font-normal opacity-80">Số dư hiện tại</p>
@@ -230,23 +240,23 @@ export function AccountPage() {
       </div>
 
       {/* Transaction History */}
-      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
-        <h3 className="mb-4 font-['Inter'] text-xl font-semibold text-zinc-800">
+      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
+        <h3 className="mb-4 font-['Inter'] text-xl font-semibold text-zinc-800 dark:text-white">
           Lịch sử giao dịch
         </h3>
         <div className="flex flex-col gap-4">
           {wallet.transactions.map((transaction: Transaction) => (
             <div
               key={transaction.id}
-              className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+              className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
               <div className="flex items-center gap-4">
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-full ${
                     transaction.type === "deposit"
-                      ? "bg-emerald-100"
+                      ? "bg-emerald-100 dark:bg-emerald-900/30"
                       : transaction.type === "refund"
-                        ? "bg-blue-100"
-                        : "bg-rose-100"
+                        ? "bg-blue-100 dark:bg-blue-900/30"
+                        : "bg-rose-100 dark:bg-rose-900/30"
                   }`}>
                   {transaction.type === "deposit" || transaction.type === "refund" ? (
                     <ArrowDownLeft
@@ -259,15 +269,15 @@ export function AccountPage() {
                   )}
                 </div>
                 <div>
-                  <p className="font-['Inter'] text-base font-medium text-zinc-800">
+                  <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
                     {transaction.description}
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="font-['Inter'] text-sm font-normal text-gray-500">
+                    <span className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
                       {formatDate(transaction.date)}
                     </span>
-                    <span className="text-gray-300">•</span>
-                    <span className="font-['Inter'] text-sm font-normal text-gray-500">
+                    <span className="text-gray-300 dark:text-slate-600">•</span>
+                    <span className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
                       {getTransactionTypeLabel(transaction.type)}
                     </span>
                   </div>
@@ -284,10 +294,10 @@ export function AccountPage() {
                 <span
                   className={`inline-block rounded-full px-2 py-0.5 font-['Inter'] text-xs font-medium ${
                     transaction.status === "completed"
-                      ? "bg-emerald-100 text-emerald-600"
+                      ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30"
                       : transaction.status === "pending"
-                        ? "bg-amber-100 text-amber-600"
-                        : "bg-rose-100 text-rose-600"
+                        ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30"
+                        : "bg-rose-100 text-rose-600 dark:bg-rose-900/30"
                   }`}>
                   {getTransactionStatusLabel(transaction.status)}
                 </span>
@@ -302,22 +312,24 @@ export function AccountPage() {
   const renderSettingsTab = () => (
     <div className="flex flex-col gap-6">
       {/* Language Settings */}
-      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
+      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
               <Globe className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800">Ngôn ngữ</h3>
-              <p className="font-['Inter'] text-sm font-normal text-gray-500">
+              <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800 dark:text-white">
+                Ngôn ngữ
+              </h3>
+              <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
                 Chọn ngôn ngữ hiển thị
               </p>
             </div>
           </div>
           <select
             value={settings.language}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none">
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 font-['Inter'] text-base focus:border-[#0047AB] focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-white">
             <option value="vi">Tiếng Việt</option>
             <option value="en">English</option>
           </select>
@@ -325,14 +337,16 @@ export function AccountPage() {
       </div>
 
       {/* Notification Settings */}
-      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)]">
+      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
         <div className="mb-4 flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF]">
-            <Bell className="h-5 w-5 text-[#0047AB]" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#DCEEFF] dark:bg-[#0047AB]/30">
+            <Bell className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
           </div>
           <div>
-            <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800">Thông báo</h3>
-            <p className="font-['Inter'] text-sm font-normal text-gray-500">
+            <h3 className="font-['Inter'] text-lg font-semibold text-zinc-800 dark:text-white">
+              Thông báo
+            </h3>
+            <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
               Quản lý cài đặt thông báo
             </p>
           </div>
@@ -365,14 +379,18 @@ export function AccountPage() {
   );
 
   const renderNotificationToggle = (title: string, description: string, enabled: boolean) => (
-    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
+    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
       <div>
-        <p className="font-['Inter'] text-base font-medium text-zinc-800">{title}</p>
-        <p className="font-['Inter'] text-sm font-normal text-gray-500">{description}</p>
+        <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
+          {title}
+        </p>
+        <p className="font-['Inter'] text-sm font-normal text-gray-500 dark:text-slate-400">
+          {description}
+        </p>
       </div>
       <button
         className={`relative h-7 w-12 rounded-full transition-colors ${
-          enabled ? "bg-[#0047AB]" : "bg-gray-300"
+          enabled ? "bg-[#0047AB]" : "bg-gray-300 dark:bg-slate-600"
         }`}>
         <span
           className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-transform ${
@@ -386,28 +404,28 @@ export function AccountPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Top Banner */}
-      <div className="flex h-56 items-center justify-between rounded-[30px] bg-[#DCEEFF] px-10">
+      <div className="flex h-56 items-center justify-between rounded-[30px] bg-[#DCEEFF] px-10 dark:bg-[#0047AB]/20">
         <div className="flex flex-col gap-4">
-          <h1 className="font-['Open_Sans'] text-3xl leading-tight font-bold text-blue-800">
+          <h1 className="font-['Open_Sans'] text-3xl leading-tight font-bold text-blue-800 dark:text-[#66B2FF]">
             Tài khoản của bạn
           </h1>
-          <p className="font-['Open_Sans'] text-base font-normal text-gray-700">
+          <p className="font-['Open_Sans'] text-base font-normal text-gray-700 dark:text-slate-300">
             Quản lý thông tin cá nhân, ví tiền và cài đặt
           </p>
         </div>
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/50">
-          <User className="h-12 w-12 text-[#0047AB]" />
+        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50">
+          <User className="h-12 w-12 text-[#0047AB] dark:text-[#66B2FF]" />
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-4 border-b border-gray-200">
+      <div className="flex gap-4 border-b border-gray-200 dark:border-slate-700">
         <button
           onClick={() => setActiveTab("profile")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "profile"
-              ? "border-b-2 border-[#0047AB] text-[#0047AB]"
-              : "text-gray-500 hover:text-gray-700"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
+              : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}>
           Thông tin cá nhân
         </button>
@@ -415,8 +433,8 @@ export function AccountPage() {
           onClick={() => setActiveTab("wallet")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "wallet"
-              ? "border-b-2 border-[#0047AB] text-[#0047AB]"
-              : "text-gray-500 hover:text-gray-700"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
+              : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}>
           Ví tiền
         </button>
@@ -424,8 +442,8 @@ export function AccountPage() {
           onClick={() => setActiveTab("settings")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "settings"
-              ? "border-b-2 border-[#0047AB] text-[#0047AB]"
-              : "text-gray-500 hover:text-gray-700"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
+              : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}>
           Cài đặt
         </button>
@@ -434,7 +452,7 @@ export function AccountPage() {
       {/* Tab Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <p className="font-['Inter'] text-base text-gray-500">Đang tải...</p>
+          <p className="font-['Inter'] text-base text-gray-500 dark:text-slate-400">Đang tải...</p>
         </div>
       ) : (
         renderTabContent()

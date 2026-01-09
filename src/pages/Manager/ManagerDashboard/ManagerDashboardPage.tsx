@@ -97,7 +97,7 @@ export function ManagerDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
       {/* Sidebar */}
       <Sidebar onNavigate={handleSidebarNavigate} currentView={activeTab?.type} />
 
