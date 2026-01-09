@@ -159,11 +159,13 @@ export function UserManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800">User Management</h1>
-        <p className="font-['Inter'] text-base text-gray-600">
+        <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
+          User Management
+        </h1>
+        <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
           Manage user accounts, roles, and permissions
         </p>
       </div>
@@ -173,7 +175,7 @@ export function UserManagementPage() {
         <div className="flex items-center gap-4">
           {/* Search Input */}
           <div className="relative w-96">
-            <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500" />
+            <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
               placeholder="Search users by name, email, university..."
@@ -206,7 +208,7 @@ export function UserManagementPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border bg-white shadow-sm">
+      <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <UserTable users={filteredUsers} onEdit={handleEdit} onDelete={handleDelete} />
 
         {/* Empty State with Clear Filters */}

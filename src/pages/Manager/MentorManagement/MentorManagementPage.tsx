@@ -142,11 +142,13 @@ export function MentorManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800">Mentor Management</h1>
-        <p className="font-['Inter'] text-base text-gray-600">
+        <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
+          Mentor Management
+        </h1>
+        <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
           Manage mentor accounts, profiles, and settings
         </p>
       </div>
@@ -155,7 +157,7 @@ export function MentorManagementPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         {/* Search Input */}
         <div className="relative w-96">
-          <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500" />
+          <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
             placeholder="Search mentors by name, email, expertise..."
@@ -173,7 +175,7 @@ export function MentorManagementPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border bg-white shadow-sm">
+      <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <MentorTable mentors={filteredMentors} onEdit={handleEdit} onDelete={handleDelete} />
 
         {/* Empty State with Clear Search */}
