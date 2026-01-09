@@ -285,8 +285,16 @@ export class MentorManager implements BaseManager<Mentor> {
 
     try {
       // According to schema, updateMentor is PUT /api/mentors with JSON body
+      // Remove undefined/null values to prevent backend deserialization errors
+      // Backend doesn't accept null for primitive types like boolean
       const mentorData: Mentor = { ..._data, id: Number(_id) };
-      const response = await this.api.put(API_ENDPOINTS.MENTOR.UPDATE, mentorData);
+
+      // Filter out undefined/null values to prevent "Cannot map null into type boolean" error
+      const cleanedData = Object.fromEntries(
+        Object.entries(mentorData).filter(([_, value]) => value !== undefined && value !== null)
+      ) as Mentor;
+
+      const response = await this.api.put(API_ENDPOINTS.MENTOR.UPDATE, cleanedData);
       return {
         success: true,
         data: response.data,
