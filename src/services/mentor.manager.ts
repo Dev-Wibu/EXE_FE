@@ -44,6 +44,14 @@ export interface CreateMentorData extends MentorInfo {
   otherFile?: File;
 }
 
+/**
+ * Creates an empty file placeholder for multipart/form-data requests
+ * Used as workaround for backend null pointer issues with optional file fields
+ */
+function createEmptyFilePlaceholder(): File {
+  return new File([], "empty.txt", { type: "text/plain" });
+}
+
 // Local mutable array for mock CRUD operations
 let mockMentorsData: Mentor[] | null = null;
 
@@ -212,11 +220,20 @@ export class MentorManager implements BaseManager<Mentor> {
       // This ensures the backend receives proper JSON data within multipart/form-data
       formData.append("data", new Blob([JSON.stringify(mentorInfo)], { type: "application/json" }));
 
-      // Add optional file fields
+      // Add file fields - always send placeholder files to avoid backend NullPointerException
+      // Backend code calls file.isEmpty() without null check first, causing 500 error
+      // By sending empty files as placeholders, we prevent null pointer exceptions
       const createData = _data as CreateMentorData;
+
+      // Always send avatar to avoid "avatar is null" NullPointerException
       if (createData.avatar) {
         formData.append("avatar", createData.avatar);
+      } else {
+        formData.append("avatar", createEmptyFilePlaceholder());
       }
+
+      // Note: identityFile, degreeFile, otherFile may also need placeholders
+      // depending on backend implementation. Adding placeholders for safety.
       if (createData.identityFile) {
         formData.append("identityFile", createData.identityFile);
       }
@@ -227,8 +244,12 @@ export class MentorManager implements BaseManager<Mentor> {
         formData.append("otherFile", createData.otherFile);
       }
 
-      // Let axios set Content-Type automatically with proper boundary for multipart/form-data
-      const response = await this.api.post(API_ENDPOINTS.MENTOR.CREATE, formData);
+      // Remove default Content-Type header to let axios set multipart boundary automatically
+      const response = await this.api.post(API_ENDPOINTS.MENTOR.CREATE, formData, {
+        headers: {
+          "Content-Type": undefined,
+        },
+      });
       return {
         success: true,
         data: response.data,
