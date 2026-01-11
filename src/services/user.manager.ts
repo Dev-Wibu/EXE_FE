@@ -53,7 +53,8 @@ export class UserManager {
     }
 
     try {
-      const response = await this.api.put(API_ENDPOINTS.USER.UPDATE_PROFILE, data);
+      // Note: Backend confirmed POST should be used for updates (not PUT)
+      const response = await this.api.post(API_ENDPOINTS.USER.UPDATE_PROFILE, data);
       return {
         success: true,
         data: response.data,
@@ -82,7 +83,8 @@ export class UserManager {
     }
 
     try {
-      const response = await this.api.put(API_ENDPOINTS.USER.UPDATE_PASSWORD, {
+      // Note: Backend confirmed POST should be used for updates (not PUT)
+      const response = await this.api.post(API_ENDPOINTS.USER.UPDATE_PASSWORD, {
         currentPassword,
         newPassword,
       });
@@ -137,7 +139,8 @@ export class UserManager {
     }
 
     try {
-      const response = await this.api.put(API_ENDPOINTS.USER.SETTINGS, settings);
+      // Note: Backend confirmed POST should be used for updates (not PUT)
+      const response = await this.api.post(API_ENDPOINTS.USER.SETTINGS, settings);
       return {
         success: true,
         data: response.data,

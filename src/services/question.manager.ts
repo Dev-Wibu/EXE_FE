@@ -117,7 +117,8 @@ export class QuestionManager implements BaseManager<QuestionSet> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.UPDATE, { id });
-      const response = await this.api.put(endpoint, data);
+      // Note: Backend confirmed POST should be used for updates (not PUT)
+      const response = await this.api.post(endpoint, data);
       return {
         success: true,
         data: response.data,
