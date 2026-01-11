@@ -27,6 +27,7 @@ React + Vite web application for interview practice platform with type-safe back
 - **Role separation**: USER → `(tabs)` routes, ADMIN → `/manager` routes
 - **Auth flow**: JWT stored in `authStore` → auto-injected via `lib/api.ts` middleware
 - **Fetch rule**: Prefer `$api` client from `lib/api.ts` for type-safe API calls
+- **⚠️ IMPORTANT - HTTP Methods**: Backend team confirmed that **all UPDATE operations must use POST method, NOT PUT**. Always use `api.post()` for updates in service managers, even though the schema shows `put`. This applies to all CRUD operations in `services/*.manager.ts` files.
 
 ## Architecture
 
@@ -59,6 +60,13 @@ React + Vite web application for interview practice platform with type-safe back
 
 **Rule**: Prefer using `$api` client from `lib/api.ts` for type-safe API calls.
 
+**⚠️ CRITICAL - HTTP Methods for CRUD Operations**:
+
+- **CREATE** → Use `POST` method
+- **READ** → Use `GET` method
+- **UPDATE** → Use `POST` method (**NOT PUT** - Backend team confirmation)
+- **DELETE** → Use `DELETE` or soft delete via `POST` update
+
 ```typescript
 // ✅ CORRECT: Using $api client for type-safe queries
 import { $api } from "@/lib/api";
@@ -70,12 +78,17 @@ export const useSessions = () => {
 export const useCreateSession = () => {
   return $api.useMutation("post", "/api/sessions/create-session");
 };
+
+// ✅ CORRECT: Update operations use POST (not PUT)
+export const useUpdateSession = () => {
+  return $api.useMutation("post", "/api/sessions"); // POST for updates!
+};
 ```
 
 **Cache invalidation**:
 
 ```typescript
-import { queryClient } from "@/contexts/QueryProvider";
+import { queryClient } from "@/lib/queryClient"; // Note: Import from queryClient, not QueryProvider
 
 // After mutation success
 queryClient.invalidateQueries({ queryKey: ["get", "/api/sessions"] });

@@ -5,7 +5,7 @@
   "singleQuote": false,
   "bracketSameLine": true,
   "trailingComma": "es5",
-  "endOfLine": "crlf",
+  "endOfLine": "lf",
   "tailwindAttributes": ["className"],
   "plugins": [
     "prettier-plugin-packagejson",

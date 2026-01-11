@@ -4,22 +4,6 @@
  */
 
 export interface paths {
-    "/api/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getUsers"];
-        put: operations["updateUser"];
-        post: operations["createUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/sessions": {
         parameters: {
             query?: never;
@@ -125,6 +109,7 @@ export interface paths {
         };
         get: operations["getAllMentors"];
         put: operations["updateMentor"];
+        /** dùng chung cho create và update mentor, nếu create thì ko có id còn update thì có id gửi kèm trong json data á */
         post: operations["createMentor"];
         delete?: never;
         options?: never;
@@ -155,21 +140,23 @@ export interface paths {
          *     }
          */
         put: operations["updateMentorReview"];
-        /**
-         * Json mẫu create
-         * @description {
-         *       "session": 1,
-         *       "rating": 3,
-         *       "situationNote": "string",
-         *       "taskNote": "string",
-         *       "actionNote": "string",
-         *       "resultNote": "string",
-         *       "strength": "string",
-         *       "weakness": "string",
-         *       "improve": "string"
-         *     }
-         */
         post: operations["createMentorReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mentor-feedbacks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllMentorFeedbacks"];
+        put: operations["updateMentorFeedback"];
+        post: operations["createMentorFeedback"];
         delete?: never;
         options?: never;
         head?: never;
@@ -186,6 +173,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["testFoodHash"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUsers"];
+        put?: never;
+        /** dùng chung cho create và update user, nếu create thì ko có id còn update thì có id gửi kèm trong json data á */
+        post: operations["createUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -233,6 +237,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * {
+         *       "dailyCoCreationRequest": {
+         *         "name": "",
+         *         "privacy": "public",
+         *         "properties": {
+         *           "max_participants": 2,
+         *           "start_video_off": true,
+         *           "start_audio_off": true,
+         *           "enable_screenshare": true,
+         *           "exp": 120,
+         *           "enable_recording": "cloud"
+         *         }
+         *       },
+         *       "userId": 1,
+         *       "mentorId": 1
+         *     }
+         * @description json mẫu tạo 1 session họp với mentor(privacy ,enable_recording ko cần cho chọn mà gửi ẩn là public,cloud về, name khỏi cần cho điền cứ gửi như json mẫu, còn lại thì cho người dùng chọn )
+         */
         post: operations["createSession"];
         delete?: never;
         options?: never;
@@ -640,29 +663,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mentor-feedbacks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMentorFeedbackBySessionId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mentor-feedbacks/mentor/{mentorId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllByMentor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        User: {
-            /** Format: int32 */
-            id?: number;
-            name?: string;
-            email?: string;
-            password?: string;
-            /** @enum {string} */
-            role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
-            isActive?: boolean;
-            bio?: string;
-            avatarUrl?: string;
-            public_id?: string;
-            university?: string;
-            major?: string;
-            targetPosition?: string;
-            targetLevel?: string;
-            cvUrl?: string;
-            cv_public_id?: string;
-        };
         Session: {
             /** Format: int32 */
             id?: number;
@@ -758,10 +794,9 @@ export interface components {
             totalSession?: number;
             active?: boolean;
         };
-        MentorReview: {
+        UpdateMentorReviewRequest: {
             /** Format: int32 */
             id?: number;
-            session?: components["schemas"]["Session"];
             /** Format: int32 */
             rating?: number;
             situationNote?: string;
@@ -771,6 +806,58 @@ export interface components {
             strength?: string;
             weakness?: string;
             improve?: string;
+        };
+        MentorReview: {
+            /** Format: int32 */
+            id?: number;
+            session?: components["schemas"]["Session"];
+            mentor?: components["schemas"]["Mentor"];
+            user?: components["schemas"]["User"];
+            /** Format: int32 */
+            rating?: number;
+            situationNote?: string;
+            taskNote?: string;
+            actionNote?: string;
+            resultNote?: string;
+            strength?: string;
+            weakness?: string;
+            improve?: string;
+        };
+        User: {
+            /** Format: int32 */
+            id?: number;
+            name?: string;
+            email?: string;
+            password?: string;
+            /** @enum {string} */
+            role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
+            isActive?: boolean;
+            bio?: string;
+            avatarUrl?: string;
+            public_id?: string;
+            university?: string;
+            major?: string;
+            targetPosition?: string;
+            targetLevel?: string;
+            cvUrl?: string;
+            cv_public_id?: string;
+        };
+        UpdateMentorFeedbackRequest: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            rating?: number;
+            comment?: string;
+        };
+        MentorFeedback: {
+            /** Format: int32 */
+            id?: number;
+            session?: components["schemas"]["Session"];
+            mentor?: components["schemas"]["Mentor"];
+            user?: components["schemas"]["User"];
+            /** Format: int32 */
+            rating?: number;
+            comment?: string;
         };
         UserInfo: {
             /** Format: int32 */
@@ -857,6 +944,34 @@ export interface components {
             linkedInUrl?: string;
             currentCompany?: string;
         };
+        CreateMentorReviewRequest: {
+            /** Format: int32 */
+            sessionId?: number;
+            /** Format: int32 */
+            mentorId?: number;
+            /** Format: int32 */
+            userId?: number;
+            /** Format: int32 */
+            rating?: number;
+            situationNote?: string;
+            taskNote?: string;
+            actionNote?: string;
+            resultNote?: string;
+            strength?: string;
+            weakness?: string;
+            improve?: string;
+        };
+        CreateMentorFeedbackRequest: {
+            /** Format: int32 */
+            sessionId?: number;
+            /** Format: int32 */
+            mentorId?: number;
+            /** Format: int32 */
+            userId?: number;
+            /** Format: int32 */
+            rating?: number;
+            comment?: string;
+        };
         FaceAnalysisResponse: {
             /** @enum {string} */
             status?: "TURNING_LEFT" | "TURNING_RIGHT" | "BOWING_HEAD" | "LOOKING_UP_HEAD" | "TOO_CLOSE" | "TOO_FAR" | "GLANCING_LEFT" | "GLANCING_RIGHT" | "LOOKING_UP_EYES" | "LOOKING_DOWN_EYES" | "NORMAL" | "UNKNOWN";
@@ -871,78 +986,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getUsers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["User"][];
-                };
-            };
-        };
-    };
-    updateUser: {
-        parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["User"];
-                };
-            };
-        };
-    };
-    createUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": {
-                    data: components["schemas"]["UserInfo"];
-                    /** Format: binary */
-                    avatar?: string;
-                    /** Format: binary */
-                    cvFile?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["User"];
-                };
-            };
-        };
-    };
     getSessions: {
         parameters: {
             query?: never;
@@ -1423,14 +1466,16 @@ export interface operations {
     };
     updateMentorReview: {
         parameters: {
-            query: {
-                mentorReview: components["schemas"]["MentorReview"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMentorReviewRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -1445,9 +1490,31 @@ export interface operations {
     };
     createMentorReview: {
         parameters: {
-            query: {
-                mentorReview: components["schemas"]["MentorReview"];
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMentorReviewRequest"];
             };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MentorReview"];
+                };
+            };
+        };
+    };
+    getAllMentorFeedbacks: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -1460,7 +1527,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MentorReview"];
+                    "*/*": components["schemas"]["MentorFeedback"][];
+                };
+            };
+        };
+    };
+    updateMentorFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMentorFeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MentorFeedback"];
+                };
+            };
+        };
+    };
+    createMentorFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMentorFeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MentorFeedback"];
                 };
             };
         };
@@ -1488,6 +1603,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": Record<string, never>;
+                };
+            };
+        };
+    };
+    getUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["User"][];
+                };
+            };
+        };
+    };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    data: components["schemas"]["UserInfo"];
+                    /** Format: binary */
+                    avatar?: string;
+                    /** Format: binary */
+                    cvFile?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["User"];
                 };
             };
         };
@@ -2215,6 +2380,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MentorReview"];
+                };
+            };
+        };
+    };
+    getMentorFeedbackBySessionId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MentorFeedback"];
+                };
+            };
+        };
+    };
+    getAllByMentor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mentorId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MentorFeedback"][];
                 };
             };
         };
