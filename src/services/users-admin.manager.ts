@@ -307,13 +307,17 @@ export class UsersAdminManager implements BaseManager<User> {
 
   /**
    * Update user
-   * PUT /api/users (query param: user with dot notation)
-   * According to schema: uses query parameter with User object
+   * POST /api/users (multipart/form-data with JSON data field)
+   * According to schema-from-be.d.ts: createUser operation is used for both create and update
+   * Comment in schema: "dùng chung cho create và update user, nếu create thì ko có id còn update thì có id gửi kèm trong json data á"
    *
-   * Spring Boot @ModelAttribute binding requires dot notation format:
-   * PUT /api/users?user.id=1&user.name=John&user.email=john@test.com
+   * Schema requires multipart/form-data with:
+   * - data: UserInfo (JSON) - contains id when updating
+   * - avatar?: File (optional)
+   * - cvFile?: File (optional)
    *
-   * NOT JSON string format (which causes "Failed to convert String to User" error)
+   * NOTE: UserInfo schema only contains: id, name, email, password, bio, university, major, targetPosition, targetLevel
+   * It does NOT contain: role, isActive, avatarUrl, cvUrl (these are in User schema only)
    */
   async update(_id: string | number, _data: Partial<User>): Promise<ApiResponse<User>> {
     if (this.mode === "mock") {
@@ -333,14 +337,48 @@ export class UsersAdminManager implements BaseManager<User> {
     }
 
     try {
-      // Build the user object with id included
-      const userData: Partial<User> = { ..._data, id: Number(_id) };
+      // According to schema, use multipart/form-data with JSON 'data' field (same as create)
+      const formData = new FormData();
 
-      // Send user object using dot notation in query parameters
-      // Format: PUT /api/users?user.id=1&user.name=John&user.email=john@test.com
-      const response = await this.api.put(API_ENDPOINTS.USERS.UPDATE, null, {
-        params: { user: userData },
-        paramsSerializer: serializeParams,
+      // Build UserInfo object with only fields defined in schema
+      // Note: UserInfo does NOT include role, isActive - these are read-only from backend
+      const userInfo: UserInfo = {
+        id: Number(_id), // Include id for update operation
+        name: _data.name?.trim(),
+        email: _data.email?.trim(),
+        password: _data.password,
+        bio: _data.bio,
+        university: _data.university,
+        major: _data.major,
+        targetPosition: _data.targetPosition,
+        targetLevel: _data.targetLevel,
+      };
+
+      // Append the 'data' field as a JSON Blob (same format as create)
+      formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
+
+      // Handle optional file fields
+      const updateData = _data as CreateUserData;
+
+      // Avatar file - send placeholder if not provided to avoid backend NullPointerException
+      if (updateData.avatar) {
+        formData.append("avatar", updateData.avatar);
+      } else {
+        formData.append("avatar", createEmptyFilePlaceholder());
+      }
+
+      // CV file - send placeholder if not provided to avoid backend NullPointerException
+      if (updateData.cvFile) {
+        formData.append("cvFile", updateData.cvFile);
+      } else {
+        formData.append("cvFile", createEmptyFilePlaceholder());
+      }
+
+      // Remove default Content-Type header to let axios set multipart boundary automatically
+      const response = await this.api.post(API_ENDPOINTS.USERS.UPDATE, formData, {
+        headers: {
+          "Content-Type": undefined,
+        },
       });
       return {
         success: true,
@@ -357,7 +395,13 @@ export class UsersAdminManager implements BaseManager<User> {
   /**
    * Delete user
    * Note: Backend schema does not define DELETE for /api/users
-   * This is a soft delete by setting isActive to false via PUT with dot notation
+   *
+   * IMPORTANT: Soft delete (setting isActive=false) may not work via the createUser endpoint
+   * because UserInfo schema does NOT contain isActive field.
+   * The backend may need a separate endpoint or need to extend UserInfo schema.
+   *
+   * Current implementation uses query params as workaround - may cause 500 error
+   * until backend provides proper support.
    */
   async delete(_id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -376,11 +420,11 @@ export class UsersAdminManager implements BaseManager<User> {
     }
 
     try {
-      // Backend doesn't have DELETE endpoint, use soft delete via update
-      // Send user object with isActive: false using dot notation in query parameters
-      // Format: PUT /api/users?user.id=1&user.isActive=false
+      // Backend doesn't have DELETE endpoint
+      // Try soft delete via update - but this may fail because UserInfo doesn't include isActive
+      // Using query params as workaround - backend may need to add support for this
       const userData: Partial<User> = { id: Number(_id), isActive: false };
-      await this.api.put(API_ENDPOINTS.USERS.UPDATE, null, {
+      await this.api.post(API_ENDPOINTS.USERS.UPDATE, null, {
         params: { user: userData },
         paramsSerializer: serializeParams,
       });
