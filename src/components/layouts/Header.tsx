@@ -1,6 +1,7 @@
-import { ChevronDown, Cpu } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import icon2 from "@/assets/icon2.svg";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 
@@ -10,9 +11,7 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#0047AB] to-[#007BFF] shadow-sm">
-            <Cpu className="h-6 w-6 text-white" />
-          </div>
+          <img src={icon2} alt="INBLUE AI" className="h-10 w-10" />
           <span className="text-lg font-bold tracking-tight text-[#002654] dark:text-white">
             INBLUE AI
           </span>
