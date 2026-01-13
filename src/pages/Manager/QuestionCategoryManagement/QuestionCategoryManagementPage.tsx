@@ -1,0 +1,222 @@
+import { Plus, Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { extractDataArray } from "@/lib/utils";
+import { questionCategoryManager } from "@/services";
+import { toast } from "sonner";
+
+import {
+  DeleteQuestionCategoryDialog,
+  QuestionCategoryFormDialog,
+  QuestionCategoryTable,
+} from "./components";
+import type { QuestionCategory, QuestionCategoryFormData } from "./types";
+
+export function QuestionCategoryManagementPage() {
+  const [categories, setCategories] = useState<QuestionCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<QuestionCategory | null>(null);
+  const [formData, setFormData] = useState<Partial<QuestionCategoryFormData>>({});
+
+  // Load categories using the question category manager service
+  const loadCategories = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await questionCategoryManager.getAll();
+      if (response.success) {
+        setCategories(extractDataArray<QuestionCategory>(response));
+      } else {
+        toast.error(response.error || "Failed to load question categories");
+      }
+    } catch (error) {
+      console.error("Error loading categories:", error);
+      toast.error("Failed to load question categories");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  // Filter categories based on search query
+  const filteredCategories = categories.filter((category) => {
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    return (
+      category.categoryName?.toLowerCase().includes(lowerQuery) ||
+      category.description?.toLowerCase().includes(lowerQuery)
+    );
+  });
+
+  const handleCreate = () => {
+    setFormData({});
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleEdit = (category: QuestionCategory) => {
+    setSelectedCategory(category);
+    setFormData({
+      categoryName: category.categoryName || "",
+      description: category.description,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (category: QuestionCategory) => {
+    setSelectedCategory(category);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleSubmitCreate = async () => {
+    try {
+      const response = await questionCategoryManager.create(formData);
+      if (response.success) {
+        toast.success("Question category created successfully");
+        setIsCreateDialogOpen(false);
+        loadCategories(); // Refresh the list
+      } else {
+        toast.error(response.error || "Failed to create question category");
+      }
+    } catch (error) {
+      console.error("Error creating category:", error);
+      toast.error("Failed to create question category");
+    }
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!selectedCategory?.id) return;
+
+    try {
+      const response = await questionCategoryManager.update(selectedCategory.id, formData);
+      if (response.success) {
+        toast.success("Question category updated successfully");
+        setIsEditDialogOpen(false);
+        loadCategories(); // Refresh the list
+      } else {
+        toast.error(response.error || "Failed to update question category");
+      }
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast.error("Failed to update question category");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedCategory?.id) return;
+
+    try {
+      const response = await questionCategoryManager.delete(selectedCategory.id);
+      if (response.success) {
+        toast.success("Question category deleted successfully");
+        setIsDeleteDialogOpen(false);
+        loadCategories(); // Refresh the list
+      } else {
+        toast.error(response.error || "Failed to delete question category");
+      }
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete question category");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
+          Question Category Management
+        </h1>
+        <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
+          Manage question categories for interview assessments
+        </p>
+      </div>
+
+      {/* Action Bar */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        {/* Search Input */}
+        <div className="relative w-96">
+          <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
+          <Input
+            type="text"
+            placeholder="Search categories by name or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Create Button */}
+        <Button onClick={handleCreate} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add New Category
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <QuestionCategoryTable
+          categories={filteredCategories}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+
+        {/* Empty State with Clear Search */}
+        {filteredCategories.length === 0 && searchQuery && (
+          <div className="flex justify-center pb-4">
+            <Button variant="outline" onClick={() => setSearchQuery("")}>
+              Clear Search
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Create Dialog */}
+      <QuestionCategoryFormDialog
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        formData={formData}
+        onFormChange={setFormData}
+        onSubmit={handleSubmitCreate}
+        title="Add New Question Category"
+        description="Fill in the information to create a new question category."
+        submitLabel="Create Category"
+      />
+
+      {/* Edit Dialog */}
+      <QuestionCategoryFormDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        formData={formData}
+        onFormChange={setFormData}
+        onSubmit={handleSubmitEdit}
+        title="Edit Question Category"
+        description="Update the question category information."
+        submitLabel="Save Changes"
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteQuestionCategoryDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        category={selectedCategory}
+        onConfirm={handleConfirmDelete}
+      />
+    </div>
+  );
+}

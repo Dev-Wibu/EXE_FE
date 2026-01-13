@@ -1,0 +1,76 @@
+import { Edit, Search, Trash2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import type { QuestionCategory } from "../types";
+
+interface QuestionCategoryTableProps {
+  categories: QuestionCategory[];
+  onEdit: (category: QuestionCategory) => void;
+  onDelete: (category: QuestionCategory) => void;
+}
+
+export function QuestionCategoryTable({
+  categories,
+  onEdit,
+  onDelete,
+}: QuestionCategoryTableProps) {
+  if (categories.length === 0) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-4">
+        <Search className="h-12 w-12 text-gray-400" />
+        <p className="font-['Inter'] text-lg text-gray-500">No question categories found</p>
+      </div>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-16">ID</TableHead>
+          <TableHead>Category Name</TableHead>
+          <TableHead>Description</TableHead>
+          <TableHead className="w-24 text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {categories.map((category) => (
+          <TableRow key={category.id}>
+            <TableCell className="font-medium">{category.id}</TableCell>
+            <TableCell className="font-medium">{category.categoryName}</TableCell>
+            <TableCell className="text-muted-foreground max-w-md truncate">
+              {category.description || "-"}
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(category)}
+                  className="h-8 w-8 p-0 hover:bg-blue-50">
+                  <Edit className="h-4 w-4 text-blue-600" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(category)}
+                  className="h-8 w-8 p-0 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}

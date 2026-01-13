@@ -1,0 +1,74 @@
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+import type { QuestionCategoryFormData } from "../types";
+
+interface QuestionCategoryFormDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  formData: Partial<QuestionCategoryFormData>;
+  onFormChange: (data: Partial<QuestionCategoryFormData>) => void;
+  onSubmit: () => void;
+  title: string;
+  description: string;
+  submitLabel: string;
+}
+
+export function QuestionCategoryFormDialog({
+  isOpen,
+  onOpenChange,
+  formData,
+  onFormChange,
+  onSubmit,
+  title,
+  description,
+  submitLabel,
+}: QuestionCategoryFormDialogProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div>
+            <Label htmlFor="categoryName">Category Name *</Label>
+            <Input
+              id="categoryName"
+              value={formData.categoryName || ""}
+              onChange={(e) => onFormChange({ ...formData, categoryName: e.target.value })}
+              placeholder="Enter category name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description || ""}
+              onChange={(e) => onFormChange({ ...formData, description: e.target.value })}
+              placeholder="Enter description"
+              rows={3}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={onSubmit}>{submitLabel}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
