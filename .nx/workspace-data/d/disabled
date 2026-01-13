@@ -1,0 +1,26 @@
+Error: write EPIPE
+
+Messages from the log:
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.291Z - Established a connection. Number of open connections: 1
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.291Z - Closed a connection. Number of open connections: 0
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.292Z - Established a connection. Number of open connections: 1
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.504Z - Time taken for 'Load Nx Plugin: C:\Users\PC\Desktop\EXE_FE\node_modules\.pnpm\nx@22.3.3\node_modules\nx\src\plugins\package-json' 323.5734000000001ms
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.510Z - Time taken for 'Load Nx Plugin: C:\Users\PC\Desktop\EXE_FE\node_modules\.pnpm\nx@22.3.3\node_modules\nx\src\plugins\project-json\build-nodes\project-json' 330.20079999999996ms
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.522Z - [REQUEST]: Updated workspace context based on watched changes, recomputing project graph...
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.522Z - [REQUEST]: 
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.522Z - [REQUEST]: 
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.528Z - Time taken for 'loadDefaultNxPlugins' 342.7052000000001ms
+Time for 'nx/core/project-json:createNodes' 1.1439999999999486
+Time for 'nx/js/dependencies-and-lockfile:createNodes' 100.8125
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.644Z - Started listening on: \\.\pipe\nx\C:\Users\PC\AppData\Local\Temp\83cfd02d34ce02d39113\d.sock
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.648Z - [WATCHER]: Subscribed to changes within: c:\Users\PC\Desktop\EXE_FE (native)
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.650Z - [NX-CONSOLE]: Pulling latest Nx (latest) to check console status...
+Fetching nx...
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.667Z - Closed a connection. Number of open connections: 0
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.667Z - [WATCHER]: Stopping the watcher for c:\Users\PC\Desktop\EXE_FE (sources)
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.668Z - [WATCHER]: Stopping the watcher for c:\Users\PC\Desktop\EXE_FE (outputs)
+[NX v22.3.3 Daemon Server] - 2026-01-13T23:51:43.668Z - Server stopped because: "this process is no longer the current daemon (native)"
+
+
+
+More information: c:\Users\PC\Desktop\EXE_FE\.nx\workspace-data\d\daemon.log

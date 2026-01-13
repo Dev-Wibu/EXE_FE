@@ -1,0 +1,952 @@
+{
+  "version": "6.0",
+  "nxVersion": "22.3.3",
+  "pathMappings": {
+    "@/*": [
+      "./src/*"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "exe-fe": [
+        {
+          "file": ".cursor/mcp.json",
+          "hash": "10898288588284502558"
+        },
+        {
+          "file": ".env",
+          "hash": "2873498449325320474"
+        },
+        {
+          "file": ".github/copilot-instructions.md",
+          "hash": "9462232257503794431"
+        },
+        {
+          "file": ".gitignore",
+          "hash": "11428734982598881027"
+        },
+        {
+          "file": ".prettierignore",
+          "hash": "8065679767097891997"
+        },
+        {
+          "file": ".prettierrc",
+          "hash": "13214253899154321427"
+        },
+        {
+          "file": "README.md",
+          "hash": "5335267794587467632"
+        },
+        {
+          "file": "color.md",
+          "hash": "7484697928260442483"
+        },
+        {
+          "file": "components.json",
+          "hash": "10446405576950069041"
+        },
+        {
+          "file": "cypress.config.ts",
+          "hash": "2103127525650159317"
+        },
+        {
+          "file": "cypress/e2e/homepage.cy.ts",
+          "hash": "11755027159716567353"
+        },
+        {
+          "file": "cypress/fixtures/example.json",
+          "hash": "618207074224064944"
+        },
+        {
+          "file": "cypress/support/component.ts",
+          "hash": "7738440085622103723"
+        },
+        {
+          "file": "cypress/support/e2e.ts",
+          "hash": "8407817664733122657"
+        },
+        {
+          "file": "eslint.config.js",
+          "hash": "17601310694891370094"
+        },
+        {
+          "file": "index.html",
+          "hash": "13944584521900585140"
+        },
+        {
+          "file": "nx.json",
+          "hash": "936827932433986719"
+        },
+        {
+          "file": "package-lock.json",
+          "hash": "16248874181864742236"
+        },
+        {
+          "file": "package.json",
+          "hash": "12321917195958542887"
+        },
+        {
+          "file": "pnpm-lock.yaml",
+          "hash": "7879413613336943078"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "hash": "2281451097574996958"
+        },
+        {
+          "file": "project.json",
+          "hash": "3361302824668398113"
+        },
+        {
+          "file": "public/vite.svg",
+          "hash": "16046085400642193116"
+        },
+        {
+          "file": "schema-from-be.d.ts",
+          "hash": "16392350018465165747"
+        },
+        {
+          "file": "src/App.tsx",
+          "hash": "9788593155442858594"
+        },
+        {
+          "file": "src/assets/icon.jpg",
+          "hash": "15766429101215008072"
+        },
+        {
+          "file": "src/assets/icon.svg",
+          "hash": "7583350286418709091"
+        },
+        {
+          "file": "src/assets/icon2.svg",
+          "hash": "12565603940045962543"
+        },
+        {
+          "file": "src/assets/react.svg",
+          "hash": "16069471864800376455"
+        },
+        {
+          "file": "src/components/DemoLoginButton.tsx",
+          "hash": "6092340729568030573"
+        },
+        {
+          "file": "src/components/ThemeToggle.tsx",
+          "hash": "849715378732724125"
+        },
+        {
+          "file": "src/components/layouts/AuthLayout.tsx",
+          "hash": "4152604553786420809"
+        },
+        {
+          "file": "src/components/layouts/Footer.tsx",
+          "hash": "12611283113396336964"
+        },
+        {
+          "file": "src/components/layouts/Header.tsx",
+          "hash": "17351028129274622089"
+        },
+        {
+          "file": "src/components/layouts/MainLayout.tsx",
+          "hash": "6455919175479235924"
+        },
+        {
+          "file": "src/components/layouts/Sidebar.tsx",
+          "hash": "11527619705398502412"
+        },
+        {
+          "file": "src/components/layouts/UserDashboardLayout.tsx",
+          "hash": "3812195979634119184"
+        },
+        {
+          "file": "src/components/layouts/index.ts",
+          "hash": "3906926307588270139"
+        },
+        {
+          "file": "src/components/ui/accordion.tsx",
+          "hash": "3009469664382363701"
+        },
+        {
+          "file": "src/components/ui/alert-dialog.tsx",
+          "hash": "2520163329676477247"
+        },
+        {
+          "file": "src/components/ui/alert.tsx",
+          "hash": "12190010894442712801"
+        },
+        {
+          "file": "src/components/ui/aspect-ratio.tsx",
+          "hash": "17397679441416646325"
+        },
+        {
+          "file": "src/components/ui/avatar.tsx",
+          "hash": "12198466979227851804"
+        },
+        {
+          "file": "src/components/ui/badge.tsx",
+          "hash": "11501264221091799817"
+        },
+        {
+          "file": "src/components/ui/breadcrumb.tsx",
+          "hash": "8421939069221174990"
+        },
+        {
+          "file": "src/components/ui/button-group.tsx",
+          "hash": "1415781564613938254"
+        },
+        {
+          "file": "src/components/ui/button.tsx",
+          "hash": "8588293772819708758"
+        },
+        {
+          "file": "src/components/ui/calendar.tsx",
+          "hash": "15353675728159734738"
+        },
+        {
+          "file": "src/components/ui/card.tsx",
+          "hash": "16804146913249364512"
+        },
+        {
+          "file": "src/components/ui/carousel.tsx",
+          "hash": "10619800368203824248"
+        },
+        {
+          "file": "src/components/ui/chart.tsx",
+          "hash": "4966940863290473793"
+        },
+        {
+          "file": "src/components/ui/checkbox.tsx",
+          "hash": "978646223682700228"
+        },
+        {
+          "file": "src/components/ui/collapsible.tsx",
+          "hash": "11153762199176264292"
+        },
+        {
+          "file": "src/components/ui/command.tsx",
+          "hash": "8574240943443495642"
+        },
+        {
+          "file": "src/components/ui/context-menu.tsx",
+          "hash": "17262433252311480757"
+        },
+        {
+          "file": "src/components/ui/dialog.tsx",
+          "hash": "13132919250133385564"
+        },
+        {
+          "file": "src/components/ui/drawer.tsx",
+          "hash": "15878234386504926768"
+        },
+        {
+          "file": "src/components/ui/dropdown-menu.tsx",
+          "hash": "2393682888169779291"
+        },
+        {
+          "file": "src/components/ui/empty.tsx",
+          "hash": "16372276964779776328"
+        },
+        {
+          "file": "src/components/ui/field.tsx",
+          "hash": "7944281967180958609"
+        },
+        {
+          "file": "src/components/ui/form.tsx",
+          "hash": "17736583019332676275"
+        },
+        {
+          "file": "src/components/ui/hover-card.tsx",
+          "hash": "5428048797485516806"
+        },
+        {
+          "file": "src/components/ui/input-group.tsx",
+          "hash": "13713621946320271662"
+        },
+        {
+          "file": "src/components/ui/input-otp.tsx",
+          "hash": "7204290314249677167"
+        },
+        {
+          "file": "src/components/ui/input.tsx",
+          "hash": "14635909296050657294"
+        },
+        {
+          "file": "src/components/ui/item.tsx",
+          "hash": "2744784674267263176"
+        },
+        {
+          "file": "src/components/ui/kbd.tsx",
+          "hash": "5240688187370147951"
+        },
+        {
+          "file": "src/components/ui/label.tsx",
+          "hash": "14538790431222349048"
+        },
+        {
+          "file": "src/components/ui/menubar.tsx",
+          "hash": "9344813723701137279"
+        },
+        {
+          "file": "src/components/ui/native-select.tsx",
+          "hash": "7465571095449164839"
+        },
+        {
+          "file": "src/components/ui/navigation-menu.tsx",
+          "hash": "13081928975194046134"
+        },
+        {
+          "file": "src/components/ui/pagination.tsx",
+          "hash": "3893310422592171083"
+        },
+        {
+          "file": "src/components/ui/popover.tsx",
+          "hash": "3561144613176305184"
+        },
+        {
+          "file": "src/components/ui/progress.tsx",
+          "hash": "17096225412371822705"
+        },
+        {
+          "file": "src/components/ui/radio-group.tsx",
+          "hash": "8003510241382310650"
+        },
+        {
+          "file": "src/components/ui/resizable.tsx",
+          "hash": "9265154019630290419"
+        },
+        {
+          "file": "src/components/ui/scroll-area.tsx",
+          "hash": "3820317111227495664"
+        },
+        {
+          "file": "src/components/ui/select.tsx",
+          "hash": "2331076296727557560"
+        },
+        {
+          "file": "src/components/ui/separator.tsx",
+          "hash": "7836906397075676755"
+        },
+        {
+          "file": "src/components/ui/sheet.tsx",
+          "hash": "11579072486844594345"
+        },
+        {
+          "file": "src/components/ui/sidebar.tsx",
+          "hash": "9612096650736193224"
+        },
+        {
+          "file": "src/components/ui/skeleton.tsx",
+          "hash": "3000591494574702187"
+        },
+        {
+          "file": "src/components/ui/slider.tsx",
+          "hash": "16417963725639121425"
+        },
+        {
+          "file": "src/components/ui/sonner.tsx",
+          "hash": "5785688612077782827"
+        },
+        {
+          "file": "src/components/ui/spinner.tsx",
+          "hash": "15445487774100495995"
+        },
+        {
+          "file": "src/components/ui/switch.tsx",
+          "hash": "16079167764957201715"
+        },
+        {
+          "file": "src/components/ui/table.tsx",
+          "hash": "15661109504101429065"
+        },
+        {
+          "file": "src/components/ui/tabs.tsx",
+          "hash": "967475968432121256"
+        },
+        {
+          "file": "src/components/ui/textarea.tsx",
+          "hash": "1780956966928976068"
+        },
+        {
+          "file": "src/components/ui/toggle-group.tsx",
+          "hash": "1336633702975013900"
+        },
+        {
+          "file": "src/components/ui/toggle.tsx",
+          "hash": "13611961158519991392"
+        },
+        {
+          "file": "src/components/ui/tooltip.tsx",
+          "hash": "3301445201567814329"
+        },
+        {
+          "file": "src/constants/api.config.ts",
+          "hash": "7342678910039252542"
+        },
+        {
+          "file": "src/constants/colors.ts",
+          "hash": "15216149761026686796"
+        },
+        {
+          "file": "src/contexts/QueryProvider.tsx",
+          "hash": "1492472410631399974"
+        },
+        {
+          "file": "src/contexts/index.ts",
+          "hash": "16185318182413415555"
+        },
+        {
+          "file": "src/hooks/index.ts",
+          "hash": "8255989689001719168"
+        },
+        {
+          "file": "src/hooks/use-mobile.ts",
+          "hash": "3462509458170365925"
+        },
+        {
+          "file": "src/hooks/useMutationHandler.ts",
+          "hash": "4090276570337962383"
+        },
+        {
+          "file": "src/hooks/usePagination.ts",
+          "hash": "10873344263973225932"
+        },
+        {
+          "file": "src/hooks/useSortable.ts",
+          "hash": "1707034813812942533"
+        },
+        {
+          "file": "src/index.css",
+          "hash": "8132878988158960063"
+        },
+        {
+          "file": "src/interfaces/api.types.ts",
+          "hash": "8265495914669772139"
+        },
+        {
+          "file": "src/interfaces/index.ts",
+          "hash": "15941063814495088585"
+        },
+        {
+          "file": "src/interfaces/manager.types.ts",
+          "hash": "11385020963522400040"
+        },
+        {
+          "file": "src/interfaces/schema.types.ts",
+          "hash": "5845314842421026519"
+        },
+        {
+          "file": "src/lib/api.ts",
+          "hash": "10179630101232510766"
+        },
+        {
+          "file": "src/lib/index.ts",
+          "hash": "7965428421849148899"
+        },
+        {
+          "file": "src/lib/queryClient.ts",
+          "hash": "4396529278476718253"
+        },
+        {
+          "file": "src/lib/transforms.ts",
+          "hash": "3128451215929165344"
+        },
+        {
+          "file": "src/lib/utils.ts",
+          "hash": "9032793127064754347"
+        },
+        {
+          "file": "src/main.tsx",
+          "hash": "14360542576471246290"
+        },
+        {
+          "file": "src/mocks/auth.mock.ts",
+          "hash": "3857047232989820839"
+        },
+        {
+          "file": "src/mocks/chat.mock.ts",
+          "hash": "3226654274885212203"
+        },
+        {
+          "file": "src/mocks/homepage.mock.ts",
+          "hash": "3157851801383830356"
+        },
+        {
+          "file": "src/mocks/interviews.mock.ts",
+          "hash": "12363539062401934549"
+        },
+        {
+          "file": "src/mocks/mentors.mock.ts",
+          "hash": "12184366741421421643"
+        },
+        {
+          "file": "src/mocks/overview.mock.ts",
+          "hash": "9994225341729507908"
+        },
+        {
+          "file": "src/mocks/payment.mock.ts",
+          "hash": "13112061279582823038"
+        },
+        {
+          "file": "src/mocks/questions.mock.ts",
+          "hash": "16575735166117744543"
+        },
+        {
+          "file": "src/mocks/sessions.mock.ts",
+          "hash": "10822805646445440531"
+        },
+        {
+          "file": "src/mocks/user.mock.ts",
+          "hash": "5674632978087431503"
+        },
+        {
+          "file": "src/mocks/users-admin.mock.ts",
+          "hash": "10464240231698359882"
+        },
+        {
+          "file": "src/pages/Auth/LoginPage.tsx",
+          "hash": "2976431856592804463"
+        },
+        {
+          "file": "src/pages/Auth/MentorRegisterPage.tsx",
+          "hash": "267378126063185951"
+        },
+        {
+          "file": "src/pages/Auth/SelectRolePage.tsx",
+          "hash": "8114253641031377551"
+        },
+        {
+          "file": "src/pages/Auth/SignupPage.tsx",
+          "hash": "9947841135516137732"
+        },
+        {
+          "file": "src/pages/Auth/WaitingAcceptMentorPage.tsx",
+          "hash": "1758510269175741769"
+        },
+        {
+          "file": "src/pages/Auth/index.ts",
+          "hash": "11005609226754432618"
+        },
+        {
+          "file": "src/pages/Homepage/HomePage.tsx",
+          "hash": "8126775518218212155"
+        },
+        {
+          "file": "src/pages/Homepage/index.ts",
+          "hash": "2758021283247723041"
+        },
+        {
+          "file": "src/pages/Manager/ManagerDashboard/ManagerDashboardPage.tsx",
+          "hash": "10429860197861629529"
+        },
+        {
+          "file": "src/pages/Manager/ManagerDashboard/components/ChromeTabs.tsx",
+          "hash": "17910287953168905917"
+        },
+        {
+          "file": "src/pages/Manager/ManagerDashboard/components/Sidebar.tsx",
+          "hash": "4943752068487558573"
+        },
+        {
+          "file": "src/pages/Manager/ManagerDashboard/components/index.ts",
+          "hash": "9680266221202470299"
+        },
+        {
+          "file": "src/pages/Manager/ManagerDashboard/index.ts",
+          "hash": "6680597451763967870"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/MentorManagementPage.tsx",
+          "hash": "1889968462817783384"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/components/DeleteMentorDialog.tsx",
+          "hash": "9251921953778747877"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/components/MentorFormDialog.tsx",
+          "hash": "13250804749818606035"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/components/MentorTable.tsx",
+          "hash": "6415736651123292279"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/components/index.ts",
+          "hash": "6291824714581637292"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/index.ts",
+          "hash": "9451877799956394401"
+        },
+        {
+          "file": "src/pages/Manager/MentorManagement/types.ts",
+          "hash": "16092541216213062025"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/QuestionCategoryManagementPage.tsx",
+          "hash": "6074464882389788032"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/components/DeleteQuestionCategoryDialog.tsx",
+          "hash": "13351967893573838554"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/components/QuestionCategoryFormDialog.tsx",
+          "hash": "9126316199178688285"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/components/QuestionCategoryTable.tsx",
+          "hash": "2641029105396263373"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/components/index.ts",
+          "hash": "11944648541424771171"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/index.ts",
+          "hash": "16104007476599379057"
+        },
+        {
+          "file": "src/pages/Manager/QuestionCategoryManagement/types.ts",
+          "hash": "3169619053461891268"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/QuestionMajorManagementPage.tsx",
+          "hash": "6651011321259901607"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/components/DeleteQuestionMajorDialog.tsx",
+          "hash": "10051767487017968027"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/components/QuestionMajorFormDialog.tsx",
+          "hash": "12577383186042298138"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/components/QuestionMajorTable.tsx",
+          "hash": "1198209380127338819"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/components/index.ts",
+          "hash": "5327556050293708939"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/index.ts",
+          "hash": "12236032873275064013"
+        },
+        {
+          "file": "src/pages/Manager/QuestionMajorManagement/types.ts",
+          "hash": "10722892509570713041"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/QuestionSetManagementPage.tsx",
+          "hash": "8384821575801134699"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/components/DeleteQuestionSetDialog.tsx",
+          "hash": "15672495958637322692"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/components/QuestionSetFormDialog.tsx",
+          "hash": "696365631862894181"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/components/QuestionSetTable.tsx",
+          "hash": "1762885135774409763"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/components/index.ts",
+          "hash": "1710087416992200517"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/index.ts",
+          "hash": "16514271482633893403"
+        },
+        {
+          "file": "src/pages/Manager/QuestionSetManagement/types.ts",
+          "hash": "16908084741912165539"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/SessionManagementPage.tsx",
+          "hash": "10389577406290191053"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/components/CancelSessionDialog.tsx",
+          "hash": "3821369828290102050"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/components/SessionFormDialog.tsx",
+          "hash": "14939002492303543288"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/components/SessionTable.tsx",
+          "hash": "17600305339659363331"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/components/ViewSessionDialog.tsx",
+          "hash": "18106518407884264959"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/components/index.ts",
+          "hash": "4529737509899085120"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/index.ts",
+          "hash": "5575819920577382544"
+        },
+        {
+          "file": "src/pages/Manager/SessionManagement/types.ts",
+          "hash": "11504620396615157542"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/UserManagementPage.tsx",
+          "hash": "9873921539691100376"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/components/DeleteUserDialog.tsx",
+          "hash": "14964010489676394704"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/components/UserFormDialog.tsx",
+          "hash": "18374084522116157460"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/components/UserTable.tsx",
+          "hash": "13534060936219087900"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/components/index.ts",
+          "hash": "15435512100706118582"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/index.ts",
+          "hash": "6686335715513536218"
+        },
+        {
+          "file": "src/pages/Manager/UserManagement/types.ts",
+          "hash": "7619482458904205990"
+        },
+        {
+          "file": "src/pages/Manager/index.ts",
+          "hash": "18237273312338377174"
+        },
+        {
+          "file": "src/pages/User/AIChat/AIChatConversationPage.tsx",
+          "hash": "7035878475759689284"
+        },
+        {
+          "file": "src/pages/User/AIChat/AIChatListPage.tsx",
+          "hash": "16562500257841410719"
+        },
+        {
+          "file": "src/pages/User/AIChat/index.ts",
+          "hash": "13940036575206239991"
+        },
+        {
+          "file": "src/pages/User/AIInterview/AIInterviewListPage.tsx",
+          "hash": "63313423620511145"
+        },
+        {
+          "file": "src/pages/User/AIInterview/AIInterviewPaymentPage.tsx",
+          "hash": "14490439286471258508"
+        },
+        {
+          "file": "src/pages/User/AIInterview/AIInterviewPaymentRedirectPage.tsx",
+          "hash": "18057983604207409789"
+        },
+        {
+          "file": "src/pages/User/AIInterview/AIInterviewPaymentSuccessPage.tsx",
+          "hash": "6740619557777183862"
+        },
+        {
+          "file": "src/pages/User/AIInterview/AIInterviewResultPage.tsx",
+          "hash": "15053126855715510555"
+        },
+        {
+          "file": "src/pages/User/AIInterview/AIInterviewSessionPage.tsx",
+          "hash": "1775205450384990544"
+        },
+        {
+          "file": "src/pages/User/AIInterview/index.ts",
+          "hash": "13861523976915454671"
+        },
+        {
+          "file": "src/pages/User/Account/AccountPage.tsx",
+          "hash": "9847144551794450219"
+        },
+        {
+          "file": "src/pages/User/Account/index.ts",
+          "hash": "10219033507831478679"
+        },
+        {
+          "file": "src/pages/User/MockInterview/MockInterviewConfirmPage.tsx",
+          "hash": "14757522892784919585"
+        },
+        {
+          "file": "src/pages/User/MockInterview/MockInterviewListPage.tsx",
+          "hash": "8890851210894843434"
+        },
+        {
+          "file": "src/pages/User/MockInterview/MockInterviewPaymentRedirectPage.tsx",
+          "hash": "1118942282756948873"
+        },
+        {
+          "file": "src/pages/User/MockInterview/MockInterviewPaymentSuccessPage.tsx",
+          "hash": "11308330784331534017"
+        },
+        {
+          "file": "src/pages/User/MockInterview/MockInterviewSchedulePage.tsx",
+          "hash": "15345276958379145522"
+        },
+        {
+          "file": "src/pages/User/MockInterview/MockInterviewSelectMentorPage.tsx",
+          "hash": "13652844989606574062"
+        },
+        {
+          "file": "src/pages/User/MockInterview/index.ts",
+          "hash": "11537694453813346613"
+        },
+        {
+          "file": "src/pages/User/Overview/OverviewPage.tsx",
+          "hash": "17774696120771985272"
+        },
+        {
+          "file": "src/pages/User/Overview/index.ts",
+          "hash": "18170057346869318139"
+        },
+        {
+          "file": "src/pages/User/Question/QuestionDetailPage.tsx",
+          "hash": "7495991201803657034"
+        },
+        {
+          "file": "src/pages/User/Question/QuestionListPage.tsx",
+          "hash": "8739992075837863988"
+        },
+        {
+          "file": "src/pages/User/Question/index.ts",
+          "hash": "14738593856140710836"
+        },
+        {
+          "file": "src/pages/User/index.ts",
+          "hash": "16248834018083303722"
+        },
+        {
+          "file": "src/services/auth.manager.ts",
+          "hash": "5190760078088471204"
+        },
+        {
+          "file": "src/services/chat.manager.ts",
+          "hash": "7446984850739553137"
+        },
+        {
+          "file": "src/services/index.ts",
+          "hash": "14223284168960977879"
+        },
+        {
+          "file": "src/services/interview.manager.ts",
+          "hash": "10409552237862052082"
+        },
+        {
+          "file": "src/services/mentor-feedback.manager.ts",
+          "hash": "11041600069258926648"
+        },
+        {
+          "file": "src/services/mentor-review.manager.ts",
+          "hash": "1751388247448122263"
+        },
+        {
+          "file": "src/services/mentor.manager.ts",
+          "hash": "18052066533273309118"
+        },
+        {
+          "file": "src/services/notification.manager.ts",
+          "hash": "14193428830947545441"
+        },
+        {
+          "file": "src/services/question-category.manager.test.ts",
+          "hash": "12815166970602132257"
+        },
+        {
+          "file": "src/services/question-category.manager.ts",
+          "hash": "16411866185163735853"
+        },
+        {
+          "file": "src/services/question-major.manager.ts",
+          "hash": "2361609560400877288"
+        },
+        {
+          "file": "src/services/question-set-item.manager.ts",
+          "hash": "5898775024855324081"
+        },
+        {
+          "file": "src/services/question-set.manager.ts",
+          "hash": "10221195290259203384"
+        },
+        {
+          "file": "src/services/question.manager.ts",
+          "hash": "666586267542226399"
+        },
+        {
+          "file": "src/services/session.manager.ts",
+          "hash": "16319544935089926414"
+        },
+        {
+          "file": "src/services/user.manager.ts",
+          "hash": "8403402773311339220"
+        },
+        {
+          "file": "src/services/users-admin.manager.ts",
+          "hash": "3715640397933020948"
+        },
+        {
+          "file": "src/stores/authStore.ts",
+          "hash": "578030980371418778"
+        },
+        {
+          "file": "src/stores/index.ts",
+          "hash": "15676323753256887934"
+        },
+        {
+          "file": "src/stores/themeStore.ts",
+          "hash": "11620990055151493371"
+        },
+        {
+          "file": "src/test/setup.ts",
+          "hash": "12230078146410042377"
+        },
+        {
+          "file": "tsconfig.app.json",
+          "hash": "9223124567906179525"
+        },
+        {
+          "file": "tsconfig.json",
+          "hash": "10223486499835083887"
+        },
+        {
+          "file": "tsconfig.node.json",
+          "hash": "13785301841150342753"
+        },
+        {
+          "file": "vercel.json",
+          "hash": "16785810400644696459"
+        },
+        {
+          "file": "vite.config.ts",
+          "hash": "12688151803460368759"
+        }
+      ],
+      ".vercel": [
+        {
+          "file": ".vercel/README.txt",
+          "hash": "14131471887446248118"
+        },
+        {
+          "file": ".vercel/project.json",
+          "hash": "2176943664324156558"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  },
+  "externalNodesHash": "10111814826417867258"
+}

@@ -1,5 +1,5 @@
 {
-  "name": "template-react-js-2",
+  "name": "exe-fe",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -102,6 +102,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "jsdom": "^26.1.0",
+    "nx": "^22.3.3",
     "openapi-typescript": "^7.10.1",
     "prettier": "^3.7.3",
     "prettier-plugin-organize-attributes": "^1.0.0",

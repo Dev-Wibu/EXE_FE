@@ -1,0 +1,88 @@
+{
+  "name": "exe-fe",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -b && vite build",
+        "outputPath": "dist"
+      },
+      "outputs": ["{workspaceRoot}/dist"]
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite preview"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint ."
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write ."
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest"
+      }
+    },
+    "test:run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run"
+      }
+    },
+    "test:coverage": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --coverage"
+      }
+    },
+    "generate-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "openapi-typescript https://api.kdz.asia/v3/api-docs -o ./schema-from-be.d.ts"
+      }
+    },
+    "cypress:open": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cypress open"
+      }
+    },
+    "cypress:e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cypress run --e2e"
+      }
+    },
+    "cypress:component": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cypress run --component"
+      }
+    }
+  }
+}

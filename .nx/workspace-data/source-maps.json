@@ -1,0 +1,406 @@
+{
+  ".": {
+    "root": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:private": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.0": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups.NPM Scripts.1": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageVersion": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run.executor": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run.options": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run.metadata": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run.options.script": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.cypress:run.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui.executor": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui.options": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui.metadata": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui.options.script": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui.metadata.scriptContent": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test:ui.metadata.runCommand": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "$schema": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.outputPath": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.preview.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.typecheck": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.typecheck.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.typecheck.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.typecheck.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.format.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:run": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:run.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:run.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:run.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:coverage": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:coverage.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:coverage.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test:coverage.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.generate-schema": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.generate-schema.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.generate-schema.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.generate-schema.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:open": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:open.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:open.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:open.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:e2e": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:e2e.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:e2e.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:e2e.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:component": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:component.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:component.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cypress:component.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.dev.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.dev.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.preview.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.preview.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.typecheck.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.typecheck.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.format.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  },
+  ".vercel": {
+    "root": [
+      ".vercel/project.json",
+      "nx/core/project-json"
+    ],
+    "projectId": [
+      ".vercel/project.json",
+      "nx/core/project-json"
+    ],
+    "orgId": [
+      ".vercel/project.json",
+      "nx/core/project-json"
+    ],
+    "projectName": [
+      ".vercel/project.json",
+      "nx/core/project-json"
+    ]
+  }
+}
