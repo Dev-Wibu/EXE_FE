@@ -1,0 +1,1 @@
+export { QuestionCategoryManagementPage } from "./QuestionCategoryManagementPage";
