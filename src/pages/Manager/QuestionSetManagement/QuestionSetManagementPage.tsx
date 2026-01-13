@@ -227,7 +227,7 @@ export function QuestionSetManagementPage() {
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <QuestionSetTable
-          questionSets={filteredQuestionSets}
+          questionSets={filteredQuestionSets.slice().reverse()}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />

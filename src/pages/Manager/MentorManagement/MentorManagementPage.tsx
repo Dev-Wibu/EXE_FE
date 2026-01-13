@@ -177,7 +177,11 @@ export function MentorManagementPage() {
 
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <MentorTable mentors={filteredMentors} onEdit={handleEdit} onDelete={handleDelete} />
+        <MentorTable
+          mentors={filteredMentors.slice().reverse()}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
 
         {/* Empty State with Clear Search */}
         {filteredMentors.length === 0 && searchQuery && (

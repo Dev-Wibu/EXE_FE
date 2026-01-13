@@ -170,7 +170,11 @@ export function QuestionMajorManagementPage() {
 
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <QuestionMajorTable majors={filteredMajors} onEdit={handleEdit} onDelete={handleDelete} />
+        <QuestionMajorTable
+          majors={filteredMajors.slice().reverse()}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
 
         {/* Empty State with Clear Search */}
         {filteredMajors.length === 0 && searchQuery && (

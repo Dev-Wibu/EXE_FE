@@ -216,7 +216,7 @@ export function SessionManagementPage() {
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <SessionTable
-          sessions={filteredSessions}
+          sessions={filteredSessions.slice().reverse()}
           onView={handleView}
           onEdit={handleEdit}
           onCancel={handleCancel}
