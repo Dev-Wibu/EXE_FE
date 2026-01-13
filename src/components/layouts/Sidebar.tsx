@@ -1,14 +1,7 @@
-import {
-  Bot,
-  CircleHelp,
-  Cpu,
-  LayoutDashboard,
-  LogOut,
-  MessageSquare,
-  User,
-  Users,
-} from "lucide-react";
+import { Bot, CircleHelp, LayoutDashboard, LogOut, MessageSquare, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import icon2 from "@/assets/icon2.svg";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { authManager } from "@/services/auth.manager";
@@ -75,9 +68,7 @@ export function Sidebar() {
     <aside className="flex h-screen w-72 flex-col border-r border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-6 dark:border-slate-800">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#0047AB] to-[#007BFF]">
-          <Cpu className="h-5 w-5 text-white" />
-        </div>
+        <img src={icon2} alt="INBLUE AI" className="h-9 w-9" />
         <span className="text-lg font-bold text-[#002654] dark:text-white">INBLUE AI</span>
       </div>
 

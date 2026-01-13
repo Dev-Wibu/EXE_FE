@@ -35,10 +35,10 @@ export const mockFeatures = [
   },
   {
     id: 3,
-    title: "Tích hợp với LinkedIn",
-    headline: "Thực hành từ LinkedIn",
+    title: "Mô tả công việc thông minh",
+    headline: "Thực hành từ mô tả công việc",
     description:
-      "Bắt đầu buổi phỏng vấn thử của bạn từ một bài đăng tuyển dụng trên LinkedIn. Phân tích sở thích của người phỏng vấn để điều chỉnh câu trả lời.",
+      "Bắt đầu buổi phỏng vấn thử của bạn từ bất kỳ mô tả công việc nào. AI phân tích yêu cầu công việc và tạo ra các câu hỏi phù hợp với vị trí bạn đang ứng tuyển.",
     cta: "Thử ngay",
   },
 ];

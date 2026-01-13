@@ -7,7 +7,6 @@ import {
   Code,
   Database,
   FileText,
-  Linkedin,
   Megaphone,
   MessageSquare,
   Mic,
@@ -217,23 +216,21 @@ export function HomePage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
               <span className="text-4xl font-bold text-white">{mockStats.offers}</span>
-              <span className="mt-2 text-[#A5C8F2]">Lời đề nghị</span>
+              <span className="mt-2 text-center text-[#A5C8F2]">Lời đề nghị</span>
             </div>
-            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
-              <span className="text-4xl font-bold text-white">
-                Tiết kiệm {mockStats.costSaving}
-              </span>
-              <span className="mt-2 text-[#A5C8F2]">Chi phí huấn luyện</span>
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+              <span className="text-4xl font-bold text-white">{mockStats.costSaving}</span>
+              <span className="mt-2 text-center text-[#A5C8F2]">Tiết kiệm chi phí huấn luyện</span>
             </div>
-            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
               <span className="text-4xl font-bold text-white">{mockStats.accuracy}</span>
-              <span className="mt-2 text-[#A5C8F2]">Độ chính xác AI</span>
+              <span className="mt-2 text-center text-[#A5C8F2]">Độ chính xác AI</span>
             </div>
-            <div className="flex flex-col items-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
               <span className="text-4xl font-bold text-white">{mockStats.availability}</span>
-              <span className="mt-2 text-[#A5C8F2]">Hỗ trợ khách hàng</span>
+              <span className="mt-2 text-center text-[#A5C8F2]">Hỗ trợ khách hàng</span>
             </div>
           </div>
         </div>
@@ -310,13 +307,13 @@ export function HomePage() {
               </div>
             </div>
 
-            {/* Feature 3 - LinkedIn Integration */}
+            {/* Feature 3 - Job Description Practice */}
             <div className="flex flex-col items-center gap-12 lg:flex-row">
               <div className="relative flex-1">
                 <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#66B2FF]/30 to-[#A5C8F2]/30 blur-xl dark:from-[#0047AB]/20 dark:to-[#007BFF]/20" />
                 <Card className="relative overflow-hidden dark:border-slate-700">
                   <CardContent className="flex h-80 items-center justify-center bg-gradient-to-br from-[#F0F8FF] to-[#DCEEFF] p-0 dark:from-slate-800 dark:to-slate-800/50">
-                    <Linkedin className="h-24 w-24 text-[#007BFF]" />
+                    <FileText className="h-24 w-24 text-[#0047AB] dark:text-[#66B2FF]" />
                   </CardContent>
                 </Card>
               </div>
