@@ -1,4 +1,4 @@
-import { Edit, Search, Trash2 } from "lucide-react";
+import { Edit, Power, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,8 +72,8 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             <TableCell>{user.major || "-"}</TableCell>
             <TableCell>{user.targetPosition || "-"}</TableCell>
             <TableCell>
-              <Badge variant={user.isActive ? "default" : "destructive"}>
-                {user.isActive ? "Active" : "Inactive"}
+              <Badge variant={user.isActive !== false ? "default" : "destructive"}>
+                {user.isActive !== false ? "Active" : "Inactive"}
               </Badge>
             </TableCell>
             <TableCell className="text-right">
@@ -82,15 +82,19 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(user)}
-                  className="h-8 w-8 p-0 hover:bg-blue-50">
+                  className="h-8 w-8 p-0 hover:bg-blue-50"
+                  title="Edit user">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(user)}
-                  className="h-8 w-8 p-0 hover:bg-red-50">
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  className={`h-8 w-8 p-0 ${user.isActive !== false ? "hover:bg-red-50" : "hover:bg-green-50"}`}
+                  title={user.isActive !== false ? "Deactivate user" : "Activate user"}>
+                  <Power
+                    className={`h-4 w-4 ${user.isActive !== false ? "text-red-600" : "text-green-600"}`}
+                  />
                 </Button>
               </div>
             </TableCell>
