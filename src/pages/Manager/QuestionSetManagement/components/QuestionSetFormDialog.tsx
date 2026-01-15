@@ -51,7 +51,7 @@ export function QuestionSetFormDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="questionSetName">Question Set Name *</Label>
             <Input
               id="questionSetName"
@@ -61,7 +61,7 @@ export function QuestionSetFormDialog({
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="level">Level *</Label>
               <Select
                 value={formData.level}
@@ -79,7 +79,7 @@ export function QuestionSetFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="majorId">Major</Label>
               <Select
                 value={formData.majorId?.toString()}
@@ -101,7 +101,7 @@ export function QuestionSetFormDialog({
               </Select>
             </div>
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="objective">Objective</Label>
             <Textarea
               id="objective"

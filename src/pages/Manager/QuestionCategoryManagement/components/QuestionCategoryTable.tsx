@@ -1,4 +1,4 @@
-import { Edit, Search, Trash2 } from "lucide-react";
+import { Edit, Power, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -56,15 +56,17 @@ export function QuestionCategoryTable({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(category)}
-                  className="h-8 w-8 p-0 hover:bg-blue-50">
+                  className="h-8 w-8 p-0 hover:bg-blue-50"
+                  title="Edit category">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(category)}
-                  className="h-8 w-8 p-0 hover:bg-red-50">
-                  <Trash2 className="h-4 w-4 text-red-600" />
+                  className="h-8 w-8 p-0 hover:bg-red-50"
+                  title="Deactivate category">
+                  <Power className="h-4 w-4 text-red-600" />
                 </Button>
               </div>
             </TableCell>

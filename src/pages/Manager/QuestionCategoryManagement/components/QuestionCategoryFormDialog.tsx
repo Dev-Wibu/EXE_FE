@@ -42,7 +42,7 @@ export function QuestionCategoryFormDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="categoryName">Category Name *</Label>
             <Input
               id="categoryName"
@@ -51,7 +51,7 @@ export function QuestionCategoryFormDialog({
               placeholder="Enter category name"
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"

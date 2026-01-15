@@ -42,7 +42,7 @@ export function QuestionMajorFormDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="majorName">Major Name *</Label>
             <Input
               id="majorName"
@@ -51,7 +51,7 @@ export function QuestionMajorFormDialog({
               placeholder="Enter major name"
             />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
