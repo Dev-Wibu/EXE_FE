@@ -69,6 +69,10 @@ export interface UserFormData {
   targetPosition?: string;
   targetLevel?: string;
   isActive?: boolean;
+  /** Cloudinary public_id for avatar - required for update operations */
+  public_id?: string;
+  /** Cloudinary public_id for CV - required for update operations */
+  cv_public_id?: string;
 }
 
 /**

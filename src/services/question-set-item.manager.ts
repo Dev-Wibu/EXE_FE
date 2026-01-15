@@ -302,7 +302,8 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Delete question set item
-   * DELETE /api/question-set-items/{id}
+   * POST /api/question-set-items/{id}
+   * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -321,7 +322,8 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_SET_ITEMS.DELETE, { id });
-      await this.api.delete(endpoint);
+      // Note: Backend requires POST method for delete operations (PUT/DELETE not used)
+      await this.api.post(endpoint);
       return {
         success: true,
       };

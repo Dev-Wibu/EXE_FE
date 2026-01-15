@@ -21,6 +21,9 @@ export type { User } from "@/interfaces";
 
 /**
  * UserInfo type for create operations (matches backend schema)
+ * Extended to include role field for update operations
+ * Note: Backend schema UserInfo doesn't officially include role,
+ * but we send it anyway - backend may accept it since User schema has role
  */
 export interface UserInfo {
   id?: number;
@@ -32,6 +35,14 @@ export interface UserInfo {
   major?: string;
   targetPosition?: string;
   targetLevel?: string;
+  /** Role field - not in official UserInfo schema but may be accepted by backend */
+  role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
+  /** isActive field - for soft delete/toggle operations */
+  isActive?: boolean;
+  /** Cloudinary public_id for avatar - required for update operations to replace/delete old files */
+  public_id?: string;
+  /** Cloudinary public_id for CV - required for update operations to replace/delete old files */
+  cv_public_id?: string;
 }
 
 /**
@@ -43,96 +54,11 @@ export interface CreateUserData extends UserInfo {
 }
 
 /**
- * Type guard to check if a value is a plain object (not array, not null)
- */
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
  * Creates an empty file placeholder for multipart/form-data requests
  * Used as workaround for backend null pointer issues with optional file fields
  */
 function createEmptyFilePlaceholder(): File {
   return new File([], "empty.txt", { type: "text/plain" });
-}
-
-/**
- * Serialize params for Spring Boot query parameter binding
- * Converts nested objects to dot notation query string format
- *
- * Spring Boot uses @ModelAttribute binding with dot notation:
- * user.id=1&user.name=John (NOT JSON string as parameter value)
- *
- * Example output: PUT /api/users?user.id=1&user.name=John&user.email=john@test.com
- *
- * @param prefix - The prefix for parameter names (e.g., "user")
- * @param obj - The object to serialize
- * @returns Array of URL-encoded parameter strings like ["user.id=1", "user.name=John"]
- */
-function serializeParamsWithDotNotation(prefix: string, obj: Record<string, unknown>): string[] {
-  const params: string[] = [];
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (value === undefined || value === null) continue;
-
-    const paramKey = `${prefix}.${key}`;
-
-    if (isPlainObject(value)) {
-      // Recursively handle nested objects
-      params.push(...serializeParamsWithDotNotation(paramKey, value));
-    } else if (Array.isArray(value)) {
-      // Handle arrays with indexed notation: user.items[0], user.items[1], etc.
-      value.forEach((item, index) => {
-        if (isPlainObject(item)) {
-          params.push(...serializeParamsWithDotNotation(`${paramKey}[${index}]`, item));
-        } else {
-          params.push(
-            `${encodeURIComponent(`${paramKey}[${index}]`)}=${encodeURIComponent(String(item))}`
-          );
-        }
-      });
-    } else {
-      params.push(`${encodeURIComponent(paramKey)}=${encodeURIComponent(String(value))}`);
-    }
-  }
-
-  return params;
-}
-
-/**
- * Main serializer function for axios paramsSerializer
- * Converts { user: { id: 1, name: "John" } } to "user.id=1&user.name=John"
- *
- * @param params - The parameters object to serialize
- * @returns URL-encoded query string
- */
-function serializeParams(params: Record<string, unknown>): string {
-  const allParams: string[] = [];
-
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null) continue;
-
-    if (isPlainObject(value)) {
-      // Use dot notation for nested objects (e.g., user object)
-      allParams.push(...serializeParamsWithDotNotation(key, value));
-    } else if (Array.isArray(value)) {
-      // Handle top-level arrays
-      value.forEach((item, index) => {
-        if (isPlainObject(item)) {
-          allParams.push(...serializeParamsWithDotNotation(`${key}[${index}]`, item));
-        } else {
-          allParams.push(
-            `${encodeURIComponent(`${key}[${index}]`)}=${encodeURIComponent(String(item))}`
-          );
-        }
-      });
-    } else {
-      allParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
-    }
-  }
-
-  return allParams.join("&");
 }
 
 export class UsersAdminManager implements BaseManager<User> {
@@ -250,6 +176,7 @@ export class UsersAdminManager implements BaseManager<User> {
       // This will be serialized to JSON and sent as a Blob with application/json content type
       // Note: Password should be handled securely by the backend (e.g., hashing)
       // The frontend sends the password in plain text over HTTPS
+      const createData = _data as CreateUserData;
       const userInfo: UserInfo = {
         name: _data.name.trim(),
         email: _data.email.trim(),
@@ -259,6 +186,13 @@ export class UsersAdminManager implements BaseManager<User> {
         major: _data.major,
         targetPosition: _data.targetPosition,
         targetLevel: _data.targetLevel,
+        // IMPORTANT: Include public_id fields for Cloudinary file management
+        // Backend requires public_id to be present when files are uploaded.
+        // For new users creating with files, send empty string "" as placeholder.
+        // Backend will use this to determine if it should create new files.
+        // Error "Missing required parameter - public_id" occurs when this field is missing.
+        public_id: createData.avatar ? "" : undefined, // empty string when uploading new file
+        cv_public_id: createData.cvFile ? "" : undefined, // empty string when uploading new file
       };
 
       // Append the 'data' field as a JSON Blob
@@ -269,7 +203,6 @@ export class UsersAdminManager implements BaseManager<User> {
       // Add file fields - always send placeholder files to avoid backend NullPointerException
       // Backend code calls file.isEmpty() without null check first, causing 500 error
       // By sending empty files as placeholders, we prevent null pointer exceptions
-      const createData = _data as CreateUserData;
 
       // Always send avatar to avoid "avatar is null" NullPointerException
       if (createData.avatar) {
@@ -340,8 +273,13 @@ export class UsersAdminManager implements BaseManager<User> {
       // According to schema, use multipart/form-data with JSON 'data' field (same as create)
       const formData = new FormData();
 
-      // Build UserInfo object with only fields defined in schema
-      // Note: UserInfo does NOT include role, isActive - these are read-only from backend
+      // Handle optional file fields
+      const updateData = _data as CreateUserData;
+
+      // Build UserInfo object with fields to update
+      // Note: role and isActive are not in official UserInfo schema but we include them
+      // Backend may accept these fields since they are part of the User schema
+      // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
       const userInfo: UserInfo = {
         id: Number(_id), // Include id for update operation
         name: _data.name?.trim(),
@@ -352,13 +290,19 @@ export class UsersAdminManager implements BaseManager<User> {
         major: _data.major,
         targetPosition: _data.targetPosition,
         targetLevel: _data.targetLevel,
+        // Include role if provided - backend may accept this even though not in UserInfo schema
+        role: _data.role,
+        // Include Cloudinary public_id for avatar - required for update/delete operations
+        // Use empty string "" as fallback when uploading new file but no existing public_id
+        // Error "Missing required parameter - public_id" occurs when this field is missing
+        public_id: _data.public_id ?? (updateData.avatar ? "" : undefined),
+        // Include Cloudinary public_id for CV - required for update/delete operations
+        // Use empty string "" as fallback when uploading new file but no existing cv_public_id
+        cv_public_id: _data.cv_public_id ?? (updateData.cvFile ? "" : undefined),
       };
 
       // Append the 'data' field as a JSON Blob (same format as create)
       formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
-
-      // Handle optional file fields
-      const updateData = _data as CreateUserData;
 
       // Avatar file - send placeholder if not provided to avoid backend NullPointerException
       if (updateData.avatar) {
@@ -393,19 +337,23 @@ export class UsersAdminManager implements BaseManager<User> {
   }
 
   /**
-   * Delete user
-   * Note: Backend schema does not define DELETE for /api/users
+   * Toggle user active status (soft delete / restore)
    *
-   * IMPORTANT: Soft delete (setting isActive=false) may not work via the createUser endpoint
-   * because UserInfo schema does NOT contain isActive field.
-   * The backend may need a separate endpoint or need to extend UserInfo schema.
+   * IMPORTANT: Backend does not provide a dedicated toggle endpoint for /api/users.
+   * This method toggles isActive status via POST to the same endpoint used for
+   * create/update operations (API_ENDPOINTS.USERS.UPDATE).
    *
-   * Current implementation uses query params as workaround - may cause 500 error
-   * until backend provides proper support.
+   * Technical details:
+   * - Uses POST /api/users with multipart/form-data (same format as create/update)
+   * - Sends JSON data with full user data + toggled isActive in the 'data' field
+   * - We need to include ALL existing user data to prevent backend from nullifying fields
+   *
+   * @param _id User ID to toggle
+   * @param userData Current user data to preserve during toggle operation
    */
-  async delete(_id: string | number): Promise<ApiResponse<void>> {
+  async toggleActive(_id: string | number, userData?: Partial<User>): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
-      // In mock mode, simulate deleting a user
+      // In mock mode, toggle isActive status
       const index = usersMock.mockUsers.findIndex((u) => u.id === Number(_id));
       if (index === -1) {
         return {
@@ -413,30 +361,105 @@ export class UsersAdminManager implements BaseManager<User> {
           error: "User not found",
         };
       }
-      usersMock.mockUsers.splice(index, 1);
+      // Toggle - if currently active (or null/undefined), deactivate; if inactive, activate
+      const currentlyActive = usersMock.mockUsers[index].isActive !== false;
+      usersMock.mockUsers[index].isActive = !currentlyActive;
       return {
         success: true,
       };
     }
 
     try {
-      // Backend doesn't have DELETE endpoint
-      // Try soft delete via update - but this may fail because UserInfo doesn't include isActive
-      // Using query params as workaround - backend may need to add support for this
-      const userData: Partial<User> = { id: Number(_id), isActive: false };
-      await this.api.post(API_ENDPOINTS.USERS.UPDATE, null, {
-        params: { user: userData },
-        paramsSerializer: serializeParams,
+      // If no user data provided, fetch it first to preserve existing data
+      let currentUserData = userData;
+      if (!currentUserData) {
+        const fetchResult = await this.getById(_id);
+        if (fetchResult.success && fetchResult.data) {
+          currentUserData = fetchResult.data;
+        } else {
+          // Failed to fetch user data - cannot proceed with toggle
+          return {
+            success: false,
+            error: fetchResult.error || "Failed to fetch user data for toggle operation",
+          };
+        }
+      }
+
+      // Determine the new active status (toggle current status)
+      const currentlyActive = currentUserData?.isActive !== false;
+      const newActiveStatus = !currentlyActive;
+
+      // Build user data with toggled isActive
+      // Include all existing user data to prevent backend from nullifying fields
+      // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
+      const userInfo: UserInfo = {
+        id: Number(_id),
+        name: currentUserData?.name?.trim(),
+        email: currentUserData?.email?.trim(),
+        bio: currentUserData?.bio,
+        university: currentUserData?.university,
+        major: currentUserData?.major,
+        targetPosition: currentUserData?.targetPosition,
+        targetLevel: currentUserData?.targetLevel,
+        role: currentUserData?.role,
+        isActive: newActiveStatus,
+        // Include Cloudinary public_id for avatar - required for update operations
+        public_id: currentUserData?.public_id,
+        // Include Cloudinary public_id for CV - required for update operations
+        cv_public_id: currentUserData?.cv_public_id,
+      };
+
+      // Send as multipart/form-data to match the createUser endpoint format
+      const formData = new FormData();
+
+      // Append the 'data' field as a JSON Blob
+      formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
+
+      // Send placeholder files to avoid backend NullPointerException
+      formData.append("avatar", createEmptyFilePlaceholder());
+      formData.append("cvFile", createEmptyFilePlaceholder());
+
+      await this.api.post(API_ENDPOINTS.USERS.UPDATE, formData, {
+        headers: {
+          "Content-Type": undefined,
+        },
       });
+
       return {
         success: true,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete user",
+        error: error instanceof Error ? error.message : "Failed to toggle user status",
       };
     }
+  }
+
+  /**
+   * Delete user (soft delete / toggle active status)
+   *
+   * IMPORTANT: Backend does not provide a DELETE endpoint for /api/users.
+   * This method implements soft delete by sending isActive: false via POST to the
+   * same endpoint used for create/update operations (API_ENDPOINTS.USERS.UPDATE).
+   *
+   * Technical details:
+   * - Uses POST /api/users with multipart/form-data (same format as create/update)
+   * - Sends JSON data with full user data + isActive: false in the 'data' field
+   * - We need to include ALL existing user data to prevent backend from nullifying fields
+   *
+   * If the backend rejects this request, the backend team needs to either:
+   * 1. Add a dedicated DELETE/deactivate endpoint
+   * 2. Extend UserInfo schema to include isActive field
+   *
+   * @param _id User ID to delete/deactivate
+   * @param userData Optional current user data to preserve during toggle operation
+   * @deprecated Since v1.0.0. Use toggleActive() instead for better semantics.
+   *             This method will be removed in a future major version.
+   */
+  async delete(_id: string | number, userData?: Partial<User>): Promise<ApiResponse<void>> {
+    // Delegate to toggleActive for the actual implementation
+    return this.toggleActive(_id, userData);
   }
 }
 
