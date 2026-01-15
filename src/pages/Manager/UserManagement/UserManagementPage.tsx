@@ -21,6 +21,7 @@ export function UserManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("active"); // Default to show only active users
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -51,8 +52,27 @@ export function UserManagementPage() {
     loadUsers();
   }, [loadUsers]);
 
-  // Filter users based on search query and role filter
+  // Filter users based on search query, role filter, and status filter
   const filteredUsers = users.filter((user) => {
+    // Filter by status (active/inactive/all) - default shows active only
+    // Backend can return isActive as: true (active), false (deactivated), or null/undefined (not set)
+    // - isActive === true: Explicitly active user
+    // - isActive === false: Explicitly deactivated user (soft deleted)
+    // - isActive === null/undefined: Treated as active (default state)
+    if (statusFilter === "active") {
+      // Show users that are active (true) or not explicitly set (null/undefined)
+      // Hide users that are explicitly inactive (false)
+      if (user.isActive === false) {
+        return false;
+      }
+    } else if (statusFilter === "inactive") {
+      // Show only users that are explicitly deactivated (isActive === false)
+      if (user.isActive !== false) {
+        return false;
+      }
+    }
+    // statusFilter === "all" shows everything
+
     // Filter by search query
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
@@ -89,6 +109,9 @@ export function UserManagementPage() {
       targetPosition: user.targetPosition,
       targetLevel: user.targetLevel,
       isActive: user.isActive,
+      // Include Cloudinary public_id fields for file management during update
+      public_id: user.public_id,
+      cv_public_id: user.cv_public_id,
     });
     setIsEditDialogOpen(true);
   };
@@ -136,17 +159,19 @@ export function UserManagementPage() {
     if (!selectedUser?.id) return;
 
     try {
-      const response = await usersAdminManager.delete(selectedUser.id);
+      // Toggle the user's active status (activate/deactivate)
+      const response = await usersAdminManager.toggleActive(selectedUser.id, selectedUser);
       if (response.success) {
-        toast.success("User deleted successfully");
+        const action = selectedUser.isActive !== false ? "deactivated" : "activated";
+        toast.success(`User ${action} successfully`);
         setIsDeleteDialogOpen(false);
         loadUsers(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to delete user");
+        toast.error(response.error || "Failed to change user status");
       }
     } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
+      console.error("Error changing user status:", error);
+      toast.error("Failed to change user status");
     }
   };
 
@@ -198,6 +223,18 @@ export function UserManagementPage() {
               <SelectItem value="ADMIN">Admin</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Status Filter - Default shows active users only */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active Only</SelectItem>
+              <SelectItem value="inactive">Inactive Only</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Create Button */}
@@ -216,18 +253,20 @@ export function UserManagementPage() {
         />
 
         {/* Empty State with Clear Filters */}
-        {filteredUsers.length === 0 && (searchQuery || roleFilter !== "all") && (
-          <div className="flex justify-center pb-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchQuery("");
-                setRoleFilter("all");
-              }}>
-              Clear Filters
-            </Button>
-          </div>
-        )}
+        {filteredUsers.length === 0 &&
+          (searchQuery || roleFilter !== "all" || statusFilter !== "active") && (
+            <div className="flex justify-center pb-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery("");
+                  setRoleFilter("all");
+                  setStatusFilter("active");
+                }}>
+                Clear Filters
+              </Button>
+            </div>
+          )}
       </div>
 
       {/* Create Dialog */}
@@ -252,6 +291,7 @@ export function UserManagementPage() {
         title="Edit User"
         description="Update the user information."
         submitLabel="Save Changes"
+        selectedUser={selectedUser}
       />
 
       {/* Delete Confirmation Dialog */}
