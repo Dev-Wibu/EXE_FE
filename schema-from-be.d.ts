@@ -68,22 +68,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/question-majors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllQuestionMajors"];
-        put: operations["updateQuestionMajor"];
-        post: operations["createQuestionMajor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/question-categories": {
         parameters: {
             query?: never;
@@ -157,6 +141,22 @@ export interface paths {
         get: operations["getAllMentorFeedbacks"];
         put: operations["updateMentorFeedback"];
         post: operations["createMentorFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/majors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllQuestionMajors"];
+        put: operations["updateQuestionMajor"];
+        post: operations["createQuestionMajor"];
         delete?: never;
         options?: never;
         head?: never;
@@ -567,22 +567,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/question-majors/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionMajorById"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteQuestionMajor"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/question-categories/{id}": {
         parameters: {
             query?: never;
@@ -690,6 +674,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/majors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getQuestionMajorById"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteQuestionMajor"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1234,70 +1234,6 @@ export interface operations {
             };
         };
     };
-    getAllQuestionMajors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"][];
-                };
-            };
-        };
-    };
-    updateQuestionMajor: {
-        parameters: {
-            query: {
-                major: components["schemas"]["Major"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"];
-                };
-            };
-        };
-    };
-    createQuestionMajor: {
-        parameters: {
-            query: {
-                major: components["schemas"]["Major"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"];
-                };
-            };
-        };
-    };
     findAll: {
         parameters: {
             query?: never;
@@ -1576,6 +1512,70 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MentorFeedback"];
+                };
+            };
+        };
+    };
+    getAllQuestionMajors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Major"][];
+                };
+            };
+        };
+    };
+    updateQuestionMajor: {
+        parameters: {
+            query: {
+                major: components["schemas"]["Major"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Major"];
+                };
+            };
+        };
+    };
+    createQuestionMajor: {
+        parameters: {
+            query: {
+                major: components["schemas"]["Major"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Major"];
                 };
             };
         };
@@ -2210,50 +2210,6 @@ export interface operations {
             };
         };
     };
-    getQuestionMajorById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"];
-                };
-            };
-        };
-    };
-    deleteQuestionMajor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": boolean;
-                };
-            };
-        };
-    };
     findById: {
         parameters: {
             query?: never;
@@ -2424,6 +2380,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MentorFeedback"][];
+                };
+            };
+        };
+    };
+    getQuestionMajorById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Major"];
+                };
+            };
+        };
+    };
+    deleteQuestionMajor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": boolean;
                 };
             };
         };

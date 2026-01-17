@@ -74,6 +74,7 @@ export const API_ENDPOINTS = {
     CREATE: "/api/ai-interviews",
     RESULT: "/api/ai-interviews/:id/result",
     PAYMENT: "/api/ai-interviews/payment",
+    FACE_ANALYSIS: "/api/interview-analysis/face-behavior",
   },
 
   // Mock Interview endpoints
@@ -101,18 +102,25 @@ export const API_ENDPOINTS = {
   // PUT /api/questions - updateQuestion (JSON body)
   // GET /api/questions/{id} - getQuestionById
   // DELETE /api/questions/{id} - deleteQuestion
+  // GET /api/questions/random-by-level - getRandomQuestionsByLevel
+  // GET /api/questions/by-category-level - getQuestionsByCategoryAndLevel
+  // POST /api/questions/save-all - createQuestionList
   QUESTION: {
     LIST: "/api/questions",
     DETAIL: "/api/questions/:id",
     CREATE: "/api/questions",
     UPDATE: "/api/questions",
     DELETE: "/api/questions/:id",
+    RANDOM_BY_LEVEL: "/api/questions/random-by-level",
+    BY_CATEGORY_LEVEL: "/api/questions/by-category-level",
+    SAVE_ALL: "/api/questions/save-all",
   },
 
   // Session endpoints (for admin management) - Based on schema-from-be.d.ts
   // GET /api/sessions - getSessions
   // PUT /api/sessions - updateSession (JSON body)
   // POST /api/sessions/create-session - createSession (JSON body with SessionCreationRequest)
+  // POST /api/sessions/join-session - saveJoinRecord
   // GET /api/sessions/{id} - getSession
   // GET /api/sessions/{userId}/by-user - getSessionsByUserId
   SESSIONS: {
@@ -121,6 +129,7 @@ export const API_ENDPOINTS = {
     CREATE: "/api/sessions/create-session",
     UPDATE: "/api/sessions",
     BY_USER: "/api/sessions/:userId/by-user",
+    JOIN: "/api/sessions/join-session",
   },
 
   // Question Sets endpoints - Based on schema-from-be.d.ts
@@ -143,12 +152,15 @@ export const API_ENDPOINTS = {
   },
 
   // Question Majors endpoints - Based on schema-from-be.d.ts
+  // NOTE: Schema defines these as /api/majors (not /api/question-majors)
+  // The object key remains QUESTION_MAJORS for consistency with the service manager naming,
+  // but the actual URLs use /api/majors as per the backend schema definition
   QUESTION_MAJORS: {
-    LIST: "/api/question-majors",
-    DETAIL: "/api/question-majors/:id",
-    CREATE: "/api/question-majors",
-    UPDATE: "/api/question-majors",
-    DELETE: "/api/question-majors/:id",
+    LIST: "/api/majors",
+    DETAIL: "/api/majors/:id",
+    CREATE: "/api/majors",
+    UPDATE: "/api/majors",
+    DELETE: "/api/majors/:id",
   },
 
   // Question Set Items endpoints - Based on schema-from-be.d.ts
