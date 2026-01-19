@@ -155,8 +155,8 @@ export function MentorManagementPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="font-['Inter'] text-lg text-gray-500">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
       </div>
     );
   }
