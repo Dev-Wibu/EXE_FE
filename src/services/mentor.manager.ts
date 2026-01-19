@@ -205,6 +205,9 @@ export class MentorManager implements BaseManager<Mentor> {
       // Prepare MentorInfo data (JSON object)
       // Note: Password should be handled securely by the backend (e.g., hashing)
       // The frontend sends the password in plain text over HTTPS
+      // IMPORTANT: Backend comment says POST /api/mentors is shared for create & update
+      // When creating, don't include id. When updating, include id.
+      // Adding 'active: true' to ensure new mentors are active by default
       const mentorInfo: MentorInfo = {
         name: _data.name.trim(),
         email: _data.email.trim(),
@@ -216,9 +219,19 @@ export class MentorManager implements BaseManager<Mentor> {
         currentCompany: _data.currentCompany,
       };
 
+      // Add active field to the payload to ensure new mentors are active
+      // Note: This extends MentorInfo with the active field from Mentor schema
+      const mentorPayload = {
+        ...mentorInfo,
+        active: (_data as Partial<Mentor>).active !== false, // Default true unless explicitly false
+      };
+
       // Append the 'data' field as a Blob with application/json content type
       // This ensures the backend receives proper JSON data within multipart/form-data
-      formData.append("data", new Blob([JSON.stringify(mentorInfo)], { type: "application/json" }));
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(mentorPayload)], { type: "application/json" })
+      );
 
       // Add file fields - always send placeholder files to avoid backend NullPointerException
       // Backend code calls file.isEmpty() without null check first, causing 500 error
@@ -232,16 +245,22 @@ export class MentorManager implements BaseManager<Mentor> {
         formData.append("avatar", createEmptyFilePlaceholder());
       }
 
-      // Note: identityFile, degreeFile, otherFile may also need placeholders
-      // depending on backend implementation. Adding placeholders for safety.
+      // Send placeholder files for all optional file fields to avoid backend NullPointerException
+      // Backend calls file.getOriginalFilename() without null check, causing 500 error
       if (createData.identityFile) {
         formData.append("identityFile", createData.identityFile);
+      } else {
+        formData.append("identityFile", createEmptyFilePlaceholder());
       }
       if (createData.degreeFile) {
         formData.append("degreeFile", createData.degreeFile);
+      } else {
+        formData.append("degreeFile", createEmptyFilePlaceholder());
       }
       if (createData.otherFile) {
         formData.append("otherFile", createData.otherFile);
+      } else {
+        formData.append("otherFile", createEmptyFilePlaceholder());
       }
 
       // Remove default Content-Type header to let axios set multipart boundary automatically
