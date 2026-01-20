@@ -28,22 +28,24 @@ export interface LoginCredentials {
 export interface SignupData {
   fullName: string;
   email: string;
-  phone: string;
-  birthday: string;
   password: string;
+  university: string;
+  major: string;
 }
 
 export interface MentorRegisterData {
   fullName: string;
   email: string;
-  phone: string;
+  password: string;
+  bio?: string;
   yearsOfExperience: string;
-  company: string;
-  position: string;
   expertise: string;
-  cvFile?: File;
-  certificateFile?: File;
-  idCardFile?: File;
+  linkedInUrl?: string;
+  currentCompany: string;
+  avatar?: File;
+  identityFile?: File;
+  degreeFile?: File;
+  otherFile?: File;
 }
 
 export class AuthManager {
@@ -57,8 +59,18 @@ export class AuthManager {
   private isDemoAccount(email: string, password: string): boolean {
     return (
       (email === "user@example.com" && password === "user123") ||
-      (email === "admin@example.com" && password === "admin123")
+      (email === "admin@example.com" && password === "admin123") ||
+      (email === "mentor@example.com" && password === "mentor123")
     );
+  }
+
+  /**
+   * Get demo user role based on email
+   */
+  private getDemoUserRole(email: string): "admin" | "user" | "mentor" {
+    if (email === "admin@example.com") return "admin";
+    if (email === "mentor@example.com") return "mentor";
+    return "user";
   }
 
   /**
@@ -71,11 +83,12 @@ export class AuthManager {
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token?: string }>> {
     // Demo account exception - works in both mock and api modes
     if (this.isDemoAccount(credentials.email, credentials.password)) {
+      const role = this.getDemoUserRole(credentials.email);
       const demoUser: User = {
-        id: credentials.email === "admin@example.com" ? "demo-admin" : "demo-user",
+        id: `demo-${role}`,
         email: credentials.email,
-        fullName: credentials.email === "admin@example.com" ? "Demo Admin" : "Demo User",
-        role: credentials.email === "admin@example.com" ? "admin" : "user",
+        fullName: role === "admin" ? "Demo Admin" : role === "mentor" ? "Demo Mentor" : "Demo User",
+        role: role,
         avatar: undefined,
         phone: "",
         bio: "Demo account for testing",
@@ -164,6 +177,16 @@ export class AuthManager {
    * - First checks if email already exists in /api/users
    * - Creates new user via POST /api/users using multipart/form-data (same as users-admin.manager.ts)
    * - TODO: Replace with proper /auth/signup endpoint when available
+   *
+   * Updated (2026-01-20): Registration no longer requires avatar or CV upload
+   * New JSON format:
+   * {
+   *   "name": "Nguyen Van A",
+   *   "email": "nguyenvana@example.com",
+   *   "password": "Password123!",
+   *   "university": "Hanoi University of Science and Technology",
+   *   "major": "Computer Science"
+   * }
    */
   async signup(data: SignupData): Promise<ApiResponse<{ user: User; token?: string }>> {
     if (this.mode === "mock") {
@@ -196,15 +219,13 @@ export class AuthManager {
       const formData = new FormData();
 
       // Prepare UserInfo data object - will be serialized to JSON
+      // Updated: Registration no longer requires avatar/CV upload (2026-01-20)
       const userInfo = {
         name: data.fullName.trim(),
         email: data.email.trim(),
         password: data.password, // TEMPORARY - insecure, for development only
-        role: "USER",
-        isActive: true,
-        // Include empty public_id fields for Cloudinary
-        public_id: "",
-        cv_public_id: "",
+        university: data.university?.trim() || "",
+        major: data.major?.trim() || "",
       };
 
       // Append the 'data' field as a JSON Blob (required by backend)
@@ -230,7 +251,6 @@ export class AuthManager {
         email: backendUser.email || "",
         fullName: backendUser.name || "",
         role: "user",
-        phone: "",
       };
 
       return {
