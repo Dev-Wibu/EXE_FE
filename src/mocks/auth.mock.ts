@@ -1,11 +1,12 @@
 // Mock data for authentication
+// Updated: Removed phone, added university/major per BE requirement (2026-01-20)
 export interface User {
   id: string;
   email: string;
   fullName: string;
-  phone: string;
   role: "user" | "mentor" | "admin";
-  avatar: string | null;
+  avatar?: string | null;
+  bio?: string;
 }
 
 export interface MentorRegistration {
@@ -18,7 +19,6 @@ export const mockUser: User = {
   id: "1",
   email: "user@example.com",
   fullName: "Nguyễn Văn A",
-  phone: "0912345678",
   role: "user",
   avatar: null,
 };
@@ -27,7 +27,6 @@ export const mockAdmin: User = {
   id: "2",
   email: "admin@example.com",
   fullName: "Admin",
-  phone: "0987654321",
   role: "admin",
   avatar: null,
 };
@@ -61,20 +60,24 @@ export const mockLogin = async (
 };
 
 // Mock signup function
+// Updated: New registration format with university/major (2026-01-20)
 export const mockSignup = async (data: {
   fullName: string;
   email: string;
-  phone: string;
-  birthday: string;
   password: string;
+  university: string;
+  major: string;
 }): Promise<{ success: boolean; user?: User; error?: string }> => {
   await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
+
+  // Use data to create new user
+  void data.university; // University is stored in backend
+  void data.major; // Major is stored in backend
 
   const newUser: User = {
     id: Date.now().toString(),
     email: data.email,
     fullName: data.fullName,
-    phone: data.phone,
     role: "user",
     avatar: null,
   };

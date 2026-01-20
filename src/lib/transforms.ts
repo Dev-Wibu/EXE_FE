@@ -1,6 +1,7 @@
 /**
  * Transform functions for converting between frontend forms and backend API formats
  * Based on schema-from-be.d.ts types
+ * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
  */
 
 import type { Mentor, Session, User, UserRole } from "@/interfaces/schema.types";
@@ -12,11 +13,8 @@ export interface UserCreateFormData {
   email: string;
   password?: string;
   role?: UserRole;
-  bio?: string;
   university?: string;
   major?: string;
-  targetPosition?: string;
-  targetLevel?: string;
 }
 
 /**
@@ -26,11 +24,8 @@ export const transformUserCreateRequest = (formData: UserCreateFormData) => ({
   name: formData.name?.trim(),
   email: formData.email?.trim(),
   password: formData.password?.trim(),
-  bio: formData.bio?.trim(),
   university: formData.university?.trim(),
   major: formData.major?.trim(),
-  targetPosition: formData.targetPosition?.trim(),
-  targetLevel: formData.targetLevel?.trim(),
 });
 
 /**
@@ -46,11 +41,8 @@ export const transformUserUpdateRequest = (
   name: formData.name?.trim() || existingUser?.name,
   email: formData.email?.trim() || existingUser?.email,
   role: formData.role || existingUser?.role,
-  bio: formData.bio?.trim() || existingUser?.bio,
   university: formData.university?.trim() || existingUser?.university,
   major: formData.major?.trim() || existingUser?.major,
-  targetPosition: formData.targetPosition?.trim() || existingUser?.targetPosition,
-  targetLevel: formData.targetLevel?.trim() || existingUser?.targetLevel,
 });
 
 // ==================== Mentor Transforms ====================

@@ -10,6 +10,7 @@ export type UserRole = "MENTOR" | "ADMIN" | "STAFF" | "USER";
 
 /**
  * User type based on backend schema
+ * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
  */
 export interface User {
   id?: number;
@@ -18,13 +19,10 @@ export interface User {
   password?: string;
   role?: UserRole;
   isActive?: boolean;
-  bio?: string;
   avatarUrl?: string;
   public_id?: string;
   university?: string;
   major?: string;
-  targetPosition?: string;
-  targetLevel?: string;
   cvUrl?: string;
   cv_public_id?: string;
 }
@@ -58,16 +56,14 @@ export interface Mentor {
 
 /**
  * User form data for create/update operations
+ * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
  */
 export interface UserFormData {
   name: string;
   email: string;
   role: UserRole;
-  bio?: string;
   university?: string;
   major?: string;
-  targetPosition?: string;
-  targetLevel?: string;
   isActive?: boolean;
   /** Cloudinary public_id for avatar - required for update operations */
   public_id?: string;

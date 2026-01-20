@@ -1,5 +1,6 @@
 /**
  * Mock data for users admin management
+ * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
  */
 
 import type { User } from "@/interfaces";
@@ -11,11 +12,8 @@ export const mockUsers: User[] = [
     email: "alice.johnson@example.com",
     role: "USER",
     isActive: true,
-    bio: "Software engineering student",
     university: "FPT University",
     major: "Software Engineering",
-    targetPosition: "Backend Developer",
-    targetLevel: "Junior",
   },
   {
     id: 2,
@@ -23,11 +21,8 @@ export const mockUsers: User[] = [
     email: "bob.wilson@example.com",
     role: "USER",
     isActive: true,
-    bio: "Recent graduate looking for opportunities",
     university: "HCMC University of Technology",
     major: "Computer Science",
-    targetPosition: "Full-stack Developer",
-    targetLevel: "Fresher",
   },
   {
     id: 3,
@@ -35,7 +30,6 @@ export const mockUsers: User[] = [
     email: "admin@example.com",
     role: "ADMIN",
     isActive: true,
-    bio: "System administrator",
   },
   {
     id: 4,
@@ -43,7 +37,6 @@ export const mockUsers: User[] = [
     email: "staff@example.com",
     role: "STAFF",
     isActive: true,
-    bio: "Support staff member",
   },
 ];
 
