@@ -33,9 +33,9 @@ const formatDuration = (seconds?: number) => {
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   if (hours > 0) {
-    return `${hours}h ${minutes}m ${secs}s`;
+    return `${hours}g ${minutes}p ${secs}s`;
   }
-  return `${minutes}m ${secs}s`;
+  return `${minutes}p ${secs}s`;
 };
 
 const getStatusBadgeVariant = (
@@ -62,22 +62,22 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Session Details</DialogTitle>
-          <DialogDescription>Detailed information about this session</DialogDescription>
+          <DialogTitle>Chi Tiết Buổi Học</DialogTitle>
+          <DialogDescription>Thông tin chi tiết về buổi học này</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-500">Session ID</p>
+              <p className="text-sm font-medium text-gray-500">ID Buổi học</p>
               <p className="text-sm">{session.id}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Status</p>
+              <p className="text-sm font-medium text-gray-500">Trạng thái</p>
               <Badge variant={getStatusBadgeVariant(session.status)}>{session.status}</Badge>
             </div>
             <div className="col-span-2">
-              <p className="text-sm font-medium text-gray-500">Room Name</p>
+              <p className="text-sm font-medium text-gray-500">Tên phòng</p>
               <p className="text-sm">{session.roomName || "-"}</p>
             </div>
           </div>
@@ -86,26 +86,26 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
 
           {/* Participant 1 (User) */}
           <div>
-            <h4 className="mb-2 text-sm font-semibold">User Information</h4>
+            <h4 className="mb-2 text-sm font-semibold">Thông Tin Người Dùng</h4>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">User ID</p>
+                <p className="text-sm font-medium text-gray-500">ID Người dùng</p>
                 <p className="text-sm">{session.userId || "-"}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Participant ID</p>
+                <p className="text-sm font-medium text-gray-500">ID Người tham gia</p>
                 <p className="text-sm">{session.participantId1 || "-"}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Start Time</p>
+                <p className="text-sm font-medium text-gray-500">Thời gian bắt đầu</p>
                 <p className="text-sm">{formatDateTime(session.startTime1)}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">End Time</p>
+                <p className="text-sm font-medium text-gray-500">Thời gian kết thúc</p>
                 <p className="text-sm">{formatDateTime(session.endTime1)}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm font-medium text-gray-500">Duration</p>
+                <p className="text-sm font-medium text-gray-500">Thời lượng</p>
                 <p className="text-sm">{formatDuration(session.durationSeconds1)}</p>
               </div>
             </div>
@@ -115,26 +115,26 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
 
           {/* Participant 2 (Mentor) */}
           <div>
-            <h4 className="mb-2 text-sm font-semibold">Mentor Information</h4>
+            <h4 className="mb-2 text-sm font-semibold">Thông Tin Mentor</h4>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Mentor ID</p>
+                <p className="text-sm font-medium text-gray-500">ID Mentor</p>
                 <p className="text-sm">{session.userId2 || "-"}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Participant ID</p>
+                <p className="text-sm font-medium text-gray-500">ID Người tham gia</p>
                 <p className="text-sm">{session.participantId2 || "-"}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Start Time</p>
+                <p className="text-sm font-medium text-gray-500">Thời gian bắt đầu</p>
                 <p className="text-sm">{formatDateTime(session.startTime2)}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">End Time</p>
+                <p className="text-sm font-medium text-gray-500">Thời gian kết thúc</p>
                 <p className="text-sm">{formatDateTime(session.endTime2)}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm font-medium text-gray-500">Duration</p>
+                <p className="text-sm font-medium text-gray-500">Thời lượng</p>
                 <p className="text-sm">{formatDuration(session.durationSeconds2)}</p>
               </div>
             </div>
@@ -144,10 +144,10 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
 
           {/* URLs */}
           <div>
-            <h4 className="mb-2 text-sm font-semibold">Session Links</h4>
+            <h4 className="mb-2 text-sm font-semibold">Liên Kết Buổi Học</h4>
             <div className="space-y-2">
               <div>
-                <p className="text-sm font-medium text-gray-500">Room URL</p>
+                <p className="text-sm font-medium text-gray-500">URL Phòng</p>
                 {session.roomUrl ? (
                   <a
                     href={session.roomUrl}
@@ -161,7 +161,7 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Recording URL</p>
+                <p className="text-sm font-medium text-gray-500">URL Bản ghi</p>
                 {session.recordUrl ? (
                   <a
                     href={session.recordUrl}
@@ -179,7 +179,7 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Đóng
           </Button>
         </DialogFooter>
       </DialogContent>

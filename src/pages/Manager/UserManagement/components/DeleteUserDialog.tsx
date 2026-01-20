@@ -20,21 +20,21 @@ interface DeleteUserDialogProps {
 
 export function DeleteUserDialog({ isOpen, onOpenChange, user, onConfirm }: DeleteUserDialogProps) {
   const isCurrentlyActive = user?.isActive !== false;
-  const actionTitle = isCurrentlyActive ? "Deactivate" : "Activate";
+  const actionTitle = isCurrentlyActive ? "Vô hiệu hóa" : "Kích hoạt";
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{actionTitle} User</AlertDialogTitle>
+          <AlertDialogTitle>{actionTitle} Người Dùng</AlertDialogTitle>
           <AlertDialogDescription>
             {isCurrentlyActive
-              ? `Are you sure you want to deactivate user "${user?.name}"? The user will no longer be able to access the system.`
-              : `Are you sure you want to activate user "${user?.name}"? The user will regain access to the system.`}
+              ? `Bạn có chắc chắn muốn vô hiệu hóa người dùng "${user?.name}"? Người dùng sẽ không thể truy cập hệ thống nữa.`
+              : `Bạn có chắc chắn muốn kích hoạt người dùng "${user?.name}"? Người dùng sẽ có thể truy cập hệ thống trở lại.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Hủy</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className={

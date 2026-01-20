@@ -38,11 +38,11 @@ export function UserManagementPage() {
         const userData = Array.isArray(response.data) ? response.data : response.data.data;
         setUsers(userData as User[]);
       } else {
-        toast.error(response.error || "Failed to load users");
+        toast.error(response.error || "Không thể tải danh sách người dùng");
       }
     } catch (error) {
       console.error("Error loading users:", error);
-      toast.error("Failed to load users");
+      toast.error("Không thể tải danh sách người dùng");
     } finally {
       setLoading(false);
     }
@@ -103,11 +103,8 @@ export function UserManagementPage() {
       name: user.name || "",
       email: user.email || "",
       role: user.role || "USER",
-      bio: user.bio,
       university: user.university,
       major: user.major,
-      targetPosition: user.targetPosition,
-      targetLevel: user.targetLevel,
       isActive: user.isActive,
       // Include Cloudinary public_id fields for file management during update
       public_id: user.public_id,
@@ -125,15 +122,15 @@ export function UserManagementPage() {
     try {
       const response = await usersAdminManager.create(formData);
       if (response.success) {
-        toast.success("User created successfully");
+        toast.success("Đã tạo người dùng thành công");
         setIsCreateDialogOpen(false);
         loadUsers(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to create user");
+        toast.error(response.error || "Không thể tạo người dùng");
       }
     } catch (error) {
       console.error("Error creating user:", error);
-      toast.error("Failed to create user");
+      toast.error("Không thể tạo người dùng");
     }
   };
 
@@ -151,15 +148,15 @@ export function UserManagementPage() {
       // Call update with separate file parameters for clarity
       const response = await usersAdminManager.update(selectedUser.id, userData, avatar, cvFile);
       if (response.success) {
-        toast.success("User updated successfully");
+        toast.success("Đã cập nhật người dùng thành công");
         setIsEditDialogOpen(false);
         loadUsers(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to update user");
+        toast.error(response.error || "Không thể cập nhật người dùng");
       }
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      toast.error("Không thể cập nhật người dùng");
     }
   };
 
@@ -170,23 +167,23 @@ export function UserManagementPage() {
       // Toggle the user's active status (activate/deactivate)
       const response = await usersAdminManager.toggleActive(selectedUser.id, selectedUser);
       if (response.success) {
-        const action = selectedUser.isActive !== false ? "deactivated" : "activated";
-        toast.success(`User ${action} successfully`);
+        const action = selectedUser.isActive !== false ? "đã vô hiệu hóa" : "đã kích hoạt";
+        toast.success(`Người dùng ${action} thành công`);
         setIsDeleteDialogOpen(false);
         loadUsers(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to change user status");
+        toast.error(response.error || "Không thể thay đổi trạng thái người dùng");
       }
     } catch (error) {
       console.error("Error changing user status:", error);
-      toast.error("Failed to change user status");
+      toast.error("Không thể thay đổi trạng thái người dùng");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
       </div>
     );
   }
@@ -196,10 +193,10 @@ export function UserManagementPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-          User Management
+          Quản Lý Người Dùng
         </h1>
         <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
-          Manage user accounts, roles, and permissions
+          Quản lý tài khoản, vai trò và quyền hạn người dùng
         </p>
       </div>
 
@@ -211,7 +208,7 @@ export function UserManagementPage() {
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
-              placeholder="Search users by name, email, university..."
+              placeholder="Tìm kiếm theo tên, email, trường đại học..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -221,26 +218,26 @@ export function UserManagementPage() {
           {/* Role Filter */}
           <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by role" />
+              <SelectValue placeholder="Lọc theo vai trò" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="USER">User</SelectItem>
+              <SelectItem value="all">Tất cả vai trò</SelectItem>
+              <SelectItem value="USER">Người dùng</SelectItem>
               <SelectItem value="MENTOR">Mentor</SelectItem>
-              <SelectItem value="STAFF">Staff</SelectItem>
-              <SelectItem value="ADMIN">Admin</SelectItem>
+              <SelectItem value="STAFF">Nhân viên</SelectItem>
+              <SelectItem value="ADMIN">Quản trị viên</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Status Filter - Default shows active users only */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active Only</SelectItem>
-              <SelectItem value="inactive">Inactive Only</SelectItem>
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Đang hoạt động</SelectItem>
+              <SelectItem value="inactive">Ngưng hoạt động</SelectItem>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -248,7 +245,7 @@ export function UserManagementPage() {
         {/* Create Button */}
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add New User
+          Thêm Người Dùng
         </Button>
       </div>
 
@@ -271,7 +268,7 @@ export function UserManagementPage() {
                   setRoleFilter("all");
                   setStatusFilter("active");
                 }}>
-                Clear Filters
+                Xóa bộ lọc
               </Button>
             </div>
           )}
@@ -284,9 +281,9 @@ export function UserManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitCreate}
-        title="Add New User"
-        description="Fill in the information to create a new user account."
-        submitLabel="Create User"
+        title="Thêm Người Dùng Mới"
+        description="Điền thông tin để tạo tài khoản người dùng mới."
+        submitLabel="Tạo người dùng"
       />
 
       {/* Edit Dialog */}
@@ -296,9 +293,9 @@ export function UserManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitEdit}
-        title="Edit User"
-        description="Update the user information."
-        submitLabel="Save Changes"
+        title="Chỉnh Sửa Người Dùng"
+        description="Cập nhật thông tin người dùng."
+        submitLabel="Lưu thay đổi"
         selectedUser={selectedUser}
       />
 

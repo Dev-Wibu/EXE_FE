@@ -37,11 +37,11 @@ export function MentorManagementPage() {
         const mentorData = Array.isArray(response.data) ? response.data : response.data.data;
         setMentors(mentorData as Mentor[]);
       } else {
-        toast.error(response.error || "Failed to load mentors");
+        toast.error(response.error || "Không thể tải danh sách mentor");
       }
     } catch (error) {
       console.error("Error loading mentors:", error);
-      toast.error("Failed to load mentors");
+      toast.error("Không thể tải danh sách mentor");
     } finally {
       setLoading(false);
     }
@@ -104,15 +104,15 @@ export function MentorManagementPage() {
     try {
       const response = await mentorManager.create(formData);
       if (response.success) {
-        toast.success("Mentor created successfully");
+        toast.success("Đã tạo mentor thành công");
         setIsCreateDialogOpen(false);
         loadMentors(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to create mentor");
+        toast.error(response.error || "Không thể tạo mentor");
       }
     } catch (error) {
       console.error("Error creating mentor:", error);
-      toast.error("Failed to create mentor");
+      toast.error("Không thể tạo mentor");
     }
   };
 
@@ -123,15 +123,15 @@ export function MentorManagementPage() {
       console.log("Updating mentor with formData:", formData);
       const response = await mentorManager.update(selectedMentor.id, formData);
       if (response.success) {
-        toast.success("Mentor updated successfully");
+        toast.success("Đã cập nhật mentor thành công");
         setIsEditDialogOpen(false);
         loadMentors(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to update mentor");
+        toast.error(response.error || "Không thể cập nhật mentor");
       }
     } catch (error) {
       console.error("Error updating mentor:", error);
-      toast.error("Failed to update mentor");
+      toast.error("Không thể cập nhật mentor");
     }
   };
 
@@ -141,22 +141,22 @@ export function MentorManagementPage() {
     try {
       const response = await mentorManager.delete(selectedMentor.id);
       if (response.success) {
-        toast.success("Mentor deleted successfully");
+        toast.success("Đã xóa mentor thành công");
         setIsDeleteDialogOpen(false);
         loadMentors(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to delete mentor");
+        toast.error(response.error || "Không thể xóa mentor");
       }
     } catch (error) {
       console.error("Error deleting mentor:", error);
-      toast.error("Failed to delete mentor");
+      toast.error("Không thể xóa mentor");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
       </div>
     );
   }
@@ -166,10 +166,10 @@ export function MentorManagementPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-          Mentor Management
+          Quản Lý Mentor
         </h1>
         <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
-          Manage mentor accounts, profiles, and settings
+          Quản lý tài khoản, hồ sơ và cài đặt mentor
         </p>
       </div>
 
@@ -181,7 +181,7 @@ export function MentorManagementPage() {
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
-              placeholder="Search mentors by name, email, expertise..."
+              placeholder="Tìm kiếm theo tên, email, chuyên môn..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -191,12 +191,12 @@ export function MentorManagementPage() {
           {/* Status Filter - Default shows active mentors only */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active Only</SelectItem>
-              <SelectItem value="inactive">Inactive Only</SelectItem>
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Đang hoạt động</SelectItem>
+              <SelectItem value="inactive">Ngưng hoạt động</SelectItem>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -204,7 +204,7 @@ export function MentorManagementPage() {
         {/* Create Button */}
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add New Mentor
+          Thêm Mentor
         </Button>
       </div>
 
@@ -225,7 +225,7 @@ export function MentorManagementPage() {
                 setSearchQuery("");
                 setStatusFilter("active");
               }}>
-              Clear Filters
+              Xóa bộ lọc
             </Button>
           </div>
         )}
@@ -238,9 +238,9 @@ export function MentorManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitCreate}
-        title="Add New Mentor"
-        description="Fill in the information to create a new mentor account."
-        submitLabel="Create Mentor"
+        title="Thêm Mentor Mới"
+        description="Điền thông tin để tạo tài khoản mentor mới."
+        submitLabel="Tạo Mentor"
       />
 
       {/* Edit Dialog */}
@@ -250,9 +250,9 @@ export function MentorManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitEdit}
-        title="Edit Mentor"
-        description="Update the mentor information."
-        submitLabel="Save Changes"
+        title="Chỉnh Sửa Mentor"
+        description="Cập nhật thông tin mentor."
+        submitLabel="Lưu thay đổi"
         selectedMentor={selectedMentor}
       />
 

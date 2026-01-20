@@ -107,14 +107,14 @@ function FilePreview({ url, previewUrl, isNew, onClear, label, fileName }: FileP
       <div className="mt-1 flex items-center justify-center gap-2">
         {isNew ? (
           <>
-            <span className="text-xs text-green-600">New file</span>
+            <span className="text-xs text-green-600">File mới</span>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               className="h-5 w-5 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
               onClick={onClear}
-              title="Remove">
+              title="Xóa">
               <X className="h-3 w-3" />
             </Button>
           </>
@@ -124,7 +124,7 @@ function FilePreview({ url, previewUrl, isNew, onClear, label, fileName }: FileP
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
-            <span>View</span>
+            <span>Xem</span>
             <ExternalLink className="h-2.5 w-2.5" />
           </a>
         )}
@@ -250,12 +250,12 @@ export function MentorFormDialog({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Họ tên *</Label>
               <Input
                 id="name"
                 value={formData.name || ""}
                 onChange={(e) => onFormChange({ ...formData, name: e.target.value })}
-                placeholder="Enter mentor name"
+                placeholder="Nhập tên mentor"
               />
             </div>
             <div className="space-y-1.5">
@@ -270,28 +270,28 @@ export function MentorFormDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="bio">Bio</Label>
+            <Label htmlFor="bio">Giới thiệu bản thân</Label>
             <Textarea
               id="bio"
               value={formData.bio || ""}
               onChange={(e) => onFormChange({ ...formData, bio: e.target.value })}
-              placeholder="Short biography - describe your experience, skills, and teaching approach"
+              placeholder="Mô tả ngắn gọn - kinh nghiệm, kỹ năng và phương pháp giảng dạy của bạn"
               rows={3}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="expertise">Expertise</Label>
+            <Label htmlFor="expertise">Chuyên môn</Label>
             <Textarea
               id="expertise"
               value={formData.expertise || ""}
               onChange={(e) => onFormChange({ ...formData, expertise: e.target.value })}
-              placeholder="e.g., React, Node.js, AWS, System Design, Interview Coaching, etc."
+              placeholder="VD: React, Node.js, AWS, System Design, Coaching phỏng vấn, v.v."
               rows={2}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="yearsOfExperience">Years of Experience</Label>
+              <Label htmlFor="yearsOfExperience">Số năm kinh nghiệm</Label>
               <Input
                 id="yearsOfExperience"
                 type="number"
@@ -306,7 +306,7 @@ export function MentorFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rate">Rate (VND per session)</Label>
+              <Label htmlFor="rate">Giá mỗi buổi (VND)</Label>
               <Input
                 id="rate"
                 type="number"
@@ -318,12 +318,12 @@ export function MentorFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="currentCompany">Current Company</Label>
+              <Label htmlFor="currentCompany">Công ty hiện tại</Label>
               <Input
                 id="currentCompany"
                 value={formData.currentCompany || ""}
                 onChange={(e) => onFormChange({ ...formData, currentCompany: e.target.value })}
-                placeholder="Company name"
+                placeholder="Tên công ty"
               />
             </div>
             <div className="space-y-1.5">
@@ -338,11 +338,11 @@ export function MentorFormDialog({
           </div>
           {/* File Upload Section with Previews */}
           <div className="mt-2 border-t pt-4">
-            <h4 className="mb-3 text-sm font-medium">Documents</h4>
+            <h4 className="mb-3 text-sm font-medium">Tài liệu</h4>
             <div className="grid grid-cols-2 gap-4">
               {/* Avatar */}
               <div className="space-y-1.5">
-                <Label htmlFor="avatar">Avatar Image</Label>
+                <Label htmlFor="avatar">Ảnh đại diện</Label>
                 <FilePreview
                   url={displayAvatarUrl}
                   previewUrl={avatarPreview}
@@ -361,14 +361,14 @@ export function MentorFormDialog({
                 {!displayAvatarUrl && (
                   <p className="text-muted-foreground flex items-center gap-1 text-xs">
                     <ImageIcon className="h-3 w-3" />
-                    No avatar selected
+                    Chưa chọn ảnh đại diện
                   </p>
                 )}
               </div>
 
               {/* Identity Document */}
               <div className="space-y-1.5">
-                <Label htmlFor="identityFile">Identity Document</Label>
+                <Label htmlFor="identityFile">Giấy tờ tùy thân</Label>
                 <FilePreview
                   url={displayIdentityUrl}
                   previewUrl={identityPreview}
@@ -387,14 +387,14 @@ export function MentorFormDialog({
                 {!displayIdentityUrl && (
                   <p className="text-muted-foreground flex items-center gap-1 text-xs">
                     <FileText className="h-3 w-3" />
-                    No identity document selected
+                    Chưa chọn giấy tờ tùy thân
                   </p>
                 )}
               </div>
 
               {/* Degree/Certificate */}
               <div className="space-y-1.5">
-                <Label htmlFor="degreeFile">Degree/Certificate</Label>
+                <Label htmlFor="degreeFile">Bằng cấp/Chứng chỉ</Label>
                 <FilePreview
                   url={displayDegreeUrl}
                   previewUrl={degreePreview}
@@ -413,14 +413,14 @@ export function MentorFormDialog({
                 {!displayDegreeUrl && (
                   <p className="text-muted-foreground flex items-center gap-1 text-xs">
                     <FileText className="h-3 w-3" />
-                    No degree/certificate selected
+                    Chưa chọn bằng cấp/chứng chỉ
                   </p>
                 )}
               </div>
 
               {/* Other File */}
               <div className="space-y-1.5">
-                <Label htmlFor="otherFile">Other File</Label>
+                <Label htmlFor="otherFile">Tệp khác</Label>
                 <FilePreview
                   url={displayOtherUrl}
                   previewUrl={otherPreview}
@@ -439,7 +439,7 @@ export function MentorFormDialog({
                 {!displayOtherUrl && (
                   <p className="text-muted-foreground flex items-center gap-1 text-xs">
                     <FileText className="h-3 w-3" />
-                    No other file selected
+                    Chưa chọn tệp khác
                   </p>
                 )}
               </div>
@@ -448,7 +448,7 @@ export function MentorFormDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>

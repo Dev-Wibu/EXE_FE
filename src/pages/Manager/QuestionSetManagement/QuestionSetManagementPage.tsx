@@ -41,7 +41,7 @@ export function QuestionSetManagementPage() {
       if (questionSetsResponse.success) {
         setQuestionSets(extractDataArray<QuestionSet>(questionSetsResponse));
       } else {
-        toast.error(questionSetsResponse.error || "Failed to load question sets");
+        toast.error(questionSetsResponse.error || "Không thể tải danh sách bộ câu hỏi");
       }
 
       if (majorsResponse.success) {
@@ -49,7 +49,7 @@ export function QuestionSetManagementPage() {
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error("Failed to load data");
+      toast.error("Không thể tải dữ liệu");
     } finally {
       setLoading(false);
     }
@@ -110,15 +110,15 @@ export function QuestionSetManagementPage() {
       };
       const response = await questionSetManager.create(createData);
       if (response.success) {
-        toast.success("Question set created successfully");
+        toast.success("Đã tạo bộ câu hỏi thành công");
         setIsCreateDialogOpen(false);
         loadData(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to create question set");
+        toast.error(response.error || "Không thể tạo bộ câu hỏi");
       }
     } catch (error) {
       console.error("Error creating question set:", error);
-      toast.error("Failed to create question set");
+      toast.error("Không thể tạo bộ câu hỏi");
     }
   };
 
@@ -137,15 +137,15 @@ export function QuestionSetManagementPage() {
         updateData
       );
       if (response.success) {
-        toast.success("Question set updated successfully");
+        toast.success("Đã cập nhật bộ câu hỏi thành công");
         setIsEditDialogOpen(false);
         loadData(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to update question set");
+        toast.error(response.error || "Không thể cập nhật bộ câu hỏi");
       }
     } catch (error) {
       console.error("Error updating question set:", error);
-      toast.error("Failed to update question set");
+      toast.error("Không thể cập nhật bộ câu hỏi");
     }
   };
 
@@ -155,22 +155,22 @@ export function QuestionSetManagementPage() {
     try {
       const response = await questionSetManager.delete(selectedQuestionSet.questionSetId);
       if (response.success) {
-        toast.success("Question set deleted successfully");
+        toast.success("Đã xóa bộ câu hỏi thành công");
         setIsDeleteDialogOpen(false);
         loadData(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to delete question set");
+        toast.error(response.error || "Không thể xóa bộ câu hỏi");
       }
     } catch (error) {
       console.error("Error deleting question set:", error);
-      toast.error("Failed to delete question set");
+      toast.error("Không thể xóa bộ câu hỏi");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
       </div>
     );
   }
@@ -180,10 +180,10 @@ export function QuestionSetManagementPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-          Question Set Management
+          Quản Lý Bộ Câu Hỏi
         </h1>
         <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
-          Manage question sets for different interview levels
+          Quản lý các bộ câu hỏi cho các cấp độ phỏng vấn khác nhau
         </p>
       </div>
 
@@ -195,7 +195,7 @@ export function QuestionSetManagementPage() {
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
-              placeholder="Search question sets by name or objective..."
+              placeholder="Tìm kiếm theo tên hoặc mục tiêu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -205,10 +205,10 @@ export function QuestionSetManagementPage() {
           {/* Level Filter */}
           <Select value={levelFilter} onValueChange={setLevelFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by level" />
+              <SelectValue placeholder="Lọc theo cấp độ" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Levels</SelectItem>
+              <SelectItem value="all">Tất cả cấp độ</SelectItem>
               <SelectItem value="INTERN">Intern</SelectItem>
               <SelectItem value="FRESHER">Fresher</SelectItem>
               <SelectItem value="JUNIOR">Junior</SelectItem>
@@ -220,7 +220,7 @@ export function QuestionSetManagementPage() {
         {/* Create Button */}
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add New Question Set
+          Thêm Bộ Câu Hỏi
         </Button>
       </div>
 
@@ -241,7 +241,7 @@ export function QuestionSetManagementPage() {
                 setSearchQuery("");
                 setLevelFilter("all");
               }}>
-              Clear Filters
+              Xóa bộ lọc
             </Button>
           </div>
         )}
@@ -254,9 +254,9 @@ export function QuestionSetManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitCreate}
-        title="Add New Question Set"
-        description="Fill in the information to create a new question set."
-        submitLabel="Create Question Set"
+        title="Thêm Bộ Câu Hỏi Mới"
+        description="Điền thông tin để tạo bộ câu hỏi mới."
+        submitLabel="Tạo bộ câu hỏi"
         majors={majors}
       />
 
@@ -267,9 +267,9 @@ export function QuestionSetManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitEdit}
-        title="Edit Question Set"
-        description="Update the question set information."
-        submitLabel="Save Changes"
+        title="Chỉnh Sửa Bộ Câu Hỏi"
+        description="Cập nhật thông tin bộ câu hỏi."
+        submitLabel="Lưu thay đổi"
         majors={majors}
       />
 

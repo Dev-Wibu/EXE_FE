@@ -51,16 +51,16 @@ export function SessionFormDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="roomName">Room Name</Label>
+            <Label htmlFor="roomName">Tên phòng</Label>
             <Input
               id="roomName"
               value={formData.roomName || ""}
               onChange={(e) => onFormChange({ ...formData, roomName: e.target.value })}
-              placeholder="Enter room name (optional)"
+              placeholder="Nhập tên phòng (tùy chọn)"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="userId">User ID</Label>
+            <Label htmlFor="userId">ID người dùng</Label>
             <Input
               id="userId"
               type="number"
@@ -68,11 +68,11 @@ export function SessionFormDialog({
               onChange={(e) =>
                 onFormChange({ ...formData, userId: parseInt(e.target.value) || undefined })
               }
-              placeholder="Enter user ID"
+              placeholder="Nhập ID người dùng"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="userId2">Mentor ID</Label>
+            <Label htmlFor="userId2">ID Mentor</Label>
             <Input
               id="userId2"
               type="number"
@@ -80,18 +80,18 @@ export function SessionFormDialog({
               onChange={(e) =>
                 onFormChange({ ...formData, userId2: parseInt(e.target.value) || undefined })
               }
-              placeholder="Enter mentor ID"
+              placeholder="Nhập ID mentor"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">Trạng thái</Label>
             <Select
               value={formData.status || "SCHEDULED"}
               onValueChange={(value) =>
                 onFormChange({ ...formData, status: value as SessionStatus })
               }>
               <SelectTrigger>
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder="Chọn trạng thái" />
               </SelectTrigger>
               <SelectContent>
                 {SESSION_STATUSES.map((status) => (
@@ -105,7 +105,7 @@ export function SessionFormDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>

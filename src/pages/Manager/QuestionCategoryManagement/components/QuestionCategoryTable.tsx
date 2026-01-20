@@ -27,7 +27,7 @@ export function QuestionCategoryTable({
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <Search className="h-12 w-12 text-gray-400" />
-        <p className="font-['Inter'] text-lg text-gray-500">No question categories found</p>
+        <p className="font-['Inter'] text-lg text-gray-500">Không tìm thấy danh mục câu hỏi nào</p>
       </div>
     );
   }
@@ -37,9 +37,9 @@ export function QuestionCategoryTable({
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Category Name</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead className="w-24 text-right">Actions</TableHead>
+          <TableHead>Tên danh mục</TableHead>
+          <TableHead>Mô tả</TableHead>
+          <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -57,7 +57,7 @@ export function QuestionCategoryTable({
                   size="sm"
                   onClick={() => onEdit(category)}
                   className="h-8 w-8 p-0 hover:bg-blue-50"
-                  title="Edit category">
+                  title="Chỉnh sửa">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
@@ -65,7 +65,7 @@ export function QuestionCategoryTable({
                   size="sm"
                   onClick={() => onDelete(category)}
                   className="h-8 w-8 p-0 hover:bg-red-50"
-                  title="Deactivate category">
+                  title="Xóa">
                   <Power className="h-4 w-4 text-red-600" />
                 </Button>
               </div>

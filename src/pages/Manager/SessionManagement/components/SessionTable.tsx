@@ -49,9 +49,9 @@ const formatDuration = (seconds?: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
+    return `${hours}g ${minutes}p`;
   }
-  return `${minutes}m`;
+  return `${minutes}p`;
 };
 
 export function SessionTable({ sessions, onView, onEdit, onCancel }: SessionTableProps) {
@@ -59,7 +59,7 @@ export function SessionTable({ sessions, onView, onEdit, onCancel }: SessionTabl
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <Search className="h-12 w-12 text-gray-400" />
-        <p className="font-['Inter'] text-lg text-gray-500">No sessions found</p>
+        <p className="font-['Inter'] text-lg text-gray-500">Không tìm thấy buổi học nào</p>
       </div>
     );
   }
@@ -69,13 +69,13 @@ export function SessionTable({ sessions, onView, onEdit, onCancel }: SessionTabl
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Room Name</TableHead>
-          <TableHead className="w-24">User ID</TableHead>
-          <TableHead className="w-24">Mentor ID</TableHead>
-          <TableHead>Start Time</TableHead>
-          <TableHead className="w-24">Duration</TableHead>
-          <TableHead className="w-28">Status</TableHead>
-          <TableHead className="w-28 text-right">Actions</TableHead>
+          <TableHead>Tên phòng</TableHead>
+          <TableHead className="w-24">ID người dùng</TableHead>
+          <TableHead className="w-24">ID Mentor</TableHead>
+          <TableHead>Thời gian bắt đầu</TableHead>
+          <TableHead className="w-24">Thời lượng</TableHead>
+          <TableHead className="w-28">Trạng thái</TableHead>
+          <TableHead className="w-28 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -107,7 +107,7 @@ export function SessionTable({ sessions, onView, onEdit, onCancel }: SessionTabl
                   size="sm"
                   onClick={() => onView(session)}
                   className="h-8 w-8 p-0 hover:bg-green-50"
-                  title="View Details">
+                  title="Xem chi tiết">
                   <Eye className="h-4 w-4 text-green-600" />
                 </Button>
                 <Button
@@ -116,7 +116,7 @@ export function SessionTable({ sessions, onView, onEdit, onCancel }: SessionTabl
                   onClick={() => onEdit(session)}
                   className="h-8 w-8 p-0 hover:bg-blue-50 disabled:opacity-50"
                   disabled={session.status === "COMPLETED" || session.status === "CANCELED"}
-                  title="Edit Session">
+                  title="Chỉnh sửa">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
@@ -125,7 +125,7 @@ export function SessionTable({ sessions, onView, onEdit, onCancel }: SessionTabl
                   onClick={() => onCancel(session)}
                   className="h-8 w-8 p-0 hover:bg-red-50 disabled:opacity-50"
                   disabled={session.status === "COMPLETED" || session.status === "CANCELED"}
-                  title="Cancel Session">
+                  title="Hủy buổi học">
                   <XCircle className="h-4 w-4 text-red-600" />
                 </Button>
               </div>

@@ -28,18 +28,18 @@ export function DeleteQuestionMajorDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Question Major</AlertDialogTitle>
+          <AlertDialogTitle>Xóa Chuyên Ngành</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete major &quot;{major?.majorName}&quot;? This action cannot
-            be undone.
+            Bạn có chắc chắn muốn xóa chuyên ngành &quot;{major?.majorName}&quot;? Hành động này
+            không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Hủy</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
-            Delete
+            Xóa
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

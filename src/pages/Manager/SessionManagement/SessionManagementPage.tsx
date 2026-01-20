@@ -43,11 +43,11 @@ export function SessionManagementPage() {
         const sessionData = Array.isArray(response.data) ? response.data : response.data.data;
         setSessions(sessionData as Session[]);
       } else {
-        toast.error(response.error || "Failed to load sessions");
+        toast.error(response.error || "Không thể tải danh sách buổi học");
       }
     } catch (error) {
       console.error("Error loading sessions:", error);
-      toast.error("Failed to load sessions");
+      toast.error("Không thể tải danh sách buổi học");
     } finally {
       setLoading(false);
     }
@@ -108,15 +108,15 @@ export function SessionManagementPage() {
     try {
       const response = await sessionManager.create(formData);
       if (response.success) {
-        toast.success("Session created successfully");
+        toast.success("Đã tạo buổi học thành công");
         setIsCreateDialogOpen(false);
         loadSessions(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to create session");
+        toast.error(response.error || "Không thể tạo buổi học");
       }
     } catch (error) {
       console.error("Error creating session:", error);
-      toast.error("Failed to create session");
+      toast.error("Không thể tạo buổi học");
     }
   };
 
@@ -126,15 +126,15 @@ export function SessionManagementPage() {
     try {
       const response = await sessionManager.update(selectedSession.id, formData);
       if (response.success) {
-        toast.success("Session updated successfully");
+        toast.success("Đã cập nhật buổi học thành công");
         setIsEditDialogOpen(false);
         loadSessions(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to update session");
+        toast.error(response.error || "Không thể cập nhật buổi học");
       }
     } catch (error) {
       console.error("Error updating session:", error);
-      toast.error("Failed to update session");
+      toast.error("Không thể cập nhật buổi học");
     }
   };
 
@@ -144,22 +144,22 @@ export function SessionManagementPage() {
     try {
       const response = await sessionManager.delete(selectedSession.id);
       if (response.success) {
-        toast.success("Session canceled successfully");
+        toast.success("Đã hủy buổi học thành công");
         setIsCancelDialogOpen(false);
         loadSessions(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to cancel session");
+        toast.error(response.error || "Không thể hủy buổi học");
       }
     } catch (error) {
       console.error("Error canceling session:", error);
-      toast.error("Failed to cancel session");
+      toast.error("Không thể hủy buổi học");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
       </div>
     );
   }
@@ -169,10 +169,10 @@ export function SessionManagementPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-          Session Management
+          Quản Lý Buổi Học
         </h1>
         <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
-          Manage interview sessions, view recordings, and track session status
+          Quản lý các buổi phỏng vấn, xem bản ghi và theo dõi trạng thái
         </p>
       </div>
 
@@ -184,7 +184,7 @@ export function SessionManagementPage() {
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
-              placeholder="Search by ID, room name, user ID..."
+              placeholder="Tìm kiếm theo ID, tên phòng, ID người dùng..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -194,14 +194,14 @@ export function SessionManagementPage() {
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-              <SelectItem value="ONGOING">Ongoing</SelectItem>
-              <SelectItem value="COMPLETED">Completed</SelectItem>
-              <SelectItem value="CANCELED">Canceled</SelectItem>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="SCHEDULED">Đã lên lịch</SelectItem>
+              <SelectItem value="ONGOING">Đang diễn ra</SelectItem>
+              <SelectItem value="COMPLETED">Đã hoàn thành</SelectItem>
+              <SelectItem value="CANCELED">Đã hủy</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -209,7 +209,7 @@ export function SessionManagementPage() {
         {/* Create Button */}
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Create Session
+          Tạo Buổi Học
         </Button>
       </div>
 
@@ -231,7 +231,7 @@ export function SessionManagementPage() {
                 setSearchQuery("");
                 setStatusFilter("all");
               }}>
-              Clear Filters
+              Xóa bộ lọc
             </Button>
           </div>
         )}
@@ -251,9 +251,9 @@ export function SessionManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitCreate}
-        title="Create New Session"
-        description="Fill in the information to create a new session."
-        submitLabel="Create Session"
+        title="Tạo Buổi Học Mới"
+        description="Điền thông tin để tạo buổi học mới."
+        submitLabel="Tạo buổi học"
       />
 
       {/* Edit Dialog */}
@@ -263,9 +263,9 @@ export function SessionManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitEdit}
-        title="Edit Session"
-        description="Update the session information."
-        submitLabel="Save Changes"
+        title="Chỉnh Sửa Buổi Học"
+        description="Cập nhật thông tin buổi học."
+        submitLabel="Lưu thay đổi"
       />
 
       {/* Cancel Confirmation Dialog */}

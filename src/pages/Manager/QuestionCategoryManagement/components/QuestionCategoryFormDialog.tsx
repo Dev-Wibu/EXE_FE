@@ -43,28 +43,28 @@ export function QuestionCategoryFormDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="categoryName">Category Name *</Label>
+            <Label htmlFor="categoryName">Tên danh mục *</Label>
             <Input
               id="categoryName"
               value={formData.categoryName || ""}
               onChange={(e) => onFormChange({ ...formData, categoryName: e.target.value })}
-              placeholder="Enter category name"
+              placeholder="Nhập tên danh mục"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Mô tả</Label>
             <Textarea
               id="description"
               value={formData.description || ""}
               onChange={(e) => onFormChange({ ...formData, description: e.target.value })}
-              placeholder="Enter description"
+              placeholder="Nhập mô tả"
               rows={3}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>

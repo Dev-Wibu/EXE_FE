@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 
 import type { User, UserFormData } from "../types";
 
@@ -170,12 +169,12 @@ export function UserFormDialog({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Họ tên *</Label>
               <Input
                 id="name"
                 value={formData.name || ""}
                 onChange={(e) => onFormChange({ ...formData, name: e.target.value })}
-                placeholder="Enter user name"
+                placeholder="Nhập họ tên người dùng"
               />
             </div>
             <div className="space-y-1.5">
@@ -191,94 +190,56 @@ export function UserFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="role">Role *</Label>
+              <Label htmlFor="role">Vai trò *</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value) =>
                   onFormChange({ ...formData, role: value as UserFormData["role"] })
                 }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder="Chọn vai trò" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="USER">Người dùng</SelectItem>
                   <SelectItem value="MENTOR">Mentor</SelectItem>
-                  <SelectItem value="STAFF">Staff</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="STAFF">Nhân viên</SelectItem>
+                  <SelectItem value="ADMIN">Quản trị viên</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="university">University</Label>
+              <Label htmlFor="university">Trường đại học</Label>
               <Input
                 id="university"
                 value={formData.university || ""}
                 onChange={(e) => onFormChange({ ...formData, university: e.target.value })}
-                placeholder="University name"
+                placeholder="Tên trường đại học"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="major">Major</Label>
+              <Label htmlFor="major">Chuyên ngành</Label>
               <Input
                 id="major"
                 value={formData.major || ""}
                 onChange={(e) => onFormChange({ ...formData, major: e.target.value })}
-                placeholder="e.g., Computer Science"
+                placeholder="VD: Khoa học máy tính"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="targetPosition">Target Position</Label>
-              <Input
-                id="targetPosition"
-                value={formData.targetPosition || ""}
-                onChange={(e) => onFormChange({ ...formData, targetPosition: e.target.value })}
-                placeholder="e.g., Backend Developer"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="targetLevel">Target Level</Label>
-              <Select
-                value={formData.targetLevel}
-                onValueChange={(value) => onFormChange({ ...formData, targetLevel: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Intern">Intern</SelectItem>
-                  <SelectItem value="Fresher">Fresher</SelectItem>
-                  <SelectItem value="Junior">Junior</SelectItem>
-                  <SelectItem value="Middle">Middle</SelectItem>
-                  <SelectItem value="Senior">Senior</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              value={formData.bio || ""}
-              onChange={(e) => onFormChange({ ...formData, bio: e.target.value })}
-              placeholder="Short biography - describe yourself, your interests, and goals"
-              rows={3}
-            />
           </div>
           {/* File Upload Section with Previews */}
           <div className="grid grid-cols-2 gap-4">
             {/* Avatar Section */}
             <div className="space-y-1.5">
-              <Label htmlFor="avatar">Avatar Image</Label>
+              <Label htmlFor="avatar">Ảnh đại diện</Label>
               {/* Image Preview - Show either new upload or existing avatar */}
               {displayAvatarUrl && (
                 <div className="relative mb-2 rounded-lg border bg-slate-50 p-2 dark:bg-slate-800">
                   <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full">
                     <img
                       src={displayAvatarUrl}
-                      alt="Avatar preview"
+                      alt="Xem trước ảnh đại diện"
                       className="h-full w-full object-cover"
                       onError={(e) => {
                         // Hide image on error
@@ -289,14 +250,14 @@ export function UserFormDialog({
                   <div className="mt-2 flex items-center justify-center gap-2">
                     {avatarPreview ? (
                       <>
-                        <span className="text-xs text-green-600">New file selected</span>
+                        <span className="text-xs text-green-600">Đã chọn file mới</span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
                           onClick={handleClearAvatar}
-                          title="Remove new avatar">
+                          title="Xóa ảnh đại diện mới">
                           <X className="h-4 w-4" />
                         </Button>
                       </>
@@ -306,7 +267,7 @@ export function UserFormDialog({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
-                        <span>View full image</span>
+                        <span>Xem ảnh đầy đủ</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     )}
@@ -324,14 +285,14 @@ export function UserFormDialog({
               {!displayAvatarUrl && (
                 <p className="text-muted-foreground flex items-center gap-1 text-xs">
                   <ImageIcon className="h-3 w-3" />
-                  No avatar selected
+                  Chưa chọn ảnh đại diện
                 </p>
               )}
             </div>
 
             {/* CV Section */}
             <div className="space-y-1.5">
-              <Label htmlFor="cvFile">CV File</Label>
+              <Label htmlFor="cvFile">File CV</Label>
               {/* CV Preview - Show image preview for images, or file icon for documents */}
               {displayCvUrl && (
                 <div className="relative mb-2 rounded-lg border bg-slate-50 p-2 dark:bg-slate-800">
@@ -339,7 +300,7 @@ export function UserFormDialog({
                     <div className="relative mx-auto h-32 w-full overflow-hidden rounded-md">
                       <img
                         src={displayCvUrl}
-                        alt="CV preview"
+                        alt="Xem trước CV"
                         className="h-full w-full object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
@@ -350,7 +311,7 @@ export function UserFormDialog({
                     <div className="flex h-32 flex-col items-center justify-center">
                       <FileText className="h-12 w-12 text-green-500" />
                       <span className="mt-2 text-xs text-gray-500">
-                        {formData.cvFile?.name || "Document file"}
+                        {formData.cvFile?.name || "File tài liệu"}
                       </span>
                     </div>
                   )}
@@ -358,7 +319,7 @@ export function UserFormDialog({
                     {cvPreview ? (
                       <>
                         <span className="text-xs text-green-600">
-                          {formData.cvFile?.name || "New file selected"}
+                          {formData.cvFile?.name || "Đã chọn file mới"}
                         </span>
                         <Button
                           type="button"
@@ -366,7 +327,7 @@ export function UserFormDialog({
                           size="sm"
                           className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
                           onClick={handleClearCv}
-                          title="Remove new CV">
+                          title="Xóa CV mới">
                           <X className="h-4 w-4" />
                         </Button>
                       </>
@@ -376,7 +337,7 @@ export function UserFormDialog({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-xs text-green-600 hover:underline dark:text-green-400">
-                        <span>View CV</span>
+                        <span>Xem CV</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     )}
@@ -394,7 +355,7 @@ export function UserFormDialog({
               {!displayCvUrl && (
                 <p className="text-muted-foreground flex items-center gap-1 text-xs">
                   <FileText className="h-3 w-3" />
-                  No CV selected
+                  Chưa chọn CV
                 </p>
               )}
             </div>
@@ -402,7 +363,7 @@ export function UserFormDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>

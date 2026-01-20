@@ -28,18 +28,18 @@ export function CancelSessionDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Cancel Session</AlertDialogTitle>
+          <AlertDialogTitle>Hủy Buổi Học</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to cancel session "{session?.roomName || `#${session?.id}`}"? This
-            action cannot be undone.
+            Bạn có chắc chắn muốn hủy buổi học "{session?.roomName || `#${session?.id}`}"? Hành động
+            này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Đóng</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
-            Yes, Cancel Session
+            Xác nhận hủy
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

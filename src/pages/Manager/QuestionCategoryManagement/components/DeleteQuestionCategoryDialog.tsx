@@ -28,18 +28,18 @@ export function DeleteQuestionCategoryDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Question Category</AlertDialogTitle>
+          <AlertDialogTitle>Xóa Danh Mục Câu Hỏi</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete category &quot;{category?.categoryName}&quot;? This
-            action cannot be undone.
+            Bạn có chắc chắn muốn xóa danh mục &quot;{category?.categoryName}&quot;? Hành động này
+            không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Hủy</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
-            Delete
+            Xóa
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

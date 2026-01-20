@@ -1,4 +1,4 @@
-import { Edit, Power, Search } from "lucide-react";
+import { Edit, Search, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,7 @@ export function QuestionMajorTable({ majors, onEdit, onDelete }: QuestionMajorTa
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <Search className="h-12 w-12 text-gray-400" />
-        <p className="font-['Inter'] text-lg text-gray-500">No question majors found</p>
+        <p className="font-['Inter'] text-lg text-gray-500">Không tìm thấy chuyên ngành nào</p>
       </div>
     );
   }
@@ -33,9 +33,9 @@ export function QuestionMajorTable({ majors, onEdit, onDelete }: QuestionMajorTa
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Major Name</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead className="w-24 text-right">Actions</TableHead>
+          <TableHead>Tên Chuyên Ngành</TableHead>
+          <TableHead>Mô Tả</TableHead>
+          <TableHead className="w-24 text-right">Thao Tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -53,7 +53,7 @@ export function QuestionMajorTable({ majors, onEdit, onDelete }: QuestionMajorTa
                   size="sm"
                   onClick={() => onEdit(major)}
                   className="h-8 w-8 p-0 hover:bg-blue-50"
-                  title="Edit major">
+                  title="Chỉnh sửa">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
@@ -61,8 +61,8 @@ export function QuestionMajorTable({ majors, onEdit, onDelete }: QuestionMajorTa
                   size="sm"
                   onClick={() => onDelete(major)}
                   className="h-8 w-8 p-0 hover:bg-red-50"
-                  title="Deactivate major">
-                  <Power className="h-4 w-4 text-red-600" />
+                  title="Xóa">
+                  <Trash2 className="h-4 w-4 text-red-600" />
                 </Button>
               </div>
             </TableCell>

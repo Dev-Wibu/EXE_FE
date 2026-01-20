@@ -32,11 +32,11 @@ export function QuestionMajorManagementPage() {
       if (response.success) {
         setMajors(extractDataArray<Major>(response));
       } else {
-        toast.error(response.error || "Failed to load question majors");
+        toast.error(response.error || "Không thể tải danh sách chuyên ngành");
       }
     } catch (error) {
       console.error("Error loading majors:", error);
-      toast.error("Failed to load question majors");
+      toast.error("Không thể tải danh sách chuyên ngành");
     } finally {
       setLoading(false);
     }
@@ -79,15 +79,15 @@ export function QuestionMajorManagementPage() {
     try {
       const response = await questionMajorManager.create(formData);
       if (response.success) {
-        toast.success("Question major created successfully");
+        toast.success("Đã tạo chuyên ngành thành công");
         setIsCreateDialogOpen(false);
         loadMajors(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to create question major");
+        toast.error(response.error || "Không thể tạo chuyên ngành");
       }
     } catch (error) {
       console.error("Error creating major:", error);
-      toast.error("Failed to create question major");
+      toast.error("Không thể tạo chuyên ngành");
     }
   };
 
@@ -97,15 +97,15 @@ export function QuestionMajorManagementPage() {
     try {
       const response = await questionMajorManager.update(selectedMajor.id, formData);
       if (response.success) {
-        toast.success("Question major updated successfully");
+        toast.success("Đã cập nhật chuyên ngành thành công");
         setIsEditDialogOpen(false);
         loadMajors(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to update question major");
+        toast.error(response.error || "Không thể cập nhật chuyên ngành");
       }
     } catch (error) {
       console.error("Error updating major:", error);
-      toast.error("Failed to update question major");
+      toast.error("Không thể cập nhật chuyên ngành");
     }
   };
 
@@ -115,22 +115,22 @@ export function QuestionMajorManagementPage() {
     try {
       const response = await questionMajorManager.delete(selectedMajor.id);
       if (response.success) {
-        toast.success("Question major deleted successfully");
+        toast.success("Đã xóa chuyên ngành thành công");
         setIsDeleteDialogOpen(false);
         loadMajors(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to delete question major");
+        toast.error(response.error || "Không thể xóa chuyên ngành");
       }
     } catch (error) {
       console.error("Error deleting major:", error);
-      toast.error("Failed to delete question major");
+      toast.error("Không thể xóa chuyên ngành");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
       </div>
     );
   }
@@ -140,10 +140,10 @@ export function QuestionMajorManagementPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-          Question Major Management
+          Quản Lý Chuyên Ngành
         </h1>
         <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
-          Manage question majors/disciplines for interview assessments
+          Quản lý các chuyên ngành cho bộ câu hỏi phỏng vấn
         </p>
       </div>
 
@@ -154,7 +154,7 @@ export function QuestionMajorManagementPage() {
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
-            placeholder="Search majors by name or description..."
+            placeholder="Tìm kiếm theo tên hoặc mô tả..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -164,7 +164,7 @@ export function QuestionMajorManagementPage() {
         {/* Create Button */}
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add New Major
+          Thêm Chuyên Ngành
         </Button>
       </div>
 
@@ -180,7 +180,7 @@ export function QuestionMajorManagementPage() {
         {filteredMajors.length === 0 && searchQuery && (
           <div className="flex justify-center pb-4">
             <Button variant="outline" onClick={() => setSearchQuery("")}>
-              Clear Search
+              Xóa bộ lọc
             </Button>
           </div>
         )}
@@ -193,9 +193,9 @@ export function QuestionMajorManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitCreate}
-        title="Add New Question Major"
-        description="Fill in the information to create a new question major."
-        submitLabel="Create Major"
+        title="Thêm Chuyên Ngành Mới"
+        description="Điền thông tin để tạo chuyên ngành mới."
+        submitLabel="Tạo mới"
       />
 
       {/* Edit Dialog */}
@@ -205,9 +205,9 @@ export function QuestionMajorManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitEdit}
-        title="Edit Question Major"
-        description="Update the question major information."
-        submitLabel="Save Changes"
+        title="Chỉnh Sửa Chuyên Ngành"
+        description="Cập nhật thông tin chuyên ngành."
+        submitLabel="Lưu thay đổi"
       />
 
       {/* Delete Confirmation Dialog */}

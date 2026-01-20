@@ -37,7 +37,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <Search className="h-12 w-12 text-gray-400" />
-        <p className="font-['Inter'] text-lg text-gray-500">No users found</p>
+        <p className="font-['Inter'] text-lg text-gray-500">Không tìm thấy người dùng nào</p>
       </div>
     );
   }
@@ -47,14 +47,13 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Name</TableHead>
+          <TableHead>Tên</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead className="w-24">Role</TableHead>
-          <TableHead>University</TableHead>
-          <TableHead>Major</TableHead>
-          <TableHead>Target Position</TableHead>
-          <TableHead className="w-24">Status</TableHead>
-          <TableHead className="w-24 text-right">Actions</TableHead>
+          <TableHead className="w-24">Vai trò</TableHead>
+          <TableHead>Trường đại học</TableHead>
+          <TableHead>Chuyên ngành</TableHead>
+          <TableHead className="w-24">Trạng thái</TableHead>
+          <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -70,10 +69,9 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             </TableCell>
             <TableCell className="max-w-xs truncate">{user.university || "-"}</TableCell>
             <TableCell>{user.major || "-"}</TableCell>
-            <TableCell>{user.targetPosition || "-"}</TableCell>
             <TableCell>
               <Badge variant={user.isActive !== false ? "default" : "destructive"}>
-                {user.isActive !== false ? "Active" : "Inactive"}
+                {user.isActive !== false ? "Hoạt động" : "Ngưng hoạt động"}
               </Badge>
             </TableCell>
             <TableCell className="text-right">
@@ -83,7 +81,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   size="sm"
                   onClick={() => onEdit(user)}
                   className="h-8 w-8 p-0 hover:bg-blue-50"
-                  title="Edit user">
+                  title="Chỉnh sửa">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
@@ -91,7 +89,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   size="sm"
                   onClick={() => onDelete(user)}
                   className={`h-8 w-8 p-0 ${user.isActive !== false ? "hover:bg-red-50" : "hover:bg-green-50"}`}
-                  title={user.isActive !== false ? "Deactivate user" : "Activate user"}>
+                  title={user.isActive !== false ? "Vô hiệu hóa" : "Kích hoạt"}>
                   <Power
                     className={`h-4 w-4 ${user.isActive !== false ? "text-red-600" : "text-green-600"}`}
                   />

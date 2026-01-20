@@ -43,28 +43,30 @@ export function QuestionMajorFormDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="majorName">Major Name *</Label>
+            <Label htmlFor="majorName">
+              Tên Chuyên Ngành <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="majorName"
               value={formData.majorName || ""}
               onChange={(e) => onFormChange({ ...formData, majorName: e.target.value })}
-              placeholder="Enter major name"
+              placeholder="VD: Công nghệ thông tin, Kinh tế, Marketing..."
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Mô Tả</Label>
             <Textarea
               id="description"
               value={formData.description || ""}
               onChange={(e) => onFormChange({ ...formData, description: e.target.value })}
-              placeholder="Enter description"
+              placeholder="Mô tả ngắn về chuyên ngành này..."
               rows={3}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>

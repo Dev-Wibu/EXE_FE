@@ -52,24 +52,24 @@ export function QuestionSetFormDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="questionSetName">Question Set Name *</Label>
+            <Label htmlFor="questionSetName">Tên bộ câu hỏi *</Label>
             <Input
               id="questionSetName"
               value={formData.questionSetName || ""}
               onChange={(e) => onFormChange({ ...formData, questionSetName: e.target.value })}
-              placeholder="Enter question set name"
+              placeholder="Nhập tên bộ câu hỏi"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="level">Level *</Label>
+              <Label htmlFor="level">Cấp độ *</Label>
               <Select
                 value={formData.level}
                 onValueChange={(value) =>
                   onFormChange({ ...formData, level: value as QuestionSetLevel })
                 }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
+                  <SelectValue placeholder="Chọn cấp độ" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="INTERN">Intern</SelectItem>
@@ -80,14 +80,14 @@ export function QuestionSetFormDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="majorId">Major</Label>
+              <Label htmlFor="majorId">Chuyên ngành</Label>
               <Select
                 value={formData.majorId?.toString()}
                 onValueChange={(value) =>
                   onFormChange({ ...formData, majorId: value ? Number(value) : undefined })
                 }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select major" />
+                  <SelectValue placeholder="Chọn chuyên ngành" />
                 </SelectTrigger>
                 <SelectContent>
                   {majors
@@ -102,19 +102,19 @@ export function QuestionSetFormDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="objective">Objective</Label>
+            <Label htmlFor="objective">Mục tiêu</Label>
             <Textarea
               id="objective"
               value={formData.objective || ""}
               onChange={(e) => onFormChange({ ...formData, objective: e.target.value })}
-              placeholder="Enter objective"
+              placeholder="Nhập mục tiêu"
               rows={3}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>

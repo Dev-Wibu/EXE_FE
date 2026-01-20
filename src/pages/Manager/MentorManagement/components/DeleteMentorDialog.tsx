@@ -28,18 +28,18 @@ export function DeleteMentorDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Mentor</AlertDialogTitle>
+          <AlertDialogTitle>Xóa Mentor</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete mentor &quot;{mentor?.name}&quot;? This action cannot be
-            undone and will deactivate the mentor account.
+            Bạn có chắc chắn muốn xóa mentor &quot;{mentor?.name}&quot;? Hành động này không thể hoàn
+            tác và sẽ vô hiệu hóa tài khoản mentor.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Hủy</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600">
-            Delete
+            Xóa
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

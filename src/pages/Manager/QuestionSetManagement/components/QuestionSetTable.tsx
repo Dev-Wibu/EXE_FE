@@ -39,7 +39,7 @@ export function QuestionSetTable({ questionSets, onEdit, onDelete }: QuestionSet
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <Search className="h-12 w-12 text-gray-400" />
-        <p className="font-['Inter'] text-lg text-gray-500">No question sets found</p>
+        <p className="font-['Inter'] text-lg text-gray-500">Không tìm thấy bộ câu hỏi nào</p>
       </div>
     );
   }
@@ -49,11 +49,11 @@ export function QuestionSetTable({ questionSets, onEdit, onDelete }: QuestionSet
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Objective</TableHead>
-          <TableHead className="w-24">Level</TableHead>
-          <TableHead>Major</TableHead>
-          <TableHead className="w-24 text-right">Actions</TableHead>
+          <TableHead>Tên</TableHead>
+          <TableHead>Mục tiêu</TableHead>
+          <TableHead className="w-24">Cấp độ</TableHead>
+          <TableHead>Chuyên ngành</TableHead>
+          <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -81,7 +81,7 @@ export function QuestionSetTable({ questionSets, onEdit, onDelete }: QuestionSet
                   size="sm"
                   onClick={() => onEdit(questionSet)}
                   className="h-8 w-8 p-0 hover:bg-blue-50"
-                  title="Edit question set">
+                  title="Chỉnh sửa">
                   <Edit className="h-4 w-4 text-blue-600" />
                 </Button>
                 <Button
@@ -89,7 +89,7 @@ export function QuestionSetTable({ questionSets, onEdit, onDelete }: QuestionSet
                   size="sm"
                   onClick={() => onDelete(questionSet)}
                   className="h-8 w-8 p-0 hover:bg-red-50"
-                  title="Deactivate question set">
+                  title="Xóa">
                   <Power className="h-4 w-4 text-red-600" />
                 </Button>
               </div>

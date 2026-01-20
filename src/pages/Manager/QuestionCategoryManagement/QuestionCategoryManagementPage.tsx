@@ -32,11 +32,11 @@ export function QuestionCategoryManagementPage() {
       if (response.success) {
         setCategories(extractDataArray<QuestionCategory>(response));
       } else {
-        toast.error(response.error || "Failed to load question categories");
+        toast.error(response.error || "Không thể tải danh sách danh mục câu hỏi");
       }
     } catch (error) {
       console.error("Error loading categories:", error);
-      toast.error("Failed to load question categories");
+      toast.error("Không thể tải danh sách danh mục câu hỏi");
     } finally {
       setLoading(false);
     }
@@ -79,15 +79,15 @@ export function QuestionCategoryManagementPage() {
     try {
       const response = await questionCategoryManager.create(formData);
       if (response.success) {
-        toast.success("Question category created successfully");
+        toast.success("Đã tạo danh mục câu hỏi thành công");
         setIsCreateDialogOpen(false);
         loadCategories(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to create question category");
+        toast.error(response.error || "Không thể tạo danh mục câu hỏi");
       }
     } catch (error) {
       console.error("Error creating category:", error);
-      toast.error("Failed to create question category");
+      toast.error("Không thể tạo danh mục câu hỏi");
     }
   };
 
@@ -97,15 +97,15 @@ export function QuestionCategoryManagementPage() {
     try {
       const response = await questionCategoryManager.update(selectedCategory.id, formData);
       if (response.success) {
-        toast.success("Question category updated successfully");
+        toast.success("Đã cập nhật danh mục câu hỏi thành công");
         setIsEditDialogOpen(false);
         loadCategories(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to update question category");
+        toast.error(response.error || "Không thể cập nhật danh mục câu hỏi");
       }
     } catch (error) {
       console.error("Error updating category:", error);
-      toast.error("Failed to update question category");
+      toast.error("Không thể cập nhật danh mục câu hỏi");
     }
   };
 
@@ -115,22 +115,22 @@ export function QuestionCategoryManagementPage() {
     try {
       const response = await questionCategoryManager.delete(selectedCategory.id);
       if (response.success) {
-        toast.success("Question category deleted successfully");
+        toast.success("Đã xóa danh mục câu hỏi thành công");
         setIsDeleteDialogOpen(false);
         loadCategories(); // Refresh the list
       } else {
-        toast.error(response.error || "Failed to delete question category");
+        toast.error(response.error || "Không thể xóa danh mục câu hỏi");
       }
     } catch (error) {
       console.error("Error deleting category:", error);
-      toast.error("Failed to delete question category");
+      toast.error("Không thể xóa danh mục câu hỏi");
     }
   };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Loading...</div>
+        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
       </div>
     );
   }
@@ -140,10 +140,10 @@ export function QuestionCategoryManagementPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-          Question Category Management
+          Quản Lý Danh Mục Câu Hỏi
         </h1>
         <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
-          Manage question categories for interview assessments
+          Quản lý các danh mục câu hỏi cho đánh giá phỏng vấn
         </p>
       </div>
 
@@ -154,7 +154,7 @@ export function QuestionCategoryManagementPage() {
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
-            placeholder="Search categories by name or description..."
+            placeholder="Tìm kiếm theo tên hoặc mô tả..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -164,7 +164,7 @@ export function QuestionCategoryManagementPage() {
         {/* Create Button */}
         <Button onClick={handleCreate} className="gap-2">
           <Plus className="h-4 w-4" />
-          Add New Category
+          Thêm Danh Mục
         </Button>
       </div>
 
@@ -180,7 +180,7 @@ export function QuestionCategoryManagementPage() {
         {filteredCategories.length === 0 && searchQuery && (
           <div className="flex justify-center pb-4">
             <Button variant="outline" onClick={() => setSearchQuery("")}>
-              Clear Search
+              Xóa bộ lọc
             </Button>
           </div>
         )}
@@ -193,9 +193,9 @@ export function QuestionCategoryManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitCreate}
-        title="Add New Question Category"
-        description="Fill in the information to create a new question category."
-        submitLabel="Create Category"
+        title="Thêm Danh Mục Câu Hỏi Mới"
+        description="Điền thông tin để tạo danh mục câu hỏi mới."
+        submitLabel="Tạo danh mục"
       />
 
       {/* Edit Dialog */}
@@ -205,9 +205,9 @@ export function QuestionCategoryManagementPage() {
         formData={formData}
         onFormChange={setFormData}
         onSubmit={handleSubmitEdit}
-        title="Edit Question Category"
-        description="Update the question category information."
-        submitLabel="Save Changes"
+        title="Chỉnh Sửa Danh Mục Câu Hỏi"
+        description="Cập nhật thông tin danh mục câu hỏi."
+        submitLabel="Lưu thay đổi"
       />
 
       {/* Delete Confirmation Dialog */}
