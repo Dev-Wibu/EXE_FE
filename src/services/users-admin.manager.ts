@@ -24,17 +24,24 @@ export type { User } from "@/interfaces";
  * Extended to include role field for update operations
  * Note: Backend schema UserInfo doesn't officially include role,
  * but we send it anyway - backend may accept it since User schema has role
+ *
+ * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
+ * New user registration JSON format:
+ * {
+ *   "name": "Nguyen Van A",
+ *   "email": "nguyenvana@example.com",
+ *   "password": "Password123!",
+ *   "university": "Hanoi University of Science and Technology",
+ *   "major": "Computer Science"
+ * }
  */
 export interface UserInfo {
   id?: number;
   name?: string;
   email?: string;
   password?: string;
-  bio?: string;
   university?: string;
   major?: string;
-  targetPosition?: string;
-  targetLevel?: string;
   /** Role field - not in official UserInfo schema but may be accepted by backend */
   role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
   /** isActive field - for soft delete/toggle operations */
@@ -130,6 +137,8 @@ export class UsersAdminManager implements BaseManager<User> {
    * Create new user
    * POST /api/users (multipart/form-data)
    * According to schema: { data: UserInfo, avatar?: File, cvFile?: File }
+   *
+   * Note: Registration does NOT require avatar or CV upload (2026-01-20 update)
    */
   async create(_data: Partial<User> | CreateUserData): Promise<ApiResponse<User>> {
     if (this.mode === "mock") {
@@ -141,11 +150,8 @@ export class UsersAdminManager implements BaseManager<User> {
         email: _data.email,
         role: (_data as User).role || "USER",
         isActive: (_data as User).isActive !== false,
-        bio: _data.bio,
         university: _data.university,
         major: _data.major,
-        targetPosition: _data.targetPosition,
-        targetLevel: _data.targetLevel,
       };
       usersMock.mockUsers.push(newUser);
       return {
@@ -181,11 +187,8 @@ export class UsersAdminManager implements BaseManager<User> {
         name: _data.name.trim(),
         email: _data.email.trim(),
         password: _data.password,
-        bio: _data.bio,
         university: _data.university,
         major: _data.major,
-        targetPosition: _data.targetPosition,
-        targetLevel: _data.targetLevel,
         // IMPORTANT: Include public_id fields for Cloudinary file management
         // Backend requires public_id to be present when files are uploaded.
         // For new users creating with files, send empty string "" as placeholder.
@@ -249,8 +252,9 @@ export class UsersAdminManager implements BaseManager<User> {
    * - avatar?: File (optional)
    * - cvFile?: File (optional)
    *
-   * NOTE: UserInfo schema only contains: id, name, email, password, bio, university, major, targetPosition, targetLevel
+   * NOTE: UserInfo schema only contains: id, name, email, password, university, major
    * It does NOT contain: role, isActive, avatarUrl, cvUrl (these are in User schema only)
+   * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
    *
    * @param _id - User ID to update
    * @param _data - User data to update
@@ -292,16 +296,14 @@ export class UsersAdminManager implements BaseManager<User> {
       // Note: role and isActive are not in official UserInfo schema but we include them
       // Backend may accept these fields since they are part of the User schema
       // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
+      // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
       const userInfo: UserInfo = {
         id: Number(_id), // Include id for update operation
         name: _data.name?.trim(),
         email: _data.email?.trim(),
         password: _data.password,
-        bio: _data.bio,
         university: _data.university,
         major: _data.major,
-        targetPosition: _data.targetPosition,
-        targetLevel: _data.targetLevel,
         // Include role if provided - backend may accept this even though not in UserInfo schema
         role: _data.role,
         // Include Cloudinary public_id for avatar - required for update/delete operations
@@ -404,15 +406,13 @@ export class UsersAdminManager implements BaseManager<User> {
       // Build user data with toggled isActive
       // Include all existing user data to prevent backend from nullifying fields
       // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
+      // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
       const userInfo: UserInfo = {
         id: Number(_id),
         name: currentUserData?.name?.trim(),
         email: currentUserData?.email?.trim(),
-        bio: currentUserData?.bio,
         university: currentUserData?.university,
         major: currentUserData?.major,
-        targetPosition: currentUserData?.targetPosition,
-        targetLevel: currentUserData?.targetLevel,
         role: currentUserData?.role,
         isActive: newActiveStatus,
         // Include Cloudinary public_id for avatar - required for update operations

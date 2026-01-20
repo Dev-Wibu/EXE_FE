@@ -3,7 +3,6 @@ import {
   ArrowUpRight,
   Bell,
   BookOpen,
-  Briefcase,
   Camera,
   ChevronRight,
   ExternalLink,
@@ -13,11 +12,9 @@ import {
   Hash,
   Lock,
   Mail,
-  Phone,
   Plus,
   RefreshCw,
   Save,
-  Target,
   Upload,
   User,
   Wallet as WalletIcon,
@@ -28,14 +25,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   formatCurrency,
   getTransactionStatusLabel,
@@ -53,18 +42,17 @@ import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
 // Extended profile type based on schema-from-be User type
+// Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
 interface UserProfileData {
   id: string;
   name: string;
   email: string;
-  phone?: string;
   avatar?: string | null;
-  bio?: string;
+  public_id?: string | null;
   university?: string;
   major?: string;
-  targetPosition?: string;
-  targetLevel?: string;
   cvUrl?: string | null;
+  cv_public_id?: string | null;
   createdAt?: string;
 }
 
@@ -103,14 +91,12 @@ export function AccountPage() {
           id: String(userData.id || authUser.id),
           name: userData.name || authUser.name || "",
           email: userData.email || authUser.email || "",
-          phone: "", // Backend User schema doesn't have phone field
           avatar: userData.avatarUrl || null,
-          bio: userData.bio || "",
+          public_id: userData.public_id || null,
           university: userData.university || "",
           major: userData.major || "",
-          targetPosition: userData.targetPosition || "",
-          targetLevel: userData.targetLevel || "",
           cvUrl: userData.cvUrl || null,
+          cv_public_id: userData.cv_public_id || null,
           createdAt: new Date().toISOString(), // Backend doesn't provide createdAt
         });
       } else {
@@ -119,13 +105,12 @@ export function AccountPage() {
           id: String(authUser.id),
           name: authUser.name || "",
           email: authUser.email || "",
-          phone: "",
           avatar: authUser.avatarUrl || null,
-          bio: "",
+          public_id: authUser.public_id || null,
           university: "",
           major: "",
-          targetPosition: "",
-          targetLevel: "",
+          cvUrl: null,
+          cv_public_id: null,
           createdAt: new Date().toISOString(),
         });
         console.warn("Failed to fetch user data, using auth store data");
@@ -138,13 +123,12 @@ export function AccountPage() {
           id: String(authUser.id),
           name: authUser.name || "",
           email: authUser.email || "",
-          phone: "",
           avatar: authUser.avatarUrl || null,
-          bio: "",
+          public_id: authUser.public_id || null,
           university: "",
           major: "",
-          targetPosition: "",
-          targetLevel: "",
+          cvUrl: null,
+          cv_public_id: null,
           createdAt: new Date().toISOString(),
         });
       }
@@ -180,12 +164,8 @@ export function AccountPage() {
     if (!userProfile) return;
     setFormData({
       name: userProfile.name,
-      phone: userProfile.phone,
-      bio: userProfile.bio,
       university: userProfile.university,
       major: userProfile.major,
-      targetPosition: userProfile.targetPosition,
-      targetLevel: userProfile.targetLevel,
     });
     setIsEditing(true);
   };
@@ -254,15 +234,17 @@ export function AccountPage() {
     setIsSaving(true);
     try {
       // Call backend API to update user (with optional file uploads)
+      // Include public_id and cv_public_id for proper Cloudinary file management
+      // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
       const response = await usersAdminManager.update(
         userProfile.id,
         {
           name: formData.name,
-          bio: formData.bio,
           university: formData.university,
           major: formData.major,
-          targetPosition: formData.targetPosition,
-          targetLevel: formData.targetLevel,
+          // Include Cloudinary public_id for proper file management (only when present)
+          ...(userProfile.public_id ? { public_id: userProfile.public_id } : {}),
+          ...(userProfile.cv_public_id ? { cv_public_id: userProfile.cv_public_id } : {}),
         },
         avatarFile || undefined,
         cvFile || undefined
@@ -271,6 +253,14 @@ export function AccountPage() {
       if (response.success) {
         // Refresh data from backend to get updated URLs
         await fetchUserData();
+
+        // Update auth store with new data if needed
+        if (response.data) {
+          setUser({
+            ...authUser,
+            ...response.data,
+          });
+        }
 
         toast.success("Cập nhật thông tin thành công!");
         setIsEditing(false);
@@ -465,54 +455,6 @@ export function AccountPage() {
                 </p>
               </div>
             </div>
-
-            {/* Phone - Editable */}
-            <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                <Phone className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div className="flex-1">
-                <Label className="text-sm text-gray-500 dark:text-slate-400">Số điện thoại</Label>
-                {isEditing ? (
-                  <Input
-                    type="tel"
-                    value={formData.phone || ""}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className="mt-1"
-                    placeholder="Nhập số điện thoại"
-                  />
-                ) : (
-                  <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                    {userProfile.phone || "Chưa cập nhật"}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Bio - Editable */}
-            <div className="flex items-start gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
-                <BookOpen className="h-5 w-5 text-purple-500" />
-              </div>
-              <div className="flex-1">
-                <Label className="text-sm text-gray-500 dark:text-slate-400">
-                  Giới thiệu bản thân
-                </Label>
-                {isEditing ? (
-                  <Textarea
-                    value={formData.bio || ""}
-                    onChange={(e) => handleInputChange("bio", e.target.value)}
-                    className="mt-1"
-                    placeholder="Viết vài dòng giới thiệu về bản thân..."
-                    rows={3}
-                  />
-                ) : (
-                  <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                    {userProfile.bio || "Chưa cập nhật"}
-                  </p>
-                )}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -562,59 +504,6 @@ export function AccountPage() {
                 ) : (
                   <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
                     {userProfile.major || "Chưa cập nhật"}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Target Position - Editable */}
-            <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                <Briefcase className="h-5 w-5 text-orange-500" />
-              </div>
-              <div className="flex-1">
-                <Label className="text-sm text-gray-500 dark:text-slate-400">Vị trí mục tiêu</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.targetPosition || ""}
-                    onChange={(e) => handleInputChange("targetPosition", e.target.value)}
-                    className="mt-1"
-                    placeholder="VD: Backend Developer, Data Analyst"
-                  />
-                ) : (
-                  <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                    {userProfile.targetPosition || "Chưa cập nhật"}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Target Level - Editable with Select */}
-            <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
-                <Target className="h-5 w-5 text-rose-500" />
-              </div>
-              <div className="flex-1">
-                <Label className="text-sm text-gray-500 dark:text-slate-400">Cấp độ mục tiêu</Label>
-                {isEditing ? (
-                  <Select
-                    value={formData.targetLevel || ""}
-                    onValueChange={(value) => handleInputChange("targetLevel", value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Chọn cấp độ" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Intern">Intern (Thực tập sinh)</SelectItem>
-                      <SelectItem value="Fresher">Fresher (Mới ra trường)</SelectItem>
-                      <SelectItem value="Junior">Junior (1-2 năm kinh nghiệm)</SelectItem>
-                      <SelectItem value="Middle">Middle (2-4 năm kinh nghiệm)</SelectItem>
-                      <SelectItem value="Senior">Senior (4+ năm kinh nghiệm)</SelectItem>
-                      <SelectItem value="Lead">Lead / Manager</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                    {userProfile.targetLevel || "Chưa cập nhật"}
                   </p>
                 )}
               </div>
