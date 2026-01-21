@@ -37,11 +37,8 @@ export interface MentorRegisterData {
   fullName: string;
   email: string;
   password: string;
-  phone: string;
   bio?: string;
   yearsOfExperience: string;
-  company: string;
-  position: string;
   expertise: string;
   linkedInUrl?: string;
   currentCompany: string;
