@@ -62,6 +62,7 @@ export function MentorAccountPage() {
   const [formData, setFormData] = useState<Partial<MentorProfileData>>({});
 
   // File upload state
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Fetch mentor data from backend
