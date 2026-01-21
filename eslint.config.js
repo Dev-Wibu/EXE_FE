@@ -26,6 +26,15 @@ export default defineConfig([
     rules: {
       "react/no-unescaped-entities": "off",
       "no-undef": "off",
+      "no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          args: "after-used",
+          ignoreRestSiblings: false,
+          argsIgnorePattern: "^_",
+        },
+      ],
       // Disabled linebreak-style as files use LF (Unix) not CRLF (Windows)
       // "linebreak-style": ["error", "windows"],
     },
