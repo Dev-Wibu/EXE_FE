@@ -88,7 +88,9 @@ export function MentorRegisterPage() {
     yearsOfExperience: "",
     expertise: "",
     linkedInUrl: "",
-    currentCompany: "",
+    company: "",
+    phone: "",
+    position: "",
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [identityFile, setIdentityFile] = useState<File | null>(null);
@@ -119,14 +121,16 @@ export function MentorRegisterPage() {
       fullName: formData.fullName,
       email: formData.email,
       password: formData.password,
-      bio: formData.bio || undefined,
+      phone: formData.phone,
       yearsOfExperience: formData.yearsOfExperience,
+      company: formData.company,
+      position: formData.position,
       expertise: formData.expertise,
+      bio: formData.bio || undefined,
       linkedInUrl: formData.linkedInUrl || undefined,
-      currentCompany: formData.currentCompany,
-      avatar: avatarFile ?? undefined,
-      identityFile: identityFile ?? undefined,
-      degreeFile: degreeFile ?? undefined,
+      cvFile: avatarFile ?? undefined,
+      certificateFile: degreeFile ?? undefined,
+      idCardFile: identityFile ?? undefined,
     });
 
     if (result.success) {
@@ -239,15 +243,44 @@ export function MentorRegisterPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="currentCompany">
+                      <Label htmlFor="company">
                         Công ty hiện tại <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="currentCompany"
-                        name="currentCompany"
-                        value={formData.currentCompany}
+                        id="company"
+                        name="company"
+                        value={formData.company}
                         onChange={handleChange}
                         placeholder="Google Vietnam"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="position">
+                        Vị trí công việc <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="position"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
+                        placeholder="Senior Software Engineer"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">
+                        Số điện thoại <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="0901234567"
                         required
                       />
                     </div>
