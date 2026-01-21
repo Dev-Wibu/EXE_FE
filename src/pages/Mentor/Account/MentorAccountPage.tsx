@@ -61,8 +61,7 @@ export function MentorAccountPage() {
   // Form state for editing
   const [formData, setFormData] = useState<Partial<MentorProfileData>>({});
 
-  // File upload state
-  const [_avatarFile, setAvatarFile] = useState<File | null>(null);
+  // Avatar preview state (for display only)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Fetch mentor data from backend
@@ -182,12 +181,11 @@ export function MentorAccountPage() {
   // Cancel editing
   const handleCancelEdit = () => {
     setFormData({});
-    setAvatarFile(null);
     setAvatarPreview(null);
     setIsEditing(false);
   };
 
-  // Handle avatar file selection
+  // Handle avatar file selection (preview only - actual upload not supported)
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -196,7 +194,6 @@ export function MentorAccountPage() {
       }
       const previewUrl = URL.createObjectURL(file);
       setAvatarPreview(previewUrl);
-      setAvatarFile(file);
     }
   };
 
@@ -205,7 +202,6 @@ export function MentorAccountPage() {
     if (avatarPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(avatarPreview);
     }
-    setAvatarFile(null);
     setAvatarPreview(null);
   };
 
@@ -249,7 +245,6 @@ export function MentorAccountPage() {
         toast.success("Cập nhật thông tin thành công!");
         setIsEditing(false);
         setFormData({});
-        setAvatarFile(null);
         setAvatarPreview(null);
       } else {
         toast.error(response.error || "Cập nhật thất bại. Vui lòng thử lại.");

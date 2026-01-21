@@ -98,10 +98,16 @@ export function UserFormDialog({
     }
   };
 
-  // Handle file input change for CV
+  // Handle file input change for CV (PDF only)
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate PDF file type
+      if (!file.type.includes("pdf") && !file.name.toLowerCase().endsWith(".pdf")) {
+        // Invalid file type - only PDF allowed
+        e.target.value = ""; // Reset input
+        return;
+      }
       // Create preview URL for the selected file
       if (cvPreview?.startsWith("blob:")) {
         URL.revokeObjectURL(cvPreview);
@@ -133,31 +139,6 @@ export function UserFormDialog({
   // Get the display image URL - prioritize new upload preview over existing URL
   const displayAvatarUrl = avatarPreview || selectedUser?.avatarUrl;
   const displayCvUrl = cvPreview || selectedUser?.cvUrl;
-
-  // Check if CV is an image (for preview purposes)
-  const isCvImage = (url: string | null | undefined): boolean => {
-    if (!url) return false;
-    // For blob URLs, check the file extension from formData
-    if (url.startsWith("blob:") && formData.cvFile) {
-      const fileName = formData.cvFile.name.toLowerCase();
-      return [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"].some((ext) =>
-        fileName.endsWith(ext)
-      );
-    }
-    // For server URLs, extract the path and check extension
-    try {
-      const urlPath = new URL(url).pathname.toLowerCase();
-      return [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"].some((ext) =>
-        urlPath.endsWith(ext)
-      );
-    } catch {
-      // If URL parsing fails, fallback to includes check on the full string
-      const lowerUrl = url.toLowerCase();
-      return [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"].some((ext) =>
-        lowerUrl.endsWith(ext)
-      );
-    }
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -290,31 +271,18 @@ export function UserFormDialog({
               )}
             </div>
 
-            {/* CV Section */}
+            {/* CV Section - PDF Only */}
             <div className="space-y-1.5">
-              <Label htmlFor="cvFile">File CV</Label>
-              {/* CV Preview - Show image preview for images, or file icon for documents */}
+              <Label htmlFor="cvFile">File CV (PDF)</Label>
+              {/* CV Preview - Show PDF icon for all CV files (only PDF allowed) */}
               {displayCvUrl && (
                 <div className="relative mb-2 rounded-lg border bg-slate-50 p-2 dark:bg-slate-800">
-                  {isCvImage(displayCvUrl) ? (
-                    <div className="relative mx-auto h-32 w-full overflow-hidden rounded-md">
-                      <img
-                        src={displayCvUrl}
-                        alt="Xem trước CV"
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-32 flex-col items-center justify-center">
-                      <FileText className="h-12 w-12 text-green-500" />
-                      <span className="mt-2 text-xs text-gray-500">
-                        {formData.cvFile?.name || "File tài liệu"}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex h-32 flex-col items-center justify-center">
+                    <FileText className="h-12 w-12 text-red-500" />
+                    <span className="mt-2 max-w-full truncate px-2 text-xs text-gray-500">
+                      {formData.cvFile?.name || "PDF Document"}
+                    </span>
+                  </div>
                   <div className="mt-2 flex items-center justify-center gap-2">
                     {cvPreview ? (
                       <>
@@ -344,18 +312,18 @@ export function UserFormDialog({
                   </div>
                 </div>
               )}
-              {/* File Input */}
+              {/* File Input - PDF only */}
               <Input
                 id="cvFile"
                 type="file"
-                accept=".pdf,.doc,.docx,image/*"
+                accept=".pdf,application/pdf"
                 onChange={handleCvChange}
                 className="cursor-pointer"
               />
               {!displayCvUrl && (
                 <p className="text-muted-foreground flex items-center gap-1 text-xs">
                   <FileText className="h-3 w-3" />
-                  Chưa chọn CV
+                  Chưa chọn CV (chỉ chấp nhận PDF)
                 </p>
               )}
             </div>

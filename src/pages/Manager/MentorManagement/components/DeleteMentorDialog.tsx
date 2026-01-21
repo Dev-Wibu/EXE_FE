@@ -30,8 +30,8 @@ export function DeleteMentorDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Xóa Mentor</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa mentor &quot;{mentor?.name}&quot;? Hành động này không thể hoàn
-            tác và sẽ vô hiệu hóa tài khoản mentor.
+            Bạn có chắc chắn muốn xóa mentor &quot;{mentor?.name}&quot;? Hành động này không thể
+            hoàn tác và sẽ vô hiệu hóa tài khoản mentor.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
