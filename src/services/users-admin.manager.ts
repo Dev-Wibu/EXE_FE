@@ -473,6 +473,76 @@ export class UsersAdminManager implements BaseManager<User> {
     // Delegate to toggleActive for the actual implementation
     return this.toggleActive(_id, userData);
   }
+
+  /**
+   * Upload CV for a specific user
+   * POST /api/users/upload-cv (multipart/form-data)
+   *
+   * This is a dedicated endpoint for CV upload that returns CandidateProfile.
+   * Use this instead of including CV in the general update when you only need to update CV.
+   *
+   * @param userId - User ID to upload CV for
+   * @param cvFile - PDF file to upload (only PDF is accepted)
+   * @returns CandidateProfile with parsed CV data
+   */
+  async uploadCv(
+    userId: string | number,
+    cvFile: File
+  ): Promise<
+    ApiResponse<import("../../schema-from-be").components["schemas"]["CandidateProfile"]>
+  > {
+    if (this.mode === "mock") {
+      // In mock mode, simulate CV upload
+      return {
+        success: true,
+        data: {
+          id: Date.now(),
+          user: { id: Number(userId) },
+          targetRole: "Software Engineer",
+          targetLevel: "Junior",
+          introduction: "Mock CV data",
+          technicalSkills: ["JavaScript", "React"],
+          softSkills: ["Communication"],
+          tools: ["VS Code"],
+          projects: [],
+          workExperiences: [],
+          educations: [],
+          certifications: [],
+          achievements: [],
+        },
+      };
+    }
+
+    try {
+      // Validate file type - only PDF allowed
+      if (!cvFile.type.includes("pdf") && !cvFile.name.toLowerCase().endsWith(".pdf")) {
+        return {
+          success: false,
+          error: "Chỉ chấp nhận file PDF",
+        };
+      }
+
+      const formData = new FormData();
+      formData.append("userId", String(userId));
+      formData.append("cvFile", cvFile);
+
+      const response = await this.api.post(API_ENDPOINTS.USERS.UPLOAD_CV, formData, {
+        headers: {
+          "Content-Type": undefined,
+        },
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to upload CV",
+      };
+    }
+  }
 }
 
 // Export singleton instance

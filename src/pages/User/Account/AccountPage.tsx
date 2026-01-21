@@ -23,6 +23,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -71,9 +72,11 @@ export function AccountPage() {
 
   // File upload state
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [cvFile, setCvFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [cvPreview, setCvPreview] = useState<string | null>(null);
+
+  // CV Upload Modal state
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
+  const [isCvUploading, setIsCvUploading] = useState(false);
 
   // Fetch user data from backend
   const fetchUserData = useCallback(async () => {
@@ -148,11 +151,8 @@ export function AccountPage() {
       if (avatarPreview?.startsWith("blob:")) {
         URL.revokeObjectURL(avatarPreview);
       }
-      if (cvPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(cvPreview);
-      }
     };
-  }, [avatarPreview, cvPreview]);
+  }, [avatarPreview]);
 
   const handleRefreshData = async () => {
     await fetchUserData();
@@ -174,9 +174,7 @@ export function AccountPage() {
   const handleCancelEdit = () => {
     setFormData({});
     setAvatarFile(null);
-    setCvFile(null);
     setAvatarPreview(null);
-    setCvPreview(null);
     setIsEditing(false);
   };
 
@@ -193,19 +191,6 @@ export function AccountPage() {
     }
   };
 
-  // Handle CV file selection
-  const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (cvPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(cvPreview);
-      }
-      const previewUrl = URL.createObjectURL(file);
-      setCvPreview(previewUrl);
-      setCvFile(file);
-    }
-  };
-
   // Clear avatar selection
   const handleClearAvatar = () => {
     if (avatarPreview?.startsWith("blob:")) {
@@ -215,13 +200,29 @@ export function AccountPage() {
     setAvatarPreview(null);
   };
 
-  // Clear CV selection
-  const handleClearCv = () => {
-    if (cvPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(cvPreview);
+  // Handle CV upload via dedicated modal
+  const handleCvUpload = async (file: File) => {
+    if (!userProfile?.id) {
+      toast.error("Không tìm thấy ID người dùng");
+      return;
     }
-    setCvFile(null);
-    setCvPreview(null);
+
+    setIsCvUploading(true);
+    try {
+      const response = await usersAdminManager.uploadCv(userProfile.id, file);
+      if (response.success) {
+        // Refresh data to get updated CV URL
+        await fetchUserData();
+        toast.success("Upload CV thành công!");
+      } else {
+        toast.error(response.error || "Upload CV thất bại");
+        throw new Error(response.error);
+      }
+    } catch {
+      throw new Error("Upload CV thất bại");
+    } finally {
+      setIsCvUploading(false);
+    }
   };
 
   // Save profile changes to backend
@@ -236,6 +237,7 @@ export function AccountPage() {
       // Call backend API to update user (with optional file uploads)
       // Include public_id and cv_public_id for proper Cloudinary file management
       // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
+      // Note: CV is now uploaded separately via CVUploadModal using /api/users/upload-cv endpoint
       const response = await usersAdminManager.update(
         userProfile.id,
         {
@@ -247,7 +249,7 @@ export function AccountPage() {
           ...(userProfile.cv_public_id ? { cv_public_id: userProfile.cv_public_id } : {}),
         },
         avatarFile || undefined,
-        cvFile || undefined
+        undefined // CV is uploaded separately
       );
 
       if (response.success) {
@@ -266,9 +268,7 @@ export function AccountPage() {
         setIsEditing(false);
         setFormData({});
         setAvatarFile(null);
-        setCvFile(null);
         setAvatarPreview(null);
-        setCvPreview(null);
       } else {
         toast.error(response.error || "Cập nhật thất bại. Vui lòng thử lại.");
       }
@@ -509,58 +509,40 @@ export function AccountPage() {
               </div>
             </div>
 
-            {/* CV Upload - Editable */}
+            {/* CV Upload - Dedicated Modal (PDF only) */}
             <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                 <FileText className="h-5 w-5 text-green-500" />
               </div>
               <div className="flex-1">
                 <Label className="text-sm text-gray-500 dark:text-slate-400">CV / Resume</Label>
-                {isEditing ? (
-                  <div className="mt-1 space-y-2">
-                    <Input
-                      type="file"
-                      accept=".pdf,.doc,.docx,image/*"
-                      onChange={handleCvChange}
-                      className="cursor-pointer"
-                    />
-                    {(cvPreview || userProfile.cvUrl) && (
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={cvPreview || userProfile.cvUrl || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs text-green-600 hover:underline dark:text-green-400">
-                          <ExternalLink className="h-3 w-3" />
-                          {cvFile?.name || "Xem CV hiện tại"}
-                        </a>
-                        {cvPreview && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleClearCv}
-                            className="h-6 px-2 text-red-500 hover:bg-red-50 hover:text-red-600">
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : userProfile.cvUrl ? (
-                  <a
-                    href={userProfile.cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 font-['Inter'] text-base font-medium text-green-600 hover:underline dark:text-green-400">
-                    <Upload className="h-4 w-4" />
-                    Xem CV
-                  </a>
-                ) : (
-                  <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                    Chưa cập nhật
-                  </p>
-                )}
+                <div className="mt-1 flex items-center gap-3">
+                  {userProfile.cvUrl ? (
+                    <a
+                      href={userProfile.cvUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 font-['Inter'] text-base font-medium text-green-600 hover:underline dark:text-green-400">
+                      <ExternalLink className="h-4 w-4" />
+                      Xem CV hiện tại
+                    </a>
+                  ) : (
+                    <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
+                      Chưa có CV
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCvModalOpen(true)}
+                    className="ml-auto">
+                    <Upload className="mr-2 h-4 w-4" />
+                    {userProfile.cvUrl ? "Cập nhật CV" : "Upload CV"}
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                  Chỉ chấp nhận file PDF, tối đa 10MB
+                </p>
               </div>
             </div>
           </div>
@@ -828,6 +810,17 @@ export function AccountPage() {
       ) : (
         renderTabContent()
       )}
+
+      {/* CV Upload Modal */}
+      <CVUploadModal
+        isOpen={isCvModalOpen}
+        onOpenChange={setIsCvModalOpen}
+        currentCvUrl={userProfile?.cvUrl}
+        onUpload={handleCvUpload}
+        isUploading={isCvUploading}
+        title="Upload CV"
+        description="Tải lên CV của bạn để mentor có thể xem trước khi phỏng vấn. Chỉ chấp nhận file PDF."
+      />
     </div>
   );
 }

@@ -48,11 +48,13 @@ export const API_ENDPOINTS = {
   // POST /api/users - createUser (multipart/form-data)
   // PUT /api/users - updateUser (query param: user)
   // GET /api/users/{id} - getUserById
+  // POST /api/users/upload-cv - uploadCv (multipart/form-data: userId, cvFile)
   USERS: {
     LIST: "/api/users",
     DETAIL: "/api/users/:id",
     CREATE: "/api/users",
     UPDATE: "/api/users",
+    UPLOAD_CV: "/api/users/upload-cv",
   },
 
   // Mentor endpoints - Based on schema-from-be.d.ts
