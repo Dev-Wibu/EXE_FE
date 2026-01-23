@@ -57,11 +57,12 @@ export interface Mentor {
 /**
  * User form data for create/update operations
  * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
+ * Updated: Removed role as UserInfo schema doesn't include it (2026-01-23)
+ * UserInfo only contains: id, name, email, password, university, major
  */
 export interface UserFormData {
   name: string;
   email: string;
-  role: UserRole;
   university?: string;
   major?: string;
   isActive?: boolean;
@@ -73,6 +74,7 @@ export interface UserFormData {
 
 /**
  * Mentor form data for create/update operations
+ * Updated to match MentorInfo schema (doesn't include rate)
  */
 export interface MentorFormData {
   name: string;
@@ -82,7 +84,6 @@ export interface MentorFormData {
   yearsOfExperience?: number;
   linkedInUrl?: string;
   currentCompany?: string;
-  rate?: number;
   active?: boolean;
 }
 

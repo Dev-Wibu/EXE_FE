@@ -4,7 +4,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
-  role: "user" | "mentor" | "admin";
+  role: "user" | "mentor" | "admin" | "staff";
   avatar?: string | null;
   bio?: string;
 }
@@ -31,6 +31,14 @@ export const mockAdmin: User = {
   avatar: null,
 };
 
+export const mockStaff: User = {
+  id: "4",
+  email: "staff@example.com",
+  fullName: "Staff Demo",
+  role: "staff",
+  avatar: null,
+};
+
 export const mockMentorRegistration: MentorRegistration = {
   status: "pending",
   submittedAt: "2025-10-20T10:00:00Z",
@@ -54,6 +62,11 @@ export const mockLogin = async (
   // Demo admin account
   if (email === "admin@example.com" && password === "admin123") {
     return { success: true, user: mockAdmin };
+  }
+
+  // Demo staff account
+  if (email === "staff@example.com" && password === "staff123") {
+    return { success: true, user: mockStaff };
   }
 
   return { success: false, error: "Email hoặc mật khẩu không đúng" };

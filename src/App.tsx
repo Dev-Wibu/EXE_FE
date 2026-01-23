@@ -24,6 +24,7 @@ import {
   UserManagementPage,
 } from "@/pages/Manager";
 import { MentorAccountPage, MentorOverviewPage } from "@/pages/Mentor";
+import { StaffDashboardPage } from "@/pages/Staff";
 import {
   AccountPage,
   AIChatConversationPage,
@@ -134,6 +135,9 @@ function App() {
         <Route path="/admin/mentors" element={<MentorManagementPage />} />
         <Route path="/admin/users" element={<UserManagementPage />} />
         <Route path="/admin/sessions" element={<SessionManagementPage />} />
+
+        {/* Staff Dashboard routes */}
+        <Route path="/staff" element={<StaffDashboardPage />} />
       </Routes>
     </BrowserRouter>
   );

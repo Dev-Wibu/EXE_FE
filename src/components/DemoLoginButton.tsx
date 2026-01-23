@@ -14,6 +14,7 @@
  * - USER: Regular user to test basic features
  * - ADMIN: Admin user to test management features
  * - MENTOR: Mentor user to test mentor dashboard
+ * - STAFF: Staff user to test staff operational tasks (approvals, moderation, support)
  */
 
 import { useState } from "react";
@@ -43,6 +44,13 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     email: "mentor@example.com",
     password: "mentor123",
     description: "Tài khoản mentor để quản lý phiên phỏng vấn và hỗ trợ học viên",
+  },
+  {
+    role: "STAFF",
+    email: "staff@example.com",
+    password: "staff123",
+    description:
+      "Tài khoản nhân viên để xử lý công việc vận hành (duyệt mentor, hỗ trợ người dùng)",
   },
 ];
 
@@ -150,7 +158,9 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
                           ? "bg-purple-100 text-purple-700"
                           : account.role === "MENTOR"
                             ? "bg-emerald-100 text-emerald-700"
-                            : "bg-blue-100 text-blue-700"
+                            : account.role === "STAFF"
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-blue-100 text-blue-700"
                       }`}>
                       {account.role}
                     </span>

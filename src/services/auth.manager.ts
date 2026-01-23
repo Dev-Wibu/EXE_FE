@@ -61,16 +61,18 @@ export class AuthManager {
     return (
       (email === "user@example.com" && password === "user123") ||
       (email === "admin@example.com" && password === "admin123") ||
-      (email === "mentor@example.com" && password === "mentor123")
+      (email === "mentor@example.com" && password === "mentor123") ||
+      (email === "staff@example.com" && password === "staff123")
     );
   }
 
   /**
    * Get demo user role based on email
    */
-  private getDemoUserRole(email: string): "admin" | "user" | "mentor" {
+  private getDemoUserRole(email: string): "admin" | "user" | "mentor" | "staff" {
     if (email === "admin@example.com") return "admin";
     if (email === "mentor@example.com") return "mentor";
+    if (email === "staff@example.com") return "staff";
     return "user";
   }
 
@@ -88,7 +90,14 @@ export class AuthManager {
       const demoUser: User = {
         id: `demo-${role}`,
         email: credentials.email,
-        fullName: role === "admin" ? "Demo Admin" : role === "mentor" ? "Demo Mentor" : "Demo User",
+        fullName:
+          role === "admin"
+            ? "Demo Admin"
+            : role === "mentor"
+              ? "Demo Mentor"
+              : role === "staff"
+                ? "Demo Staff"
+                : "Demo User",
         role: role,
         avatar: undefined,
       };

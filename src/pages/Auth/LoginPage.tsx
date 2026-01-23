@@ -35,7 +35,7 @@ export function LoginPage() {
             : result.data.user.id,
         name: result.data.user.fullName,
         email: result.data.user.email,
-        role: result.data.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR",
+        role: result.data.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR" | "STAFF",
         avatarUrl: result.data.user.avatar || undefined,
       });
       setToken(result.data.token ?? null);
@@ -45,6 +45,10 @@ export function LoginPage() {
       const userRole = result.data.user.role;
       if (userRole === "admin") {
         navigate("/manager");
+      } else if (userRole === "mentor") {
+        navigate("/mentor");
+      } else if (userRole === "staff") {
+        navigate("/staff");
       } else {
         navigate("/select-role");
       }
