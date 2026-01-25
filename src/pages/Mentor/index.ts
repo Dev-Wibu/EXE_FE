@@ -1,2 +1,7 @@
 export { MentorAccountPage } from "./Account";
+export { GivenFeedbackListPage } from "./Feedback";
+export { MentorNotificationsPage } from "./Notifications";
 export { MentorOverviewPage } from "./Overview";
+export { MentorReviewsPage, ReviewDetailPage } from "./Reviews";
+export { MentorSessionsPage, WriteFeedbackPage } from "./Sessions";
+export { StudentDetailPage, StudentsListPage } from "./Students";

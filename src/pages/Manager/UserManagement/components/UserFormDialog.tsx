@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MAJOR_OPTIONS } from "@/constants/majors";
 
 import type { User, UserFormData } from "../types";
 
@@ -175,13 +183,21 @@ export function UserFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="major">Chuyên ngành</Label>
-              <Input
-                id="major"
+              <Label htmlFor="major">Chuyên ngành *</Label>
+              <Select
                 value={formData.major || ""}
-                onChange={(e) => onFormChange({ ...formData, major: e.target.value })}
-                placeholder="VD: Khoa học máy tính"
-              />
+                onValueChange={(value) => onFormChange({ ...formData, major: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn chuyên ngành" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MAJOR_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {/* File Upload Section with Previews */}
