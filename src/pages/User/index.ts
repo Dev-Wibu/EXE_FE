@@ -19,6 +19,9 @@ export {
   MockInterviewPaymentSuccessPage,
   MockInterviewSchedulePage,
   MockInterviewSelectMentorPage,
+  SessionDetailPage,
+  SessionHistoryPage,
+  WriteReviewPage,
 } from "./MockInterview";
 
 // AI Chat exports
@@ -29,3 +32,9 @@ export { QuestionDetailPage, QuestionListPage } from "./Question";
 
 // Account exports
 export { AccountPage } from "./Account";
+
+// Feedback exports
+export { FeedbackDetailPage, UserFeedbackListPage } from "./Feedback";
+
+// Notifications exports
+export { UserNotificationsPage } from "./Notifications";

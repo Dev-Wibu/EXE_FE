@@ -27,6 +27,14 @@ import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MAJOR_OPTIONS, getMajorLabel } from "@/constants/majors";
+import {
   formatCurrency,
   getTransactionStatusLabel,
   getTransactionTypeLabel,
@@ -495,15 +503,23 @@ export function AccountPage() {
               <div className="flex-1">
                 <Label className="text-sm text-gray-500 dark:text-slate-400">Chuyên ngành</Label>
                 {isEditing ? (
-                  <Input
+                  <Select
                     value={formData.major || ""}
-                    onChange={(e) => handleInputChange("major", e.target.value)}
-                    className="mt-1"
-                    placeholder="VD: Công nghệ thông tin"
-                  />
+                    onValueChange={(value) => handleInputChange("major", value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Chọn chuyên ngành" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MAJOR_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                    {userProfile.major || "Chưa cập nhật"}
+                    {getMajorLabel(userProfile.major || "") || "Chưa cập nhật"}
                   </p>
                 )}
               </div>
@@ -577,7 +593,7 @@ export function AccountPage() {
   const renderWalletTab = () => (
     <div className="flex flex-col gap-6">
       {/* Wallet Balance Card */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0047AB] to-[#007BFF] p-8 text-white shadow-lg">
+      <div className="rounded-2xl bg-linear-to-r from-[#0047AB] to-[#007BFF] p-8 text-white shadow-lg">
         <div className="mb-4 flex items-center gap-3">
           <WalletIcon className="h-8 w-8" />
           <span className="font-['Inter'] text-lg font-medium">Ví INBLUE</span>

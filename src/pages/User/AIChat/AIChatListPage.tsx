@@ -24,7 +24,7 @@ export function AIChatListPage() {
   return (
     <div className="flex flex-col gap-8 p-8">
       {/* Top Banner */}
-      <Card className="overflow-hidden border-0 bg-gradient-to-r from-[#0047AB] via-[#005B9A] to-[#007BFF] py-0">
+      <Card className="overflow-hidden border-0 bg-linear-to-r from-[#0047AB] via-[#005B9A] to-[#007BFF] py-0">
         <CardContent className="flex items-center justify-between p-8">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
