@@ -95,7 +95,7 @@ export function MentorManagementPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (mentor: Mentor) => {
+  const handleToggleActive = (mentor: Mentor) => {
     setSelectedMentor(mentor);
     setIsDeleteDialogOpen(true);
   };
@@ -135,21 +135,22 @@ export function MentorManagementPage() {
     }
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmToggle = async () => {
     if (!selectedMentor?.id) return;
 
     try {
-      const response = await mentorManager.delete(selectedMentor.id);
+      const response = await mentorManager.toggleActive(selectedMentor.id);
       if (response.success) {
-        toast.success("Đã xóa mentor thành công");
+        const action = selectedMentor.active !== false ? "vô hiệu hóa" : "kích hoạt";
+        toast.success(`Đã ${action} mentor thành công`);
         setIsDeleteDialogOpen(false);
         loadMentors(); // Refresh the list
       } else {
-        toast.error(response.error || "Không thể xóa mentor");
+        toast.error(response.error || "Không thể thay đổi trạng thái mentor");
       }
     } catch (error) {
-      console.error("Error deleting mentor:", error);
-      toast.error("Không thể xóa mentor");
+      console.error("Error toggling mentor status:", error);
+      toast.error("Không thể thay đổi trạng thái mentor");
     }
   };
 
@@ -213,7 +214,7 @@ export function MentorManagementPage() {
         <MentorTable
           mentors={filteredMentors.slice().reverse()}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={handleToggleActive}
         />
 
         {/* Empty State with Clear Filters */}
@@ -256,12 +257,12 @@ export function MentorManagementPage() {
         selectedMentor={selectedMentor}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Toggle Active Status Confirmation Dialog */}
       <DeleteMentorDialog
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         mentor={selectedMentor}
-        onConfirm={handleConfirmDelete}
+        onConfirm={handleConfirmToggle}
       />
     </div>
   );

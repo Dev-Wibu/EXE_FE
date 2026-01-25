@@ -1,7 +1,10 @@
+export { FeedbackManagementPage } from "./FeedbackManagement";
 export { ManagerDashboardPage } from "./ManagerDashboard";
 export { MentorManagementPage } from "./MentorManagement";
+export { NotificationManagementPage } from "./NotificationManagement";
 export { QuestionCategoryManagementPage } from "./QuestionCategoryManagement";
 export { QuestionMajorManagementPage } from "./QuestionMajorManagement";
 export { QuestionSetManagementPage } from "./QuestionSetManagement";
+export { ReviewManagementPage } from "./ReviewManagement";
 export { SessionManagementPage } from "./SessionManagement";
 export { UserManagementPage } from "./UserManagement";
