@@ -162,7 +162,7 @@ export function Header() {
           <Button
             className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-6 shadow-sm hover:shadow-md"
             asChild>
-            <Link to="/signup">Bắt đầu</Link>
+            <Link to="/select-role">Bắt đầu</Link>
           </Button>
         </div>
       </div>

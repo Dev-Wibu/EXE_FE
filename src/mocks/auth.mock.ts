@@ -10,6 +10,9 @@ export interface User {
 }
 
 export interface MentorRegistration {
+  id?: string;
+  fullName?: string;
+  email?: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: string;
   reviewedAt: string | null;
@@ -99,14 +102,18 @@ export const mockSignup = async (data: {
 };
 
 // Mock mentor registration function
+// Updated to match backend MentorInfo schema (2026-01-24)
 export const mockMentorRegister = async (data: {
   fullName: string;
   email: string;
-  phone: string;
-  yearsOfExperience: string;
-  company: string;
-  position: string;
-  expertise: string;
+  password?: string;
+  phone?: string;
+  yearsOfExperience?: string;
+  company?: string;
+  position?: string;
+  expertise?: string;
+  bio?: string;
+  linkedInUrl?: string;
   cvFile?: File;
   certificateFile?: File;
   idCardFile?: File;
@@ -117,6 +124,9 @@ export const mockMentorRegister = async (data: {
   void data;
 
   const registration: MentorRegistration = {
+    id: Date.now().toString(),
+    fullName: data.fullName,
+    email: data.email,
     status: "pending",
     submittedAt: new Date().toISOString(),
     reviewedAt: null,

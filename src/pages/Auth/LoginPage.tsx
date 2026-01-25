@@ -50,7 +50,8 @@ export function LoginPage() {
       } else if (userRole === "staff") {
         navigate("/staff");
       } else {
-        navigate("/select-role");
+        // For regular users, go directly to dashboard
+        navigate("/dashboard");
       }
     } else {
       setError(result.error || "Đăng nhập thất bại");
@@ -60,8 +61,8 @@ export function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    // Mock Google login - redirect to select role
-    navigate("/select-role");
+    // Mock Google login - redirect to dashboard for regular users
+    navigate("/dashboard");
   };
 
   // Handler for demo account selection - auto-fills credentials

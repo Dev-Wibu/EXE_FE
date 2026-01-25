@@ -80,7 +80,7 @@ function FileUploadBox({
 export function MentorRegisterPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -88,13 +88,12 @@ export function MentorRegisterPage() {
     yearsOfExperience: "",
     expertise: "",
     linkedInUrl: "",
-    company: "",
-    phone: "",
-    position: "",
+    currentCompany: "",
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [identityFile, setIdentityFile] = useState<File | null>(null);
   const [degreeFile, setDegreeFile] = useState<File | null>(null);
+  const [otherFile, setOtherFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -118,19 +117,20 @@ export function MentorRegisterPage() {
     setIsLoading(true);
 
     const result = await authManager.registerMentor({
-      fullName: formData.fullName,
+      name: formData.name,
       email: formData.email,
       password: formData.password,
-      phone: formData.phone,
-      yearsOfExperience: formData.yearsOfExperience,
-      company: formData.company,
-      position: formData.position,
-      expertise: formData.expertise,
       bio: formData.bio || undefined,
+      expertise: formData.expertise,
+      yearsOfExperience: formData.yearsOfExperience
+        ? Number(formData.yearsOfExperience)
+        : undefined,
       linkedInUrl: formData.linkedInUrl || undefined,
-      cvFile: avatarFile ?? undefined,
-      certificateFile: degreeFile ?? undefined,
-      idCardFile: identityFile ?? undefined,
+      currentCompany: formData.currentCompany,
+      avatar: avatarFile ?? undefined,
+      identityFile: identityFile ?? undefined,
+      degreeFile: degreeFile ?? undefined,
+      otherFile: otherFile ?? undefined,
     });
 
     if (result.success) {
@@ -175,13 +175,13 @@ export function MentorRegisterPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">
+                      <Label htmlFor="name">
                         Họ và tên <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="fullName"
-                        name="fullName"
-                        value={formData.fullName}
+                        id="name"
+                        name="name"
+                        value={formData.name}
                         onChange={handleChange}
                         placeholder="Nguyễn Văn A"
                         required
@@ -243,44 +243,15 @@ export function MentorRegisterPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="company">
+                      <Label htmlFor="currentCompany">
                         Công ty hiện tại <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="company"
-                        name="company"
-                        value={formData.company}
+                        id="currentCompany"
+                        name="currentCompany"
+                        value={formData.currentCompany}
                         onChange={handleChange}
                         placeholder="Google Vietnam"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="position">
-                        Vị trí công việc <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="position"
-                        name="position"
-                        value={formData.position}
-                        onChange={handleChange}
-                        placeholder="Senior Software Engineer"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">
-                        Số điện thoại <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="0901234567"
                         required
                       />
                     </div>
@@ -292,6 +263,8 @@ export function MentorRegisterPage() {
                       <Input
                         id="yearsOfExperience"
                         name="yearsOfExperience"
+                        type="number"
+                        min="0"
                         value={formData.yearsOfExperience}
                         onChange={handleChange}
                         placeholder="5"
@@ -347,7 +320,7 @@ export function MentorRegisterPage() {
                     Upload các giấy tờ để xác minh danh tính và năng lực của bạn
                   </p>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <FileUploadBox
                       label="Ảnh đại diện"
                       acceptedTypes="JPG, PNG"
@@ -364,7 +337,6 @@ export function MentorRegisterPage() {
 
                     <FileUploadBox
                       label="CCCD/CMND"
-                      required
                       acceptedTypes="JPG, PNG, PDF"
                       maxSize="5MB"
                       icon={<FileText className="h-8 w-8" />}
@@ -385,6 +357,21 @@ export function MentorRegisterPage() {
                       icon={<Award className="h-8 w-8" />}
                       onFileSelect={setDegreeFile}
                       selectedFile={degreeFile}
+                      accept={{
+                        "application/pdf": [".pdf"],
+                        "image/jpeg": [".jpg", ".jpeg"],
+                        "image/png": [".png"],
+                      }}
+                      maxSizeBytes={5 * 1024 * 1024}
+                    />
+
+                    <FileUploadBox
+                      label="Tài liệu khác"
+                      acceptedTypes="PDF, JPG, PNG"
+                      maxSize="5MB"
+                      icon={<FileText className="h-8 w-8" />}
+                      onFileSelect={setOtherFile}
+                      selectedFile={otherFile}
                       accept={{
                         "application/pdf": [".pdf"],
                         "image/jpeg": [".jpg", ".jpeg"],

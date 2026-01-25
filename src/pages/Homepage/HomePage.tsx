@@ -112,7 +112,7 @@ export function HomePage() {
                   size="lg"
                   className="h-14 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8 text-base shadow-lg hover:shadow-xl"
                   asChild>
-                  <Link to="/signup">
+                  <Link to="/select-role">
                     <Play className="mr-2 h-5 w-5" />
                     Thử phỏng vấn miễn phí
                   </Link>
@@ -122,7 +122,7 @@ export function HomePage() {
                   variant="outline"
                   className="h-14 rounded-full px-8 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                   asChild>
-                  <Link to="/login">Xem demo</Link>
+                  <Link to="/login">Đăng nhập</Link>
                 </Button>
               </div>
 
@@ -297,7 +297,7 @@ export function HomePage() {
                 <Button
                   className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
                   asChild>
-                  <Link to="/signup">
+                  <Link to="/select-role">
                     {mockFeatures[0].cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -318,7 +318,7 @@ export function HomePage() {
                 <Button
                   className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
                   asChild>
-                  <Link to="/signup">
+                  <Link to="/select-role">
                     {mockFeatures[1].cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -363,7 +363,7 @@ export function HomePage() {
                 <Button
                   className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
                   asChild>
-                  <Link to="/signup">
+                  <Link to="/select-role">
                     {mockFeatures[2].cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>

@@ -13,7 +13,7 @@ export const mockUsers: User[] = [
     role: "USER",
     isActive: true,
     university: "FPT University",
-    major: "Software Engineering",
+    major: "CNTT",
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ export const mockUsers: User[] = [
     role: "USER",
     isActive: true,
     university: "HCMC University of Technology",
-    major: "Computer Science",
+    major: "Marketing",
   },
   {
     id: 3,

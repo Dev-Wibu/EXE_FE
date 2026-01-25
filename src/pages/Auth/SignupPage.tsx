@@ -1,17 +1,27 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MAJOR_OPTIONS } from "@/constants/majors";
 import { authManager } from "@/services/auth.manager";
 import { useAuthStore } from "@/stores/authStore";
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get("role"); // Get role from URL param
   const { setUser, setToken, setIsLoggedIn } = useAuthStore();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -74,8 +84,8 @@ export function SignupPage() {
       setToken(result.data.token || null);
       setIsLoggedIn(true);
 
-      // Navigate to select role page after successful signup
-      navigate("/select-role");
+      // Navigate to user dashboard after successful signup
+      navigate("/dashboard");
     } else {
       setError(result.error || "Đăng ký thất bại");
     }
@@ -84,14 +94,16 @@ export function SignupPage() {
   };
 
   const handleGoogleSignup = () => {
-    // Mock Google signup - redirect to select role
-    navigate("/select-role");
+    // Mock Google signup - redirect to dashboard
+    navigate("/dashboard");
   };
 
   return (
     <Card className="w-full max-w-md dark:border-slate-800 dark:bg-slate-900">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl text-[#0047AB] dark:text-[#66B2FF]">Đăng ký</CardTitle>
+        <CardTitle className="text-2xl text-[#0047AB] dark:text-[#66B2FF]">
+          {role === "user" ? "Đăng ký tài khoản học viên" : "Đăng ký"}
+        </CardTitle>
         <CardDescription className="dark:text-slate-400">
           Chào mừng đến với InBlue. Vui lòng điền thông tin
         </CardDescription>
@@ -189,17 +201,22 @@ export function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="major" className="dark:text-slate-300">
-                Chuyên ngành
+                Chuyên ngành *
               </Label>
-              <Input
-                id="major"
-                name="major"
+              <Select
                 value={formData.major}
-                onChange={handleChange}
-                placeholder="Khoa học máy tính"
-                required
-                className="dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
-              />
+                onValueChange={(value) => setFormData({ ...formData, major: value })}>
+                <SelectTrigger className="dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                  <SelectValue placeholder="Chọn chuyên ngành" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MAJOR_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

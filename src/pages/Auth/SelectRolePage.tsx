@@ -14,8 +14,8 @@ export function SelectRolePage() {
   const isMentor = user?.role?.toUpperCase() === "MENTOR" || user?.role?.toLowerCase() === "mentor";
 
   const handleUserSelect = () => {
-    // Navigate to user dashboard
-    navigate("/dashboard");
+    // Navigate to user registration/signup
+    navigate("/signup?role=user");
   };
 
   const handleMentorSelect = () => {
