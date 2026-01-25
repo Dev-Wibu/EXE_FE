@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getMajorLabel } from "@/constants/majors";
 
 import type { User, UserRole } from "../types";
 
@@ -68,7 +69,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
               </Badge>
             </TableCell>
             <TableCell className="max-w-xs truncate">{user.university || "-"}</TableCell>
-            <TableCell>{user.major || "-"}</TableCell>
+            <TableCell>{getMajorLabel(user.major || "") || "-"}</TableCell>
             <TableCell>
               <Badge variant={user.isActive !== false ? "default" : "destructive"}>
                 {user.isActive !== false ? "Hoạt động" : "Ngưng hoạt động"}
