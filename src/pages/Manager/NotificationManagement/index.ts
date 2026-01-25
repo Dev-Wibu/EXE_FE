@@ -1,0 +1,1 @@
+export { NotificationManagementPage } from "./NotificationManagementPage";
