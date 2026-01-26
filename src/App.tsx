@@ -10,6 +10,14 @@ import {
   WaitingAcceptMentorPage,
 } from "@/pages/Auth";
 import {
+  ForbiddenPage,
+  GatewayTimeoutPage,
+  NotFoundPage,
+  ServerErrorPage,
+  ServiceUnavailablePage,
+  UnauthorizedPage,
+} from "@/pages/Error";
+import {
   AIInterviewFeaturePage,
   BlogPage,
   FAQPage,
@@ -184,7 +192,7 @@ function App() {
           </Route>
 
           {/* Admin Management routes */}
-          <Route path="/manager" element={<ManagerDashboardPage />} />
+          <Route path="/admin" element={<ManagerDashboardPage />} />
           <Route path="/admin/mentors" element={<MentorManagementPage />} />
           <Route path="/admin/users" element={<UserManagementPage />} />
           <Route path="/admin/sessions" element={<SessionManagementPage />} />
@@ -196,6 +204,17 @@ function App() {
           <Route path="/staff" element={<StaffDashboardPage />} />
           <Route path="/staff/reviews" element={<ReviewModerationPage />} />
           <Route path="/staff/feedback" element={<FeedbackModerationPage />} />
+
+          {/* Error pages */}
+          <Route path="/error/401" element={<UnauthorizedPage />} />
+          <Route path="/error/403" element={<ForbiddenPage />} />
+          <Route path="/error/404" element={<NotFoundPage />} />
+          <Route path="/error/500" element={<ServerErrorPage />} />
+          <Route path="/error/503" element={<ServiceUnavailablePage />} />
+          <Route path="/error/504" element={<GatewayTimeoutPage />} />
+
+          {/* Catch-all route for 404 */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </QueryProvider>

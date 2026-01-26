@@ -376,6 +376,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interview-sessions/generate-job-requirement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generateJobRequirement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-sessions/create-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createInterviewSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interview-analysis/face-behavior": {
         parameters: {
             query?: never;
@@ -776,6 +808,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interview-sessions/config-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInterviewConfigOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/candidate-profiles/{userId}": {
         parameters: {
             query?: never;
@@ -830,15 +878,16 @@ export interface components {
             content?: string;
             /** @enum {string} */
             level?: "EASY" | "MEDIUM" | "HARD";
-            category?: components["schemas"]["QuestionCategory"];
+            lesson?: components["schemas"]["QuestionLesson"];
             answer?: string;
             hint?: string;
         };
-        QuestionCategory: {
+        QuestionLesson: {
             /** Format: int32 */
             id?: number;
             categoryName?: string;
             description?: string;
+            urlTutorial?: string;
         };
         Major: {
             /** Format: int32 */
@@ -1145,6 +1194,40 @@ export interface components {
             rating?: number;
             comment?: string;
         };
+        BasicInfo: {
+            job_title?: string;
+            industry_domain?: string;
+            seniority_level?: string;
+        };
+        Competencies: {
+            hard_skills?: string[];
+            tools_and_platforms?: string[];
+            soft_skills?: string[];
+        };
+        JobRequirementData: {
+            basic_info?: components["schemas"]["BasicInfo"];
+            competencies?: components["schemas"]["Competencies"];
+            responsibilities?: string[];
+        };
+        InterviewSetupRequest: {
+            /** Format: int32 */
+            user_id?: number;
+            candidate_profile?: components["schemas"]["CandidateProfile"];
+            job_requirement?: components["schemas"]["JobRequirementData"];
+            session_config?: components["schemas"]["SessionConfigData"];
+        };
+        SessionConfigData: {
+            /** Format: int32 */
+            duration_minutes?: number;
+            /** @enum {string} */
+            interview_mode?: "STANDARD_MOCK" | "THEORY_CHECK" | "PROJECT_DEFENSE";
+            /** @enum {string} */
+            difficulty?: "FRESHER_BASIC" | "FRESHER_ADVANCED";
+            /** @enum {string} */
+            language?: "VI" | "EN";
+            /** @enum {string} */
+            domain?: "IT" | "NON_IT";
+        };
         FaceAnalysisResponse: {
             /** @enum {string} */
             status?: "TURNING_LEFT" | "TURNING_RIGHT" | "BOWING_HEAD" | "LOOKING_UP_HEAD" | "TOO_CLOSE" | "TOO_FAR" | "GLANCING_LEFT" | "GLANCING_RIGHT" | "LOOKING_UP_EYES" | "LOOKING_DOWN_EYES" | "NORMAL" | "UNKNOWN";
@@ -1422,7 +1505,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["QuestionCategory"][];
+                    "*/*": components["schemas"]["QuestionLesson"][];
                 };
             };
         };
@@ -1436,7 +1519,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuestionCategory"];
+                "application/json": components["schemas"]["QuestionLesson"];
             };
         };
         responses: {
@@ -1446,7 +1529,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["QuestionCategory"];
+                    "*/*": components["schemas"]["QuestionLesson"];
                 };
             };
         };
@@ -1460,7 +1543,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuestionCategory"];
+                "application/json": components["schemas"]["QuestionLesson"];
             };
         };
         responses: {
@@ -1470,7 +1553,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["QuestionCategory"];
+                    "*/*": components["schemas"]["QuestionLesson"];
                 };
             };
         };
@@ -1908,8 +1991,6 @@ export interface operations {
                     data: components["schemas"]["UserInfo"];
                     /** Format: binary */
                     avatar?: string;
-                    /** Format: binary */
-                    cvFile?: string;
                 };
             };
         };
@@ -1935,8 +2016,8 @@ export interface operations {
         requestBody?: {
             content: {
                 "multipart/form-data": {
-                    /** Format: int32 */
-                    userId: number;
+                    /** @example 1 */
+                    userId: string;
                     /** Format: binary */
                     cvFile?: string;
                 };
@@ -2094,6 +2175,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Notification"];
+                };
+            };
+        };
+    };
+    generateJobRequirement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobRequirementData"];
+                };
+            };
+        };
+    };
+    createInterviewSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewSetupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };
@@ -2524,7 +2653,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["QuestionCategory"];
+                    "*/*": components["schemas"]["QuestionLesson"];
                 };
             };
         };
@@ -2741,6 +2870,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": boolean;
+                };
+            };
+        };
+    };
+    getInterviewConfigOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
