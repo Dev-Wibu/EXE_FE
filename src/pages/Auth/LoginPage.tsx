@@ -44,7 +44,7 @@ export function LoginPage() {
       // Navigate based on user role
       const userRole = result.data.user.role;
       if (userRole === "admin") {
-        navigate("/manager");
+        navigate("/admin");
       } else if (userRole === "mentor") {
         navigate("/mentor");
       } else if (userRole === "staff") {
