@@ -28,7 +28,9 @@ interface SidebarProps {
   currentView?: TabType;
 }
 
-const MANAGER_SIDEBAR_COLLAPSED_KEY = "manager_sidebar_collapsed";
+const ADMIN_SIDEBAR_COLLAPSED_KEY = "admin_sidebar_collapsed";
+// Migration: Keep old key for backwards compatibility
+const LEGACY_SIDEBAR_KEY = "manager_sidebar_collapsed";
 
 const MENU_ITEMS = [
   { type: "users" as TabType, icon: Users, label: "Users", color: "text-blue-600" },
@@ -63,12 +65,24 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
 
   // Collapsible state with localStorage persistence
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem(MANAGER_SIDEBAR_COLLAPSED_KEY);
-    return saved === "true";
+    // Migration: Check new key first, then fall back to legacy key
+    const saved = localStorage.getItem(ADMIN_SIDEBAR_COLLAPSED_KEY);
+    if (saved !== null) return saved === "true";
+
+    // Check legacy key for migration
+    const legacy = localStorage.getItem(LEGACY_SIDEBAR_KEY);
+    if (legacy !== null) {
+      // Migrate to new key and clean up
+      localStorage.setItem(ADMIN_SIDEBAR_COLLAPSED_KEY, legacy);
+      localStorage.removeItem(LEGACY_SIDEBAR_KEY);
+      return legacy === "true";
+    }
+
+    return false;
   });
 
   useEffect(() => {
-    localStorage.setItem(MANAGER_SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
+    localStorage.setItem(ADMIN_SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
   }, [isCollapsed]);
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
@@ -146,7 +160,7 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="font-semibold text-gray-900 dark:text-white">Manager Panel</h1>
+              <h1 className="font-semibold text-gray-900 dark:text-white">Admin Panel</h1>
               <p className="text-xs text-gray-500 dark:text-slate-400">Administration</p>
             </div>
           )}

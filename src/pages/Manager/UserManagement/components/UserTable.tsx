@@ -1,4 +1,4 @@
-import { Edit, Power, Search } from "lucide-react";
+import { Edit, FileText, Power, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ interface UserTableProps {
   users: User[];
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onUploadCV: (user: User) => void;
 }
 
 const getRoleBadgeClass = (role?: UserRole): string => {
@@ -33,7 +34,7 @@ const getRoleBadgeClass = (role?: UserRole): string => {
   }
 };
 
-export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
+export function UserTable({ users, onEdit, onDelete, onUploadCV }: UserTableProps) {
   if (users.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -77,6 +78,14 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onUploadCV(user)}
+                  className="h-8 w-8 p-0 hover:bg-green-50"
+                  title={user.cvUrl ? "Cập nhật CV" : "Upload CV"}>
+                  <FileText className={`h-4 w-4 ${user.cvUrl ? "text-green-600" : "text-gray-400"}`} />
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

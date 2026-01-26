@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, ImageIcon, X } from "lucide-react";
+import { ExternalLink, ImageIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -28,11 +28,13 @@ import type { User, UserFormData } from "../types";
  * Based on schema-from-be.d.ts createUser operation which requires:
  * - data: UserInfo (JSON)
  * - avatar?: File (binary)
- * - cvFile?: File (binary)
+ *
+ * Note: CV upload is handled separately via dedicated /api/users/upload-cv endpoint
+ * which returns CandidateProfile data, avoiding conflicts with general user update operations.
+ * See CVUploadModal component.
  */
 interface ExtendedUserFormData extends Partial<UserFormData> {
   avatar?: File;
-  cvFile?: File;
 }
 
 interface UserFormDialogProps {
@@ -61,7 +63,6 @@ export function UserFormDialog({
 }: UserFormDialogProps) {
   // State for local file previews (blob URLs for new file uploads)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [cvPreview, setCvPreview] = useState<string | null>(null);
 
   // Clean up blob URLs when component unmounts or when files change
   useEffect(() => {
@@ -69,18 +70,14 @@ export function UserFormDialog({
       if (avatarPreview?.startsWith("blob:")) {
         URL.revokeObjectURL(avatarPreview);
       }
-      if (cvPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(cvPreview);
-      }
     };
-  }, [avatarPreview, cvPreview]);
+  }, [avatarPreview]);
 
   // Handle dialog open/close with preview reset
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       // Reset previews when closing
       setAvatarPreview(null);
-      setCvPreview(null);
     }
     onOpenChange(open);
   };
@@ -99,26 +96,6 @@ export function UserFormDialog({
     }
   };
 
-  // Handle file input change for CV (PDF only)
-  const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate PDF file type
-      if (!file.type.includes("pdf") && !file.name.toLowerCase().endsWith(".pdf")) {
-        // Invalid file type - only PDF allowed
-        e.target.value = ""; // Reset input
-        return;
-      }
-      // Create preview URL for the selected file
-      if (cvPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(cvPreview);
-      }
-      const previewUrl = URL.createObjectURL(file);
-      setCvPreview(previewUrl);
-      onFormChange({ ...formData, cvFile: file });
-    }
-  };
-
   // Clear avatar selection
   const handleClearAvatar = () => {
     if (avatarPreview?.startsWith("blob:")) {
@@ -128,18 +105,8 @@ export function UserFormDialog({
     onFormChange({ ...formData, avatar: undefined });
   };
 
-  // Clear CV selection
-  const handleClearCv = () => {
-    if (cvPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(cvPreview);
-    }
-    setCvPreview(null);
-    onFormChange({ ...formData, cvFile: undefined });
-  };
-
   // Get the display image URL - prioritize new upload preview over existing URL
   const displayAvatarUrl = avatarPreview || selectedUser?.avatarUrl;
-  const displayCvUrl = cvPreview || selectedUser?.cvUrl;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -200,124 +167,65 @@ export function UserFormDialog({
               </Select>
             </div>
           </div>
-          {/* File Upload Section with Previews */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Avatar Section */}
-            <div className="space-y-1.5">
-              <Label htmlFor="avatar">Ảnh đại diện</Label>
-              {/* Image Preview - Show either new upload or existing avatar */}
-              {displayAvatarUrl && (
-                <div className="relative mb-2 rounded-lg border bg-slate-50 p-2 dark:bg-slate-800">
-                  <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full">
-                    <img
-                      src={displayAvatarUrl}
-                      alt="Xem trước ảnh đại diện"
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        // Hide image on error
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-                  <div className="mt-2 flex items-center justify-center gap-2">
-                    {avatarPreview ? (
-                      <>
-                        <span className="text-xs text-green-600">Đã chọn file mới</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={handleClearAvatar}
-                          title="Xóa ảnh đại diện mới">
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <a
-                        href={displayAvatarUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
-                        <span>Xem ảnh đầy đủ</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                  </div>
+          {/* File Upload Section - Avatar Only */}
+          {/* Note: CV upload is handled separately via dedicated button in UserTable */}
+          <div className="space-y-1.5">
+            <Label htmlFor="avatar">Ảnh đại diện</Label>
+            {/* Image Preview - Show either new upload or existing avatar */}
+            {displayAvatarUrl && (
+              <div className="relative mb-2 rounded-lg border bg-slate-50 p-2 dark:bg-slate-800">
+                <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full">
+                  <img
+                    src={displayAvatarUrl}
+                    alt="Xem trước ảnh đại diện"
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      // Hide image on error
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
                 </div>
-              )}
-              {/* File Input */}
-              <Input
-                id="avatar"
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="cursor-pointer"
-              />
-              {!displayAvatarUrl && (
-                <p className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <ImageIcon className="h-3 w-3" />
-                  Chưa chọn ảnh đại diện
-                </p>
-              )}
-            </div>
-
-            {/* CV Section - PDF Only */}
-            <div className="space-y-1.5">
-              <Label htmlFor="cvFile">File CV (PDF)</Label>
-              {/* CV Preview - Show PDF icon for all CV files (only PDF allowed) */}
-              {displayCvUrl && (
-                <div className="relative mb-2 rounded-lg border bg-slate-50 p-2 dark:bg-slate-800">
-                  <div className="flex h-32 flex-col items-center justify-center">
-                    <FileText className="h-12 w-12 text-red-500" />
-                    <span className="mt-2 max-w-full truncate px-2 text-xs text-gray-500">
-                      {formData.cvFile?.name || "PDF Document"}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-center gap-2">
-                    {cvPreview ? (
-                      <>
-                        <span className="text-xs text-green-600">
-                          {formData.cvFile?.name || "Đã chọn file mới"}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={handleClearCv}
-                          title="Xóa CV mới">
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <a
-                        href={displayCvUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-green-600 hover:underline dark:text-green-400">
-                        <span>Xem CV</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    )}
-                  </div>
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  {avatarPreview ? (
+                    <>
+                      <span className="text-xs text-green-600">Đã chọn file mới</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        onClick={handleClearAvatar}
+                        title="Xóa ảnh đại diện mới">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <a
+                      href={displayAvatarUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                      <span>Xem ảnh đầy đủ</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
                 </div>
-              )}
-              {/* File Input - PDF only */}
-              <Input
-                id="cvFile"
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handleCvChange}
-                className="cursor-pointer"
-              />
-              {!displayCvUrl && (
-                <p className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <FileText className="h-3 w-3" />
-                  Chưa chọn CV (chỉ chấp nhận PDF)
-                </p>
-              )}
-            </div>
+              </div>
+            )}
+            {/* File Input */}
+            <Input
+              id="avatar"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="cursor-pointer"
+            />
+            {!displayAvatarUrl && (
+              <p className="text-muted-foreground flex items-center gap-1 text-xs">
+                <ImageIcon className="h-3 w-3" />
+                Chưa chọn ảnh đại diện
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>

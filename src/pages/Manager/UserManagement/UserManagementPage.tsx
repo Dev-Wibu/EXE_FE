@@ -2,6 +2,7 @@ import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -27,6 +28,10 @@ export function UserManagementPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<Partial<UserFormData>>({});
+
+  // CV Upload Modal state
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
+  const [isCvUploading, setIsCvUploading] = useState(false);
 
   // Load users using the users admin manager service
   const loadUsers = useCallback(async () => {
@@ -120,6 +125,29 @@ export function UserManagementPage() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleUploadCV = (user: User) => {
+    setSelectedUser(user);
+    setIsCvModalOpen(true);
+  };
+
+  // Handle CV upload via dedicated modal
+  const handleCvUpload = async (file: File) => {
+    if (!selectedUser?.id) return;
+
+    setIsCvUploading(true);
+    try {
+      const response = await usersAdminManager.uploadCv(selectedUser.id, file);
+      if (response.success) {
+        toast.success("Upload CV thành công!");
+        loadUsers(); // Refresh the list to show updated CV status
+      } else {
+        toast.error(response.error || "Upload CV thất bại");
+      }
+    } finally {
+      setIsCvUploading(false);
+    }
+  };
+
   const handleSubmitCreate = async () => {
     try {
       const response = await usersAdminManager.create(formData);
@@ -140,15 +168,14 @@ export function UserManagementPage() {
     if (!selectedUser?.id) return;
 
     try {
-      // Extract files from formData (if present from ExtendedUserFormData)
-      const { avatar, cvFile, ...userData } = formData as {
+      // Separate avatar file from user data (CV upload is handled via dedicated CVUploadModal)
+      const { avatar, ...userData } = formData as {
         avatar?: File;
-        cvFile?: File;
         [key: string]: unknown;
       };
 
-      // Call update with separate file parameters for clarity
-      const response = await usersAdminManager.update(selectedUser.id, userData, avatar, cvFile);
+      // Call update with avatar file only (CV upload is now separate)
+      const response = await usersAdminManager.update(selectedUser.id, userData, avatar);
       if (response.success) {
         toast.success("Đã cập nhật người dùng thành công");
         setIsEditDialogOpen(false);
@@ -257,6 +284,7 @@ export function UserManagementPage() {
           users={filteredUsers.slice().reverse()}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onUploadCV={handleUploadCV}
         />
 
         {/* Empty State with Clear Filters */}
@@ -307,6 +335,17 @@ export function UserManagementPage() {
         onOpenChange={setIsDeleteDialogOpen}
         user={selectedUser}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* CV Upload Modal */}
+      <CVUploadModal
+        isOpen={isCvModalOpen}
+        onOpenChange={setIsCvModalOpen}
+        currentCvUrl={selectedUser?.cvUrl}
+        onUpload={handleCvUpload}
+        isUploading={isCvUploading}
+        title="Upload CV"
+        description="Tải lên CV của người dùng. Chỉ chấp nhận file PDF."
       />
     </div>
   );
