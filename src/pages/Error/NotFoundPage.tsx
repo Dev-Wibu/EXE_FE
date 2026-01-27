@@ -1,4 +1,4 @@
-import { Home, Search, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Home, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,7 @@ export function NotFoundPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        Mã lỗi: 404 - Not Found
-      </div>
+      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">Mã lỗi: 404 - Not Found</div>
     </div>
   );
 }
