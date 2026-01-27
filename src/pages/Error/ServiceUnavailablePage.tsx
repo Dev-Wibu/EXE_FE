@@ -30,7 +30,8 @@ export function ServiceUnavailablePage() {
           Dịch vụ tạm thời không khả dụng
         </h1>
         <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">
-          Máy chủ đang bảo trì hoặc quá tải. Vui lòng đợi vài phút và thử lại. Chúng tôi đang nỗ lực khôi phục dịch vụ nhanh nhất có thể.
+          Máy chủ đang bảo trì hoặc quá tải. Vui lòng đợi vài phút và thử lại. Chúng tôi đang nỗ lực
+          khôi phục dịch vụ nhanh nhất có thể.
         </p>
 
         {/* Action Buttons */}

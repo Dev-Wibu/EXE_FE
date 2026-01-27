@@ -1,4 +1,4 @@
-import { Home, LogIn, KeyRound } from "lucide-react";
+import { Home, KeyRound, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -22,16 +22,16 @@ export function UnauthorizedPage() {
         </div>
 
         {/* Title & Description */}
-        <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-          Chưa xác thực
-        </h1>
+        <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">Chưa xác thực</h1>
         <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">
           Bạn cần đăng nhập để truy cập trang này. Vui lòng đăng nhập và thử lại.
         </p>
 
         {/* Action Buttons */}
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <Button onClick={() => navigate("/login")} className="gap-2 bg-blue-600 hover:bg-blue-700">
+          <Button
+            onClick={() => navigate("/login")}
+            className="gap-2 bg-blue-600 hover:bg-blue-700">
             <LogIn className="h-4 w-4" />
             Đăng nhập
           </Button>

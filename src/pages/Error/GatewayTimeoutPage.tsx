@@ -1,4 +1,4 @@
-import { Home, RefreshCcw, Clock } from "lucide-react";
+import { Clock, Home, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,7 @@ export function GatewayTimeoutPage() {
         </div>
 
         {/* Title & Description */}
-        <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-          Hết thời gian chờ
-        </h1>
+        <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">Hết thời gian chờ</h1>
         <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">
           Máy chủ không phản hồi kịp thời. Điều này có thể do mạng chậm hoặc máy chủ đang quá tải.
           Vui lòng thử lại sau.
