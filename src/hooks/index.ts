@@ -10,3 +10,4 @@ export * from "./useNotification";
 export * from "./usePagination";
 export * from "./useSession";
 export * from "./useSortable";
+export * from "./useTabsState";
