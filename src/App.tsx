@@ -1,7 +1,8 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AuthLayout, MentorDashboardLayout, UserDashboardLayout } from "@/components/layouts";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import { AdminDashboardPage } from "@/pages/Admin";
 import {
   LoginPage,
   MentorRegisterPage,
@@ -27,17 +28,9 @@ import {
   QuestionBankPage,
 } from "@/pages/Homepage";
 import {
-  FeedbackManagementPage,
-  ManagerDashboardPage,
-  MentorManagementPage,
-  NotificationManagementPage,
-  ReviewManagementPage,
-  SessionManagementPage,
-  UserManagementPage,
-} from "@/pages/Manager";
-import {
   GivenFeedbackListPage,
   MentorAccountPage,
+  MentorDashboardPage,
   MentorNotificationsPage,
   MentorOverviewPage,
   MentorReviewsPage,
@@ -69,6 +62,7 @@ import {
   QuestionListPage,
   SessionDetailPage,
   SessionHistoryPage,
+  UserDashboardPage,
   UserFeedbackListPage,
   UserNotificationsPage,
   WriteReviewPage,
@@ -169,6 +163,31 @@ function App() {
             <Route path="/dashboard/notifications" element={<UserNotificationsPage />} />
           </Route>
 
+          {/* User Dashboard with Chrome Tabs (alternative route) */}
+          <Route path="/user" element={<UserDashboardPage />} />
+          {/* Redirect routes for User Dashboard tabs */}
+          <Route path="/user/overview" element={<Navigate to="/user?tab=overview" replace />} />
+          <Route
+            path="/user/mock-interview"
+            element={<Navigate to="/user?tab=mockInterview" replace />}
+          />
+          <Route
+            path="/user/interview-history"
+            element={<Navigate to="/user?tab=interviewHistory" replace />}
+          />
+          <Route path="/user/feedback" element={<Navigate to="/user?tab=feedback" replace />} />
+          <Route
+            path="/user/ai-interview"
+            element={<Navigate to="/user?tab=aiInterview" replace />}
+          />
+          <Route path="/user/ai-chat" element={<Navigate to="/user?tab=aiChat" replace />} />
+          <Route path="/user/questions" element={<Navigate to="/user?tab=questions" replace />} />
+          <Route
+            path="/user/notifications"
+            element={<Navigate to="/user?tab=notifications" replace />}
+          />
+          <Route path="/user/account" element={<Navigate to="/user?tab=account" replace />} />
+
           {/* Mentor Dashboard routes with MentorDashboardLayout */}
           <Route element={<MentorDashboardLayout />}>
             <Route path="/mentor" element={<MentorOverviewPage />} />
@@ -191,14 +210,62 @@ function App() {
             <Route path="/mentor/students/:userId" element={<StudentDetailPage />} />
           </Route>
 
+          {/* Mentor Dashboard with Chrome Tabs (alternative route) */}
+          <Route path="/mentor-dashboard" element={<MentorDashboardPage />} />
+          {/* Redirect routes for Mentor Dashboard tabs */}
+          <Route
+            path="/mentor-dashboard/overview"
+            element={<Navigate to="/mentor-dashboard?tab=overview" replace />}
+          />
+          <Route
+            path="/mentor-dashboard/sessions"
+            element={<Navigate to="/mentor-dashboard?tab=sessions" replace />}
+          />
+          <Route
+            path="/mentor-dashboard/students"
+            element={<Navigate to="/mentor-dashboard?tab=students" replace />}
+          />
+          <Route
+            path="/mentor-dashboard/reviews"
+            element={<Navigate to="/mentor-dashboard?tab=reviews" replace />}
+          />
+          <Route
+            path="/mentor-dashboard/feedback"
+            element={<Navigate to="/mentor-dashboard?tab=feedback" replace />}
+          />
+          <Route
+            path="/mentor-dashboard/notifications"
+            element={<Navigate to="/mentor-dashboard?tab=notifications" replace />}
+          />
+          <Route
+            path="/mentor-dashboard/account"
+            element={<Navigate to="/mentor-dashboard?tab=account" replace />}
+          />
+
           {/* Admin Management routes */}
-          <Route path="/admin" element={<ManagerDashboardPage />} />
-          <Route path="/admin/mentors" element={<MentorManagementPage />} />
-          <Route path="/admin/users" element={<UserManagementPage />} />
-          <Route path="/admin/sessions" element={<SessionManagementPage />} />
-          <Route path="/admin/reviews" element={<ReviewManagementPage />} />
-          <Route path="/admin/feedback" element={<FeedbackManagementPage />} />
-          <Route path="/admin/notifications" element={<NotificationManagementPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          {/* Redirect routes for backward compatibility - redirect /admin/* to /admin?tab=* */}
+          <Route path="/admin/mentors" element={<Navigate to="/admin?tab=mentors" replace />} />
+          <Route path="/admin/users" element={<Navigate to="/admin?tab=users" replace />} />
+          <Route path="/admin/sessions" element={<Navigate to="/admin?tab=sessions" replace />} />
+          <Route path="/admin/reviews" element={<Navigate to="/admin?tab=reviews" replace />} />
+          <Route path="/admin/feedback" element={<Navigate to="/admin?tab=feedback" replace />} />
+          <Route
+            path="/admin/notifications"
+            element={<Navigate to="/admin?tab=notifications" replace />}
+          />
+          <Route
+            path="/admin/questionCategories"
+            element={<Navigate to="/admin?tab=questionCategories" replace />}
+          />
+          <Route
+            path="/admin/questionMajors"
+            element={<Navigate to="/admin?tab=questionMajors" replace />}
+          />
+          <Route
+            path="/admin/questionSets"
+            element={<Navigate to="/admin?tab=questionSets" replace />}
+          />
 
           {/* Staff Dashboard routes */}
           <Route path="/staff" element={<StaffDashboardPage />} />
