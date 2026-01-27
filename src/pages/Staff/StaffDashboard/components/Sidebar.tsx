@@ -5,7 +5,9 @@ import {
   Headphones,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   Settings,
+  Star,
   UserCheck,
   Video,
 } from "lucide-react";
@@ -37,6 +39,8 @@ const STAFF_SIDEBAR_COLLAPSED_KEY = "staff_sidebar_collapsed";
  * - Managing session scheduling and issues
  * - User support and inquiries
  * - Content moderation (reviewing questions before publishing)
+ * - Review moderation
+ * - Feedback moderation
  */
 const MENU_ITEMS = [
   {
@@ -66,6 +70,23 @@ const MENU_ITEMS = [
     label: "Kiểm Duyệt",
     color: "text-purple-600",
     description: "Kiểm duyệt nội dung",
+  },
+];
+
+const MODERATION_MENU_ITEMS = [
+  {
+    type: "reviewModeration" as TabType,
+    icon: Star,
+    label: "Đánh Giá",
+    color: "text-yellow-600",
+    description: "Kiểm duyệt đánh giá",
+  },
+  {
+    type: "feedbackModeration" as TabType,
+    icon: MessageSquare,
+    label: "Phản Hồi",
+    color: "text-cyan-600",
+    description: "Kiểm duyệt phản hồi",
   },
 ];
 
@@ -175,6 +196,14 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
             </p>
           )}
           {MENU_ITEMS.map(renderMenuItem)}
+
+          {!isCollapsed && (
+            <p className="mt-4 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-slate-400">
+              Kiểm Duyệt
+            </p>
+          )}
+          {isCollapsed && <div className="my-2 border-t dark:border-slate-700" />}
+          {MODERATION_MENU_ITEMS.map(renderMenuItem)}
         </nav>
 
         {/* Footer */}

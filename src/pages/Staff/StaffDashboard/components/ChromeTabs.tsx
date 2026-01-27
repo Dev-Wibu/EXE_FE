@@ -1,9 +1,22 @@
-import { Plus, X } from "lucide-react";
+import { MessageSquare, Plus, Star, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export type TabType = "mentorApplications" | "sessions" | "userSupport" | "contentModeration";
+export type TabType =
+  | "mentorApplications"
+  | "sessions"
+  | "userSupport"
+  | "contentModeration"
+  | "reviewModeration"
+  | "feedbackModeration";
 
 export interface Tab {
   id: string;
@@ -51,14 +64,32 @@ export function ChromeTabs({
           )}
         </div>
       ))}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onNewTab("mentorApplications")}
-        className="h-8 w-8 p-0"
-        title="Thêm tab mới">
-        <Plus className="h-4 w-4" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Thêm tab mới">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => onNewTab("mentorApplications")}>
+            Duyệt Mentor
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onNewTab("sessions")}>Phiên Phỏng Vấn</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onNewTab("userSupport")}>Hỗ Trợ</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onNewTab("contentModeration")}>
+            Kiểm Duyệt Nội Dung
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => onNewTab("reviewModeration")}>
+            <Star className="mr-2 h-4 w-4 text-yellow-600" />
+            Kiểm Duyệt Đánh Giá
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onNewTab("feedbackModeration")}>
+            <MessageSquare className="mr-2 h-4 w-4 text-cyan-600" />
+            Kiểm Duyệt Phản Hồi
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { CheckCircle, Clock, Search, UserCheck, XCircle } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle, Clock, Loader2, Search, UserCheck, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,53 +19,53 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-/**
- * Mock data for mentor applications
- * In production, this would come from the mentorManager service
- */
-const mockApplications = [
-  {
-    id: 1,
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    expertise: "React, Node.js",
-    yearsOfExperience: 5,
-    currentCompany: "FPT Software",
-    submittedAt: "2026-01-20",
-    status: "pending",
-  },
-  {
-    id: 2,
-    name: "Trần Thị B",
-    email: "tranthib@example.com",
-    expertise: "Java, Spring Boot",
-    yearsOfExperience: 8,
-    currentCompany: "VNG",
-    submittedAt: "2026-01-19",
-    status: "pending",
-  },
-  {
-    id: 3,
-    name: "Lê Văn C",
-    email: "levanc@example.com",
-    expertise: "Python, Machine Learning",
-    yearsOfExperience: 6,
-    currentCompany: "VinAI",
-    submittedAt: "2026-01-18",
-    status: "approved",
-  },
-];
+import type { Mentor } from "@/interfaces";
+import { mentorManager } from "@/services/mentor.manager";
 
 type ApplicationStatus = "pending" | "approved" | "rejected" | "all";
+
+/**
+ * Get application status from mentor active field
+ * Mentors with active=true are approved, active=false are pending/rejected
+ */
+const getApplicationStatus = (mentor: Mentor): "pending" | "approved" => {
+  return mentor.active ? "approved" : "pending";
+};
 
 export function MentorApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus>("pending");
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
-  const filteredApplications = mockApplications.filter((app) => {
+  // Load mentors from API
+  useEffect(() => {
+    const loadMentors = async () => {
+      setIsLoading(true);
+      try {
+        const result = await mentorManager.getAll();
+        if (result.success && result.data) {
+          // Handle both array and paginated response
+          const mentorsList = Array.isArray(result.data) ? result.data : result.data.data || [];
+          setMentors(mentorsList);
+        }
+      } catch (error) {
+        console.error("Failed to load mentors:", error);
+        toast.error("Không thể tải danh sách mentor");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMentors();
+  }, []);
+
+  // Filter mentors based on search and status
+  const filteredMentors = mentors.filter((mentor) => {
     // Filter by status
-    if (statusFilter !== "all" && app.status !== statusFilter) {
+    const status = getApplicationStatus(mentor);
+    if (statusFilter !== "all" && status !== statusFilter) {
       return false;
     }
 
@@ -72,16 +73,71 @@ export function MentorApplicationsPage() {
     if (searchQuery) {
       const lowerQuery = searchQuery.toLowerCase();
       return (
-        app.name.toLowerCase().includes(lowerQuery) ||
-        app.email.toLowerCase().includes(lowerQuery) ||
-        app.expertise.toLowerCase().includes(lowerQuery)
+        mentor.name?.toLowerCase().includes(lowerQuery) ||
+        mentor.email?.toLowerCase().includes(lowerQuery) ||
+        mentor.expertise?.toLowerCase().includes(lowerQuery)
       );
     }
 
     return true;
   });
 
-  const getStatusBadge = (status: string) => {
+  /**
+   * Accept mentor application - toggle active status to true
+   * Uses GET /api/mentors/toggle/{id} endpoint
+   */
+  const handleAcceptMentor = async (mentorId: number) => {
+    setProcessingIds((prev) => new Set(prev).add(mentorId));
+    try {
+      const result = await mentorManager.toggleActive(mentorId);
+      if (result.success) {
+        // Update local state
+        setMentors((prev) => prev.map((m) => (m.id === mentorId ? { ...m, active: true } : m)));
+        toast.success("Đã duyệt mentor thành công");
+      } else {
+        toast.error(result.error || "Không thể duyệt mentor");
+      }
+    } catch (error) {
+      console.error("Failed to accept mentor:", error);
+      toast.error("Có lỗi xảy ra khi duyệt mentor");
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(mentorId);
+        return next;
+      });
+    }
+  };
+
+  /**
+   * Reject mentor application - toggle active status to false
+   * Uses GET /api/mentors/toggle/{id} endpoint
+   */
+  const handleRejectMentor = async (mentorId: number) => {
+    setProcessingIds((prev) => new Set(prev).add(mentorId));
+    try {
+      const result = await mentorManager.toggleActive(mentorId);
+      if (result.success) {
+        // Update local state
+        setMentors((prev) => prev.map((m) => (m.id === mentorId ? { ...m, active: false } : m)));
+        toast.success("Đã từ chối mentor");
+      } else {
+        toast.error(result.error || "Không thể từ chối mentor");
+      }
+    } catch (error) {
+      console.error("Failed to reject mentor:", error);
+      toast.error("Có lỗi xảy ra khi từ chối mentor");
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(mentorId);
+        return next;
+      });
+    }
+  };
+
+  const getStatusBadge = (mentor: Mentor) => {
+    const status = getApplicationStatus(mentor);
     switch (status) {
       case "pending":
         return (
@@ -97,17 +153,12 @@ export function MentorApplicationsPage() {
             Đã duyệt
           </span>
         );
-      case "rejected":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800 dark:bg-red-900/30 dark:text-red-400">
-            <XCircle className="h-3 w-3" />
-            Từ chối
-          </span>
-        );
       default:
         return null;
     }
   };
+
+  const pendingCount = mentors.filter((m) => !m.active).length;
 
   return (
     <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
@@ -146,7 +197,6 @@ export function MentorApplicationsPage() {
             <SelectContent>
               <SelectItem value="pending">Chờ duyệt</SelectItem>
               <SelectItem value="approved">Đã duyệt</SelectItem>
-              <SelectItem value="rejected">Từ chối</SelectItem>
               <SelectItem value="all">Tất cả</SelectItem>
             </SelectContent>
           </Select>
@@ -155,9 +205,7 @@ export function MentorApplicationsPage() {
         {/* Stats */}
         <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 dark:bg-slate-800">
           <UserCheck className="h-5 w-5 text-green-600" />
-          <span className="text-sm font-medium">
-            {mockApplications.filter((a) => a.status === "pending").length} đơn chờ duyệt
-          </span>
+          <span className="text-sm font-medium">{pendingCount} đơn chờ duyệt</span>
         </div>
       </div>
 
@@ -171,46 +219,93 @@ export function MentorApplicationsPage() {
               <TableHead>Chuyên môn</TableHead>
               <TableHead>Kinh nghiệm</TableHead>
               <TableHead>Công ty</TableHead>
-              <TableHead>Ngày nộp</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredApplications.map((app) => (
-              <TableRow key={app.id}>
-                <TableCell className="font-medium">{app.name}</TableCell>
-                <TableCell>{app.email}</TableCell>
-                <TableCell className="max-w-[200px] truncate">{app.expertise}</TableCell>
-                <TableCell>{app.yearsOfExperience} năm</TableCell>
-                <TableCell>{app.currentCompany}</TableCell>
-                <TableCell>{app.submittedAt}</TableCell>
-                <TableCell>{getStatusBadge(app.status)}</TableCell>
-                <TableCell className="text-right">
-                  {app.status === "pending" && (
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 hover:bg-green-50">
-                        <CheckCircle className="mr-1 h-4 w-4" />
-                        Duyệt
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50">
-                        <XCircle className="mr-1 h-4 w-4" />
-                        Từ chối
-                      </Button>
-                    </div>
-                  )}
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center">
+                  <div className="flex items-center justify-center gap-2 text-gray-500">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Đang tải...</span>
+                  </div>
                 </TableCell>
               </TableRow>
-            ))}
-            {filteredApplications.length === 0 && (
+            ) : filteredMentors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-gray-500">
+                <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                   Không có đơn đăng ký nào
                 </TableCell>
               </TableRow>
+            ) : (
+              filteredMentors.map((mentor) => {
+                const mentorId = mentor.id;
+                // Skip rendering if mentor has no ID
+                if (mentorId === undefined || mentorId === null) {
+                  return null;
+                }
+                const isProcessing = processingIds.has(mentorId);
+                const status = getApplicationStatus(mentor);
+                return (
+                  <TableRow key={mentorId}>
+                    <TableCell className="font-medium">{mentor.name}</TableCell>
+                    <TableCell>{mentor.email}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{mentor.expertise}</TableCell>
+                    <TableCell>{mentor.yearsOfExperience} năm</TableCell>
+                    <TableCell>{mentor.currentCompany}</TableCell>
+                    <TableCell>{getStatusBadge(mentor)}</TableCell>
+                    <TableCell className="text-right">
+                      {status === "pending" && (
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 hover:bg-green-50"
+                            disabled={isProcessing}
+                            onClick={() => handleAcceptMentor(mentorId)}>
+                            {isProcessing ? (
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="mr-1 h-4 w-4" />
+                            )}
+                            Duyệt
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:bg-red-50"
+                            disabled={isProcessing}
+                            onClick={() => handleRejectMentor(mentorId)}>
+                            {isProcessing ? (
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            ) : (
+                              <XCircle className="mr-1 h-4 w-4" />
+                            )}
+                            Từ chối
+                          </Button>
+                        </div>
+                      )}
+                      {status === "approved" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-orange-600 hover:bg-orange-50"
+                          disabled={isProcessing}
+                          onClick={() => handleRejectMentor(mentorId)}>
+                          {isProcessing ? (
+                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="mr-1 h-4 w-4" />
+                          )}
+                          Vô hiệu hóa
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

@@ -65,10 +65,10 @@ export const API_ENDPOINTS = {
   // GET /api/mentors/toggle/{id} - toggleActive
   MENTOR: {
     LIST: "/api/mentors",
-    DETAIL: "/api/mentors/{id}",
+    DETAIL: "/api/mentors/:id",
     CREATE: "/api/mentors",
     UPDATE: "/api/mentors",
-    TOGGLE: "/api/mentors/toggle/{id}",
+    TOGGLE: "/api/mentors/toggle/:id",
   },
 
   // AI Interview endpoints

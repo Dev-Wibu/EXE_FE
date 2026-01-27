@@ -286,10 +286,15 @@ export class MentorManager implements BaseManager<Mentor> {
 
   /**
    * Update mentor
-   * POST /api/mentors (JSON body with Mentor object)
-   * Note: Schema defines PUT but backend team confirmed POST should be used for updates
+   * POST /api/mentors (multipart/form-data with 'data' field containing JSON)
+   * Note: Schema comment says POST is shared for create and update
+   * "dùng chung cho create và update mentor, nếu create thì ko có id còn update thì có id gửi kèm trong json data á"
+   * Translation: if create - no id, if update - include id in the json data
    */
-  async update(_id: string | number, _data: Partial<Mentor>): Promise<ApiResponse<Mentor>> {
+  async update(
+    _id: string | number,
+    _data: Partial<Mentor> | CreateMentorData
+  ): Promise<ApiResponse<Mentor>> {
     if (this.mode === "mock") {
       const mentors = await this.getMockMentors();
       const index = mentors.findIndex((m) => m.id === Number(_id));
@@ -299,7 +304,16 @@ export class MentorManager implements BaseManager<Mentor> {
           error: "Mentor not found",
         };
       }
-      mockMentorsData![index] = { ...mockMentorsData![index], ..._data };
+      // Extract file fields and only keep Mentor-compatible fields
+
+      const {
+        avatar: _avatar,
+        identityFile: _identityFile,
+        degreeFile: _degreeFile,
+        otherFile: _otherFile,
+        ...mentorData
+      } = _data as Partial<Mentor> & CreateMentorData;
+      mockMentorsData![index] = { ...mockMentorsData![index], ...mentorData };
       return {
         success: true,
         data: mockMentorsData![index],
@@ -307,33 +321,74 @@ export class MentorManager implements BaseManager<Mentor> {
     }
 
     try {
-      // Backend requires Mentor object in JSON body
-      // Note: Using POST instead of PUT as confirmed by backend team
+      // Backend uses POST /api/mentors for both create and update (multipart/form-data)
+      // For update, include 'id' in the JSON data field
+      const formData = new FormData();
 
-      // Build payload with only provided values + id
-      const payload: Record<string, unknown> = {
+      // Build MentorInfo payload with id for update
+      const mentorInfo: MentorInfo & { active?: boolean } = {
         id: Number(_id),
+        name: _data.name?.trim(),
+        email: _data.email?.trim(),
+        bio: _data.bio,
+        expertise: _data.expertise,
+        yearsOfExperience: _data.yearsOfExperience,
+        linkedInUrl: _data.linkedInUrl,
+        currentCompany: _data.currentCompany,
       };
 
-      // Add all non-null, non-undefined values from _data
-      Object.entries(_data).forEach(([key, value]) => {
-        // Skip undefined values but keep false/0 as they are valid
-        if (value !== undefined && value !== null) {
-          payload[key] = value;
-        }
-      });
-
-      // Critical: Ensure active field is a proper boolean if provided
-      if ("active" in _data) {
-        payload.active = Boolean(_data.active);
+      // Add password only if provided (for password updates)
+      if (_data.password) {
+        mentorInfo.password = _data.password;
       }
 
-      console.log("Update mentor payload:", JSON.stringify(payload, null, 2));
+      // Add active field if provided
+      // Note: 'active' is not in MentorInfo schema but BE curl example includes it
+      // The BE accepts it for setting mentor active status during update
+      if ("active" in _data) {
+        mentorInfo.active = Boolean(_data.active);
+      }
 
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(API_ENDPOINTS.MENTOR.UPDATE, payload, {
+      console.log("Update mentor payload:", JSON.stringify(mentorInfo, null, 2));
+
+      // Append the 'data' field as a Blob with application/json content type
+      // This matches the curl format: --form 'data="...";type=application/json'
+      formData.append("data", new Blob([JSON.stringify(mentorInfo)], { type: "application/json" }));
+
+      // Add file fields - always send placeholder files to avoid backend NullPointerException
+      const updateData = _data as CreateMentorData;
+
+      if (updateData.avatar) {
+        formData.append("avatar", updateData.avatar);
+      } else {
+        formData.append("avatar", createEmptyFilePlaceholder());
+      }
+
+      if (updateData.identityFile) {
+        formData.append("identityFile", updateData.identityFile);
+      } else {
+        formData.append("identityFile", createEmptyFilePlaceholder());
+      }
+
+      if (updateData.degreeFile) {
+        formData.append("degreeFile", updateData.degreeFile);
+      } else {
+        formData.append("degreeFile", createEmptyFilePlaceholder());
+      }
+
+      if (updateData.otherFile) {
+        formData.append("otherFile", updateData.otherFile);
+      } else {
+        formData.append("otherFile", createEmptyFilePlaceholder());
+      }
+
+      // Use POST endpoint (API_ENDPOINTS.MENTOR.CREATE) for BOTH create and update operations
+      // Backend schema comment: "dùng chung cho create và update mentor"
+      // The difference: create has no id, update includes id in the JSON data
+      // Remove Content-Type to let axios set multipart boundary automatically
+      const response = await this.api.post(API_ENDPOINTS.MENTOR.CREATE, formData, {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": undefined,
         },
       });
 

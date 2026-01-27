@@ -5,3 +5,6 @@ export { MentorOverviewPage } from "./Overview";
 export { MentorReviewsPage, ReviewDetailPage } from "./Reviews";
 export { MentorSessionsPage, WriteFeedbackPage } from "./Sessions";
 export { StudentDetailPage, StudentsListPage } from "./Students";
+
+// Mentor Dashboard with Chrome Tabs
+export { MentorDashboardPage } from "./MentorDashboard";

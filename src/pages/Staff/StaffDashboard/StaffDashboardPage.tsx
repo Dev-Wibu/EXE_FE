@@ -1,7 +1,9 @@
 import { useCallback, useState } from "react";
 
 import { ContentModerationPage } from "../ContentModeration";
+import { FeedbackModerationPage } from "../FeedbackModeration";
 import { MentorApplicationsPage } from "../MentorApplications";
+import { ReviewModerationPage } from "../ReviewModeration";
 import { SessionProcessingPage } from "../SessionProcessing";
 import { UserSupportPage } from "../UserSupport";
 import type { Tab, TabType } from "./components";
@@ -21,6 +23,10 @@ const getTabTitle = (type: TabType): string => {
       return "Hỗ Trợ";
     case "contentModeration":
       return "Kiểm Duyệt";
+    case "reviewModeration":
+      return "Kiểm Duyệt Đánh Giá";
+    case "feedbackModeration":
+      return "Kiểm Duyệt Phản Hồi";
     default:
       return "Tab Mới";
   }
@@ -30,7 +36,7 @@ const getTabTitle = (type: TabType): string => {
  * Staff Dashboard Page
  *
  * This page is designed for STAFF role users who handle operational tasks.
- * Key differences from Admin (Manager) Dashboard:
+ * Key differences from Admin Dashboard:
  *
  * - Staff focuses on PROCESSING tasks (approvals, support, moderation)
  * - Admin focuses on MANAGEMENT tasks (configuration, user roles, settings)
@@ -40,6 +46,8 @@ const getTabTitle = (type: TabType): string => {
  * - Session monitoring and issue handling
  * - User support ticket management
  * - Content moderation (questions, resources)
+ * - Review moderation
+ * - Feedback moderation
  *
  * Admin features (not included here):
  * - User role management
@@ -117,6 +125,10 @@ export function StaffDashboardPage() {
         return <UserSupportPage />;
       case "contentModeration":
         return <ContentModerationPage />;
+      case "reviewModeration":
+        return <ReviewModerationPage />;
+      case "feedbackModeration":
+        return <FeedbackModerationPage />;
       default:
         return <div>Unknown tab type</div>;
     }
