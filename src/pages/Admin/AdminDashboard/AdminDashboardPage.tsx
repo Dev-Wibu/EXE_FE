@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 
 import { useTabsState } from "@/hooks/useTabsState";
 
+import { DashboardOverviewPage } from "../DashboardOverview";
 import { FeedbackManagementPage } from "../FeedbackManagement";
 import { MentorManagementPage } from "../MentorManagement";
 import { NotificationManagementPage } from "../NotificationManagement";
@@ -19,6 +20,7 @@ import { ChromeTabs, Sidebar } from "./components";
  * Defines all possible tab types with their display labels
  */
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
+  { type: "dashboard", label: "Dashboard" },
   { type: "users", label: "User Management" },
   { type: "mentors", label: "Mentor Management" },
   { type: "sessions", label: "Session Management" },
@@ -41,12 +43,12 @@ export function AdminDashboardPage() {
   // Use the tabs state hook with URL + localStorage persistence
   const { activeTab, openTabs, setActiveTab, openTab, closeTab } = useTabsState({
     storageKey: "admin",
-    defaultTab: "users",
+    defaultTab: "dashboard",
     availableTabs: AVAILABLE_TABS,
   });
 
   // Validate and get the typed active tab
-  const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "users";
+  const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
 
   // Convert openTabs to the format expected by ChromeTabs component
   const chromeTabsData: Tab[] = useMemo(() => {
@@ -87,6 +89,8 @@ export function AdminDashboardPage() {
   // Render the content based on active tab type
   const renderContent = () => {
     switch (typedActiveTab) {
+      case "dashboard":
+        return <DashboardOverviewPage />;
       case "users":
         return <UserManagementPage />;
       case "mentors":

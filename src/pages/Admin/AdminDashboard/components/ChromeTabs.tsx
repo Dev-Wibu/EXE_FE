@@ -3,6 +3,7 @@ import {
   BookOpen,
   FolderOpen,
   GraduationCap,
+  LayoutDashboard,
   MessageSquare,
   Plus,
   Star,
@@ -16,6 +17,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type TabType =
+  | "dashboard"
   | "users"
   | "mentors"
   | "sessions"
@@ -41,6 +43,7 @@ interface ChromeTabsProps {
 }
 
 const TAB_ICONS: Record<TabType, React.ElementType> = {
+  dashboard: LayoutDashboard,
   users: Users,
   mentors: UserCog,
   sessions: Video,
@@ -53,6 +56,7 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
 };
 
 const TAB_COLORS: Record<TabType, string> = {
+  dashboard: "text-indigo-600",
   users: "text-blue-600",
   mentors: "text-orange-600",
   sessions: "text-green-600",
@@ -122,6 +126,16 @@ export function ChromeTabs({
           <>
             <div className="fixed inset-0 z-10" onClick={() => setShowNewTabMenu(false)} />
             <div className="absolute top-full left-0 z-20 mt-1 w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+              <button
+                onClick={() => {
+                  onNewTab("dashboard");
+                  setShowNewTabMenu(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
+                <LayoutDashboard className="h-4 w-4 text-indigo-600" />
+                Dashboard
+              </button>
+              <div className="my-1 border-t dark:border-slate-600" />
               <button
                 onClick={() => {
                   onNewTab("users");

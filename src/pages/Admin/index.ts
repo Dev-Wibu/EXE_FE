@@ -1,4 +1,5 @@
 export { AdminDashboardPage } from "./AdminDashboard";
+export { DashboardOverviewPage } from "./DashboardOverview";
 export { FeedbackManagementPage } from "./FeedbackManagement";
 export { MentorManagementPage } from "./MentorManagement";
 export { NotificationManagementPage } from "./NotificationManagement";

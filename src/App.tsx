@@ -247,6 +247,7 @@ function App() {
           {/* Admin Management routes */}
           <Route path="/admin" element={<AdminDashboardPage />} />
           {/* Redirect routes for backward compatibility - redirect /admin/* to /admin?tab=* */}
+          <Route path="/admin/dashboard" element={<Navigate to="/admin?tab=dashboard" replace />} />
           <Route path="/admin/mentors" element={<Navigate to="/admin?tab=mentors" replace />} />
           <Route path="/admin/users" element={<Navigate to="/admin?tab=users" replace />} />
           <Route path="/admin/sessions" element={<Navigate to="/admin?tab=sessions" replace />} />

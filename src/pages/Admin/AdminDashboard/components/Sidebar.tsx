@@ -36,6 +36,12 @@ const ADMIN_SIDEBAR_COLLAPSED_KEY = "admin_sidebar_collapsed";
 const LEGACY_SIDEBAR_KEY = "manager_sidebar_collapsed";
 
 const MENU_ITEMS = [
+  {
+    type: "dashboard" as TabType,
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    color: "text-indigo-600",
+  },
   { type: "users" as TabType, icon: Users, label: "Users", color: "text-blue-600" },
   { type: "mentors" as TabType, icon: UserCog, label: "Mentors", color: "text-orange-600" },
   { type: "sessions" as TabType, icon: Video, label: "Sessions", color: "text-green-600" },
