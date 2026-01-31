@@ -201,6 +201,36 @@ export const API_ENDPOINTS = {
     UPDATE: "/api/mentor-feedbacks",
     BY_MENTOR: "/api/mentor-feedbacks/mentor/:mentorId",
   },
+
+  // Candidate Profiles endpoints - Based on schema-from-be.d.ts
+  // GET /api/candidate-profiles - getAllProfile
+  // POST /api/candidate-profiles - createProfile (JSON body)
+  // PUT /api/candidate-profiles - updateProfile (JSON body)
+  // GET /api/candidate-profiles/{userId} - getByUserId
+  CANDIDATE_PROFILES: {
+    LIST: "/api/candidate-profiles",
+    DETAIL: "/api/candidate-profiles/:userId",
+    CREATE: "/api/candidate-profiles",
+    UPDATE: "/api/candidate-profiles",
+  },
+
+  // Interview Sessions endpoints - Based on schema-from-be.d.ts
+  // POST /api/interview-sessions/create-session - createInterviewSession (JSON body)
+  // POST /api/interview-sessions/generate-job-requirement - generateJobRequirement (JSON body)
+  // GET /api/interview-sessions/config-options - getInterviewConfigOptions
+  INTERVIEW_SESSIONS: {
+    CREATE: "/api/interview-sessions/create-session",
+    GENERATE_JOB_REQUIREMENT: "/api/interview-sessions/generate-job-requirement",
+    CONFIG_OPTIONS: "/api/interview-sessions/config-options",
+  },
+
+  // Interview V1 endpoints - Based on schema-from-be.d.ts
+  // GET /api/v1/interview/start/{sessionKey} - startInterview
+  // POST /api/v1/interview/submit - submitAnswer (JSON body)
+  INTERVIEW_V1: {
+    START: "/api/v1/interview/start/:sessionKey",
+    SUBMIT: "/api/v1/interview/submit",
+  },
 } as const;
 
 /**

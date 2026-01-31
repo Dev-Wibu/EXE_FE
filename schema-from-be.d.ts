@@ -215,6 +215,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/interview/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitAnswer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -274,6 +290,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * SessionName gửi về là roomName trong session
+         * @description Ghi nhận 1 user đã tham gia vào session
+         */
         post: operations["saveJoinRecord"];
         delete?: never;
         options?: never;
@@ -521,6 +541,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/interview/start/{sessionKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["startInterview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/{id}": {
         parameters: {
             query?: never;
@@ -544,6 +580,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Lấy tất cả session của user
+         * @description Lấy tất cả session liên quan đến userId
+         */
         get: operations["getSessionsByUserId"];
         put?: never;
         post?: never;
@@ -1100,6 +1140,21 @@ export interface components {
             start_date?: string;
             end_date?: string;
         };
+        SubmitAnswerRequest: {
+            sessionKey?: string;
+            answer?: string;
+        };
+        QuestionResponse: {
+            sessionKey?: string;
+            phaseName?: string;
+            /** Format: int32 */
+            currentQuestionIndex?: number;
+            /** Format: int32 */
+            totalQuestionsInPhase?: number;
+            questionContent?: string;
+            questionType?: string;
+            finished?: boolean;
+        };
         UserInfo: {
             /** Format: int32 */
             id?: number;
@@ -1110,12 +1165,12 @@ export interface components {
             major?: string;
         };
         DailyWebHookPayload: {
-            event?: string;
             payload?: components["schemas"]["PayloadData"];
+            type?: string;
         };
         PayloadData: {
-            roomName?: string;
             recording_id?: string;
+            room?: string;
             session_id?: string;
         };
         JoinSessionDtoRequest: {
@@ -1123,6 +1178,7 @@ export interface components {
             /** Format: int32 */
             userId?: number;
             participantId?: string;
+            mentor?: boolean;
         };
         DailyCoCreationRequest: {
             name?: string;
@@ -2010,6 +2066,30 @@ export interface operations {
             };
         };
     };
+    submitAnswer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuestionResponse"];
+                };
+            };
+        };
+    };
     getUsers: {
         parameters: {
             query?: never;
@@ -2426,6 +2506,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    startInterview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuestionResponse"];
                 };
             };
         };

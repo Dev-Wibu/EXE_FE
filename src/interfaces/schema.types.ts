@@ -115,10 +115,20 @@ export interface Session {
 
 /**
  * Session form data for create/update operations
+ * Updated: Removed roomName (auto-generated), added exp (expiration time), start_audio_off, start_video_off
  */
 export interface SessionFormData {
-  roomName?: string;
   userId?: number;
   userId2?: number;
   status?: SessionStatus;
+  /** Session expiration time in seconds for the user */
+  exp?: number;
+  /** Start with video off (default: true) */
+  start_video_off?: boolean;
+  /** Start with audio off (default: true) */
+  start_audio_off?: boolean;
+  /** Maximum participants (default: 2) */
+  max_participants?: number;
+  /** Enable screenshare */
+  enable_screenshare?: boolean;
 }
