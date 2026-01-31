@@ -158,6 +158,7 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
   /**
    * Create new question set
    * POST /api/question-sets (JSON body)
+   * Backend requires full QuestionSet schema including questionSetId: 0 for creation
    */
   async create(data: Partial<QuestionSet>): Promise<ApiResponse<QuestionSet>> {
     if (this.mode === "mock") {
@@ -177,7 +178,16 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
     }
 
     try {
-      const response = await this.api.post(API_ENDPOINTS.QUESTION_SETS.CREATE, data);
+      // Backend requires full QuestionSet schema for creation
+      // questionSetId: 0 indicates new record creation
+      const questionSetPayload: QuestionSet = {
+        questionSetId: 0, // Required: 0 for creation
+        questionSetName: data.questionSetName,
+        objective: data.objective,
+        level: data.level,
+        major: data.major,
+      };
+      const response = await this.api.post(API_ENDPOINTS.QUESTION_SETS.CREATE, questionSetPayload);
       return {
         success: true,
         data: response.data,
@@ -229,8 +239,8 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Delete question set
-   * POST /api/question-sets/{id}
-   * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
+   * DELETE /api/question-sets/{id}
+   * Schema provides DELETE endpoint for question sets
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -249,8 +259,8 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_SETS.DELETE, { id });
-      // Note: Backend requires POST method for delete operations (PUT/DELETE not used)
-      await this.api.post(endpoint);
+      // Use DELETE method as per schema
+      await this.api.delete(endpoint);
       return {
         success: true,
       };

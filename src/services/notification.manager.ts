@@ -143,6 +143,7 @@ export class NotificationManager implements BaseManager<Notification> {
   /**
    * Create new notification
    * POST /api/notifications (JSON body)
+   * Backend requires full Notification schema including id: 0 for creation
    */
   async create(data: Partial<Notification>): Promise<ApiResponse<Notification>> {
     if (this.mode === "mock") {
@@ -163,7 +164,17 @@ export class NotificationManager implements BaseManager<Notification> {
     }
 
     try {
-      const response = await this.api.post(API_ENDPOINTS.NOTIFICATIONS.CREATE, data);
+      // Backend requires full Notification schema for creation
+      // id: 0 indicates new record creation
+      const notificationPayload: Notification = {
+        id: 0, // Required: 0 for creation
+        user: data.user,
+        title: data.title,
+        message: data.message,
+        isRead: data.isRead ?? false,
+        createAt: data.createAt ?? new Date().toISOString(),
+      };
+      const response = await this.api.post(API_ENDPOINTS.NOTIFICATIONS.CREATE, notificationPayload);
       return {
         success: true,
         data: response.data,

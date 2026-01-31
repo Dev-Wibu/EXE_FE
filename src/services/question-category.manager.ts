@@ -10,12 +10,14 @@ import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constan
 import axios from "axios";
 
 /**
- * QuestionCategory type based on backend schema
+ * QuestionCategory type based on backend schema (QuestionLesson)
+ * Schema includes: id, categoryName, description, urlTutorial
  */
 export interface QuestionCategory {
   id?: number;
   categoryName?: string;
   description?: string;
+  urlTutorial?: string;
 }
 
 /**
@@ -24,6 +26,7 @@ export interface QuestionCategory {
 export interface QuestionCategoryFormData {
   categoryName: string;
   description?: string;
+  urlTutorial?: string;
 }
 
 // Mock data for development
@@ -114,6 +117,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
   /**
    * Create new question category
    * POST /api/question-categories (JSON body)
+   * Backend requires full QuestionLesson schema including id: 0 for creation
    */
   async create(data: Partial<QuestionCategory>): Promise<ApiResponse<QuestionCategory>> {
     if (this.mode === "mock") {
@@ -122,6 +126,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
         id: newId,
         categoryName: data.categoryName,
         description: data.description,
+        urlTutorial: data.urlTutorial,
       };
       mockQuestionCategories.push(newCategory);
       return {
@@ -131,7 +136,18 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     }
 
     try {
-      const response = await this.api.post(API_ENDPOINTS.QUESTION_CATEGORIES.CREATE, data);
+      // Backend requires full QuestionLesson schema for creation
+      // id: 0 indicates new record creation
+      const categoryPayload: QuestionCategory = {
+        id: 0, // Required: 0 for creation
+        categoryName: data.categoryName,
+        description: data.description,
+        urlTutorial: data.urlTutorial ?? "",
+      };
+      const response = await this.api.post(
+        API_ENDPOINTS.QUESTION_CATEGORIES.CREATE,
+        categoryPayload
+      );
       return {
         success: true,
         data: response.data,
@@ -186,8 +202,8 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
 
   /**
    * Delete question category
-   * POST /api/question-categories/{id}
-   * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
+   * DELETE /api/question-categories/{id}
+   * Schema provides DELETE endpoint for question categories
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -206,8 +222,8 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DELETE, { id });
-      // Note: Backend requires POST method for delete operations (PUT/DELETE not used)
-      await this.api.post(endpoint);
+      // Use DELETE method as per schema
+      await this.api.delete(endpoint);
       return {
         success: true,
       };

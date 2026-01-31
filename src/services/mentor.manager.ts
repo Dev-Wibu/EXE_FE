@@ -305,14 +305,16 @@ export class MentorManager implements BaseManager<Mentor> {
         };
       }
       // Extract file fields and only keep Mentor-compatible fields
+      // Prefix unused destructured variables with underscore to avoid lint errors
 
-      const {
-        avatar: _avatar,
-        identityFile: _identityFile,
-        degreeFile: _degreeFile,
-        otherFile: _otherFile,
-        ...mentorData
-      } = _data as Partial<Mentor> & CreateMentorData;
+      const { avatar, identityFile, degreeFile, otherFile, ...mentorData } =
+        _data as Partial<Mentor> & CreateMentorData;
+      // Note: Files (avatar, identityFile, degreeFile, otherFile) are ignored in mock mode
+      void avatar;
+      void identityFile;
+      void degreeFile;
+      void otherFile;
+
       mockMentorsData![index] = { ...mockMentorsData![index], ...mentorData };
       return {
         success: true,
