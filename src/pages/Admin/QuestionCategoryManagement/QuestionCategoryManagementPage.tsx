@@ -66,6 +66,7 @@ export function QuestionCategoryManagementPage() {
     setFormData({
       categoryName: category.categoryName || "",
       description: category.description,
+      urlTutorial: category.urlTutorial,
     });
     setIsEditDialogOpen(true);
   };

@@ -1,4 +1,4 @@
-import { Edit, Power, Search } from "lucide-react";
+import { Edit, ExternalLink, Power, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,18 @@ interface QuestionCategoryTableProps {
   categories: QuestionCategory[];
   onEdit: (category: QuestionCategory) => void;
   onDelete: (category: QuestionCategory) => void;
+}
+
+/**
+ * Validate if a string is a valid HTTP/HTTPS URL
+ */
+function isValidHttpUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export function QuestionCategoryTable({
@@ -39,6 +51,7 @@ export function QuestionCategoryTable({
           <TableHead className="w-16">ID</TableHead>
           <TableHead>Tên danh mục</TableHead>
           <TableHead>Mô tả</TableHead>
+          <TableHead>URL Hướng dẫn</TableHead>
           <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
@@ -49,6 +62,24 @@ export function QuestionCategoryTable({
             <TableCell className="font-medium">{category.categoryName}</TableCell>
             <TableCell className="text-muted-foreground max-w-md truncate">
               {category.description || "-"}
+            </TableCell>
+            <TableCell>
+              {category.urlTutorial && isValidHttpUrl(category.urlTutorial) ? (
+                <a
+                  href={category.urlTutorial}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline">
+                  <ExternalLink className="h-3 w-3" />
+                  Link
+                </a>
+              ) : category.urlTutorial ? (
+                <span className="text-muted-foreground text-xs" title={category.urlTutorial}>
+                  URL không hợp lệ
+                </span>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">

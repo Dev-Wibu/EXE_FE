@@ -61,6 +61,15 @@ export function QuestionCategoryFormDialog({
               rows={3}
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="urlTutorial">URL Hướng dẫn</Label>
+            <Input
+              id="urlTutorial"
+              value={formData.urlTutorial || ""}
+              onChange={(e) => onFormChange({ ...formData, urlTutorial: e.target.value })}
+              placeholder="Nhập URL bài hướng dẫn (không bắt buộc)"
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
