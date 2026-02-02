@@ -6,13 +6,12 @@
 import type { ApiResponse } from "@/interfaces";
 import type { Transaction, UserProfile, UserSettings, Wallet } from "@/mocks/user.mock";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig } from "@/constants/api.config";
+import { API_ENDPOINTS, MANAGER_MODE, createApiInstance } from "@/constants/api.config";
 import * as userMock from "@/mocks/user.mock";
-import axios from "axios";
 
 export class UserManager {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get user profile

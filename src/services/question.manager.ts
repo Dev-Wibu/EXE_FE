@@ -6,13 +6,17 @@
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 import type { QuestionSet, QuestionSetDetail } from "@/mocks/questions.mock";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import * as questionMock from "@/mocks/questions.mock";
-import axios from "axios";
 
 export class QuestionManager implements BaseManager<QuestionSet> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all question sets

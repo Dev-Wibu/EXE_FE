@@ -6,8 +6,12 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
-import axios from "axios";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 
 /**
  * QuestionCategory type based on backend schema (QuestionLesson)
@@ -48,7 +52,7 @@ const mockQuestionCategories: QuestionCategory[] = [
 
 export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all question categories

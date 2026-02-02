@@ -12,9 +12,13 @@ import type {
   Session,
 } from "@/interfaces";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import * as sessionMock from "@/mocks/sessions.mock";
-import axios from "axios";
 
 // Re-export Session type for convenience
 export type { Session } from "@/interfaces";
@@ -39,9 +43,19 @@ export interface SessionCreationRequest {
   mentorId?: number;
 }
 
+/**
+ * Join session request (matches backend schema JoinSessionDtoRequest)
+ */
+export interface JoinSessionRequest {
+  sessionName?: string;
+  userId?: number;
+  participantId?: string;
+  mentor?: boolean;
+}
+
 export class SessionManager implements BaseManager<Session> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all sessions
@@ -299,6 +313,33 @@ export class SessionManager implements BaseManager<Session> {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to cancel session",
+      };
+    }
+  }
+
+  /**
+   * Join session
+   * POST /api/sessions/join-session (JSON body with JoinSessionDtoRequest)
+   * Used to track user joining a session (for Daily.co integration)
+   */
+  async joinSession(data: JoinSessionRequest): Promise<ApiResponse<void>> {
+    if (this.mode === "mock") {
+      // In mock mode, simulate joining a session
+      console.log("Mock: User joining session", data);
+      return {
+        success: true,
+      };
+    }
+
+    try {
+      await this.api.post(API_ENDPOINTS.SESSIONS.JOIN, data);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to join session",
       };
     }
   }

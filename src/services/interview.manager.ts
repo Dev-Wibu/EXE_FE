@@ -17,14 +17,18 @@ import type {
   MockPaymentResult,
 } from "@/mocks/mentors.mock";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import * as interviewMock from "@/mocks/interviews.mock";
 import * as mentorMock from "@/mocks/mentors.mock";
-import axios from "axios";
 
 export class InterviewManager {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   // ============= AI Interview Methods =============
 

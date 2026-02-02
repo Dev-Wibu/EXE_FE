@@ -6,13 +6,17 @@
 import type { ApiResponse, PaginatedResponse, PaginationParams } from "@/interfaces";
 import type { ChatMessage, ChatSession } from "@/mocks/chat.mock";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import * as chatMock from "@/mocks/chat.mock";
-import axios from "axios";
 
 export class ChatManager {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all chat sessions

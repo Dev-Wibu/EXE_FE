@@ -4,6 +4,7 @@
  */
 
 import type { ApiConfig, ManagerMode } from "@/interfaces";
+import axios, { type AxiosInstance } from "axios";
 
 // Determine manager mode from environment variable or default to mock
 const envMode = import.meta.env.VITE_MANAGER_MODE as string;
@@ -246,3 +247,73 @@ export function buildEndpoint(endpoint: string, params?: Record<string, string |
     return path.replace(`:${key}`, String(value));
   }, endpoint);
 }
+
+// Error messages mapping - Vietnamese user-friendly messages
+// EXPORTED for components to use when handling HTTP errors
+// Components can import this to get consistent, localized error messages:
+// import { ERROR_MESSAGES } from '@/constants/api.config';
+// const message = ERROR_MESSAGES[response.status] || 'Đã xảy ra lỗi';
+export const ERROR_MESSAGES: Record<number, string> = {
+  400: "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.",
+  401: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
+  403: "Bạn không có quyền thực hiện thao tác này.",
+  404: "Không tìm thấy dữ liệu yêu cầu.",
+  413: "Tập tin quá lớn. Vui lòng chọn file nhỏ hơn.",
+  415: "Định dạng file không được hỗ trợ.",
+  429: "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
+  500: "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.",
+  502: "Máy chủ tạm thời không khả dụng.",
+  503: "Dịch vụ đang bảo trì. Vui lòng thử lại sau.",
+  504: "Máy chủ phản hồi quá chậm. Vui lòng thử lại.",
+};
+
+/**
+ * Create axios instance with response interceptors for global error handling
+ *
+ * NOTE: Toast notifications are NOT shown in the interceptor to prevent duplicate toasts.
+ * Components/hooks should handle their own error toasts for more specific messaging.
+ *
+ * @returns Configured axios instance with error interceptors
+ */
+export const createApiInstance = (): AxiosInstance => {
+  const instance = axios.create(apiConfig);
+
+  // Request interceptor - Add request ID for debugging
+  instance.interceptors.request.use((config) => {
+    // Generate unique request ID for debugging
+    const requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    config.headers["X-Request-ID"] = requestId;
+    return config;
+  });
+
+  // Response interceptor - Global error handling (without toast to prevent duplicates)
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      const status = error.response?.status;
+
+      // Handle network errors (no response) - log but don't toast
+      if (!error.response) {
+        console.error("Network error: Không thể kết nối đến máy chủ");
+        return Promise.reject(error);
+      }
+
+      // Handle HTTP errors
+      if (status >= 400) {
+        // Log error for debugging
+        console.error(`HTTP ${status} error:`, error.response?.data);
+
+        // Redirect to login on 401 (unauthorized)
+        if (status === 401) {
+          // Clear auth and redirect
+          localStorage.removeItem("auth-storage");
+          window.location.href = "/login";
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
+  return instance;
+};

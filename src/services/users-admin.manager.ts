@@ -12,9 +12,13 @@ import type {
   User,
 } from "@/interfaces";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import * as usersMock from "@/mocks/users-admin.mock";
-import axios from "axios";
 
 // Re-export User type for convenience
 export type { User } from "@/interfaces";
@@ -70,7 +74,7 @@ function createEmptyFilePlaceholder(): File {
 
 export class UsersAdminManager implements BaseManager<User> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all users

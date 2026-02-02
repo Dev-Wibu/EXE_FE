@@ -12,9 +12,13 @@ import type {
   PaginationParams,
 } from "@/interfaces";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import * as mentorMock from "@/mocks/mentors.mock";
-import axios from "axios";
 
 // Re-export Mentor type for convenience
 export type { Mentor } from "@/interfaces";
@@ -60,7 +64,7 @@ let mockMentorsData: Mentor[] | null = null;
 
 export class MentorManager implements BaseManager<Mentor> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Transform mock mentor data to backend schema format

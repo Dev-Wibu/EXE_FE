@@ -6,8 +6,12 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
-import axios from "axios";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import type { QuestionSet } from "./question-set.manager";
 
 /**
@@ -90,7 +94,7 @@ const mockQuestionSetItems: QuestionSetItem[] = [
 
 export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all question set items

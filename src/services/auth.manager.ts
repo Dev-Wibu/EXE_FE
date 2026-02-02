@@ -12,10 +12,9 @@ import type { ApiResponse } from "@/interfaces";
 import type { MentorRegistration, User } from "@/mocks/auth.mock";
 import type { components } from "../../schema-from-be";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig } from "@/constants/api.config";
+import { API_ENDPOINTS, MANAGER_MODE, createApiInstance } from "@/constants/api.config";
 import { fetchClient } from "@/lib/api";
 import * as authMock from "@/mocks/auth.mock";
-import axios from "axios";
 
 // Type from backend schema
 type BackendUser = components["schemas"]["User"];
@@ -50,7 +49,7 @@ export interface MentorRegisterData {
 
 export class AuthManager {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Check if credentials match demo accounts

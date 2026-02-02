@@ -6,9 +6,13 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import { API_ENDPOINTS, MANAGER_MODE, apiConfig, buildEndpoint } from "@/constants/api.config";
+import {
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  buildEndpoint,
+  createApiInstance,
+} from "@/constants/api.config";
 import type { Mentor, Session, User } from "@/interfaces";
-import axios from "axios";
 
 /**
  * MentorFeedback type based on backend schema
@@ -72,7 +76,7 @@ const mockMentorFeedbacks: MentorFeedback[] = [
 
 export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
   private mode = MANAGER_MODE;
-  private api = axios.create(apiConfig);
+  private api = createApiInstance();
 
   /**
    * Get all mentor feedbacks
