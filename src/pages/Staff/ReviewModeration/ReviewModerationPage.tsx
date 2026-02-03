@@ -4,8 +4,10 @@
  */
 
 import { AlertTriangle, Eye, Flag, Search, Star } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { PaginationControl } from "@/components/shared/PaginationControl";
+import { SortButton } from "@/components/shared/SortButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMentorReviews, type MentorReview } from "@/hooks/useMentorReview";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 
 // Rating thresholds for moderation
 const LOW_RATING_THRESHOLD = 2;
@@ -47,29 +51,46 @@ export function ReviewModerationPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("low"); // Default to low ratings
+  const [pageSize, setPageSize] = useState(10);
   const [selectedReview, setSelectedReview] = useState<MentorReview | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Filter reviews
-  const filteredReviews = reviews.filter((review: MentorReview) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        review.mentor?.name?.toLowerCase().includes(query) ||
-        review.user?.name?.toLowerCase().includes(query) ||
-        review.situationNote?.toLowerCase().includes(query) ||
-        review.taskNote?.toLowerCase().includes(query) ||
-        review.weakness?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-    }
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((review: MentorReview) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          review.mentor?.name?.toLowerCase().includes(query) ||
+          review.user?.name?.toLowerCase().includes(query) ||
+          review.situationNote?.toLowerCase().includes(query) ||
+          review.taskNote?.toLowerCase().includes(query) ||
+          review.weakness?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
-    // Rating filter
-    if (ratingFilter === "low" && (review.rating || 0) > LOW_RATING_THRESHOLD) return false;
-    if (ratingFilter === "high" && (review.rating || 0) < HIGH_RATING_MIN) return false;
+      // Rating filter
+      if (ratingFilter === "low" && (review.rating || 0) > LOW_RATING_THRESHOLD) return false;
+      if (ratingFilter === "high" && (review.rating || 0) < HIGH_RATING_MIN) return false;
 
-    return true;
+      return true;
+    });
+  }, [reviews, searchQuery, ratingFilter]);
+
+  // Apply sorting
+  const { sortedData, getSortProps } = useSortable(filteredReviews);
+
+  // Apply pagination
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   // Calculate stats
   const lowRatingReviews = reviews.filter(
@@ -183,72 +204,87 @@ export function ReviewModerationPage() {
             <CardTitle>Danh Sách Kiểm Duyệt</CardTitle>
           </div>
           <CardDescription>
-            Hiển thị {filteredReviews.length} / {reviews.length} đánh giá
+            Hiển thị {sortedData.length} / {reviews.length} đánh giá
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <LoadingCardList count={5} />
-          ) : filteredReviews.length === 0 ? (
+          ) : pageData.length === 0 ? (
             <EmptyState
               icon={Star}
               title="Không có đánh giá"
               description="Không tìm thấy đánh giá nào cần kiểm duyệt."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Mentor</TableHead>
-                  <TableHead>Học viên</TableHead>
-                  <TableHead>Đánh giá</TableHead>
-                  <TableHead>Điểm yếu được nêu</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReviews.map((review: MentorReview) => (
-                  <TableRow
-                    key={review.id}
-                    className={
-                      (review.rating || 0) <= LOW_RATING_THRESHOLD
-                        ? "bg-red-50/50 dark:bg-red-900/10"
-                        : ""
-                    }>
-                    <TableCell>#{review.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={review.mentor?.avatarUrl} />
-                          <AvatarFallback>{review.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{review.mentor?.name || "N/A"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{review.user?.name || "N/A"}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <StarRating value={review.rating || 0} readOnly size="sm" />
-                        {(review.rating || 0) <= LOW_RATING_THRESHOLD && (
-                          <Badge variant="destructive" className="text-xs">
-                            Thấp
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-red-600 dark:text-red-400">
-                      {review.weakness || "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => handleViewDetail(review)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <SortButton {...getSortProps("id")}>ID</SortButton>
+                    </TableHead>
+                    <TableHead>Mentor</TableHead>
+                    <TableHead>Học viên</TableHead>
+                    <TableHead>
+                      <SortButton {...getSortProps("rating")}>Đánh giá</SortButton>
+                    </TableHead>
+                    <TableHead>Điểm yếu được nêu</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pageData.map((review: MentorReview) => (
+                    <TableRow
+                      key={review.id}
+                      className={
+                        (review.rating || 0) <= LOW_RATING_THRESHOLD
+                          ? "bg-red-50/50 dark:bg-red-900/10"
+                          : ""
+                      }>
+                      <TableCell>#{review.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={review.mentor?.avatarUrl} />
+                            <AvatarFallback>{review.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{review.mentor?.name || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{review.user?.name || "N/A"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <StarRating value={review.rating || 0} readOnly size="sm" />
+                          {(review.rating || 0) <= LOW_RATING_THRESHOLD && (
+                            <Badge variant="destructive" className="text-xs">
+                              Thấp
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-red-600 dark:text-red-400">
+                        {review.weakness || "-"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(review)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              <div className="mt-4">
+                <PaginationControl
+                  pagination={pagination}
+                  onPageSizeChange={setPageSize}
+                  pageSizeOptions={[5, 10, 20, 50]}
+                />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -1,6 +1,7 @@
 import { Plus, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { PaginationControl } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { mentorManager } from "@/services";
 import { toast } from "sonner";
 
@@ -52,27 +55,41 @@ export function MentorManagementPage() {
   }, [loadMentors]);
 
   // Filter mentors based on search query and status filter
-  const filteredMentors = mentors.filter((mentor) => {
-    // Filter by status (active/inactive/all) - default shows active only
-    // Note: active can be true, false, or undefined (not set)
-    // Mentors with active === undefined are treated as active (default state)
-    // Only mentors with active === false are considered inactive (soft deleted)
-    if (statusFilter === "active" && mentor.active === false) {
-      return false;
-    }
-    if (statusFilter === "inactive" && mentor.active !== false) {
-      return false;
-    }
+  const filteredMentors = useMemo(() => {
+    return mentors.filter((mentor) => {
+      // Filter by status (active/inactive/all)
+      if (statusFilter === "active" && mentor.active === false) {
+        return false;
+      }
+      if (statusFilter === "inactive" && mentor.active !== false) {
+        return false;
+      }
 
-    if (!searchQuery) return true;
-    const lowerQuery = searchQuery.toLowerCase();
-    return (
-      mentor.name?.toLowerCase().includes(lowerQuery) ||
-      mentor.email?.toLowerCase().includes(lowerQuery) ||
-      mentor.expertise?.toLowerCase().includes(lowerQuery) ||
-      mentor.currentCompany?.toLowerCase().includes(lowerQuery)
-    );
+      if (!searchQuery) return true;
+      const lowerQuery = searchQuery.toLowerCase();
+      return (
+        mentor.name?.toLowerCase().includes(lowerQuery) ||
+        mentor.email?.toLowerCase().includes(lowerQuery) ||
+        mentor.expertise?.toLowerCase().includes(lowerQuery) ||
+        mentor.currentCompany?.toLowerCase().includes(lowerQuery)
+      );
+    });
+  }, [mentors, statusFilter, searchQuery]);
+
+  // Sorting
+  const { sortedData, getSortProps } = useSortable(filteredMentors);
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   const handleCreate = () => {
     setFormData({});
@@ -212,13 +229,19 @@ export function MentorManagementPage() {
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <MentorTable
-          mentors={filteredMentors.slice().reverse()}
+          mentors={pageData}
           onEdit={handleEdit}
           onDelete={handleToggleActive}
+          getSortProps={getSortProps}
         />
 
+        {/* Pagination */}
+        {sortedData.length > 0 && (
+          <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+        )}
+
         {/* Empty State with Clear Filters */}
-        {filteredMentors.length === 0 && (searchQuery || statusFilter !== "active") && (
+        {sortedData.length === 0 && (searchQuery || statusFilter !== "active") && (
           <div className="flex justify-center pb-4">
             <Button
               variant="outline"

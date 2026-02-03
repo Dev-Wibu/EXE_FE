@@ -1,5 +1,6 @@
 import { Edit, FileText, Power, Search } from "lucide-react";
 
+import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +15,17 @@ import { getMajorLabel } from "@/constants/majors";
 
 import type { User, UserRole } from "../types";
 
+interface SortProps {
+  direction: SortDirection;
+  onChange: (direction: SortDirection) => void;
+}
+
 interface UserTableProps {
   users: User[];
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
   onUploadCV: (user: User) => void;
+  getSortProps?: (key: keyof User) => SortProps;
 }
 
 const getRoleBadgeClass = (role?: UserRole): string => {
@@ -34,7 +41,7 @@ const getRoleBadgeClass = (role?: UserRole): string => {
   }
 };
 
-export function UserTable({ users, onEdit, onDelete, onUploadCV }: UserTableProps) {
+export function UserTable({ users, onEdit, onDelete, onUploadCV, getSortProps }: UserTableProps) {
   if (users.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -49,7 +56,9 @@ export function UserTable({ users, onEdit, onDelete, onUploadCV }: UserTableProp
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Tên</TableHead>
+          <TableHead>
+            {getSortProps ? <SortButton {...getSortProps("name")}>Tên</SortButton> : "Tên"}
+          </TableHead>
           <TableHead>Email</TableHead>
           <TableHead className="w-24">Vai trò</TableHead>
           <TableHead>Trường đại học</TableHead>

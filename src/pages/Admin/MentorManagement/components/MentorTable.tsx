@@ -1,5 +1,6 @@
 import { Edit, Power, Search } from "lucide-react";
 
+import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,13 +14,19 @@ import {
 
 import type { Mentor } from "../types";
 
+interface SortProps {
+  direction: SortDirection;
+  onChange: (direction: SortDirection) => void;
+}
+
 interface MentorTableProps {
   mentors: Mentor[];
   onEdit: (mentor: Mentor) => void;
   onDelete: (mentor: Mentor) => void;
+  getSortProps?: (key: keyof Mentor) => SortProps;
 }
 
-export function MentorTable({ mentors, onEdit, onDelete }: MentorTableProps) {
+export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorTableProps) {
   if (mentors.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -34,12 +41,26 @@ export function MentorTable({ mentors, onEdit, onDelete }: MentorTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Tên</TableHead>
+          <TableHead>
+            {getSortProps ? <SortButton {...getSortProps("name")}>Tên</SortButton> : "Tên"}
+          </TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Chuyên môn</TableHead>
-          <TableHead className="w-24">Kinh nghiệm</TableHead>
+          <TableHead className="w-24">
+            {getSortProps ? (
+              <SortButton {...getSortProps("yearsOfExperience")}>Kinh nghiệm</SortButton>
+            ) : (
+              "Kinh nghiệm"
+            )}
+          </TableHead>
           <TableHead>Công ty</TableHead>
-          <TableHead className="w-20">Số buổi</TableHead>
+          <TableHead className="w-20">
+            {getSortProps ? (
+              <SortButton {...getSortProps("totalSession")}>Số buổi</SortButton>
+            ) : (
+              "Số buổi"
+            )}
+          </TableHead>
           <TableHead className="w-24">Trạng thái</TableHead>
           <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>

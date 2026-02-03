@@ -4,15 +4,35 @@
  */
 
 import { MessageSquare } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { FeedbackList, FeedbackStats } from "@/components/feedback";
+import { PaginationControl } from "@/components/shared/PaginationControl";
+import { SortButton } from "@/components/shared/SortButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMentorFeedbacksByUser } from "@/hooks/useMentorFeedback";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { useAuthStore } from "@/stores/authStore";
 
 export function UserFeedbackListPage() {
   const user = useAuthStore((state) => state.user);
+  const [pageSize, setPageSize] = useState(10);
   const { data: feedbacks = [], isLoading } = useMentorFeedbacksByUser(user?.id || 0);
+
+  // Apply sorting
+  const { sortedData, getSortProps } = useSortable(feedbacks);
+
+  // Apply pagination
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   return (
     <div className="space-y-6">
@@ -77,13 +97,35 @@ export function UserFeedbackListPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Sort Controls */}
+          {feedbacks.length > 0 && (
+            <div className="mb-4 flex items-center gap-4 border-b pb-3">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Sắp xếp theo:
+              </span>
+              <SortButton {...getSortProps("rating")}>Đánh giá</SortButton>
+              <SortButton {...getSortProps("id")}>Mới nhất</SortButton>
+            </div>
+          )}
+
           <FeedbackList
-            feedbacks={feedbacks}
+            feedbacks={pageData}
             isLoading={isLoading}
             showMentor
             emptyTitle="Chưa có phản hồi"
             emptyDescription="Bạn chưa nhận được phản hồi nào từ mentor. Hãy tham gia phỏng vấn để nhận feedback!"
           />
+
+          {/* Pagination */}
+          {feedbacks.length > 0 && (
+            <div className="mt-4">
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={setPageSize}
+                pageSizeOptions={[5, 10, 20, 50]}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

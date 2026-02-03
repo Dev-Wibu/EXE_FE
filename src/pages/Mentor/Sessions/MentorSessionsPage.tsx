@@ -4,15 +4,20 @@
  */
 
 import { Calendar, Clock, MessageSquare, User, Video } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { PaginationControl } from "@/components/shared/PaginationControl";
+import { SortButton } from "@/components/shared/SortButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
 import { useMentorFeedbacks } from "@/hooks/useMentorFeedback";
+import { usePagination } from "@/hooks/usePagination";
 import { useSessions } from "@/hooks/useSession";
+import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -100,6 +105,7 @@ function SessionCard({ session, hasFeedback, onWriteFeedback }: SessionCardProps
 export function MentorSessionsPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const [pageSize, setPageSize] = useState(10);
   const { data: allSessions = [], isLoading: sessionsLoading } = useSessions();
   const { data: feedbacks = [], isLoading: feedbacksLoading } = useMentorFeedbacks();
 
@@ -113,8 +119,19 @@ export function MentorSessionsPage() {
     feedbacks.map((f: { session?: { id?: number } }) => f.session?.id).filter(Boolean)
   );
 
-  // Sort sessions by ID descending (newest first)
-  const sortedSessions = [...mentorSessions].sort((a, b) => (b.id || 0) - (a.id || 0));
+  // Apply sorting
+  const { sortedData, getSortProps } = useSortable(mentorSessions);
+
+  // Apply pagination
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   const handleWriteFeedback = (session: Session) => {
     navigate(`/mentor/sessions/${session.id}/feedback`);
@@ -178,16 +195,36 @@ export function MentorSessionsPage() {
           description="Bạn chưa có phiên phỏng vấn nào với học viên."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {sortedSessions.map((session) => (
-            <SessionCard
-              key={session.id}
-              session={session}
-              hasFeedback={feedbackSessionIds.has(session.id)}
-              onWriteFeedback={() => handleWriteFeedback(session)}
-            />
-          ))}
-        </div>
+        <>
+          {/* Sort Controls */}
+          <Card className="border-emerald-100 p-4 dark:border-slate-800">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Sắp xếp theo:
+              </span>
+              <SortButton {...getSortProps("id")}>ID</SortButton>
+              <SortButton {...getSortProps("status")}>Trạng thái</SortButton>
+            </div>
+          </Card>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {pageData.map((session) => (
+              <SessionCard
+                key={session.id}
+                session={session}
+                hasFeedback={feedbackSessionIds.has(session.id)}
+                onWriteFeedback={() => handleWriteFeedback(session)}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <PaginationControl
+            pagination={pagination}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20, 50]}
+          />
+        </>
       )}
     </div>
   );

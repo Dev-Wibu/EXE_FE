@@ -4,9 +4,10 @@
  */
 
 import { Eye, MessageSquare, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { FeedbackStats } from "@/components/feedback";
+import { PaginationControl, SortButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,8 @@ import {
   useMentorFeedbacks,
   type MentorFeedback,
 } from "@/hooks/useMentorFeedback";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { toast } from "sonner";
 
 export function FeedbackManagementPage() {
@@ -59,25 +62,42 @@ export function FeedbackManagementPage() {
   const numericRatingFilter = ratingFilter !== "all" ? Number(ratingFilter) : null;
 
   // Filter feedbacks
-  const filteredFeedbacks = feedbacks.filter((feedback: MentorFeedback) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        feedback.mentor?.name?.toLowerCase().includes(query) ||
-        feedback.user?.name?.toLowerCase().includes(query) ||
-        feedback.comment?.toLowerCase().includes(query) ||
-        feedback.session?.roomName?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-    }
+  const filteredFeedbacks = useMemo(() => {
+    return feedbacks.filter((feedback: MentorFeedback) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          feedback.mentor?.name?.toLowerCase().includes(query) ||
+          feedback.user?.name?.toLowerCase().includes(query) ||
+          feedback.comment?.toLowerCase().includes(query) ||
+          feedback.session?.roomName?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
-    // Rating filter
-    if (numericRatingFilter !== null && feedback.rating !== numericRatingFilter) {
-      return false;
-    }
+      // Rating filter
+      if (numericRatingFilter !== null && feedback.rating !== numericRatingFilter) {
+        return false;
+      }
 
-    return true;
+      return true;
+    });
+  }, [feedbacks, searchQuery, numericRatingFilter]);
+
+  // Sorting
+  const { sortedData, getSortProps } = useSortable(filteredFeedbacks);
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   // Calculate stats
   const avgRating =
@@ -204,76 +224,89 @@ export function FeedbackManagementPage() {
         <CardContent>
           {isLoading ? (
             <LoadingCardList count={5} />
-          ) : filteredFeedbacks.length === 0 ? (
+          ) : pageData.length === 0 ? (
             <EmptyState
               icon={MessageSquare}
               title="Không có phản hồi"
               description="Không tìm thấy phản hồi nào phù hợp với bộ lọc."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Mentor</TableHead>
-                  <TableHead>Học viên</TableHead>
-                  <TableHead>Phiên</TableHead>
-                  <TableHead>Đánh giá</TableHead>
-                  <TableHead>Nhận xét</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredFeedbacks.map((feedback: MentorFeedback) => (
-                  <TableRow key={feedback.id}>
-                    <TableCell>#{feedback.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={feedback.mentor?.avatarUrl} />
-                          <AvatarFallback>{feedback.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{feedback.mentor?.name || "N/A"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={feedback.user?.avatarUrl} />
-                          <AvatarFallback>{feedback.user?.name?.charAt(0) || "U"}</AvatarFallback>
-                        </Avatar>
-                        <span>{feedback.user?.name || "N/A"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">#{feedback.session?.id}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <StarRating value={feedback.rating || 0} readOnly size="sm" />
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {feedback.comment || "Không có nhận xét"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(feedback)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(feedback)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Mentor</TableHead>
+                    <TableHead>Học viên</TableHead>
+                    <TableHead>Phiên</TableHead>
+                    <TableHead>
+                      <SortButton {...getSortProps("rating" as keyof MentorFeedback)}>
+                        Đánh giá
+                      </SortButton>
+                    </TableHead>
+                    <TableHead>Nhận xét</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pageData.map((feedback: MentorFeedback) => (
+                    <TableRow key={feedback.id}>
+                      <TableCell>#{feedback.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={feedback.mentor?.avatarUrl} />
+                            <AvatarFallback>
+                              {feedback.mentor?.name?.charAt(0) || "M"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{feedback.mentor?.name || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={feedback.user?.avatarUrl} />
+                            <AvatarFallback>{feedback.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                          </Avatar>
+                          <span>{feedback.user?.name || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">#{feedback.session?.id}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <StarRating value={feedback.rating || 0} readOnly size="sm" />
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {feedback.comment || "Không có nhận xét"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetail(feedback)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteClick(feedback)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {sortedData.length > 0 && (
+                <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+              )}
+            </>
           )}
         </CardContent>
       </Card>

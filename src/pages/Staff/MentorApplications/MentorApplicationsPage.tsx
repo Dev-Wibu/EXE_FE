@@ -1,7 +1,9 @@
 import { CheckCircle, Clock, Loader2, Search, UserCheck, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { PaginationControl } from "@/components/shared/PaginationControl";
+import { SortButton } from "@/components/shared/SortButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import type { Mentor } from "@/interfaces";
 import { mentorManager } from "@/services/mentor.manager";
 
@@ -35,6 +39,7 @@ const getApplicationStatus = (mentor: Mentor): "pending" | "approved" => {
 export function MentorApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus>("pending");
+  const [pageSize, setPageSize] = useState(10);
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
@@ -62,25 +67,41 @@ export function MentorApplicationsPage() {
   }, []);
 
   // Filter mentors based on search and status
-  const filteredMentors = mentors.filter((mentor) => {
-    // Filter by status
-    const status = getApplicationStatus(mentor);
-    if (statusFilter !== "all" && status !== statusFilter) {
-      return false;
-    }
+  const filteredMentors = useMemo(() => {
+    return mentors.filter((mentor) => {
+      // Filter by status
+      const status = getApplicationStatus(mentor);
+      if (statusFilter !== "all" && status !== statusFilter) {
+        return false;
+      }
 
-    // Filter by search query
-    if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase();
-      return (
-        mentor.name?.toLowerCase().includes(lowerQuery) ||
-        mentor.email?.toLowerCase().includes(lowerQuery) ||
-        mentor.expertise?.toLowerCase().includes(lowerQuery)
-      );
-    }
+      // Filter by search query
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        return (
+          mentor.name?.toLowerCase().includes(lowerQuery) ||
+          mentor.email?.toLowerCase().includes(lowerQuery) ||
+          mentor.expertise?.toLowerCase().includes(lowerQuery)
+        );
+      }
 
-    return true;
+      return true;
+    });
+  }, [mentors, statusFilter, searchQuery]);
+
+  // Apply sorting
+  const { sortedData, getSortProps } = useSortable(filteredMentors);
+
+  // Apply pagination
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   /**
    * Accept mentor application - toggle active status to true
@@ -214,10 +235,14 @@ export function MentorApplicationsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Họ tên</TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("name")}>Họ tên</SortButton>
+              </TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Chuyên môn</TableHead>
-              <TableHead>Kinh nghiệm</TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("yearsOfExperience")}>Kinh nghiệm</SortButton>
+              </TableHead>
               <TableHead>Công ty</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
@@ -233,14 +258,14 @@ export function MentorApplicationsPage() {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredMentors.length === 0 ? (
+            ) : pageData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                   Không có đơn đăng ký nào
                 </TableCell>
               </TableRow>
             ) : (
-              filteredMentors.map((mentor) => {
+              pageData.map((mentor) => {
                 const mentorId = mentor.id;
                 // Skip rendering if mentor has no ID
                 if (mentorId === undefined || mentorId === null) {
@@ -309,6 +334,17 @@ export function MentorApplicationsPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* Pagination */}
+        {!isLoading && pageData.length > 0 && (
+          <div className="border-t p-2">
+            <PaginationControl
+              pagination={pagination}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20, 50]}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

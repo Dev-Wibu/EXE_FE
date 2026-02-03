@@ -4,8 +4,9 @@
  */
 
 import { Bell, Eye, Plus, Search, Send, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { PaginationControl, SortButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { useCreateNotification, type Notification } from "@/hooks/useNotification";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { notificationManager } from "@/services/notification.manager";
 import { usersAdminManager } from "@/services/users-admin.manager";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -100,23 +103,40 @@ export function NotificationManagementPage() {
   const isLoading = notificationsLoading || usersLoading;
 
   // Filter notifications
-  const filteredNotifications = allNotifications.filter((notification: Notification) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        notification.title?.toLowerCase().includes(query) ||
-        notification.message?.toLowerCase().includes(query) ||
-        notification.user?.name?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-    }
+  const filteredNotifications = useMemo(() => {
+    return allNotifications.filter((notification: Notification) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          notification.title?.toLowerCase().includes(query) ||
+          notification.message?.toLowerCase().includes(query) ||
+          notification.user?.name?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
-    // Status filter
-    if (statusFilter === "read" && !notification.isRead) return false;
-    if (statusFilter === "unread" && notification.isRead) return false;
+      // Status filter
+      if (statusFilter === "read" && !notification.isRead) return false;
+      if (statusFilter === "unread" && notification.isRead) return false;
 
-    return true;
+      return true;
+    });
+  }, [allNotifications, searchQuery, statusFilter]);
+
+  // Sorting
+  const { sortedData, getSortProps } = useSortable(filteredNotifications);
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   // Calculate stats
   const totalNotifications = allNotifications.length;
@@ -267,70 +287,87 @@ export function NotificationManagementPage() {
         <CardContent>
           {isLoading ? (
             <LoadingCardList count={5} />
-          ) : filteredNotifications.length === 0 ? (
+          ) : pageData.length === 0 ? (
             <EmptyState
               icon={Bell}
               title="Không có thông báo"
               description="Không tìm thấy thông báo nào phù hợp với bộ lọc."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Người nhận</TableHead>
-                  <TableHead>Tiêu đề</TableHead>
-                  <TableHead>Nội dung</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Thời gian</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredNotifications.map((notification: Notification) => (
-                  <TableRow key={notification.id}>
-                    <TableCell>#{notification.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={notification.user?.avatarUrl} />
-                          <AvatarFallback>
-                            {notification.user?.name?.charAt(0) || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{notification.user?.name || "N/A"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{notification.title}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{notification.message}</TableCell>
-                    <TableCell>
-                      <Badge variant={notification.isRead ? "secondary" : "default"}>
-                        {notification.isRead ? "Đã đọc" : "Chưa đọc"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <TimeAgo date={notification.createAt || new Date()} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(notification)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(notification)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Người nhận</TableHead>
+                    <TableHead>Tiêu đề</TableHead>
+                    <TableHead>Nội dung</TableHead>
+                    <TableHead>
+                      <SortButton {...getSortProps("isRead" as keyof Notification)}>
+                        Trạng thái
+                      </SortButton>
+                    </TableHead>
+                    <TableHead>
+                      <SortButton {...getSortProps("createAt" as keyof Notification)}>
+                        Thời gian
+                      </SortButton>
+                    </TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pageData.map((notification: Notification) => (
+                    <TableRow key={notification.id}>
+                      <TableCell>#{notification.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={notification.user?.avatarUrl} />
+                            <AvatarFallback>
+                              {notification.user?.name?.charAt(0) || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{notification.user?.name || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{notification.title}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {notification.message}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={notification.isRead ? "secondary" : "default"}>
+                          {notification.isRead ? "Đã đọc" : "Chưa đọc"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <TimeAgo date={notification.createAt || new Date()} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetail(notification)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(notification)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {sortedData.length > 0 && (
+                <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+              )}
+            </>
           )}
         </CardContent>
       </Card>

@@ -1,6 +1,7 @@
 import { Plus, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { PaginationControl } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { extractDataArray } from "@/lib/utils";
 import { questionMajorManager, questionSetManager } from "@/services";
 import { toast } from "sonner";
@@ -60,24 +63,41 @@ export function QuestionSetManagementPage() {
   }, [loadData]);
 
   // Filter question sets based on search query and level filter
-  const filteredQuestionSets = questionSets.filter((questionSet) => {
-    // Filter by search query
-    if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase();
-      const matchesSearch =
-        questionSet.questionSetName?.toLowerCase().includes(lowerQuery) ||
-        questionSet.objective?.toLowerCase().includes(lowerQuery) ||
-        questionSet.major?.majorName?.toLowerCase().includes(lowerQuery);
-      if (!matchesSearch) return false;
-    }
+  const filteredQuestionSets = useMemo(() => {
+    return questionSets.filter((questionSet) => {
+      // Filter by search query
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        const matchesSearch =
+          questionSet.questionSetName?.toLowerCase().includes(lowerQuery) ||
+          questionSet.objective?.toLowerCase().includes(lowerQuery) ||
+          questionSet.major?.majorName?.toLowerCase().includes(lowerQuery);
+        if (!matchesSearch) return false;
+      }
 
-    // Filter by level
-    if (levelFilter !== "all" && questionSet.level !== levelFilter) {
-      return false;
-    }
+      // Filter by level
+      if (levelFilter !== "all" && questionSet.level !== levelFilter) {
+        return false;
+      }
 
-    return true;
+      return true;
+    });
+  }, [questionSets, searchQuery, levelFilter]);
+
+  // Sorting
+  const { sortedData, getSortProps } = useSortable(filteredQuestionSets);
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   const handleCreate = () => {
     setFormData({});
@@ -227,13 +247,19 @@ export function QuestionSetManagementPage() {
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <QuestionSetTable
-          questionSets={filteredQuestionSets.slice().reverse()}
+          questionSets={pageData}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          getSortProps={getSortProps}
         />
 
+        {/* Pagination */}
+        {sortedData.length > 0 && (
+          <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+        )}
+
         {/* Empty State with Clear Filters */}
-        {filteredQuestionSets.length === 0 && (searchQuery || levelFilter !== "all") && (
+        {sortedData.length === 0 && (searchQuery || levelFilter !== "all") && (
           <div className="flex justify-center pb-4">
             <Button
               variant="outline"

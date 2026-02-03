@@ -1,5 +1,6 @@
 import { Edit, Power, Search } from "lucide-react";
 
+import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +14,16 @@ import {
 
 import type { QuestionSet, QuestionSetLevel } from "../types";
 
+interface SortProps {
+  direction: SortDirection;
+  onChange: (direction: SortDirection) => void;
+}
+
 interface QuestionSetTableProps {
   questionSets: QuestionSet[];
   onEdit: (questionSet: QuestionSet) => void;
   onDelete: (questionSet: QuestionSet) => void;
+  getSortProps?: (key: keyof QuestionSet) => SortProps;
 }
 
 const getLevelBadgeClass = (level?: QuestionSetLevel): string => {
@@ -34,7 +41,12 @@ const getLevelBadgeClass = (level?: QuestionSetLevel): string => {
   }
 };
 
-export function QuestionSetTable({ questionSets, onEdit, onDelete }: QuestionSetTableProps) {
+export function QuestionSetTable({
+  questionSets,
+  onEdit,
+  onDelete,
+  getSortProps,
+}: QuestionSetTableProps) {
   if (questionSets.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -49,9 +61,17 @@ export function QuestionSetTable({ questionSets, onEdit, onDelete }: QuestionSet
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">ID</TableHead>
-          <TableHead>Tên</TableHead>
+          <TableHead>
+            {getSortProps ? (
+              <SortButton {...getSortProps("questionSetName")}>Tên</SortButton>
+            ) : (
+              "Tên"
+            )}
+          </TableHead>
           <TableHead>Mục tiêu</TableHead>
-          <TableHead className="w-24">Cấp độ</TableHead>
+          <TableHead className="w-24">
+            {getSortProps ? <SortButton {...getSortProps("level")}>Cấp độ</SortButton> : "Cấp độ"}
+          </TableHead>
           <TableHead>Chuyên ngành</TableHead>
           <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>

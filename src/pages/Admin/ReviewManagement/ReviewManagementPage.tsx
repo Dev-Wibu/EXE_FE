@@ -4,9 +4,10 @@
  */
 
 import { Eye, Search, Star, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { ReviewStats } from "@/components/review";
+import { PaginationControl, SortButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ import {
 } from "@/components/ui/table";
 import type { MentorReview } from "@/hooks/useMentorReview";
 import { useDeleteMentorReview, useMentorReviews } from "@/hooks/useMentorReview";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { toast } from "sonner";
 
 export function ReviewManagementPage() {
@@ -56,24 +59,41 @@ export function ReviewManagementPage() {
   const numericRatingFilter = ratingFilter !== "all" ? Number(ratingFilter) : null;
 
   // Filter reviews
-  const filteredReviews = reviews.filter((review: MentorReview) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        review.mentor?.name?.toLowerCase().includes(query) ||
-        review.user?.name?.toLowerCase().includes(query) ||
-        review.session?.roomName?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-    }
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((review: MentorReview) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          review.mentor?.name?.toLowerCase().includes(query) ||
+          review.user?.name?.toLowerCase().includes(query) ||
+          review.session?.roomName?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
-    // Rating filter
-    if (numericRatingFilter !== null && review.rating !== numericRatingFilter) {
-      return false;
-    }
+      // Rating filter
+      if (numericRatingFilter !== null && review.rating !== numericRatingFilter) {
+        return false;
+      }
 
-    return true;
+      return true;
+    });
+  }, [reviews, searchQuery, numericRatingFilter]);
+
+  // Sorting
+  const { sortedData, getSortProps } = useSortable(filteredReviews);
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   // Calculate stats
   const avgRating =
@@ -199,66 +219,83 @@ export function ReviewManagementPage() {
         <CardContent>
           {isLoading ? (
             <LoadingCardList count={5} />
-          ) : filteredReviews.length === 0 ? (
+          ) : pageData.length === 0 ? (
             <EmptyState
               icon={Star}
               title="Không có đánh giá"
               description="Không tìm thấy đánh giá nào phù hợp với bộ lọc."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Mentor</TableHead>
-                  <TableHead>Học viên</TableHead>
-                  <TableHead>Phiên</TableHead>
-                  <TableHead>Đánh giá</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReviews.map((review: MentorReview) => (
-                  <TableRow key={review.id}>
-                    <TableCell>#{review.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={review.mentor?.avatarUrl} />
-                          <AvatarFallback>{review.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{review.mentor?.name || "N/A"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={review.user?.avatarUrl} />
-                          <AvatarFallback>{review.user?.name?.charAt(0) || "U"}</AvatarFallback>
-                        </Avatar>
-                        <span>{review.user?.name || "N/A"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">#{review.session?.id}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <StarRating value={review.rating || 0} readOnly size="sm" />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewDetail(review)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(review)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Mentor</TableHead>
+                    <TableHead>Học viên</TableHead>
+                    <TableHead>Phiên</TableHead>
+                    <TableHead>
+                      <SortButton {...getSortProps("rating" as keyof MentorReview)}>
+                        Đánh giá
+                      </SortButton>
+                    </TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pageData.map((review: MentorReview) => (
+                    <TableRow key={review.id}>
+                      <TableCell>#{review.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={review.mentor?.avatarUrl} />
+                            <AvatarFallback>{review.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{review.mentor?.name || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={review.user?.avatarUrl} />
+                            <AvatarFallback>{review.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                          </Avatar>
+                          <span>{review.user?.name || "N/A"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">#{review.session?.id}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <StarRating value={review.rating || 0} readOnly size="sm" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetail(review)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteClick(review)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {sortedData.length > 0 && (
+                <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+              )}
+            </>
           )}
         </CardContent>
       </Card>

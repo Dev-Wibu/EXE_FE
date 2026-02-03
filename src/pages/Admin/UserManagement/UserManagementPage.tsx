@@ -1,6 +1,7 @@
 import { Plus, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { PaginationControl } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePagination } from "@/hooks/usePagination";
+import { useSortable } from "@/hooks/useSortable";
 import { usersAdminManager } from "@/services";
 import { toast } from "sonner";
 
@@ -57,39 +60,48 @@ export function UserManagementPage() {
   }, [loadUsers]);
 
   // Filter users based on search query and status filter
-  const filteredUsers = users.filter((user) => {
-    // Filter by status (active/inactive/all) - default shows active only
-    // Backend can return isActive as: true (active), false (deactivated), or null/undefined (not set)
-    // - isActive === true: Explicitly active user
-    // - isActive === false: Explicitly deactivated user (soft deleted)
-    // - isActive === null/undefined: Treated as active (default state)
-    if (statusFilter === "active") {
-      // Show users that are active (true) or not explicitly set (null/undefined)
-      // Hide users that are explicitly inactive (false)
-      if (user.isActive === false) {
-        return false;
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // Filter by status (active/inactive/all) - default shows active only
+      if (statusFilter === "active") {
+        if (user.isActive === false) {
+          return false;
+        }
+      } else if (statusFilter === "inactive") {
+        if (user.isActive !== false) {
+          return false;
+        }
       }
-    } else if (statusFilter === "inactive") {
-      // Show only users that are explicitly deactivated (isActive === false)
-      if (user.isActive !== false) {
-        return false;
+
+      // Filter by search query
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        const matchesSearch =
+          user.name?.toLowerCase().includes(lowerQuery) ||
+          user.email?.toLowerCase().includes(lowerQuery) ||
+          user.university?.toLowerCase().includes(lowerQuery) ||
+          user.major?.toLowerCase().includes(lowerQuery);
+        if (!matchesSearch) return false;
       }
-    }
-    // statusFilter === "all" shows everything
 
-    // Filter by search query
-    if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase();
-      const matchesSearch =
-        user.name?.toLowerCase().includes(lowerQuery) ||
-        user.email?.toLowerCase().includes(lowerQuery) ||
-        user.university?.toLowerCase().includes(lowerQuery) ||
-        user.major?.toLowerCase().includes(lowerQuery);
-      if (!matchesSearch) return false;
-    }
+      return true;
+    });
+  }, [users, statusFilter, searchQuery]);
 
-    return true;
+  // Sorting
+  const { sortedData, getSortProps } = useSortable(filteredUsers);
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(10);
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
   });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   const handleCreate = () => {
     // Note: Role removed from form as UserInfo schema doesn't include it
@@ -261,14 +273,20 @@ export function UserManagementPage() {
       {/* Table */}
       <div className="rounded-lg border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <UserTable
-          users={filteredUsers.slice().reverse()}
+          users={pageData}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onUploadCV={handleUploadCV}
+          getSortProps={getSortProps}
         />
 
+        {/* Pagination */}
+        {sortedData.length > 0 && (
+          <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+        )}
+
         {/* Empty State with Clear Filters */}
-        {filteredUsers.length === 0 && (searchQuery || statusFilter !== "active") && (
+        {sortedData.length === 0 && (searchQuery || statusFilter !== "active") && (
           <div className="flex justify-center pb-4">
             <Button
               variant="outline"

@@ -4,8 +4,11 @@
  */
 
 import { Calendar, MessageSquare, Star, Users } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { PaginationControl } from "@/components/shared/PaginationControl";
+import { SortButton } from "@/components/shared/SortButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +17,9 @@ import { LoadingCardList } from "@/components/ui/loading-card";
 import { StarRating } from "@/components/ui/star-rating";
 import { useMentorFeedbacksByMentor } from "@/hooks/useMentorFeedback";
 import { useMentorReviewsByMentor } from "@/hooks/useMentorReview";
+import { usePagination } from "@/hooks/usePagination";
 import { useSessions } from "@/hooks/useSession";
+import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -34,6 +39,7 @@ interface StudentInfo {
 export function StudentsListPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: allSessions = [], isLoading: sessionsLoading } = useSessions();
   const { data: feedbacks = [], isLoading: feedbacksLoading } = useMentorFeedbacksByMentor(
@@ -117,7 +123,21 @@ export function StudentsListPage() {
     }
   });
 
-  const students = Array.from(studentsMap.values()).sort((a, b) => b.sessionCount - a.sessionCount);
+  const students = Array.from(studentsMap.values());
+
+  // Apply sorting
+  const { sortedData, getSortProps } = useSortable(students);
+
+  // Apply pagination
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  // Get current page data
+  const pageData = useMemo(() => {
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   return (
     <div className="space-y-6">
@@ -188,52 +208,75 @@ export function StudentsListPage() {
               description="Bạn chưa có phiên phỏng vấn nào với học viên."
             />
           ) : (
-            <div className="space-y-4">
-              {students.map((student) => (
-                <div
-                  key={student.id}
-                  className="flex cursor-pointer items-center justify-between rounded-lg border border-emerald-100 p-4 transition-colors hover:bg-emerald-50/50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                  onClick={() => navigate(`/mentor/students/${student.id}`)}>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={student.avatarUrl} alt={student.name} />
-                      <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                        {student.name?.charAt(0) || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{student.name || `Học viên #${student.id}`}</h3>
-                      <p className="text-sm text-slate-500">
-                        {student.email || student.university}
-                      </p>
+            <>
+              {/* Sort Controls */}
+              <div className="mb-4 flex items-center gap-4 border-b pb-3">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Sắp xếp theo:
+                </span>
+                <SortButton {...getSortProps("sessionCount")}>Số phiên</SortButton>
+                <SortButton {...getSortProps("avgRating")}>Đánh giá</SortButton>
+                <SortButton {...getSortProps("name")}>Tên</SortButton>
+              </div>
+
+              <div className="space-y-4">
+                {pageData.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-emerald-100 p-4 transition-colors hover:bg-emerald-50/50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    onClick={() => navigate(`/mentor/students/${student.id}`)}>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={student.avatarUrl} alt={student.name} />
+                        <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                          {student.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold">
+                          {student.name || `Học viên #${student.id}`}
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          {student.email || student.university}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <p className="text-slate-500">Phiên</p>
+                        <p className="font-semibold">{student.sessionCount}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-slate-500">Phản hồi</p>
+                        <Badge variant={student.feedbackCount > 0 ? "default" : "secondary"}>
+                          {student.feedbackCount}
+                        </Badge>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-slate-500">Đánh giá</p>
+                        {student.reviewCount > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <StarRating value={student.avgRating} readOnly size="sm" />
+                            <span className="text-xs text-slate-500">({student.reviewCount})</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="text-center">
-                      <p className="text-slate-500">Phiên</p>
-                      <p className="font-semibold">{student.sessionCount}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-slate-500">Phản hồi</p>
-                      <Badge variant={student.feedbackCount > 0 ? "default" : "secondary"}>
-                        {student.feedbackCount}
-                      </Badge>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-slate-500">Đánh giá</p>
-                      {student.reviewCount > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <StarRating value={student.avgRating} readOnly size="sm" />
-                          <span className="text-xs text-slate-500">({student.reviewCount})</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="mt-4">
+                <PaginationControl
+                  pagination={pagination}
+                  onPageSizeChange={setPageSize}
+                  pageSizeOptions={[5, 10, 20, 50]}
+                />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
