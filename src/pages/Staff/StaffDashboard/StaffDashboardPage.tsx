@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { ContentModerationPage } from "../ContentModeration";
 import { FeedbackModerationPage } from "../FeedbackModeration";
 import { MentorApplicationsPage } from "../MentorApplications";
+import { PostModerationPage } from "../PostModeration";
 import { ReviewModerationPage } from "../ReviewModeration";
 import { SessionProcessingPage } from "../SessionProcessing";
 import { UserSupportPage } from "../UserSupport";
@@ -27,6 +28,8 @@ const getTabTitle = (type: TabType): string => {
       return "Kiểm Duyệt Đánh Giá";
     case "feedbackModeration":
       return "Kiểm Duyệt Phản Hồi";
+    case "postModeration":
+      return "Kiểm Duyệt Bài Viết";
     default:
       return "Tab Mới";
   }
@@ -129,6 +132,8 @@ export function StaffDashboardPage() {
         return <ReviewModerationPage />;
       case "feedbackModeration":
         return <FeedbackModerationPage />;
+      case "postModeration":
+        return <PostModerationPage />;
       default:
         return <div>Unknown tab type</div>;
     }

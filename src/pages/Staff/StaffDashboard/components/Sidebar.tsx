@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Newspaper,
   Settings,
   Star,
   UserCheck,
@@ -87,6 +88,13 @@ const MODERATION_MENU_ITEMS = [
     label: "Phản Hồi",
     color: "text-cyan-600",
     description: "Kiểm duyệt phản hồi",
+  },
+  {
+    type: "postModeration" as TabType,
+    icon: Newspaper,
+    label: "Bài Viết",
+    color: "text-purple-600",
+    description: "Kiểm duyệt bài viết",
   },
 ];
 

@@ -1,4 +1,4 @@
-import { MessageSquare, Plus, Star, X } from "lucide-react";
+import { MessageSquare, Newspaper, Plus, Star, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,8 @@ export type TabType =
   | "userSupport"
   | "contentModeration"
   | "reviewModeration"
-  | "feedbackModeration";
+  | "feedbackModeration"
+  | "postModeration";
 
 export interface Tab {
   id: string;
@@ -87,6 +88,10 @@ export function ChromeTabs({
           <DropdownMenuItem onClick={() => onNewTab("feedbackModeration")}>
             <MessageSquare className="mr-2 h-4 w-4 text-cyan-600" />
             Kiểm Duyệt Phản Hồi
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onNewTab("postModeration")}>
+            <Newspaper className="mr-2 h-4 w-4 text-purple-600" />
+            Kiểm Duyệt Bài Viết
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
