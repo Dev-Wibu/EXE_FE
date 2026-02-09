@@ -3,13 +3,17 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  FileQuestion,
+  FileText,
   FolderOpen,
   GraduationCap,
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Newspaper,
   Settings,
   Star,
+  Trophy,
   UserCog,
   Users,
   Video,
@@ -75,6 +79,33 @@ const QUESTION_MENU_ITEMS = [
     type: "questionSets" as TabType,
     icon: BookOpen,
     label: "Question Sets",
+    color: "text-teal-600",
+  },
+  {
+    type: "practiceQuestions" as TabType,
+    icon: FileQuestion,
+    label: "Practice Questions",
+    color: "text-emerald-600",
+  },
+  {
+    type: "quizSets" as TabType,
+    icon: Trophy,
+    label: "Quiz Sets",
+    color: "text-amber-600",
+  },
+];
+
+const CONTENT_MENU_ITEMS = [
+  {
+    type: "posts" as TabType,
+    icon: Newspaper,
+    label: "Quản lý bài viết",
+    color: "text-purple-500",
+  },
+  {
+    type: "candidateProfiles" as TabType,
+    icon: FileText,
+    label: "Hồ sơ ứng viên",
     color: "text-teal-600",
   },
 ];
@@ -210,6 +241,14 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
           )}
           {isCollapsed && <div className="my-2 border-t dark:border-slate-700" />}
           {QUESTION_MENU_ITEMS.map(renderMenuItem)}
+
+          {!isCollapsed && (
+            <p className="mt-4 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-slate-400">
+              Content
+            </p>
+          )}
+          {isCollapsed && <div className="my-2 border-t dark:border-slate-700" />}
+          {CONTENT_MENU_ITEMS.map(renderMenuItem)}
         </nav>
 
         {/* Footer */}

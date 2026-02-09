@@ -52,11 +52,11 @@ export function QuestionSetFormDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="questionSetName">Tên bộ câu hỏi *</Label>
+            <Label htmlFor="practiceSetName">Tên bộ câu hỏi *</Label>
             <Input
-              id="questionSetName"
-              value={formData.questionSetName || ""}
-              onChange={(e) => onFormChange({ ...formData, questionSetName: e.target.value })}
+              id="practiceSetName"
+              value={formData.practiceSetName || ""}
+              onChange={(e) => onFormChange({ ...formData, practiceSetName: e.target.value })}
               placeholder="Nhập tên bộ câu hỏi"
             />
           </div>

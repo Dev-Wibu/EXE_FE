@@ -1,12 +1,16 @@
 import {
   Bell,
   BookOpen,
+  FileQuestion,
+  FileText,
   FolderOpen,
   GraduationCap,
   LayoutDashboard,
   MessageSquare,
+  Newspaper,
   Plus,
   Star,
+  Trophy,
   UserCog,
   Users,
   Video,
@@ -26,7 +30,11 @@ export type TabType =
   | "notifications"
   | "questionCategories"
   | "questionMajors"
-  | "questionSets";
+  | "questionSets"
+  | "practiceQuestions"
+  | "quizSets"
+  | "posts"
+  | "candidateProfiles";
 
 export interface Tab {
   id: string;
@@ -53,6 +61,10 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   questionCategories: FolderOpen,
   questionMajors: GraduationCap,
   questionSets: BookOpen,
+  practiceQuestions: FileQuestion,
+  quizSets: Trophy,
+  posts: Newspaper,
+  candidateProfiles: FileText,
 };
 
 const TAB_COLORS: Record<TabType, string> = {
@@ -66,6 +78,10 @@ const TAB_COLORS: Record<TabType, string> = {
   questionCategories: "text-purple-600",
   questionMajors: "text-pink-600",
   questionSets: "text-teal-600",
+  practiceQuestions: "text-emerald-600",
+  quizSets: "text-amber-600",
+  posts: "text-purple-500",
+  candidateProfiles: "text-teal-600",
 };
 
 export function ChromeTabs({
@@ -218,6 +234,25 @@ export function ChromeTabs({
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
                 <BookOpen className="h-4 w-4 text-teal-600" />
                 Question Sets
+              </button>
+              <div className="my-1 border-t dark:border-slate-600" />
+              <button
+                onClick={() => {
+                  onNewTab("posts");
+                  setShowNewTabMenu(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
+                <Newspaper className="h-4 w-4 text-purple-500" />
+                Quản lý bài viết
+              </button>
+              <button
+                onClick={() => {
+                  onNewTab("candidateProfiles");
+                  setShowNewTabMenu(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-700">
+                <FileText className="h-4 w-4 text-teal-600" />
+                Hồ sơ ứng viên
               </button>
             </div>
           </>

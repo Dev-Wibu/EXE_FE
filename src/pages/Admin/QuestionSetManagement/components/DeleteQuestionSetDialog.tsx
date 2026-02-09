@@ -30,7 +30,7 @@ export function DeleteQuestionSetDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Xóa Bộ Câu Hỏi</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa bộ câu hỏi &quot;{questionSet?.questionSetName}&quot;? Hành
+            Bạn có chắc chắn muốn xóa bộ câu hỏi &quot;{questionSet?.practiceSetName}&quot;? Hành
             động này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>

@@ -69,7 +69,7 @@ export function QuestionSetManagementPage() {
       if (searchQuery) {
         const lowerQuery = searchQuery.toLowerCase();
         const matchesSearch =
-          questionSet.questionSetName?.toLowerCase().includes(lowerQuery) ||
+          questionSet.practiceSetName?.toLowerCase().includes(lowerQuery) ||
           questionSet.objective?.toLowerCase().includes(lowerQuery) ||
           questionSet.major?.majorName?.toLowerCase().includes(lowerQuery);
         if (!matchesSearch) return false;
@@ -107,7 +107,7 @@ export function QuestionSetManagementPage() {
   const handleEdit = (questionSet: QuestionSet) => {
     setSelectedQuestionSet(questionSet);
     setFormData({
-      questionSetName: questionSet.questionSetName || "",
+      practiceSetName: questionSet.practiceSetName || "",
       objective: questionSet.objective,
       level: questionSet.level,
       majorId: questionSet.major?.id,
@@ -123,7 +123,7 @@ export function QuestionSetManagementPage() {
   const handleSubmitCreate = async () => {
     try {
       const createData: Partial<QuestionSet> = {
-        questionSetName: formData.questionSetName,
+        practiceSetName: formData.practiceSetName,
         objective: formData.objective,
         level: formData.level,
         major: formData.majorId ? { id: formData.majorId } : undefined,
@@ -143,17 +143,17 @@ export function QuestionSetManagementPage() {
   };
 
   const handleSubmitEdit = async () => {
-    if (!selectedQuestionSet?.questionSetId) return;
+    if (!selectedQuestionSet?.id) return;
 
     try {
       const updateData: Partial<QuestionSet> = {
-        questionSetName: formData.questionSetName,
+        practiceSetName: formData.practiceSetName,
         objective: formData.objective,
         level: formData.level,
         major: formData.majorId ? { id: formData.majorId } : undefined,
       };
       const response = await questionSetManager.update(
-        selectedQuestionSet.questionSetId,
+        selectedQuestionSet.id,
         updateData
       );
       if (response.success) {
@@ -170,10 +170,10 @@ export function QuestionSetManagementPage() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedQuestionSet?.questionSetId) return;
+    if (!selectedQuestionSet?.id) return;
 
     try {
-      const response = await questionSetManager.delete(selectedQuestionSet.questionSetId);
+      const response = await questionSetManager.delete(selectedQuestionSet.id);
       if (response.success) {
         toast.success("Đã xóa bộ câu hỏi thành công");
         setIsDeleteDialogOpen(false);

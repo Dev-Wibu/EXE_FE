@@ -9,3 +9,7 @@ export { QuestionSetManagementPage } from "./QuestionSetManagement";
 export { ReviewManagementPage } from "./ReviewManagement";
 export { SessionManagementPage } from "./SessionManagement";
 export { UserManagementPage } from "./UserManagement";
+export { PracticeQuestionManagementPage } from "./PracticeQuestionManagement";
+export { QuizSetManagementPage } from "./QuizSetManagement";
+export { CandidateProfileManagementPage } from "./CandidateProfileManagement";
+export { PostManagementPage } from "./PostManagement";

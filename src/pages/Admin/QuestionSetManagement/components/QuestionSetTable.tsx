@@ -63,7 +63,7 @@ export function QuestionSetTable({
           <TableHead className="w-16">ID</TableHead>
           <TableHead>
             {getSortProps ? (
-              <SortButton {...getSortProps("questionSetName")}>Tên</SortButton>
+              <SortButton {...getSortProps("practiceSetName")}>Tên</SortButton>
             ) : (
               "Tên"
             )}
@@ -78,9 +78,9 @@ export function QuestionSetTable({
       </TableHeader>
       <TableBody>
         {questionSets.map((questionSet) => (
-          <TableRow key={questionSet.questionSetId}>
-            <TableCell className="font-medium">{questionSet.questionSetId}</TableCell>
-            <TableCell className="font-medium">{questionSet.questionSetName}</TableCell>
+          <TableRow key={questionSet.id}>
+            <TableCell className="font-medium">{questionSet.id}</TableCell>
+            <TableCell className="font-medium">{questionSet.practiceSetName}</TableCell>
             <TableCell className="text-muted-foreground max-w-xs truncate">
               {questionSet.objective || "-"}
             </TableCell>
