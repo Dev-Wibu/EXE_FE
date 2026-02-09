@@ -5,6 +5,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   LogOut,
+  Newspaper,
   Star,
   User,
   Users,
@@ -44,6 +45,11 @@ const menuItems = [
     label: "Đánh giá",
     icon: Star,
     path: "/mentor/reviews",
+  },
+  {
+    label: "Cộng đồng",
+    icon: Newspaper,
+    path: "/mentor/community",
   },
   {
     label: "Thông báo",

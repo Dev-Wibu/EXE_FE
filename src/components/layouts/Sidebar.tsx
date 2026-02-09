@@ -4,10 +4,13 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  FileQuestion,
+  GraduationCap,
   History,
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Newspaper,
   User,
   Users,
 } from "lucide-react";
@@ -62,6 +65,22 @@ const menuItems = [
     label: "Bộ câu hỏi",
     icon: CircleHelp,
     path: "/dashboard/questions",
+  },
+  {
+    label: "Luyện tập",
+    icon: GraduationCap,
+    path: "/dashboard/practice",
+    exactMatch: true,
+  },
+  {
+    label: "Câu hỏi luyện tập",
+    icon: FileQuestion,
+    path: "/dashboard/practice/questions",
+  },
+  {
+    label: "Cộng đồng",
+    icon: Newspaper,
+    path: "/dashboard/community",
   },
   {
     label: "Thông báo",
