@@ -43,7 +43,7 @@ import {
   StudentsListPage,
   WriteFeedbackPage,
 } from "@/pages/Mentor";
-import { FeedbackModerationPage, ReviewModerationPage, StaffDashboardPage } from "@/pages/Staff";
+import { FeedbackModerationPage, PostModerationPage, ReviewModerationPage, StaffDashboardPage } from "@/pages/Staff";
 import {
   AccountPage,
   AIChatConversationPage,
@@ -61,8 +61,13 @@ import {
   MockInterviewSchedulePage,
   MockInterviewSelectMentorPage,
   OverviewPage,
+  PracticeQuestionsPage,
+  PracticeSetDetailPage,
+  PracticeSetsPage,
   QuestionDetailPage,
   QuestionListPage,
+  QuizPage,
+  QuizResultPage,
   SessionDetailPage,
   SessionHistoryPage,
   SessionRoomPage,
@@ -71,6 +76,7 @@ import {
   UserNotificationsPage,
   WriteReviewPage,
 } from "@/pages/User";
+import { PostListPage, CreatePostPage, PostDetailPage } from "@/pages/User";
 
 function App() {
   return (
@@ -164,6 +170,13 @@ function App() {
               <Route path="/dashboard/questions" element={<QuestionListPage />} />
               <Route path="/dashboard/questions/:id" element={<QuestionDetailPage />} />
 
+              {/* Practice routes */}
+              <Route path="/dashboard/practice" element={<PracticeSetsPage />} />
+              <Route path="/dashboard/practice/questions" element={<PracticeQuestionsPage />} />
+              <Route path="/dashboard/practice/:id" element={<PracticeSetDetailPage />} />
+              <Route path="/dashboard/practice/:id/quiz" element={<QuizPage />} />
+              <Route path="/dashboard/practice/:id/quiz/:quizId/result" element={<QuizResultPage />} />
+
               {/* Feedback routes */}
               <Route path="/dashboard/feedback" element={<UserFeedbackListPage />} />
               <Route path="/dashboard/feedback/:id" element={<FeedbackDetailPage />} />
@@ -173,6 +186,11 @@ function App() {
 
               {/* Notifications routes */}
               <Route path="/dashboard/notifications" element={<UserNotificationsPage />} />
+
+              {/* Community routes */}
+              <Route path="/dashboard/community" element={<PostListPage />} />
+              <Route path="/dashboard/community/create" element={<CreatePostPage />} />
+              <Route path="/dashboard/community/:postId" element={<PostDetailPage />} />
             </Route>
 
             {/* User Dashboard with Chrome Tabs (alternative route) */}
@@ -199,6 +217,7 @@ function App() {
               element={<Navigate to="/user?tab=notifications" replace />}
             />
             <Route path="/user/account" element={<Navigate to="/user?tab=account" replace />} />
+            <Route path="/user/community" element={<Navigate to="/user?tab=community" replace />} />
 
             {/* Mentor Dashboard routes with MentorDashboardLayout */}
             <Route element={<MentorDashboardLayout />}>
@@ -221,6 +240,11 @@ function App() {
               {/* Mentor Students routes */}
               <Route path="/mentor/students" element={<StudentsListPage />} />
               <Route path="/mentor/students/:userId" element={<StudentDetailPage />} />
+
+              {/* Mentor Community routes */}
+              <Route path="/mentor/community" element={<PostListPage />} />
+              <Route path="/mentor/community/create" element={<CreatePostPage />} />
+              <Route path="/mentor/community/:postId" element={<PostDetailPage />} />
             </Route>
 
             {/* Mentor Dashboard with Chrome Tabs (alternative route) */}
@@ -254,6 +278,10 @@ function App() {
               path="/mentor-dashboard/account"
               element={<Navigate to="/mentor-dashboard?tab=account" replace />}
             />
+            <Route
+              path="/mentor-dashboard/community"
+              element={<Navigate to="/mentor-dashboard?tab=community" replace />}
+            />
 
             {/* Admin Management routes */}
             <Route path="/admin" element={<AdminDashboardPage />} />
@@ -283,11 +311,22 @@ function App() {
               path="/admin/questionSets"
               element={<Navigate to="/admin?tab=questionSets" replace />}
             />
+            <Route
+              path="/admin/practiceQuestions"
+              element={<Navigate to="/admin?tab=practiceQuestions" replace />}
+            />
+            <Route
+              path="/admin/quizSets"
+              element={<Navigate to="/admin?tab=quizSets" replace />}
+            />
+            <Route path="/admin/posts" element={<Navigate to="/admin?tab=posts" replace />} />
+            <Route path="/admin/candidateProfiles" element={<Navigate to="/admin?tab=candidateProfiles" replace />} />
 
             {/* Staff Dashboard routes */}
             <Route path="/staff" element={<StaffDashboardPage />} />
             <Route path="/staff/reviews" element={<ReviewModerationPage />} />
             <Route path="/staff/feedback" element={<FeedbackModerationPage />} />
+            <Route path="/staff/posts" element={<PostModerationPage />} />
 
             {/* Error pages */}
             <Route path="/error/401" element={<UnauthorizedPage />} />
