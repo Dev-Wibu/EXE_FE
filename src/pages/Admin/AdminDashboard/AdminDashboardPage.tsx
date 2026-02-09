@@ -9,9 +9,13 @@ import { NotificationManagementPage } from "../NotificationManagement";
 import { QuestionCategoryManagementPage } from "../QuestionCategoryManagement";
 import { QuestionMajorManagementPage } from "../QuestionMajorManagement";
 import { QuestionSetManagementPage } from "../QuestionSetManagement";
+import { PracticeQuestionManagementPage } from "../PracticeQuestionManagement";
+import { QuizSetManagementPage } from "../QuizSetManagement";
 import { ReviewManagementPage } from "../ReviewManagement";
 import { SessionManagementPage } from "../SessionManagement";
 import { UserManagementPage } from "../UserManagement";
+import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
+import { PostManagementPage } from "../PostManagement";
 import type { Tab, TabType } from "./components";
 import { ChromeTabs, Sidebar } from "./components";
 
@@ -30,6 +34,10 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "questionCategories", label: "Question Categories" },
   { type: "questionMajors", label: "Question Majors" },
   { type: "questionSets", label: "Question Sets" },
+  { type: "practiceQuestions", label: "Practice Questions" },
+  { type: "quizSets", label: "Quiz Sets" },
+  { type: "posts", label: "Quản lý bài viết" },
+  { type: "candidateProfiles", label: "Hồ sơ ứng viên" },
 ];
 
 /**
@@ -109,6 +117,14 @@ export function AdminDashboardPage() {
         return <QuestionMajorManagementPage />;
       case "questionSets":
         return <QuestionSetManagementPage />;
+      case "practiceQuestions":
+        return <PracticeQuestionManagementPage />;
+      case "quizSets":
+        return <QuizSetManagementPage />;
+      case "posts":
+        return <PostManagementPage />;
+      case "candidateProfiles":
+        return <CandidateProfileManagementPage />;
       default:
         return <div>Unknown tab type</div>;
     }
