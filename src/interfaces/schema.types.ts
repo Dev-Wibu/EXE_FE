@@ -132,3 +132,141 @@ export interface SessionFormData {
   /** Enable screenshare */
   enable_screenshare?: boolean;
 }
+
+/**
+ * Post status enum
+ */
+export type PostStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+/**
+ * Post type based on backend schema
+ */
+export interface Post {
+  postId?: number;
+  title?: string;
+  content?: string;
+  summary?: string;
+  status?: PostStatus;
+  author?: User;
+  creationDate?: string;
+  lastModifiedDate?: string;
+  major?: { id?: number; name?: string; description?: string };
+  coverImgUrl?: string;
+  public_id?: string;
+  tags?: string[];
+}
+
+/**
+ * Post create request (multipart/form-data)
+ */
+export interface PostCreateRequest {
+  title?: string;
+  content?: string;
+  summary?: string;
+  authorId?: number;
+  majorId?: number;
+  coverImg?: File;
+  tags?: string[];
+  status?: PostStatus;
+}
+
+/**
+ * Post comment response (from API)
+ */
+export interface PostCommentResponse {
+  id?: number;
+  postId?: number;
+  userId?: number;
+  userName?: string;
+  userAvatar?: string;
+  content?: string;
+  parentCommentId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Post comment request (for creating comments)
+ */
+export interface PostCommentRequest {
+  postId?: number;
+  userId?: number;
+  content?: string;
+  parentCommentId?: number;
+}
+
+/**
+ * Post like request
+ */
+export interface PostLikeRequest {
+  postId?: number;
+  userId?: number;
+}
+
+/**
+ * Post like response
+ */
+export interface PostLikeResponse {
+  id?: number;
+  postId?: number;
+  userId?: number;
+  userName?: string;
+  userAvatar?: string;
+  createdAt?: string;
+}
+
+/**
+ * Education entry for candidate profile
+ */
+export interface EducationEntry {
+  school?: string;
+  major?: string;
+  degree?: string;
+  gpa?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+/**
+ * Project detail for candidate profile
+ */
+export interface ProjectDetail {
+  name?: string;
+  description?: string;
+  role?: string;
+  teamSize?: number;
+  usedTools?: string[];
+  outcome?: string;
+}
+
+/**
+ * Work experience for candidate profile
+ */
+export interface WorkExperience {
+  company?: string;
+  position?: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+/**
+ * Candidate profile type based on backend schema
+ */
+export interface CandidateProfile {
+  id?: number;
+  user?: User;
+  targetRole?: string;
+  targetLevel?: string;
+  introduction?: string;
+  technicalSkills?: string[];
+  softSkills?: string[];
+  tools?: string[];
+  projects?: ProjectDetail[];
+  workExperiences?: WorkExperience[];
+  educations?: EducationEntry[];
+  certifications?: string[];
+  achievements?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}

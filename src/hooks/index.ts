@@ -3,6 +3,7 @@
  */
 
 export * from "./use-mobile";
+export * from "./useMentor";
 export * from "./useMentorFeedback";
 export * from "./useMentorReview";
 export * from "./useMutationHandler";

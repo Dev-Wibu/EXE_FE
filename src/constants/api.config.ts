@@ -102,23 +102,23 @@ export const API_ENDPOINTS = {
   },
 
   // Question endpoints - Based on schema-from-be.d.ts
-  // GET /api/questions - getAllQuestions
-  // POST /api/questions - createQuestion (JSON body)
-  // PUT /api/questions - updateQuestion (JSON body)
-  // GET /api/questions/{id} - getQuestionById
-  // DELETE /api/questions/{id} - deleteQuestion
-  // GET /api/questions/random-by-level - getRandomQuestionsByLevel
-  // GET /api/questions/by-category-level - getQuestionsByCategoryAndLevel
-  // POST /api/questions/save-all - createQuestionList
+  // GET /api/practice-questions - getAllQuestions
+  // POST /api/practice-questions - createQuestion (JSON body)
+  // PUT /api/practice-questions - updateQuestion (JSON body)
+  // GET /api/practice-questions/{id} - getQuestionById
+  // DELETE /api/practice-questions/{id} - deleteQuestion
+  // GET /api/practice-questions/random-by-level - getRandomQuestionsByLevel
+  // GET /api/practice-questions/by-category-level - getQuestionsByCategoryAndLevel
+  // POST /api/practice-questions/save-all - createQuestionList
   QUESTION: {
-    LIST: "/api/questions",
-    DETAIL: "/api/questions/:id",
-    CREATE: "/api/questions",
-    UPDATE: "/api/questions",
-    DELETE: "/api/questions/:id",
-    RANDOM_BY_LEVEL: "/api/questions/random-by-level",
-    BY_CATEGORY_LEVEL: "/api/questions/by-category-level",
-    SAVE_ALL: "/api/questions/save-all",
+    LIST: "/api/practice-questions",
+    DETAIL: "/api/practice-questions/:id",
+    CREATE: "/api/practice-questions",
+    UPDATE: "/api/practice-questions",
+    DELETE: "/api/practice-questions/:id",
+    RANDOM_BY_LEVEL: "/api/practice-questions/random-by-level",
+    BY_CATEGORY_LEVEL: "/api/practice-questions/by-category-level",
+    SAVE_ALL: "/api/practice-questions/save-all",
   },
 
   // Session endpoints (for admin management) - Based on schema-from-be.d.ts
@@ -139,12 +139,14 @@ export const API_ENDPOINTS = {
 
   // Question Sets endpoints - Based on schema-from-be.d.ts
   QUESTION_SETS: {
-    LIST: "/api/question-sets",
-    DETAIL: "/api/question-sets/:id",
-    CREATE: "/api/question-sets",
-    UPDATE: "/api/question-sets",
-    DELETE: "/api/question-sets/:id",
-    BY_LEVEL: "/api/question-sets/level/:level",
+    LIST: "/api/practice-sets",
+    DETAIL: "/api/practice-sets/:id",
+    CREATE: "/api/practice-sets",
+    UPDATE: "/api/practice-sets",
+    DELETE: "/api/practice-sets/:id",
+    BY_LEVEL: "/api/practice-sets/level/:level",
+    FULL_SET: "/api/practice-sets/full-set/:id",
+    CREATE_FULL: "/api/practice-sets/create-full",
   },
 
   // Question Categories endpoints - Based on schema-from-be.d.ts
@@ -170,13 +172,33 @@ export const API_ENDPOINTS = {
 
   // Question Set Items endpoints - Based on schema-from-be.d.ts
   QUESTION_SET_ITEMS: {
-    LIST: "/api/question-set-items",
-    DETAIL: "/api/question-set-items/:id",
-    CREATE: "/api/question-set-items",
-    CREATE_BULK: "/api/question-set-items/create-items",
-    UPDATE: "/api/question-set-items",
-    DELETE: "/api/question-set-items/:id",
-    BY_QUESTION_SET: "/api/question-set-items/by-question-set/:id",
+    LIST: "/api/practice-set-items",
+    DETAIL: "/api/practice-set-items/:id",
+    CREATE: "/api/practice-set-items",
+    CREATE_BULK: "/api/practice-set-items/create-items",
+    UPDATE: "/api/practice-set-items",
+    DELETE: "/api/practice-set-items/:id",
+    BY_QUESTION_SET: "/api/practice-set-items/by-question-set/:id",
+  },
+
+  // Quiz Sets endpoints - Based on schema-from-be.d.ts
+  // GET /api/quiz-sets - getAll
+  // POST /api/quiz-sets - createQuizSet (query params: quizId, quizName)
+  // GET /api/quiz-sets/{quizId} - getQuizById
+  // DELETE /api/quiz-sets/{quizId} - deleteQuizSet
+  // GET /api/quiz-sets/by-practice-set/{practiceSetId} - getHistoryByPracticeSet
+  // POST /api/quiz-sets/submit/{quizId} - submitAndCalculateScore
+  // POST /api/quiz-sets/create-full - createFullQuizSet
+  // GET /api/quiz-set-items/by-quiz-set/{quizSetId} - getItemsByQuizSetId
+  QUIZ_SETS: {
+    LIST: "/api/quiz-sets",
+    DETAIL: "/api/quiz-sets/:quizId",
+    CREATE: "/api/quiz-sets",
+    CREATE_FULL: "/api/quiz-sets/create-full",
+    SUBMIT: "/api/quiz-sets/submit/:quizId",
+    BY_PRACTICE_SET: "/api/quiz-sets/by-practice-set/:practiceSetId",
+    DELETE: "/api/quiz-sets/:quizId",
+    ITEMS_BY_QUIZ_SET: "/api/quiz-set-items/by-quiz-set/:quizSetId",
   },
 
   // Notifications endpoints - Based on schema-from-be.d.ts
@@ -213,6 +235,36 @@ export const API_ENDPOINTS = {
     DETAIL: "/api/candidate-profiles/:userId",
     CREATE: "/api/candidate-profiles",
     UPDATE: "/api/candidate-profiles",
+  },
+
+  // Posts/Social endpoints - Based on schema-from-be.d.ts
+  // POST /api/posts - createPost (multipart/form-data)
+  // GET /api/posts/{postId}/comments - getCommentsByPostId
+  // GET /api/posts/{postId}/comments/count - countComments
+  // POST /api/posts/comments - createComment
+  // GET /api/posts/comments/{commentId} - getCommentById
+  // PUT /api/posts/comments/{commentId} - updateComment
+  // DELETE /api/posts/comments/{commentId} - deleteComment
+  // GET /api/posts/comments/{parentCommentId}/replies - getReplies
+  // POST /api/posts/likes - likePost
+  // GET /api/posts/likes/{postId} - getLikesByPostId
+  // GET /api/posts/likes/{postId}/count - countLikes
+  // GET /api/posts/likes/{postId}/check/{userId} - checkLiked
+  // DELETE /api/posts/likes/{postId}/{userId} - unlikePost
+  POSTS: {
+    CREATE: "/api/posts",
+    COMMENTS: "/api/posts/:postId/comments",
+    COMMENTS_COUNT: "/api/posts/:postId/comments/count",
+    CREATE_COMMENT: "/api/posts/comments",
+    COMMENT_DETAIL: "/api/posts/comments/:commentId",
+    UPDATE_COMMENT: "/api/posts/comments/:commentId",
+    DELETE_COMMENT: "/api/posts/comments/:commentId",
+    COMMENT_REPLIES: "/api/posts/comments/:parentCommentId/replies",
+    LIKE: "/api/posts/likes",
+    LIKES_BY_POST: "/api/posts/likes/:postId",
+    LIKES_COUNT: "/api/posts/likes/:postId/count",
+    CHECK_LIKED: "/api/posts/likes/:postId/check/:userId",
+    UNLIKE: "/api/posts/likes/:postId/:userId",
   },
 
   // Interview Sessions endpoints - Based on schema-from-be.d.ts
