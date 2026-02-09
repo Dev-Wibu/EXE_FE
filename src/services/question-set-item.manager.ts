@@ -27,10 +27,11 @@ export interface Question {
   title?: string;
   content?: string;
   level?: QuestionLevel;
-  category?: {
+  lesson?: {
     id?: number;
-    categoryName?: string;
+    lessonName?: string;
     description?: string;
+    urlTutorial?: string;
   };
   answer?: string;
   hint?: string;
@@ -40,9 +41,9 @@ export interface Question {
  * QuestionSetItem type based on backend schema
  */
 export interface QuestionSetItem {
-  questionSetItemId?: number;
-  question?: Question;
-  questionSet?: QuestionSet;
+  id?: number;
+  practiceQuestion?: Question;
+  practiceSet?: QuestionSet;
   orderIndex?: number;
 }
 
@@ -58,36 +59,36 @@ export interface QuestionSetItemFormData {
 // Mock data for development
 const mockQuestionSetItems: QuestionSetItem[] = [
   {
-    questionSetItemId: 1,
-    question: {
+    id: 1,
+    practiceQuestion: {
       questionId: 1,
       title: "What is React?",
       content: "Explain what React is and its main features.",
       level: "EASY",
     },
-    questionSet: { questionSetId: 1, questionSetName: "Frontend Developer Interview" },
+    practiceSet: { id: 1, practiceSetName: "Frontend Developer Interview" },
     orderIndex: 1,
   },
   {
-    questionSetItemId: 2,
-    question: {
+    id: 2,
+    practiceQuestion: {
       questionId: 2,
       title: "Virtual DOM",
       content: "Explain how Virtual DOM works in React.",
       level: "MEDIUM",
     },
-    questionSet: { questionSetId: 1, questionSetName: "Frontend Developer Interview" },
+    practiceSet: { id: 1, practiceSetName: "Frontend Developer Interview" },
     orderIndex: 2,
   },
   {
-    questionSetItemId: 3,
-    question: {
+    id: 3,
+    practiceQuestion: {
       questionId: 3,
       title: "React Hooks",
       content: "What are React Hooks and why were they introduced?",
       level: "MEDIUM",
     },
-    questionSet: { questionSetId: 1, questionSetName: "Frontend Developer Interview" },
+    practiceSet: { id: 1, practiceSetName: "Frontend Developer Interview" },
     orderIndex: 3,
   },
 ];
@@ -98,7 +99,7 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Get all question set items
-   * GET /api/question-set-items
+   * GET /api/practice-set-items
    */
   async getAll(
     _params?: PaginationParams
@@ -128,11 +129,11 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Get question set item by ID
-   * GET /api/question-set-items/{id}
+   * GET /api/practice-set-items/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<QuestionSetItem>> {
     if (this.mode === "mock") {
-      const item = mockQuestionSetItems.find((i) => i.questionSetItemId === Number(id));
+      const item = mockQuestionSetItems.find((i) => i.id === Number(id));
       if (!item) {
         return {
           success: false,
@@ -162,14 +163,14 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Get question set items by question set ID
-   * GET /api/question-set-items/by-question-set/{id}
+   * GET /api/practice-set-items/by-question-set/{id}
    */
   async getByQuestionSetId(
     questionSetId: string | number
   ): Promise<ApiResponse<QuestionSetItem[]>> {
     if (this.mode === "mock") {
       const items = mockQuestionSetItems.filter(
-        (i) => i.questionSet?.questionSetId === Number(questionSetId)
+        (i) => i.practiceSet?.id === Number(questionSetId)
       );
       return {
         success: true,
@@ -197,15 +198,15 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Create new question set item
-   * POST /api/question-set-items (JSON body)
+   * POST /api/practice-set-items (JSON body)
    */
   async create(data: Partial<QuestionSetItem>): Promise<ApiResponse<QuestionSetItem>> {
     if (this.mode === "mock") {
-      const newId = Math.max(...mockQuestionSetItems.map((i) => i.questionSetItemId || 0)) + 1;
+      const newId = Math.max(...mockQuestionSetItems.map((i) => i.id || 0)) + 1;
       const newItem: QuestionSetItem = {
-        questionSetItemId: newId,
-        question: data.question,
-        questionSet: data.questionSet,
+        id: newId,
+        practiceQuestion: data.practiceQuestion,
+        practiceSet: data.practiceSet,
         orderIndex: data.orderIndex,
       };
       mockQuestionSetItems.push(newItem);
@@ -231,7 +232,7 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Create multiple question set items
-   * POST /api/question-set-items/create-items
+   * POST /api/practice-set-items/create-items
    */
   async createBulk(
     questionSet: QuestionSet,
@@ -266,7 +267,7 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Update question set item
-   * POST /api/question-set-items (JSON body)
+   * POST /api/practice-set-items (JSON body)
    * Note: Backend confirmed POST should be used for updates (not PUT)
    */
   async update(
@@ -274,7 +275,7 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
     data: Partial<QuestionSetItem>
   ): Promise<ApiResponse<QuestionSetItem>> {
     if (this.mode === "mock") {
-      const index = mockQuestionSetItems.findIndex((i) => i.questionSetItemId === Number(id));
+      const index = mockQuestionSetItems.findIndex((i) => i.id === Number(id));
       if (index === -1) {
         return {
           success: false,
@@ -289,7 +290,7 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
     }
 
     try {
-      const itemData: QuestionSetItem = { ...data, questionSetItemId: Number(id) };
+      const itemData: QuestionSetItem = { ...data, id: Number(id) };
       // Note: Backend confirmed POST should be used for updates (not PUT)
       const response = await this.api.post(API_ENDPOINTS.QUESTION_SET_ITEMS.UPDATE, itemData);
       return {
@@ -306,12 +307,12 @@ export class QuestionSetItemManager implements BaseManager<QuestionSetItem> {
 
   /**
    * Delete question set item
-   * POST /api/question-set-items/{id}
+   * POST /api/practice-set-items/{id}
    * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
-      const index = mockQuestionSetItems.findIndex((i) => i.questionSetItemId === Number(id));
+      const index = mockQuestionSetItems.findIndex((i) => i.id === Number(id));
       if (index === -1) {
         return {
           success: false,

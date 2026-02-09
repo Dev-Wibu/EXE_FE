@@ -14,17 +14,20 @@
  */
 
 export * from "./auth.manager";
+export * from "./candidate-profile.manager";
 export * from "./chat.manager";
 export * from "./interview.manager";
 export * from "./mentor-feedback.manager";
 export * from "./mentor-review.manager";
 export * from "./mentor.manager";
 export * from "./notification.manager";
+export * from "./post.manager";
 export * from "./question-category.manager";
 export * from "./question-major.manager";
 export * from "./question-set-item.manager";
 export * from "./question-set.manager";
 export * from "./question.manager";
+export * from "./quiz-set.manager";
 export * from "./session.manager";
 export * from "./user.manager";
 export * from "./users-admin.manager";

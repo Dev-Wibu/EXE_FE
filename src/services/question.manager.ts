@@ -14,6 +14,21 @@ import {
 } from "@/constants/api.config";
 import * as questionMock from "@/mocks/questions.mock";
 
+export interface PracticeQuestion {
+  questionId?: number;
+  title?: string;
+  content?: string;
+  level?: "EASY" | "MEDIUM" | "HARD";
+  lesson?: {
+    id?: number;
+    lessonName?: string;
+    description?: string;
+    urlTutorial?: string;
+  };
+  answer?: string;
+  hint?: string;
+}
+
 export class QuestionManager implements BaseManager<QuestionSet> {
   private mode = MANAGER_MODE;
   private api = createApiInstance();
@@ -198,6 +213,83 @@ export class QuestionManager implements BaseManager<QuestionSet> {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to search questions",
+      };
+    }
+  }
+  /**
+   * Get random questions by level
+   * GET /api/practice-questions/random-by-level?level={level}&count={count}
+   */
+  async getRandomByLevel(level: string, count: number): Promise<ApiResponse<PracticeQuestion[]>> {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Random by level not supported in mock mode",
+      };
+    }
+
+    try {
+      const response = await this.api.get(API_ENDPOINTS.QUESTION.RANDOM_BY_LEVEL, {
+        params: { level, count },
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch random questions",
+      };
+    }
+  }
+
+  /**
+   * Get questions by category and level
+   * GET /api/practice-questions/by-category-level?categoryId={categoryId}&level={level}
+   */
+  async getByCategoryAndLevel(
+    categoryId: number,
+    level: string
+  ): Promise<ApiResponse<PracticeQuestion[]>> {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Filter by category and level not supported in mock mode",
+      };
+    }
+
+    try {
+      const response = await this.api.get(API_ENDPOINTS.QUESTION.BY_CATEGORY_LEVEL, {
+        params: { categoryId, level },
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to fetch questions by category and level",
+      };
+    }
+  }
+
+  /**
+   * Bulk create questions
+   * POST /api/practice-questions/save-all
+   * Body: PracticeQuestion[]
+   */
+  async saveAll(questions: PracticeQuestion[]): Promise<ApiResponse<PracticeQuestion[]>> {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Bulk save not supported in mock mode",
+      };
+    }
+
+    try {
+      const response = await this.api.post(API_ENDPOINTS.QUESTION.SAVE_ALL, questions);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to save questions",
       };
     }
   }

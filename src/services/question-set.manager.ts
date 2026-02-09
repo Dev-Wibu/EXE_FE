@@ -13,6 +13,7 @@ import {
   createApiInstance,
 } from "@/constants/api.config";
 import type { Major } from "./question-major.manager";
+import type { QuestionSetItem } from "./question-set-item.manager";
 
 /**
  * Question set level enum based on backend schema
@@ -23,18 +24,20 @@ export type QuestionSetLevel = "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
  * QuestionSet type based on backend schema
  */
 export interface QuestionSet {
-  questionSetId?: number;
-  questionSetName?: string;
+  id?: number;
+  practiceSetName?: string;
   objective?: string;
   level?: QuestionSetLevel;
   major?: Major;
+  startDate?: string;
+  user?: { id?: number; name?: string; email?: string; };
 }
 
 /**
  * Form data for create/update operations
  */
 export interface QuestionSetFormData {
-  questionSetName: string;
+  practiceSetName: string;
   objective?: string;
   level: QuestionSetLevel;
   majorId?: number;
@@ -43,22 +46,22 @@ export interface QuestionSetFormData {
 // Mock data for development
 const mockQuestionSets: QuestionSet[] = [
   {
-    questionSetId: 1,
-    questionSetName: "Frontend Developer Interview",
+    id: 1,
+    practiceSetName: "Frontend Developer Interview",
     objective: "Assess React and JavaScript skills",
     level: "JUNIOR",
     major: { id: 1, majorName: "Software Engineering" },
   },
   {
-    questionSetId: 2,
-    questionSetName: "Data Science Fundamentals",
+    id: 2,
+    practiceSetName: "Data Science Fundamentals",
     objective: "Test Python and ML knowledge",
     level: "FRESHER",
     major: { id: 2, majorName: "Data Science" },
   },
   {
-    questionSetId: 3,
-    questionSetName: "Product Manager Assessment",
+    id: 3,
+    practiceSetName: "Product Manager Assessment",
     objective: "Evaluate product thinking",
     level: "MIDDLE",
     major: { id: 3, majorName: "Product Management" },
@@ -71,7 +74,7 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Get all question sets
-   * GET /api/question-sets
+   * GET /api/practice-sets
    */
   async getAll(
     _params?: PaginationParams
@@ -99,11 +102,11 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Get question set by ID
-   * GET /api/question-sets/{id}
+   * GET /api/practice-sets/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<QuestionSet>> {
     if (this.mode === "mock") {
-      const questionSet = mockQuestionSets.find((qs) => qs.questionSetId === Number(id));
+      const questionSet = mockQuestionSets.find((qs) => qs.id === Number(id));
       if (!questionSet) {
         return {
           success: false,
@@ -133,7 +136,7 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Get question sets by target level
-   * GET /api/question-sets/level/{level}
+   * GET /api/practice-sets/level/{level}
    */
   async getByLevel(level: QuestionSetLevel): Promise<ApiResponse<QuestionSet[]>> {
     if (this.mode === "mock") {
@@ -145,7 +148,7 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
     }
 
     try {
-      const endpoint = `/api/question-sets/level/${level}`;
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_SETS.BY_LEVEL, { level });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -161,15 +164,15 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Create new question set
-   * POST /api/question-sets (JSON body)
-   * Backend requires full QuestionSet schema including questionSetId: 0 for creation
+   * POST /api/practice-sets (JSON body)
+   * Backend requires full QuestionSet schema including id: 0 for creation
    */
   async create(data: Partial<QuestionSet>): Promise<ApiResponse<QuestionSet>> {
     if (this.mode === "mock") {
-      const newId = Math.max(...mockQuestionSets.map((qs) => qs.questionSetId || 0)) + 1;
+      const newId = Math.max(...mockQuestionSets.map((qs) => qs.id || 0)) + 1;
       const newQuestionSet: QuestionSet = {
-        questionSetId: newId,
-        questionSetName: data.questionSetName,
+        id: newId,
+        practiceSetName: data.practiceSetName,
         objective: data.objective,
         level: data.level,
         major: data.major,
@@ -183,10 +186,10 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
     try {
       // Backend requires full QuestionSet schema for creation
-      // questionSetId: 0 indicates new record creation
+      // id: 0 indicates new record creation
       const questionSetPayload: QuestionSet = {
-        questionSetId: 0, // Required: 0 for creation
-        questionSetName: data.questionSetName,
+        id: 0, // Required: 0 for creation
+        practiceSetName: data.practiceSetName,
         objective: data.objective,
         level: data.level,
         major: data.major,
@@ -206,12 +209,12 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Update question set
-   * POST /api/question-sets (JSON body)
+   * POST /api/practice-sets (JSON body)
    * Note: Backend confirmed POST should be used for updates (not PUT)
    */
   async update(id: string | number, data: Partial<QuestionSet>): Promise<ApiResponse<QuestionSet>> {
     if (this.mode === "mock") {
-      const index = mockQuestionSets.findIndex((qs) => qs.questionSetId === Number(id));
+      const index = mockQuestionSets.findIndex((qs) => qs.id === Number(id));
       if (index === -1) {
         return {
           success: false,
@@ -226,7 +229,7 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
     }
 
     try {
-      const questionSetData: QuestionSet = { ...data, questionSetId: Number(id) };
+      const questionSetData: QuestionSet = { ...data, id: Number(id) };
       // Note: Backend confirmed POST should be used for updates (not PUT)
       const response = await this.api.post(API_ENDPOINTS.QUESTION_SETS.UPDATE, questionSetData);
       return {
@@ -243,12 +246,12 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
 
   /**
    * Delete question set
-   * DELETE /api/question-sets/{id}
+   * DELETE /api/practice-sets/{id}
    * Schema provides DELETE endpoint for question sets
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
-      const index = mockQuestionSets.findIndex((qs) => qs.questionSetId === Number(id));
+      const index = mockQuestionSets.findIndex((qs) => qs.id === Number(id));
       if (index === -1) {
         return {
           success: false,
@@ -272,6 +275,75 @@ export class QuestionSetManager implements BaseManager<QuestionSet> {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to delete question set",
+      };
+    }
+  }
+  /**
+   * Get full question set with items
+   * GET /api/practice-sets/full-set/{id}
+   * Returns PracticeSetResponse = { practiceSet, practiceSetItem[] }
+   */
+  async getFullSet(
+    id: string | number
+  ): Promise<
+    ApiResponse<{
+      practiceSet: QuestionSet;
+      practiceSetItem: QuestionSetItem[];
+    }>
+  > {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Full set view not supported in mock mode",
+      };
+    }
+
+    try {
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_SETS.FULL_SET, { id });
+      const response = await this.api.get(endpoint);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch full question set",
+      };
+    }
+  }
+
+  /**
+   * Create full practice set with questions
+   * POST /api/practice-sets/create-full
+   * Body: PracticeRequest
+   */
+  async createFull(data: {
+    practiceSetName: string;
+    objective?: string;
+    target: QuestionSetLevel;
+    majorId?: number;
+    dateNumber?: number;
+    questions?: Array<{
+      title?: string;
+      content?: string;
+      level?: "EASY" | "MEDIUM" | "HARD";
+      lessonName?: string;
+      answer?: string;
+      hint?: string;
+    }>;
+  }): Promise<ApiResponse<QuestionSet>> {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Create full set not supported in mock mode",
+      };
+    }
+
+    try {
+      const response = await this.api.post(API_ENDPOINTS.QUESTION_SETS.CREATE_FULL, data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create full question set",
       };
     }
   }

@@ -75,6 +75,23 @@ export class AuthManager {
   }
 
   /**
+   * Map backend role to frontend role
+   */
+  private mapBackendRoleToFrontend(backendRole?: string): "admin" | "user" | "mentor" | "staff" {
+    switch (backendRole) {
+      case "ADMIN":
+        return "admin";
+      case "MENTOR":
+        return "mentor";
+      case "STAFF":
+        return "staff";
+      case "USER":
+      default:
+        return "user";
+    }
+  }
+
+  /**
    * Login user
    * TEMPORARY IMPLEMENTATION:
    * - Fetches all users from /api/users
@@ -121,19 +138,41 @@ export class AuthManager {
 
     // TEMPORARY: Fetch all users and compare credentials
     try {
-      const { data: users, error } = await fetchClient.GET("/api/users");
+      // Try to find user in /api/users first
+      const { data: users, error: userError } = await fetchClient.GET("/api/users");
 
-      if (error || !users) {
-        return {
-          success: false,
-          error: "Không thể kết nối đến server",
-        };
+      let foundUser: BackendUser | undefined;
+
+      if (!userError && users) {
+        // Find user by email in users endpoint
+        foundUser = (users as BackendUser[]).find(
+          (u) => u.email?.toLowerCase() === credentials.email.toLowerCase()
+        );
       }
 
-      // Find user by email
-      const foundUser = (users as BackendUser[]).find(
-        (u) => u.email?.toLowerCase() === credentials.email.toLowerCase()
-      );
+      // If not found in users, try mentors endpoint
+      if (!foundUser) {
+        const { data: mentors, error: mentorError } = await fetchClient.GET("/api/mentors");
+
+        if (!mentorError && mentors) {
+          // Find mentor by email in mentors endpoint - mentors from backend use same structure as users
+          const foundMentor = (mentors as BackendUser[]).find(
+            (m) => m.email?.toLowerCase() === credentials.email.toLowerCase()
+          );
+
+          if (foundMentor) {
+            // Map mentor to User structure
+            foundUser = {
+              id: foundMentor.id,
+              name: foundMentor.name,
+              email: foundMentor.email,
+              password: foundMentor.password,
+              role: "MENTOR",
+              avatarUrl: foundMentor.avatarUrl,
+            } as BackendUser;
+          }
+        }
+      }
 
       if (!foundUser) {
         return {
@@ -155,7 +194,7 @@ export class AuthManager {
         id: String(foundUser.id || ""),
         email: foundUser.email || "",
         fullName: foundUser.name || "",
-        role: foundUser.role === "ADMIN" ? "admin" : "user",
+        role: this.mapBackendRoleToFrontend(foundUser.role),
         avatar: foundUser.avatarUrl,
       };
 
