@@ -31,6 +31,7 @@ export function PracticeSetManagementPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPracticeSet, setSelectedPracticeSet] = useState<PracticeSet | null>(null);
   const [formData, setFormData] = useState<Partial<PracticeSetFormData>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load practice sets and majors
   const loadData = useCallback(async () => {
@@ -121,6 +122,8 @@ export function PracticeSetManagementPage() {
   };
 
   const handleSubmitCreate = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const createData: Partial<PracticeSet> = {
         practiceSetName: formData.practiceSetName,
@@ -139,6 +142,8 @@ export function PracticeSetManagementPage() {
     } catch (error) {
       console.error("Error creating practice set:", error);
       toast.error("Không thể tạo bộ câu hỏi");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -281,6 +286,7 @@ export function PracticeSetManagementPage() {
         description="Điền thông tin để tạo bộ câu hỏi mới."
         submitLabel="Tạo bộ câu hỏi"
         majors={majors}
+        isSubmitting={isSubmitting}
       />
 
       {/* Edit Dialog */}

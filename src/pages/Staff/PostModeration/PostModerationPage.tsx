@@ -129,7 +129,7 @@ export function PostModerationPage() {
   const handleApprove = async (post: Post) => {
     if (!post.postId) return;
     try {
-      const response = await postManager.update(post.postId, { status: "PUBLISHED" });
+      const response = await postManager.changeStatus(post.postId, "PUBLISHED");
       if (response.success) {
         toast.success("Đã duyệt bài viết thành công");
         loadPosts();
@@ -145,7 +145,7 @@ export function PostModerationPage() {
   const handleReject = async (post: Post) => {
     if (!post.postId) return;
     try {
-      const response = await postManager.update(post.postId, { status: "ARCHIVED" });
+      const response = await postManager.changeStatus(post.postId, "ARCHIVED");
       if (response.success) {
         toast.success("Đã từ chối bài viết");
         loadPosts();

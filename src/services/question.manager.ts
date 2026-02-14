@@ -96,7 +96,9 @@ export class QuestionManager implements BaseManager<QuestionSet> {
   }
 
   /**
-   * Create new question set
+   * Create new question
+   * POST /api/practice-questions (JSON body)
+   * Backend requires full PracticeQuestion schema including questionId: 0 for creation
    */
   async create(data: Partial<QuestionSet>): Promise<ApiResponse<QuestionSet>> {
     if (this.mode === "mock") {
@@ -108,7 +110,12 @@ export class QuestionManager implements BaseManager<QuestionSet> {
     }
 
     try {
-      const response = await this.api.post(API_ENDPOINTS.QUESTION.CREATE, data);
+      // Backend requires questionId: 0 for creation to avoid null int parse error
+      const questionPayload = {
+        questionId: 0,
+        ...data,
+      };
+      const response = await this.api.post(API_ENDPOINTS.QUESTION.CREATE, questionPayload);
       return {
         success: true,
         data: response.data,
@@ -122,7 +129,9 @@ export class QuestionManager implements BaseManager<QuestionSet> {
   }
 
   /**
-   * Update question set
+   * Update question
+   * POST /api/practice-questions (JSON body)
+   * Backend requires full PracticeQuestion schema including questionId
    */
   async update(id: string | number, data: Partial<QuestionSet>): Promise<ApiResponse<QuestionSet>> {
     if (this.mode === "mock") {
@@ -135,9 +144,13 @@ export class QuestionManager implements BaseManager<QuestionSet> {
     }
 
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.UPDATE, { id });
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(endpoint, data);
+      // Backend requires questionId in body for update
+      const questionPayload = {
+        questionId: Number(id),
+        ...data,
+      };
+      // Use POST for updates (backend treats questionId > 0 as update)
+      const response = await this.api.post(API_ENDPOINTS.QUESTION.UPDATE, questionPayload);
       return {
         success: true,
         data: response.data,
@@ -151,9 +164,8 @@ export class QuestionManager implements BaseManager<QuestionSet> {
   }
 
   /**
-   * Delete question set
-   * POST /api/questions/{id}
-   * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
+   * Delete question
+   * DELETE /api/practice-questions/{id}
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -166,8 +178,7 @@ export class QuestionManager implements BaseManager<QuestionSet> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DELETE, { id });
-      // Note: Backend requires POST method for delete operations (PUT/DELETE not used)
-      await this.api.post(endpoint);
+      await this.api.delete(endpoint);
       return {
         success: true,
       };

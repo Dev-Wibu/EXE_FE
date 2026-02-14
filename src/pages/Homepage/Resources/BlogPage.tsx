@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { Post } from "@/interfaces/schema.types";
-import { extractDataArray } from "@/lib/utils";
 import { postManager } from "@/services/post.manager";
 
 export function BlogPage() {
@@ -28,11 +27,11 @@ export function BlogPage() {
   const loadPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await postManager.getAll();
+      // Use getPublished() endpoint to get only published posts
+      const response = await postManager.getPublished();
       if (response.success) {
-        const allPosts = extractDataArray<Post>(response);
-        // Show only published posts on public blog page
-        setPosts(allPosts.filter((p) => p.status === "PUBLISHED"));
+        const allPosts = Array.isArray(response.data) ? response.data : [];
+        setPosts(allPosts);
       }
     } catch (error) {
       console.error("Error loading blog posts:", error);

@@ -510,6 +510,56 @@ export class PostManager implements BaseManager<Post> {
     }
   }
 
+  /**
+   * Get all published posts
+   * GET /api/posts/published
+   */
+  async getPublished(): Promise<ApiResponse<Post[]>> {
+    if (this.mode === "mock") {
+      const published = mockPosts.filter((p) => p.status === "PUBLISHED");
+      return { success: true, data: published };
+    }
+
+    try {
+      const response = await this.api.get(API_ENDPOINTS.POSTS.PUBLISHED);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch published posts",
+      };
+    }
+  }
+
+  /**
+   * Change post status
+   * GET /api/posts/change-status/{postId}?status=DRAFT|PUBLISHED|ARCHIVED
+   */
+  async changeStatus(
+    postId: number,
+    status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  ): Promise<ApiResponse<Record<string, string>>> {
+    if (this.mode === "mock") {
+      const index = mockPosts.findIndex((p) => p.postId === postId);
+      if (index === -1) {
+        return { success: false, error: "Post not found" };
+      }
+      mockPosts[index] = { ...mockPosts[index], status };
+      return { success: true, data: { message: "Status changed" } };
+    }
+
+    try {
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHANGE_STATUS, { postId });
+      const response = await this.api.get(endpoint, { params: { status } });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to change post status",
+      };
+    }
+  }
+
   async create(data: Partial<Post>): Promise<ApiResponse<Post>> {
     return this.createPost(data as PostCreateRequest);
   }
@@ -592,3 +642,6 @@ export const useCheckLiked = (postId: number, userId: number) =>
     params: { path: { postId, userId } },
   });
 export const useUnlikePost = () => $api.useMutation("delete", "/api/posts/likes/{postId}/{userId}");
+export const usePublishedPosts = () => $api.useQuery("get", "/api/posts/published");
+export const useChangePostStatus = () =>
+  $api.useMutation("get", "/api/posts/change-status/{postId}");

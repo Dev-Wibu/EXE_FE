@@ -55,6 +55,24 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
   private api = createApiInstance();
 
   /**
+   * Map backend QuestionLesson (lessonName) to frontend QuestionCategory (categoryName)
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private mapFromBackend(data: any): QuestionCategory {
+    return {
+      id: data.id,
+      categoryName: data.lessonName ?? data.categoryName,
+      description: data.description,
+      urlTutorial: data.urlTutorial,
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private mapArrayFromBackend(data: any[]): QuestionCategory[] {
+    return data.map((item) => this.mapFromBackend(item));
+  }
+
+  /**
    * Get all question categories
    * GET /api/question-categories
    */
@@ -72,9 +90,11 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       const response = await this.api.get(API_ENDPOINTS.QUESTION_CATEGORIES.LIST, {
         params: _params,
       });
+      const raw = response.data;
+      const mapped = Array.isArray(raw) ? this.mapArrayFromBackend(raw) : raw;
       return {
         success: true,
-        data: response.data,
+        data: mapped,
       };
     } catch (error) {
       return {
@@ -108,7 +128,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       const response = await this.api.get(endpoint);
       return {
         success: true,
-        data: response.data,
+        data: this.mapFromBackend(response.data),
       };
     } catch (error) {
       return {
@@ -142,9 +162,10 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     try {
       // Backend requires full QuestionLesson schema for creation
       // id: 0 indicates new record creation
-      const categoryPayload: QuestionCategory = {
+      // Map categoryName → lessonName (backend schema uses QuestionLesson.lessonName)
+      const categoryPayload = {
         id: 0, // Required: 0 for creation
-        categoryName: data.categoryName,
+        lessonName: data.categoryName,
         description: data.description,
         urlTutorial: data.urlTutorial ?? "",
       };
@@ -154,7 +175,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       );
       return {
         success: true,
-        data: response.data,
+        data: this.mapFromBackend(response.data),
       };
     } catch (error) {
       return {
@@ -189,12 +210,18 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     }
 
     try {
-      const categoryData: QuestionCategory = { ...data, id: Number(id) };
+      // Map categoryName → lessonName (backend schema uses QuestionLesson.lessonName)
+      const categoryData = {
+        id: Number(id),
+        lessonName: data.categoryName,
+        description: data.description,
+        urlTutorial: data.urlTutorial,
+      };
       // Note: Backend confirmed POST should be used for updates (not PUT)
       const response = await this.api.post(API_ENDPOINTS.QUESTION_CATEGORIES.UPDATE, categoryData);
       return {
         success: true,
-        data: response.data,
+        data: this.mapFromBackend(response.data),
       };
     } catch (error) {
       return {

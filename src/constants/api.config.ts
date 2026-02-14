@@ -239,6 +239,9 @@ export const API_ENDPOINTS = {
 
   // Posts/Social endpoints - Based on schema-from-be.d.ts
   // POST /api/posts - createPost (multipart/form-data)
+  // GET /api/posts - getAllPosts
+  // GET /api/posts/published - getPublishedPosts
+  // GET /api/posts/change-status/{postId}?status= - changeStatus
   // GET /api/posts/{postId}/comments - getCommentsByPostId
   // GET /api/posts/{postId}/comments/count - countComments
   // POST /api/posts/comments - createComment
@@ -257,6 +260,8 @@ export const API_ENDPOINTS = {
     CREATE: "/api/posts",
     UPDATE: "/api/posts",
     DELETE: "/api/posts/:postId",
+    PUBLISHED: "/api/posts/published",
+    CHANGE_STATUS: "/api/posts/change-status/:postId",
     COMMENTS: "/api/posts/:postId/comments",
     COMMENTS_COUNT: "/api/posts/:postId/comments/count",
     CREATE_COMMENT: "/api/posts/comments",

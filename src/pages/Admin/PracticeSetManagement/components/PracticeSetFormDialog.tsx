@@ -30,6 +30,7 @@ interface PracticeSetFormDialogProps {
   description: string;
   submitLabel: string;
   majors: Major[];
+  isSubmitting?: boolean;
 }
 
 export function PracticeSetFormDialog({
@@ -42,6 +43,7 @@ export function PracticeSetFormDialog({
   description,
   submitLabel,
   majors,
+  isSubmitting,
 }: PracticeSetFormDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -116,7 +118,9 @@ export function PracticeSetFormDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Hủy
           </Button>
-          <Button onClick={onSubmit}>{submitLabel}</Button>
+          <Button onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Đang xử lý..." : submitLabel}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
