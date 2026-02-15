@@ -17,6 +17,25 @@ interface VideoCallProviderProps {
   children: ReactNode;
 }
 
+const DAILY_URL_REGEX = /^https?:\/\//i;
+
+function normalizeRoomUrl(rawRoomUrl: string): string | null {
+  const trimmed = rawRoomUrl.trim();
+  if (!trimmed) return null;
+
+  // Backend may return full URL or host/path without protocol
+  if (DAILY_URL_REGEX.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (trimmed.includes(".")) {
+    return `https://${trimmed}`;
+  }
+
+  // If only room name is provided, cannot infer Daily domain safely
+  return null;
+}
+
 export function VideoCallProvider({ children }: VideoCallProviderProps) {
   const [callObject, setCallObject] = useState<DailyCall | null>(null);
   const [roomState, setRoomState] = useState<RoomState>("idle");
@@ -47,6 +66,13 @@ export function VideoCallProvider({ children }: VideoCallProviderProps) {
         return;
       }
 
+      const normalizedRoomUrl = normalizeRoomUrl(roomUrl);
+      if (!normalizedRoomUrl) {
+        setError("URL phòng họp không hợp lệ. Vui lòng kiểm tra roomUrl từ backend.");
+        setRoomState("error");
+        return;
+      }
+
       try {
         setRoomState("joining");
         setError(null);
@@ -68,15 +94,15 @@ export function VideoCallProvider({ children }: VideoCallProviderProps) {
           // Ignore cleanup errors - proceed with creating new instance
         }
 
-        // Create Daily.co iframe frame (matches VideoCall-Fe: DailyIframe.createFrame)
-        // This provides full Daily.co UI: pre-call lobby, device settings, call controls
+        // Create Daily.co iframe frame (same pattern as VideoCall-Fe reference).
         const newCallObject = DailyIframe.createFrame(container, {
           iframeStyle: { width: "100%", height: "100%", border: "none" },
-          url: roomUrl,
+          url: normalizedRoomUrl,
           showLeaveButton: true,
         });
 
         // Set up event listeners
+        // "joined-meeting" fires when user clicks "Join" in Daily.co's pre-call lobby
         newCallObject.on("joined-meeting", () => {
           setRoomState("joined");
         });
@@ -90,14 +116,27 @@ export function VideoCallProvider({ children }: VideoCallProviderProps) {
         });
 
         newCallObject.on("error", (event) => {
-          setError(event?.errorMsg || "Đã xảy ra lỗi khi kết nối cuộc gọi.");
+          const errorMessage =
+            event?.errorMsg || event?.error?.msg || "Đã xảy ra lỗi khi kết nối cuộc gọi.";
+
+          console.error("[Daily.co] init/join error", {
+            roomUrl: normalizedRoomUrl,
+            event,
+          });
+
+          setError(errorMessage);
           setRoomState("error");
+
+          // Stop internal call lifecycle to avoid endless retry/noise loops.
+          newCallObject.destroy();
+          callObjectRef.current = null;
+          setCallObject(null);
         });
 
         callObjectRef.current = newCallObject;
         setCallObject(newCallObject);
 
-        // Join the meeting (matches VideoCall-Fe: callObject.join with userName)
+        // Join flow like VideoCall-Fe; Daily still renders its own pre-call experience.
         await newCallObject.join({
           userName,
         });
