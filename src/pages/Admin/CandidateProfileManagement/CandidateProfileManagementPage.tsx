@@ -1,6 +1,6 @@
 /**
  * Candidate Profile Management Page (Admin)
- * View and manage all candidate profiles
+ * For managing, organizing, and reviewing submitted applications
  */
 
 import { Eye, Search } from "lucide-react";
@@ -9,13 +9,6 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -29,6 +22,8 @@ import {
 import type { CandidateProfile } from "@/interfaces/schema.types";
 import { useCandidateProfiles } from "@/services/candidate-profile.manager";
 
+import { CandidateProfileModal } from "../UserManagement/components/CandidateProfileModal";
+
 export function CandidateProfileManagementPage() {
   const { data: profilesData, isLoading } = useCandidateProfiles();
   const profiles = (profilesData as unknown as CandidateProfile[]) ?? [];
@@ -37,15 +32,17 @@ export function CandidateProfileManagementPage() {
   const [selectedProfile, setSelectedProfile] = useState<CandidateProfile | null>(null);
 
   const filteredProfiles = useMemo(() => {
-    if (!search.trim()) return profiles;
-    const q = search.toLowerCase();
-    return profiles.filter(
-      (p) =>
+    const filtered = profiles.filter((p) => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
         p.user?.name?.toLowerCase().includes(q) ||
         p.user?.email?.toLowerCase().includes(q) ||
         p.targetRole?.toLowerCase().includes(q) ||
         p.targetLevel?.toLowerCase().includes(q)
-    );
+      );
+    });
+    return filtered.reverse();
   }, [profiles, search]);
 
   if (isLoading) {
@@ -131,174 +128,12 @@ export function CandidateProfileManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Detail Dialog */}
-      <Dialog open={!!selectedProfile} onOpenChange={(open) => !open && setSelectedProfile(null)}>
-        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Chi tiết hồ sơ ứng viên</DialogTitle>
-            <DialogDescription>
-              {selectedProfile?.user?.name} — {selectedProfile?.user?.email}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedProfile && (
-            <div className="space-y-6">
-              {/* Basic Info */}
-              <div>
-                <h4 className="mb-2 font-semibold">Thông tin cơ bản</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-gray-500 dark:text-slate-400">Vai trò mục tiêu:</span>{" "}
-                    {selectedProfile.targetRole || "—"}
-                  </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-slate-400">Cấp độ:</span>{" "}
-                    {selectedProfile.targetLevel || "—"}
-                  </div>
-                </div>
-                {selectedProfile.introduction && (
-                  <p className="mt-2 text-sm">{selectedProfile.introduction}</p>
-                )}
-              </div>
-
-              {/* Skills */}
-              <div>
-                <h4 className="mb-2 font-semibold">Kỹ năng</h4>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm text-gray-500 dark:text-slate-400">
-                      Kỹ năng kỹ thuật:
-                    </span>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {(selectedProfile.technicalSkills ?? []).map((s) => (
-                        <Badge key={s} variant="secondary">
-                          {s}
-                        </Badge>
-                      ))}
-                      {(selectedProfile.technicalSkills ?? []).length === 0 && (
-                        <span className="text-sm text-gray-400">—</span>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500 dark:text-slate-400">Kỹ năng mềm:</span>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {(selectedProfile.softSkills ?? []).map((s) => (
-                        <Badge key={s} variant="outline">
-                          {s}
-                        </Badge>
-                      ))}
-                      {(selectedProfile.softSkills ?? []).length === 0 && (
-                        <span className="text-sm text-gray-400">—</span>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500 dark:text-slate-400">Công cụ:</span>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {(selectedProfile.tools ?? []).map((t) => (
-                        <Badge key={t} variant="secondary">
-                          {t}
-                        </Badge>
-                      ))}
-                      {(selectedProfile.tools ?? []).length === 0 && (
-                        <span className="text-sm text-gray-400">—</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Projects */}
-              {(selectedProfile.projects ?? []).length > 0 && (
-                <div>
-                  <h4 className="mb-2 font-semibold">Dự án</h4>
-                  <div className="space-y-2">
-                    {selectedProfile.projects!.map((p, i) => (
-                      <div key={i} className="rounded border p-3 text-sm dark:border-slate-700">
-                        <p className="font-medium">{p.name}</p>
-                        <p className="text-gray-600 dark:text-slate-300">{p.description}</p>
-                        <p className="text-gray-500 dark:text-slate-400">
-                          {p.role} · Đội {p.teamSize} người · {p.outcome}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Work Experience */}
-              {(selectedProfile.workExperiences ?? []).length > 0 && (
-                <div>
-                  <h4 className="mb-2 font-semibold">Kinh nghiệm làm việc</h4>
-                  <div className="space-y-2">
-                    {selectedProfile.workExperiences!.map((w, i) => (
-                      <div key={i} className="rounded border p-3 text-sm dark:border-slate-700">
-                        <p className="font-medium">
-                          {w.position} — {w.company}
-                        </p>
-                        <p className="text-gray-600 dark:text-slate-300">{w.description}</p>
-                        <p className="text-xs text-gray-400">
-                          {w.start_date} — {w.end_date || "Hiện tại"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Education */}
-              {(selectedProfile.educations ?? []).length > 0 && (
-                <div>
-                  <h4 className="mb-2 font-semibold">Học vấn</h4>
-                  <div className="space-y-2">
-                    {selectedProfile.educations!.map((e, i) => (
-                      <div key={i} className="rounded border p-3 text-sm dark:border-slate-700">
-                        <p className="font-medium">{e.school}</p>
-                        <p className="text-gray-600 dark:text-slate-300">
-                          {e.major} — {e.degree}
-                        </p>
-                        {e.gpa && <p>GPA: {e.gpa}</p>}
-                        <p className="text-xs text-gray-400">
-                          {e.start_date} — {e.end_date || "Hiện tại"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Certifications */}
-              {(selectedProfile.certifications ?? []).length > 0 && (
-                <div>
-                  <h4 className="mb-2 font-semibold">Chứng chỉ</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedProfile.certifications!.map((c) => (
-                      <Badge key={c} variant="secondary">
-                        {c}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Achievements */}
-              {(selectedProfile.achievements ?? []).length > 0 && (
-                <div>
-                  <h4 className="mb-2 font-semibold">Thành tích</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedProfile.achievements!.map((a) => (
-                      <Badge key={a} variant="outline">
-                        {a}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Improved Candidate Profile Modal */}
+      <CandidateProfileModal
+        profile={selectedProfile}
+        open={!!selectedProfile}
+        onOpenChange={(open) => !open && setSelectedProfile(null)}
+      />
     </div>
   );
 }

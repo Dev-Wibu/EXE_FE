@@ -14,10 +14,11 @@ import {
 } from "@/components/ui/select";
 import { usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
-import { usersAdminManager } from "@/services";
+import type { CandidateProfile } from "@/interfaces/schema.types";
+import { candidateProfileManager, usersAdminManager } from "@/services";
 import { toast } from "sonner";
 
-import { DeleteUserDialog, UserFormDialog, UserTable } from "./components";
+import { CandidateProfileModal, DeleteUserDialog, UserFormDialog, UserTable } from "./components";
 import type { User, UserFormData } from "./types";
 
 export function UserManagementPage() {
@@ -34,6 +35,10 @@ export function UserManagementPage() {
   // CV Upload Modal state
   const [isCvModalOpen, setIsCvModalOpen] = useState(false);
   const [isCvUploading, setIsCvUploading] = useState(false);
+
+  // Candidate Profile Modal state
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [selectedProfileData, setSelectedProfileData] = useState<CandidateProfile | null>(null);
 
   // Load users using the users admin manager service
   const loadUsers = useCallback(async () => {
@@ -134,6 +139,22 @@ export function UserManagementPage() {
   const handleUploadCV = (user: User) => {
     setSelectedUser(user);
     setIsCvModalOpen(true);
+  };
+
+  // Handle viewing candidate profile
+  const handleViewProfile = async (user: User) => {
+    if (!user.id) return;
+    try {
+      const response = await candidateProfileManager.getByUserId(user.id);
+      if (response.success && response.data) {
+        setSelectedProfileData(response.data);
+        setIsProfileModalOpen(true);
+      } else {
+        toast.info("Người dùng này chưa có hồ sơ ứng viên");
+      }
+    } catch {
+      toast.info("Người dùng này chưa có hồ sơ ứng viên");
+    }
   };
 
   // Handle CV upload via dedicated modal
@@ -277,6 +298,7 @@ export function UserManagementPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onUploadCV={handleUploadCV}
+          onViewProfile={handleViewProfile}
           getSortProps={getSortProps}
         />
 
@@ -342,6 +364,13 @@ export function UserManagementPage() {
         isUploading={isCvUploading}
         title="Upload CV"
         description="Tải lên CV của người dùng. Chỉ chấp nhận file PDF."
+      />
+
+      {/* Candidate Profile Modal */}
+      <CandidateProfileModal
+        profile={selectedProfileData}
+        open={isProfileModalOpen}
+        onOpenChange={setIsProfileModalOpen}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Edit, FileText, Power, Search } from "lucide-react";
+import { Edit, FileText, Power, Search, User } from "lucide-react";
 
 import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { getMajorLabel } from "@/constants/majors";
 
-import type { User, UserRole } from "../types";
+import type { UserRole, User as UserType } from "../types";
 
 interface SortProps {
   direction: SortDirection;
@@ -21,11 +21,12 @@ interface SortProps {
 }
 
 interface UserTableProps {
-  users: User[];
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
-  onUploadCV: (user: User) => void;
-  getSortProps?: (key: keyof User) => SortProps;
+  users: UserType[];
+  onEdit: (user: UserType) => void;
+  onDelete: (user: UserType) => void;
+  onUploadCV: (user: UserType) => void;
+  onViewProfile?: (user: UserType) => void;
+  getSortProps?: (key: keyof UserType) => SortProps;
 }
 
 const getRoleBadgeClass = (role?: UserRole): string => {
@@ -41,7 +42,14 @@ const getRoleBadgeClass = (role?: UserRole): string => {
   }
 };
 
-export function UserTable({ users, onEdit, onDelete, onUploadCV, getSortProps }: UserTableProps) {
+export function UserTable({
+  users,
+  onEdit,
+  onDelete,
+  onUploadCV,
+  onViewProfile,
+  getSortProps,
+}: UserTableProps) {
   if (users.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -87,6 +95,16 @@ export function UserTable({ users, onEdit, onDelete, onUploadCV, getSortProps }:
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
+                {onViewProfile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewProfile(user)}
+                    className="h-8 w-8 p-0 hover:bg-purple-50"
+                    title="Xem hồ sơ ứng viên">
+                    <User className="h-4 w-4 text-purple-600" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
