@@ -63,6 +63,7 @@ export interface Mentor {
 export interface UserFormData {
   name: string;
   email: string;
+  password?: string;
   university?: string;
   major?: string;
   isActive?: boolean;

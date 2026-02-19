@@ -63,6 +63,7 @@ export function UserFormDialog({
 }: UserFormDialogProps) {
   // State for local file previews (blob URLs for new file uploads)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Clean up blob URLs when component unmounts or when files change
   useEffect(() => {
@@ -78,6 +79,7 @@ export function UserFormDialog({
     if (!open) {
       // Reset previews when closing
       setAvatarPreview(null);
+      setShowPassword(false);
     }
     onOpenChange(open);
   };
@@ -135,6 +137,24 @@ export function UserFormDialog({
                 onChange={(e) => onFormChange({ ...formData, email: e.target.value })}
                 placeholder="user@example.com"
               />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="password">Mật khẩu (để trống nếu không đổi)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password || ""}
+                onChange={(e) => onFormChange({ ...formData, password: e.target.value })}
+                placeholder="Nhập mật khẩu cho tài khoản"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "Ẩn" : "Hiện"}
+              </Button>
             </div>
           </div>
           {/* Note: Role field removed as UserInfo schema (used for createUser) does not include role */}
