@@ -128,7 +128,10 @@ export class SessionManager implements BaseManager<Session> {
       };
 
       if (isSessionCreationRequest(_data)) {
-        requestData = _data;
+        requestData = {
+          ..._data,
+          joinTime: _data.joinTime || new Date().toISOString(),
+        };
       } else {
         // Convert from Session partial to SessionCreationRequest
         const sessionData = _data as Partial<Session> & {
@@ -156,7 +159,7 @@ export class SessionManager implements BaseManager<Session> {
         requestData = {
           userId: sessionData.userId,
           mentorId: sessionData.userId2,
-          joinTime: sessionData.joinTime,
+          joinTime: sessionData.joinTime || new Date().toISOString(),
           dailyCoCreationRequest: {
             name: "",
             privacy: "public",

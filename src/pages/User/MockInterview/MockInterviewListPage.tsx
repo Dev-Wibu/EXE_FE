@@ -10,7 +10,7 @@ import {
   Users,
   Video,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,29 +25,54 @@ export function MockInterviewListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: sessions = [], isLoading } = useUserSessions();
 
+  // Current time state for joinTime-based blocking (updates every 30s)
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Transform sessions to interview format for display (newest first)
   const interviews = useMemo(() => {
     return [...sessions]
       .filter((session) => session.status !== "COMPLETED")
       .reverse()
-      .map((session) => ({
-        id: session.id,
-        title: session.roomName || `Phiên #${session.id}`,
-        mentorName: `Mentor #${session.userId2 || "N/A"}`,
-        date: session.startTime1 ? new Date(session.startTime1).toLocaleDateString("vi-VN") : "N/A",
-        time: session.startTime1 ? new Date(session.startTime1).toLocaleTimeString("vi-VN") : "N/A",
-        status:
-          session.status === "SCHEDULED"
-            ? "upcoming"
-            : session.status === "CANCELED"
-              ? "cancelled"
-              : session.status === "ONGOING"
-                ? "ongoing"
-                : "upcoming",
-        canJoin:
-          (session.status === "SCHEDULED" || session.status === "ONGOING") && !!session.roomUrl,
-      }));
-  }, [sessions]);
+      .map((session) => {
+        const isTimeReached = session.joinTime ? new Date(session.joinTime).getTime() <= now : true;
+        return {
+          id: session.id,
+          title: session.roomName || `Phiên #${session.id}`,
+          mentorName: `Mentor #${session.userId2 || "N/A"}`,
+          date: session.joinTime
+            ? new Date(session.joinTime).toLocaleDateString("vi-VN")
+            : session.startTime1
+              ? new Date(session.startTime1).toLocaleDateString("vi-VN")
+              : "N/A",
+          time: session.joinTime
+            ? new Date(session.joinTime).toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : session.startTime1
+              ? new Date(session.startTime1).toLocaleTimeString("vi-VN")
+              : "N/A",
+          joinTime: session.joinTime,
+          status:
+            session.status === "SCHEDULED"
+              ? "upcoming"
+              : session.status === "CANCELED"
+                ? "cancelled"
+                : session.status === "ONGOING"
+                  ? "ongoing"
+                  : "upcoming",
+          canJoin:
+            (session.status === "SCHEDULED" || session.status === "ONGOING") &&
+            !!session.roomUrl &&
+            isTimeReached,
+          isTimeReached,
+        };
+      });
+  }, [sessions, now]);
 
   // Filter interviews based on search query
   const filteredInterviews = useMemo(() => {
@@ -150,20 +175,25 @@ export function MockInterviewListPage() {
         <LoadingCardList count={4} />
       ) : (
         <div className="space-y-4">
-          {filteredInterviews.map((interview) => (
+          {filteredInterviews.map((interview, index) => (
             <Card
               key={interview.id}
               className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-md"
               onClick={() => navigate(`/dashboard/mock-interview/history/${interview.id}`)}>
               <CardContent className="flex items-center gap-6 p-6">
-                {/* Avatar */}
-                <div className="bg-muted flex h-14 w-14 shrink-0 items-center justify-center rounded-full">
-                  <UserIcon className="text-muted-foreground h-7 w-7" />
+                {/* Sequential Number */}
+                <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold">
+                  {index + 1}
                 </div>
 
                 {/* Content */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-foreground text-lg font-semibold">{interview.title}</h3>
+                  <h3 className="text-foreground text-lg font-semibold">
+                    {interview.title}
+                    <span className="text-muted-foreground ml-2 text-sm font-normal">
+                      (ID: {interview.id})
+                    </span>
+                  </h3>
 
                   {/* Metadata */}
                   <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-4 text-sm">
@@ -196,6 +226,14 @@ export function MockInterviewListPage() {
                       Join
                     </Button>
                   )}
+                  {!interview.isTimeReached &&
+                    interview.status !== "cancelled" &&
+                    interview.joinTime && (
+                      <Badge className="inline-flex items-center gap-1 border border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700 hover:bg-amber-100">
+                        <Clock className="h-3.5 w-3.5" />
+                        Chưa đến giờ
+                      </Badge>
+                    )}
                   {getStatusBadge(interview.status)}
                 </div>
               </CardContent>

@@ -4,7 +4,7 @@
  * Uses browser's native navigator.mediaDevices API (no Daily.co dependency).
  */
 
-import { Camera, CameraOff, Mic, MicOff, RefreshCw } from "lucide-react";
+import { Camera, CameraOff, Check, Mic, MicOff, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,11 @@ import {
 interface DeviceCheckDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called when user confirms devices are ready and wants to join */
+  onConfirm?: () => void;
 }
 
-export function DeviceCheckDialog({ isOpen, onOpenChange }: DeviceCheckDialogProps) {
+export function DeviceCheckDialog({ isOpen, onOpenChange, onConfirm }: DeviceCheckDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
@@ -287,8 +289,19 @@ export function DeviceCheckDialog({ isOpen, onOpenChange }: DeviceCheckDialogPro
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>
-            Đóng
+            {onConfirm ? "Hủy" : "Đóng"}
           </Button>
+          {onConfirm && (
+            <Button
+              onClick={() => {
+                stopStream();
+                onConfirm();
+              }}
+              className="gap-2 bg-green-600 hover:bg-green-700">
+              <Check className="h-4 w-4" />
+              Xác nhận & Tham gia
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -56,9 +56,11 @@ const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
   label: String(i).padStart(2, "0"),
 }));
 
-const MINUTE_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
-  value: String(i * 5).padStart(2, "0"),
-  label: String(i * 5).padStart(2, "0"),
+// All 60 minutes for full flexibility; 5-minute intervals are highlighted
+const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => ({
+  value: String(i).padStart(2, "0"),
+  label: String(i).padStart(2, "0"),
+  is5Min: i % 5 === 0,
 }));
 
 // Minimum time offset in milliseconds (1 minute)
@@ -77,10 +79,14 @@ export function MockInterviewSchedulePage() {
   const [selectedMentorId, setSelectedMentorId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Step 2: Date/Time selection
+  // Step 2: Date/Time selection - preset current time
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedHour, setSelectedHour] = useState("09");
-  const [selectedMinute, setSelectedMinute] = useState("00");
+  const [selectedHour, setSelectedHour] = useState(() =>
+    String(new Date().getHours()).padStart(2, "0")
+  );
+  const [selectedMinute, setSelectedMinute] = useState(() =>
+    String(new Date().getMinutes()).padStart(2, "0")
+  );
   const [recordingMode, setRecordingMode] = useState<string>("cloud");
 
   // Step 3: Creating
@@ -414,9 +420,12 @@ export function MockInterviewSchedulePage() {
                     <SelectTrigger className="w-24">
                       <SelectValue placeholder="Phút" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-60">
                       {MINUTE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
+                        <SelectItem
+                          key={opt.value}
+                          value={opt.value}
+                          className={opt.is5Min ? "font-medium" : "text-slate-500"}>
                           {opt.label}
                         </SelectItem>
                       ))}

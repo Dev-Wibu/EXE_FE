@@ -21,7 +21,8 @@ export function MentorSessionRoomPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [hasJoinedTracking, setHasJoinedTracking] = useState(false);
-  const [isDeviceCheckOpen, setIsDeviceCheckOpen] = useState(false);
+  const [isDeviceCheckOpen, setIsDeviceCheckOpen] = useState(true);
+  const [hasConfirmedDevices, setHasConfirmedDevices] = useState(false);
 
   const { data: session, isLoading, error } = useSessionById(Number(sessionId));
   const joinSessionMutation = useJoinSession();
@@ -136,22 +137,42 @@ export function MentorSessionRoomPage() {
         </div>
       </div>
 
-      {/* Device Check Dialog */}
-      <DeviceCheckDialog isOpen={isDeviceCheckOpen} onOpenChange={setIsDeviceCheckOpen} />
+      {/* Device Check Dialog - auto-opens on entry, requires confirmation */}
+      <DeviceCheckDialog
+        isOpen={isDeviceCheckOpen}
+        onOpenChange={setIsDeviceCheckOpen}
+        onConfirm={() => {
+          setIsDeviceCheckOpen(false);
+          setHasConfirmedDevices(true);
+        }}
+      />
 
-      {/* Main Video Area - Full width for maximum screen usage */}
-      <div className="w-full">
-        <VideoCallProvider>
-          <VideoCallRoom
-            roomUrl={session.roomUrl!}
-            userName={user?.name || "Mentor"}
-            onLeave={handleLeave}
-            onError={handleError}
-            onJoined={handleJoined}
-            className="min-h-[70vh]"
-          />
-        </VideoCallProvider>
-      </div>
+      {/* Main Video Area - Only shown after device check confirmation */}
+      {hasConfirmedDevices ? (
+        <div className="w-full">
+          <VideoCallProvider>
+            <VideoCallRoom
+              roomUrl={session.roomUrl!}
+              userName={user?.name || "Mentor"}
+              onLeave={handleLeave}
+              onError={handleError}
+              onJoined={handleJoined}
+              className="min-h-[70vh]"
+            />
+          </VideoCallProvider>
+        </div>
+      ) : (
+        <div className="flex h-[60vh] flex-col items-center justify-center gap-4 rounded-lg border border-dashed">
+          <Settings className="h-12 w-12 text-slate-400" />
+          <p className="text-lg font-medium text-slate-600">
+            Vui lòng kiểm tra thiết bị trước khi tham gia
+          </p>
+          <Button onClick={() => setIsDeviceCheckOpen(true)} className="gap-2">
+            <Settings className="h-4 w-4" />
+            Kiểm tra thiết bị
+          </Button>
+        </div>
+      )}
 
       {/* Session Info - Below video like YouTube description */}
       <Card className="mt-4">

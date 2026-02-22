@@ -4,7 +4,7 @@
  */
 
 import { Calendar, Clock, LogIn, MessageSquare, User, Video } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
@@ -35,15 +35,25 @@ const statusMap: Record<
 interface SessionCardProps {
   session: Session;
   hasFeedback: boolean;
+  now: number;
   onJoinSession: () => void;
   onWriteFeedback: () => void;
 }
 
-function SessionCard({ session, hasFeedback, onJoinSession, onWriteFeedback }: SessionCardProps) {
+function SessionCard({
+  session,
+  hasFeedback,
+  now,
+  onJoinSession,
+  onWriteFeedback,
+}: SessionCardProps) {
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
   const isCompleted = session.status === "COMPLETED";
+  const isTimeReached = session.joinTime ? new Date(session.joinTime).getTime() <= now : true;
   const canJoin =
-    (session.status === "SCHEDULED" || session.status === "ONGOING") && !!session.roomUrl;
+    (session.status === "SCHEDULED" || session.status === "ONGOING") &&
+    !!session.roomUrl &&
+    isTimeReached;
 
   return (
     <Card className="border-emerald-100 transition-all hover:shadow-md dark:border-slate-800">
@@ -65,6 +75,15 @@ function SessionCard({ session, hasFeedback, onJoinSession, onWriteFeedback }: S
           </div>
           <div className="flex items-center gap-2">
             <Badge className={status.color}>{status.label}</Badge>
+            {!isTimeReached &&
+              !isCompleted &&
+              session.status !== "CANCELED" &&
+              session.joinTime && (
+                <Badge className="border-amber-200 bg-amber-50 text-amber-700">
+                  <Clock className="mr-1 h-3 w-3" />
+                  Chưa đến giờ
+                </Badge>
+              )}
             {canJoin && (
               <Button
                 size="sm"
@@ -82,6 +101,19 @@ function SessionCard({ session, hasFeedback, onJoinSession, onWriteFeedback }: S
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex items-center gap-4 text-sm text-slate-500">
+          {session.joinTime && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              Giờ họp:{" "}
+              {new Date(session.joinTime).toLocaleString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
           {session.startTime1 && (
             <>
               <span className="flex items-center gap-1">
@@ -136,6 +168,13 @@ export function MentorSessionsPage() {
   const [pageSize, setPageSize] = useState(10);
   const { data: allSessions = [], isLoading: sessionsLoading } = useSessions();
   const { data: feedbacks = [], isLoading: feedbacksLoading } = useMentorFeedbacks();
+
+  // Current time state for joinTime-based blocking (updates every 30s)
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const isLoading = sessionsLoading || feedbacksLoading;
 
@@ -250,6 +289,7 @@ export function MentorSessionsPage() {
                 key={session.id}
                 session={session}
                 hasFeedback={feedbackSessionIds.has(session.id)}
+                now={now}
                 onJoinSession={() => handleJoinSession(session)}
                 onWriteFeedback={() => handleWriteFeedback(session)}
               />
