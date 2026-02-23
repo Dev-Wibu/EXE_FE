@@ -208,7 +208,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
 
     try {
       const updateData = { id: Number(id), ...data };
-      const response = await this.api.put(API_ENDPOINTS.CANDIDATE_PROFILES.UPDATE, updateData);
+      const response = await this.api.post(API_ENDPOINTS.CANDIDATE_PROFILES.UPDATE, updateData);
       return { success: true, data: response.data };
     } catch (error) {
       return {

@@ -1,6 +1,8 @@
 import { CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { mockPaymentInfo } from "@/mocks/interviews.mock";
 
 // Display amount as shown in the design (440,000 VND)
@@ -23,97 +25,59 @@ export function AIInterviewPaymentSuccessPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Success Card */}
-      <div className="mx-auto mt-12 flex w-[653px] flex-col items-center gap-14 rounded-[40px] bg-purple-100 p-10 shadow-[0px_13px_40px_0px_rgba(170,170,170,0.12)] outline outline-1 outline-offset-[-1px] outline-black">
-        {/* Success Icon */}
-        <div className="flex flex-col items-center gap-7">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-600/10">
-            <CheckCircle className="h-14 w-14 text-emerald-600" />
-          </div>
-
-          {/* Title and Amount */}
-          <div className="flex flex-col items-center gap-3.5">
-            <h2 className="font-['Poppins'] text-4xl leading-10 font-medium text-zinc-700">
-              Thanh toán thành công
-            </h2>
-            <p className="font-['Poppins'] text-4xl leading-[53px] font-semibold text-green-500">
-              {formatCurrency(transactionDetails.amount)} VND
-            </p>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="h-[1.67px] w-[495px] bg-gray-200" />
-
-        {/* Transaction Details */}
-        <div className="flex w-full flex-col items-center gap-7">
-          <div className="flex w-full flex-col gap-6">
-            {/* Transaction ID */}
-            <div className="flex items-start justify-between">
-              <span className="font-['Poppins'] text-2xl leading-7 font-normal text-neutral-500">
-                Mã giao dịch
-              </span>
-              <span className="font-['Poppins'] text-2xl leading-7 font-medium text-neutral-900">
-                {transactionDetails.transactionId}
-              </span>
+    <div className="bg-background flex min-h-screen items-center justify-center p-6">
+      <div className="flex w-full max-w-lg flex-col items-center gap-6">
+        {/* Success Card */}
+        <Card className="w-full">
+          <CardContent className="flex flex-col items-center gap-6 p-8">
+            {/* Success Icon */}
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+              <CheckCircle className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
             </div>
 
-            {/* Timestamp */}
-            <div className="flex items-start justify-between">
-              <span className="font-['Poppins'] text-2xl leading-7 font-normal text-neutral-500">
-                Thời gian
-              </span>
-              <span className="font-['Poppins'] text-2xl leading-7 font-medium text-neutral-900">
-                {transactionDetails.timestamp}
-              </span>
+            <div className="text-center">
+              <h2 className="text-foreground text-2xl font-semibold">Thanh toán thành công</h2>
+              <p className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(transactionDetails.amount)} VND
+              </p>
             </div>
 
-            {/* Payment Method */}
-            <div className="flex items-start justify-between">
-              <span className="font-['Poppins'] text-2xl leading-7 font-normal text-neutral-500">
-                Phương thức thanh toán
-              </span>
-              <span className="font-['Poppins'] text-2xl leading-7 font-medium text-neutral-900">
-                {transactionDetails.paymentMethod}
-              </span>
+            <div className="border-border w-full border-t" />
+
+            {/* Transaction Details */}
+            <div className="w-full space-y-4">
+              {[
+                { label: "Mã giao dịch", value: transactionDetails.transactionId },
+                { label: "Thời gian", value: transactionDetails.timestamp },
+                { label: "Phương thức thanh toán", value: transactionDetails.paymentMethod },
+                { label: "Người thanh toán", value: transactionDetails.payerName },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm">{item.label}</span>
+                  <span className="text-foreground text-sm font-medium">{item.value}</span>
+                </div>
+              ))}
             </div>
 
-            {/* Payer Name */}
-            <div className="flex items-start justify-between">
-              <span className="font-['Poppins'] text-2xl leading-7 font-normal text-neutral-500">
-                Người thanh toán
-              </span>
-              <span className="font-['Poppins'] text-2xl leading-7 font-medium text-neutral-900">
-                {transactionDetails.payerName}
+            <div className="border-border w-full border-t" />
+
+            {/* Amount Summary */}
+            <div className="flex w-full items-center justify-between">
+              <span className="text-foreground font-bold">Số tiền</span>
+              <span className="text-foreground font-bold">
+                {formatCurrency(mockPaymentInfo.total)} VND
               </span>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Divider */}
-          <div className="h-[1.67px] w-[495px] bg-gray-200" />
-
-          {/* Amount Summary */}
-          <div className="flex w-full flex-col gap-6">
-            <div className="flex items-start justify-between">
-              <span className="font-['Poppins'] text-2xl leading-7 font-bold text-neutral-500">
-                Số tiền
-              </span>
-              <span className="font-['Poppins'] text-2xl leading-7 font-bold text-neutral-900">
-                {formatCurrency(mockPaymentInfo.total)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Start Interview Button */}
-      <div className="mt-8 flex justify-center">
-        <button
+        {/* Start Interview Button */}
+        <Button
           onClick={() => navigate("/dashboard/ai-interview/session")}
-          className="flex h-12 items-center justify-center gap-2.5 rounded-lg bg-violet-500 px-8 py-3">
-          <span className="font-['Inter'] text-2xl font-medium text-white">Bắt đầu phỏng vấn</span>
-        </button>
+          size="lg"
+          className="w-full bg-[#0047AB] text-white hover:bg-[#005B9A]">
+          Bắt đầu phỏng vấn
+        </Button>
       </div>
     </div>
   );

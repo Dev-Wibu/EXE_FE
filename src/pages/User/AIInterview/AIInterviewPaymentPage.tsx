@@ -30,6 +30,7 @@ import type { InterviewConfigOptionItem, InterviewConfigOptions } from "@/interf
 import { $api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useCandidateProfile } from "@/services/candidate-profile.manager";
+import { usersAdminManager } from "@/services/users-admin.manager";
 import { useAuthStore } from "@/stores/authStore";
 // Mock data giữ lại để tham khảo khi cần thiết
 // import { mockInterviewInfo, mockPaymentInfo, mockPaymentMethods } from "@/mocks/interviews.mock";
@@ -67,28 +68,28 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; icon: string }> =
   {
     interview_modes: {
-      bg: "bg-violet-50",
+      bg: "bg-violet-50 dark:bg-violet-950/40",
       border: "border-violet-500",
-      text: "text-violet-700",
-      icon: "text-violet-600",
+      text: "text-violet-700 dark:text-violet-300",
+      icon: "text-violet-600 dark:text-violet-400",
     },
     difficulties: {
-      bg: "bg-amber-50",
+      bg: "bg-amber-50 dark:bg-amber-950/40",
       border: "border-amber-500",
-      text: "text-amber-700",
-      icon: "text-amber-600",
+      text: "text-amber-700 dark:text-amber-300",
+      icon: "text-amber-600 dark:text-amber-400",
     },
     languages: {
-      bg: "bg-blue-50",
+      bg: "bg-blue-50 dark:bg-blue-950/40",
       border: "border-blue-500",
-      text: "text-blue-700",
-      icon: "text-blue-600",
+      text: "text-blue-700 dark:text-blue-300",
+      icon: "text-blue-600 dark:text-blue-400",
     },
     domains: {
-      bg: "bg-emerald-50",
+      bg: "bg-emerald-50 dark:bg-emerald-950/40",
       border: "border-emerald-500",
-      text: "text-emerald-700",
-      icon: "text-emerald-600",
+      text: "text-emerald-700 dark:text-emerald-300",
+      icon: "text-emerald-600 dark:text-emerald-400",
     },
   };
 
@@ -130,15 +131,16 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
               className={cn(
                 "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors",
                 isActive && "bg-[#0047AB] text-white",
-                isCompleted && "bg-green-100 text-green-700",
-                !isActive && !isCompleted && "bg-slate-100 text-slate-400"
+                isCompleted &&
+                  "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
+                !isActive && !isCompleted && "bg-muted text-muted-foreground"
               )}>
               {isCompleted ? <Check className="h-4 w-4" /> : <StepIcon className="h-4 w-4" />}
               <span className="hidden sm:inline">{step.label}</span>
               <span className="sm:hidden">{step.id}</span>
             </div>
             {index < STEPS.length - 1 && (
-              <div className={cn("h-0.5 w-8", isCompleted ? "bg-green-400" : "bg-slate-200")} />
+              <div className={cn("h-0.5 w-8", isCompleted ? "bg-green-400" : "bg-border")} />
             )}
           </div>
         );
@@ -165,7 +167,7 @@ function ConfigOptionCard({
       className={`relative flex w-full flex-col gap-1.5 rounded-lg border-2 p-4 text-left transition-all ${
         isSelected
           ? `${colors.bg} ${colors.border} shadow-sm`
-          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+          : "border-border bg-card hover:border-border/80 hover:bg-accent/50"
       }`}>
       {isSelected && (
         <CheckCircle2
@@ -174,10 +176,10 @@ function ConfigOptionCard({
           strokeWidth={0}
         />
       )}
-      <span className={`text-sm font-semibold ${isSelected ? colors.text : "text-gray-900"}`}>
+      <span className={`text-sm font-semibold ${isSelected ? colors.text : "text-foreground"}`}>
         {item.label}
       </span>
-      <span className="pr-6 text-xs leading-relaxed text-gray-500">{item.description}</span>
+      <span className="text-muted-foreground pr-6 text-xs leading-relaxed">{item.description}</span>
     </button>
   );
 }
@@ -201,7 +203,7 @@ function ConfigSection({
           className={`flex h-8 w-8 items-center justify-center rounded-lg ${colors.bg} ${colors.icon}`}>
           {CATEGORY_ICONS[categoryKey]}
         </div>
-        <h4 className="text-sm font-semibold text-gray-900">{CATEGORY_LABELS[categoryKey]}</h4>
+        <h4 className="text-foreground text-sm font-semibold">{CATEGORY_LABELS[categoryKey]}</h4>
       </div>
       <div
         className={`grid gap-3 ${
@@ -291,7 +293,6 @@ export function AIInterviewPaymentPage() {
 
   // API mutations
   const createSessionMutation = $api.useMutation("post", "/api/interview-sessions/create-session");
-  const uploadCvMutation = $api.useMutation("post", "/api/users/upload-cv");
   const generateJRMutation = $api.useMutation(
     "post",
     "/api/interview-sessions/generate-job-requirement"
@@ -331,14 +332,15 @@ export function AIInterviewPaymentPage() {
     if (!userId) return;
     setIsUploading(true);
     try {
-      const result = await uploadCvMutation.mutateAsync({
-        body: { userId: String(userId), cvFile: file as unknown as string },
-      });
-      setUploadedProfile(result as unknown as Record<string, unknown>);
+      const response = await usersAdminManager.uploadCv(userId, file);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || "Upload failed");
+      }
+      setUploadedProfile(response.data as unknown as Record<string, unknown>);
       setProfileMode("upload");
       toast.success("Upload CV thành công! Hồ sơ đã được tạo từ CV.");
-    } catch {
-      toast.error("Upload CV thất bại. Vui lòng thử lại.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload CV thất bại. Vui lòng thử lại.");
     } finally {
       setIsUploading(false);
     }
@@ -395,6 +397,7 @@ export function AIInterviewPaymentPage() {
         candidate_profile: buildCandidateProfile(),
         job_requirement: generatedJR,
         session_config: {
+          duration_minutes: 30,
           interview_mode: selectedMode,
           difficulty: selectedDifficulty,
           language: selectedLanguage,
@@ -470,10 +473,12 @@ export function AIInterviewPaymentPage() {
                 {configLoading && <LoadingSkeleton />}
 
                 {configError && (
-                  <div className="flex flex-col items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+                  <div className="flex flex-col items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-950/30">
                     <AlertCircle className="h-8 w-8 text-red-500" />
-                    <p className="font-medium text-red-700">Không thể tải cấu hình phỏng vấn</p>
-                    <p className="text-sm text-red-600">Vui lòng thử lại sau</p>
+                    <p className="font-medium text-red-700 dark:text-red-300">
+                      Không thể tải cấu hình phỏng vấn
+                    </p>
+                    <p className="text-sm text-red-600 dark:text-red-400">Vui lòng thử lại sau</p>
                   </div>
                 )}
 
@@ -539,20 +544,20 @@ export function AIInterviewPaymentPage() {
                     className={cn(
                       "relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
                       profileMode === "existing"
-                        ? "border-blue-500 bg-blue-50 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-300",
+                        ? "border-blue-500 bg-blue-50 shadow-sm dark:bg-blue-950/40"
+                        : "border-border bg-card hover:border-border/80",
                       !hasExistingProfile && !profileLoading && "cursor-not-allowed opacity-50"
                     )}>
                     {profileMode === "existing" && (
                       <CheckCircle2
-                        className="absolute top-2 right-2 h-4 w-4 text-blue-600"
+                        className="absolute top-2 right-2 h-4 w-4 text-blue-600 dark:text-blue-400"
                         fill="currentColor"
                         strokeWidth={0}
                       />
                     )}
-                    <FileText className="h-6 w-6 text-blue-600" />
-                    <span className="text-sm font-semibold text-gray-900">Hồ sơ có sẵn</span>
-                    <span className="text-xs text-gray-500">
+                    <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                    <span className="text-foreground text-sm font-semibold">Hồ sơ có sẵn</span>
+                    <span className="text-muted-foreground text-xs">
                       {profileLoading
                         ? "Đang tải..."
                         : hasExistingProfile
@@ -570,19 +575,19 @@ export function AIInterviewPaymentPage() {
                     className={cn(
                       "relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
                       profileMode === "upload"
-                        ? "border-emerald-500 bg-emerald-50 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-300"
+                        ? "border-emerald-500 bg-emerald-50 shadow-sm dark:bg-emerald-950/40"
+                        : "border-border bg-card hover:border-border/80"
                     )}>
                     {profileMode === "upload" && (
                       <CheckCircle2
-                        className="absolute top-2 right-2 h-4 w-4 text-emerald-600"
+                        className="absolute top-2 right-2 h-4 w-4 text-emerald-600 dark:text-emerald-400"
                         fill="currentColor"
                         strokeWidth={0}
                       />
                     )}
-                    <Upload className="h-6 w-6 text-emerald-600" />
-                    <span className="text-sm font-semibold text-gray-900">Upload CV</span>
-                    <span className="text-xs text-gray-500">Tạo hồ sơ từ CV</span>
+                    <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-foreground text-sm font-semibold">Upload CV</span>
+                    <span className="text-muted-foreground text-xs">Tạo hồ sơ từ CV</span>
                   </button>
 
                   {/* Manual entry option */}
@@ -591,19 +596,19 @@ export function AIInterviewPaymentPage() {
                     className={cn(
                       "relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
                       profileMode === "manual"
-                        ? "border-violet-500 bg-violet-50 shadow-sm"
-                        : "border-gray-200 bg-white hover:border-gray-300"
+                        ? "border-violet-500 bg-violet-50 shadow-sm dark:bg-violet-950/40"
+                        : "border-border bg-card hover:border-border/80"
                     )}>
                     {profileMode === "manual" && (
                       <CheckCircle2
-                        className="absolute top-2 right-2 h-4 w-4 text-violet-600"
+                        className="absolute top-2 right-2 h-4 w-4 text-violet-600 dark:text-violet-400"
                         fill="currentColor"
                         strokeWidth={0}
                       />
                     )}
-                    <Sparkles className="h-6 w-6 text-violet-600" />
-                    <span className="text-sm font-semibold text-gray-900">Nhập thủ công</span>
-                    <span className="text-xs text-gray-500">Tự điền thông tin</span>
+                    <Sparkles className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                    <span className="text-foreground text-sm font-semibold">Nhập thủ công</span>
+                    <span className="text-muted-foreground text-xs">Tự điền thông tin</span>
                   </button>
                 </div>
 
@@ -621,26 +626,28 @@ export function AIInterviewPaymentPage() {
 
                 {/* Existing profile display */}
                 {profileMode === "existing" && hasExistingProfile && (
-                  <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-4">
-                    <h4 className="text-sm font-semibold text-blue-800">Hồ sơ hiện tại của bạn</h4>
+                  <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+                    <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                      Hồ sơ hiện tại của bạn
+                    </h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-gray-500">Vị trí mục tiêu: </span>
-                        <span className="font-medium">
+                        <span className="text-muted-foreground">Vị trí mục tiêu: </span>
+                        <span className="text-foreground font-medium">
                           {((existingProfile as Record<string, unknown>).targetRole as string) ||
                             "Chưa cập nhật"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">Cấp độ: </span>
-                        <span className="font-medium">
+                        <span className="text-muted-foreground">Cấp độ: </span>
+                        <span className="text-foreground font-medium">
                           {((existingProfile as Record<string, unknown>).targetLevel as string) ||
                             "Chưa cập nhật"}
                         </span>
                       </div>
                     </div>
                     {Boolean((existingProfile as Record<string, unknown>).introduction) && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-muted-foreground text-sm">
                         {String((existingProfile as Record<string, unknown>).introduction)}
                       </p>
                     )}
@@ -661,9 +668,9 @@ export function AIInterviewPaymentPage() {
                 )}
 
                 {profileMode === "existing" && !hasExistingProfile && !profileLoading && (
-                  <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+                  <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-800 dark:bg-amber-950/30">
                     <AlertCircle className="h-6 w-6 text-amber-500" />
-                    <p className="text-sm font-medium text-amber-700">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                       Bạn chưa có hồ sơ ứng viên. Vui lòng upload CV hoặc nhập thủ công.
                     </p>
                   </div>
@@ -673,17 +680,17 @@ export function AIInterviewPaymentPage() {
                 {profileMode === "upload" && (
                   <div className="space-y-3">
                     {isUploading && (
-                      <div className="flex flex-col items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-6">
-                        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-                        <p className="text-sm font-medium text-emerald-700">
+                      <div className="flex flex-col items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/30">
+                        <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
+                        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                           Đang upload và phân tích CV...
                         </p>
                       </div>
                     )}
                     {!isUploading && !uploadedProfile && (
-                      <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 p-8">
+                      <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 p-8 dark:border-emerald-700 dark:bg-emerald-950/20">
                         <Upload className="h-10 w-10 text-emerald-400" />
-                        <p className="text-sm text-gray-600">
+                        <p className="text-muted-foreground text-sm">
                           Kéo thả hoặc bấm để chọn file CV (.pdf, .doc, .docx)
                         </p>
                         <Button
@@ -695,14 +702,14 @@ export function AIInterviewPaymentPage() {
                       </div>
                     )}
                     {uploadedProfile !== null && (
-                      <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4">
+                      <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/30">
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                          <h4 className="text-sm font-semibold text-emerald-800">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          <h4 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                             Hồ sơ đã được tạo từ CV
                           </h4>
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-muted-foreground text-sm">
                           Vị trí: {(uploadedProfile.targetRole as string) || "N/A"} • Cấp độ:{" "}
                           {(uploadedProfile.targetLevel as string) || "N/A"}
                         </p>
@@ -815,7 +822,7 @@ export function AIInterviewPaymentPage() {
                     rows={8}
                     className="resize-y"
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-muted-foreground text-xs">
                     Hệ thống sẽ phân tích JD và tạo yêu cầu phỏng vấn chi tiết (kỹ năng, công cụ,
                     trách nhiệm...) để AI đặt câu hỏi chính xác hơn.
                   </p>
@@ -840,10 +847,10 @@ export function AIInterviewPaymentPage() {
 
                 {/* Generated JR result */}
                 {generatedJR !== null && (
-                  <div className="space-y-4 rounded-lg border border-green-200 bg-green-50/50 p-4">
+                  <div className="space-y-4 rounded-lg border border-green-200 bg-green-50/50 p-4 dark:border-green-800 dark:bg-green-950/30">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      <h4 className="text-sm font-semibold text-green-800">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <h4 className="text-sm font-semibold text-green-800 dark:text-green-300">
                         Yêu cầu công việc đã được tạo
                       </h4>
                     </div>
@@ -853,8 +860,8 @@ export function AIInterviewPaymentPage() {
                       typeof generatedJR.basic_info === "object" && (
                         <div className="space-y-1 text-sm">
                           <p>
-                            <span className="text-gray-500">Vị trí: </span>
-                            <span className="font-medium">
+                            <span className="text-muted-foreground">Vị trí: </span>
+                            <span className="text-foreground font-medium">
                               {String(
                                 (generatedJR.basic_info as Record<string, string>).job_title ||
                                   "N/A"
@@ -862,8 +869,8 @@ export function AIInterviewPaymentPage() {
                             </span>
                           </p>
                           <p>
-                            <span className="text-gray-500">Lĩnh vực: </span>
-                            <span className="font-medium">
+                            <span className="text-muted-foreground">Lĩnh vực: </span>
+                            <span className="text-foreground font-medium">
                               {String(
                                 (generatedJR.basic_info as Record<string, string>)
                                   .industry_domain || "N/A"
@@ -871,8 +878,8 @@ export function AIInterviewPaymentPage() {
                             </span>
                           </p>
                           <p>
-                            <span className="text-gray-500">Cấp độ: </span>
-                            <span className="font-medium">
+                            <span className="text-muted-foreground">Cấp độ: </span>
+                            <span className="text-foreground font-medium">
                               {String(
                                 (generatedJR.basic_info as Record<string, string>)
                                   .seniority_level || "N/A"
@@ -890,7 +897,7 @@ export function AIInterviewPaymentPage() {
                             (generatedJR.competencies as Record<string, unknown>).hard_skills
                           ) && (
                             <div>
-                              <span className="text-xs font-medium text-gray-500">
+                              <span className="text-muted-foreground text-xs font-medium">
                                 Hard Skills:
                               </span>
                               <div className="mt-1 flex flex-wrap gap-1">
@@ -909,7 +916,7 @@ export function AIInterviewPaymentPage() {
                             (generatedJR.competencies as Record<string, unknown>).soft_skills
                           ) && (
                             <div>
-                              <span className="text-xs font-medium text-gray-500">
+                              <span className="text-muted-foreground text-xs font-medium">
                                 Soft Skills:
                               </span>
                               <div className="mt-1 flex flex-wrap gap-1">
@@ -929,7 +936,7 @@ export function AIInterviewPaymentPage() {
                               .tools_and_platforms
                           ) && (
                             <div>
-                              <span className="text-xs font-medium text-gray-500">
+                              <span className="text-muted-foreground text-xs font-medium">
                                 Tools & Platforms:
                               </span>
                               <div className="mt-1 flex flex-wrap gap-1">
@@ -950,10 +957,10 @@ export function AIInterviewPaymentPage() {
                     {/* Responsibilities */}
                     {Array.isArray(generatedJR.responsibilities) && (
                       <div>
-                        <span className="text-xs font-medium text-gray-500">
+                        <span className="text-muted-foreground text-xs font-medium">
                           Trách nhiệm chính:
                         </span>
-                        <ul className="mt-1 list-inside list-disc space-y-0.5 text-sm text-gray-700">
+                        <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-0.5 text-sm">
                           {(generatedJR.responsibilities as string[]).map((r, i) => (
                             <li key={i}>{r}</li>
                           ))}
@@ -980,17 +987,17 @@ export function AIInterviewPaymentPage() {
             <CardContent className="space-y-5">
               {/* Step 1 summary */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                   {isStep1Complete ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
-                    <Settings className="h-4 w-4 text-gray-400" />
+                    <Settings className="text-muted-foreground h-4 w-4" />
                   )}
                   Bước 1: Cấu hình
                 </div>
                 <div className="space-y-1.5 pl-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Chế độ</span>
+                    <span className="text-muted-foreground text-xs">Chế độ</span>
                     <Badge
                       variant={selectedMode ? "default" : "secondary"}
                       className="max-w-40 truncate text-xs">
@@ -998,7 +1005,7 @@ export function AIInterviewPaymentPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Độ khó</span>
+                    <span className="text-muted-foreground text-xs">Độ khó</span>
                     <Badge
                       variant={selectedDifficulty ? "default" : "secondary"}
                       className="max-w-40 truncate text-xs">
@@ -1006,7 +1013,7 @@ export function AIInterviewPaymentPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Ngôn ngữ</span>
+                    <span className="text-muted-foreground text-xs">Ngôn ngữ</span>
                     <Badge
                       variant={selectedLanguage ? "default" : "secondary"}
                       className="max-w-40 truncate text-xs">
@@ -1014,7 +1021,7 @@ export function AIInterviewPaymentPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Lĩnh vực</span>
+                    <span className="text-muted-foreground text-xs">Lĩnh vực</span>
                     <Badge
                       variant={selectedDomain ? "default" : "secondary"}
                       className="max-w-40 truncate text-xs">
@@ -1024,15 +1031,15 @@ export function AIInterviewPaymentPage() {
                 </div>
               </div>
 
-              <div className="border-t border-gray-200" />
+              <div className="border-border border-t" />
 
               {/* Step 2 summary */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                   {isStep2Complete ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
-                    <User className="h-4 w-4 text-gray-400" />
+                    <User className="text-muted-foreground h-4 w-4" />
                   )}
                   Bước 2: Hồ sơ ứng viên
                 </div>
@@ -1046,20 +1053,20 @@ export function AIInterviewPaymentPage() {
                           : "Nhập thủ công"}
                     </Badge>
                   ) : (
-                    <span className="text-xs text-gray-400">Chưa hoàn thành</span>
+                    <span className="text-muted-foreground text-xs">Chưa hoàn thành</span>
                   )}
                 </div>
               </div>
 
-              <div className="border-t border-gray-200" />
+              <div className="border-border border-t" />
 
               {/* Step 3 summary */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                   {isStep3Complete ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                   ) : (
-                    <Briefcase className="h-4 w-4 text-gray-400" />
+                    <Briefcase className="text-muted-foreground h-4 w-4" />
                   )}
                   Bước 3: Yêu cầu công việc
                 </div>
@@ -1069,12 +1076,12 @@ export function AIInterviewPaymentPage() {
                       Đã tạo yêu cầu
                     </Badge>
                   ) : (
-                    <span className="text-xs text-gray-400">Chưa hoàn thành</span>
+                    <span className="text-muted-foreground text-xs">Chưa hoàn thành</span>
                   )}
                 </div>
               </div>
 
-              <div className="border-t border-gray-200" />
+              <div className="border-border border-t" />
 
               {/* Navigation buttons */}
               <div className="flex gap-3">
