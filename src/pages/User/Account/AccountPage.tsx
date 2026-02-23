@@ -9,7 +9,6 @@ import {
   FileText,
   Globe,
   GraduationCap,
-  Hash,
   Lock,
   Mail,
   Plus,
@@ -369,7 +368,7 @@ export function AccountPage() {
               {userProfile.name}
             </h2>
             <p className="font-['Inter'] text-sm font-medium text-[#0047AB] dark:text-[#66B2FF]">
-              ID: {userProfile.id}
+              {userProfile.email}
             </p>
             {userProfile.createdAt && (
               <p className="font-['Inter'] text-base font-normal text-gray-500 dark:text-slate-400">
@@ -413,24 +412,6 @@ export function AccountPage() {
           </div>
 
           <div className="flex flex-col gap-4">
-            {/* User ID - LOCKED (read-only) */}
-            <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 opacity-75 dark:bg-slate-800">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
-                <Hash className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm text-gray-500 dark:text-slate-400">ID người dùng</Label>
-                  <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-slate-700 dark:text-slate-400">
-                    Hệ thống
-                  </span>
-                </div>
-                <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                  {userProfile.id}
-                </p>
-              </div>
-            </div>
-
             {/* Full Name - Editable */}
             <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#DCEEFF] dark:bg-[#0047AB]/30">

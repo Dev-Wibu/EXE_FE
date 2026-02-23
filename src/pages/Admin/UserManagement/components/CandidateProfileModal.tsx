@@ -38,7 +38,7 @@ export function CandidateProfileModal({ profile, open, onOpenChange }: Candidate
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[96vw] overflow-y-auto sm:max-w-[96vw] lg:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <User className="h-5 w-5 text-blue-600" />

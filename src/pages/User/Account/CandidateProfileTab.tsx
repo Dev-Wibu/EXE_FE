@@ -3,7 +3,9 @@
  * Displays and manages candidate profile within AccountPage
  */
 
+import { Plus, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,21 +26,21 @@ import {
   useUpdateCandidateProfile,
 } from "@/services/candidate-profile.manager";
 import { useAuthStore } from "@/stores/authStore";
-import { toast } from "sonner";
 
-// Helper to parse comma-separated string into array
-function parseTags(value: string): string[] {
-  return value
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
+type SkillField = "technicalSkills" | "softSkills" | "tools";
+type ListField = SkillField | "certifications" | "achievements";
+
+const SKILL_TABS: Array<{ key: SkillField; label: string }> = [
+  { key: "technicalSkills", label: "Kỹ năng kỹ thuật" },
+  { key: "softSkills", label: "Kỹ năng mềm" },
+  { key: "tools", label: "Công cụ" },
+];
 
 export function CandidateProfileTab() {
   const user = useAuthStore((state) => state.user);
   const userId = user?.id ?? 0;
 
-  const { data: profileData, isLoading, error } = useCandidateProfile(userId);
+  const { data: profileData, isLoading, error, refetch } = useCandidateProfile(userId);
   const profile = (profileData as unknown as CandidateProfile) ?? null;
 
   const createMutation = useCreateCandidateProfile();
@@ -47,12 +49,18 @@ export function CandidateProfileTab() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<CandidateProfile>>({});
 
-  // Tag input states (comma-separated strings)
-  const [techSkillsInput, setTechSkillsInput] = useState("");
-  const [softSkillsInput, setSoftSkillsInput] = useState("");
-  const [toolsInput, setToolsInput] = useState("");
-  const [certsInput, setCertsInput] = useState("");
-  const [achievementsInput, setAchievementsInput] = useState("");
+  const [activeSkillTab, setActiveSkillTab] = useState<SkillField>("technicalSkills");
+  const [newSkillValue, setNewSkillValue] = useState<Record<SkillField, string>>({
+    technicalSkills: "",
+    softSkills: "",
+    tools: "",
+  });
+
+  const [techSkillsInput, setTechSkillsInput] = useState<string[]>([]);
+  const [softSkillsInput, setSoftSkillsInput] = useState<string[]>([]);
+  const [toolsInput, setToolsInput] = useState<string[]>([]);
+  const [certificationsInput, setCertificationsInput] = useState<string[]>([]);
+  const [achievementsInput, setAchievementsInput] = useState<string[]>([]);
 
   const hasProfile = !!profile?.id;
 
@@ -66,11 +74,11 @@ export function CandidateProfileTab() {
         workExperiences: profile.workExperiences ?? [],
         educations: profile.educations ?? [],
       });
-      setTechSkillsInput((profile.technicalSkills ?? []).join(", "));
-      setSoftSkillsInput((profile.softSkills ?? []).join(", "));
-      setToolsInput((profile.tools ?? []).join(", "));
-      setCertsInput((profile.certifications ?? []).join(", "));
-      setAchievementsInput((profile.achievements ?? []).join(", "));
+      setTechSkillsInput(profile.technicalSkills ?? []);
+      setSoftSkillsInput(profile.softSkills ?? []);
+      setToolsInput(profile.tools ?? []);
+      setCertificationsInput(profile.certifications ?? [""]);
+      setAchievementsInput(profile.achievements ?? [""]);
     } else {
       setFormData({
         targetRole: "",
@@ -80,12 +88,15 @@ export function CandidateProfileTab() {
         workExperiences: [],
         educations: [],
       });
-      setTechSkillsInput("");
-      setSoftSkillsInput("");
-      setToolsInput("");
-      setCertsInput("");
-      setAchievementsInput("");
+      setTechSkillsInput([]);
+      setSoftSkillsInput([]);
+      setToolsInput([]);
+      setCertificationsInput([""]);
+      setAchievementsInput([""]);
     }
+
+    setActiveSkillTab("technicalSkills");
+    setNewSkillValue({ technicalSkills: "", softSkills: "", tools: "" });
     setIsEditing(true);
   };
 
@@ -96,11 +107,11 @@ export function CandidateProfileTab() {
   const handleSave = async () => {
     const payload: Partial<CandidateProfile> = {
       ...formData,
-      technicalSkills: parseTags(techSkillsInput),
-      softSkills: parseTags(softSkillsInput),
-      tools: parseTags(toolsInput),
-      certifications: parseTags(certsInput),
-      achievements: parseTags(achievementsInput),
+      technicalSkills: techSkillsInput.map((s) => s.trim()).filter(Boolean),
+      softSkills: softSkillsInput.map((s) => s.trim()).filter(Boolean),
+      tools: toolsInput.map((s) => s.trim()).filter(Boolean),
+      certifications: certificationsInput.map((s) => s.trim()).filter(Boolean),
+      achievements: achievementsInput.map((s) => s.trim()).filter(Boolean),
     };
 
     try {
@@ -115,14 +126,93 @@ export function CandidateProfileTab() {
         });
         toast.success("Tạo hồ sơ thành công!");
       }
-      queryClient.invalidateQueries({ queryKey: ["get", `/api/candidate-profiles/${userId}`] });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["get", "/api/candidate-profiles/{userId}"],
+      });
+      await refetch();
       setIsEditing(false);
     } catch {
       toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
     }
   };
 
-  // Project helpers
+  const getSkillList = (field: SkillField): string[] => {
+    switch (field) {
+      case "technicalSkills":
+        return techSkillsInput;
+      case "softSkills":
+        return softSkillsInput;
+      case "tools":
+        return toolsInput;
+    }
+  };
+
+  const setSkillList = (field: SkillField, updater: (_prev: string[]) => string[]) => {
+    switch (field) {
+      case "technicalSkills":
+        setTechSkillsInput(updater);
+        break;
+      case "softSkills":
+        setSoftSkillsInput(updater);
+        break;
+      case "tools":
+        setToolsInput(updater);
+        break;
+    }
+  };
+
+  const addSkillBadge = (field: SkillField) => {
+    const value = newSkillValue[field].trim();
+    if (!value) return;
+
+    setSkillList(field, (prev) => {
+      if (prev.some((item) => item.toLowerCase() === value.toLowerCase())) return prev;
+      return [...prev, value];
+    });
+
+    setNewSkillValue((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const removeSkillBadge = (field: SkillField, index: number) => {
+    setSkillList(field, (prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addListItem = (field: Exclude<ListField, SkillField>) => {
+    if (field === "certifications") {
+      setCertificationsInput((prev) => [...prev, ""]);
+      return;
+    }
+
+    setAchievementsInput((prev) => [...prev, ""]);
+  };
+
+  const updateListItem = (field: Exclude<ListField, SkillField>, index: number, value: string) => {
+    if (field === "certifications") {
+      setCertificationsInput((prev) => {
+        const next = [...prev];
+        next[index] = value;
+        return next;
+      });
+      return;
+    }
+
+    setAchievementsInput((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const removeListItem = (field: Exclude<ListField, SkillField>, index: number) => {
+    if (field === "certifications") {
+      setCertificationsInput((prev) => prev.filter((_, i) => i !== index));
+      return;
+    }
+
+    setAchievementsInput((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const addProject = () => {
     setFormData((prev) => ({
       ...prev,
@@ -152,7 +242,6 @@ export function CandidateProfileTab() {
     }));
   };
 
-  // Work experience helpers
   const addWorkExperience = () => {
     setFormData((prev) => ({
       ...prev,
@@ -178,7 +267,6 @@ export function CandidateProfileTab() {
     }));
   };
 
-  // Education helpers
   const addEducation = () => {
     setFormData((prev) => ({
       ...prev,
@@ -224,7 +312,6 @@ export function CandidateProfileTab() {
     );
   }
 
-  // No profile and not editing
   if (!hasProfile && !isEditing) {
     return (
       <Card className="border-emerald-100 dark:border-slate-800">
@@ -241,8 +328,14 @@ export function CandidateProfileTab() {
     );
   }
 
-  // Edit mode
   if (isEditing) {
+    const activeSkills = getSkillList(activeSkillTab);
+    const skillCounts: Record<SkillField, number> = {
+      technicalSkills: techSkillsInput.filter(Boolean).length,
+      softSkills: softSkillsInput.filter(Boolean).length,
+      tools: toolsInput.filter(Boolean).length,
+    };
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -265,7 +358,6 @@ export function CandidateProfileTab() {
           </div>
         </div>
 
-        {/* Basic Info */}
         <Card>
           <CardHeader>
             <CardTitle>Thông tin cơ bản</CardTitle>
@@ -304,40 +396,81 @@ export function CandidateProfileTab() {
           </CardContent>
         </Card>
 
-        {/* Skills */}
         <Card>
           <CardHeader>
             <CardTitle>Kỹ năng</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>Kỹ năng kỹ thuật (phân cách bằng dấu phẩy)</Label>
-              <Input
-                value={techSkillsInput}
-                onChange={(e) => setTechSkillsInput(e.target.value)}
-                placeholder="VD: Java, React, TypeScript"
-              />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {SKILL_TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveSkillTab(tab.key)}
+                  className={
+                    activeSkillTab === tab.key
+                      ? "flex min-h-16 flex-col items-center justify-center rounded-lg border border-[#0047AB] bg-blue-50 px-2 py-1.5 text-center text-[#0047AB]"
+                      : "flex min-h-16 flex-col items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-slate-600 hover:bg-slate-100"
+                  }>
+                  <span className="text-xl font-bold">{skillCounts[tab.key]}</span>
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </button>
+              ))}
             </div>
-            <div>
-              <Label>Kỹ năng mềm (phân cách bằng dấu phẩy)</Label>
-              <Input
-                value={softSkillsInput}
-                onChange={(e) => setSoftSkillsInput(e.target.value)}
-                placeholder="VD: Communication, Leadership"
-              />
-            </div>
-            <div>
-              <Label>Công cụ (phân cách bằng dấu phẩy)</Label>
-              <Input
-                value={toolsInput}
-                onChange={(e) => setToolsInput(e.target.value)}
-                placeholder="VD: Git, Docker, AWS"
-              />
+
+            <div className="rounded-lg border p-3 dark:border-slate-700">
+              <div className="mb-2 flex items-center justify-between">
+                <Label>{SKILL_TABS.find((s) => s.key === activeSkillTab)?.label}</Label>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {activeSkills.length > 0 ? (
+                  activeSkills.map((skill, index) => (
+                    <Badge
+                      key={`${activeSkillTab}-${skill}-${index}`}
+                      variant="secondary"
+                      className="flex items-center gap-1 pr-1">
+                      <span>{skill}</span>
+                      <button
+                        type="button"
+                        className="rounded-full p-0.5 hover:bg-black/10"
+                        onClick={() => removeSkillBadge(activeSkillTab, index)}
+                        aria-label={`Xóa ${skill}`}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-slate-400">Chưa có dữ liệu.</span>
+                )}
+              </div>
+
+              <div className="mt-3 flex gap-2">
+                <Input
+                  value={newSkillValue[activeSkillTab]}
+                  onChange={(e) =>
+                    setNewSkillValue((prev) => ({ ...prev, [activeSkillTab]: e.target.value }))
+                  }
+                  placeholder="Nhập kỹ năng và nhấn Thêm"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addSkillBadge(activeSkillTab);
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => addSkillBadge(activeSkillTab)}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Thêm
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Projects */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -374,9 +507,11 @@ export function CandidateProfileTab() {
                 </div>
                 <div>
                   <Label>Mô tả</Label>
-                  <Input
+                  <textarea
+                    className="mt-1 min-h-28 w-full rounded-md border border-gray-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-900"
                     value={project.description ?? ""}
                     onChange={(e) => updateProject(index, "description", e.target.value)}
+                    rows={5}
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -390,9 +525,11 @@ export function CandidateProfileTab() {
                   </div>
                   <div>
                     <Label>Kết quả</Label>
-                    <Input
+                    <textarea
+                      className="mt-1 min-h-28 w-full rounded-md border border-gray-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-900"
                       value={project.outcome ?? ""}
                       onChange={(e) => updateProject(index, "outcome", e.target.value)}
+                      rows={5}
                     />
                   </div>
                 </div>
@@ -406,7 +543,6 @@ export function CandidateProfileTab() {
           </CardContent>
         </Card>
 
-        {/* Work Experience */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -476,7 +612,6 @@ export function CandidateProfileTab() {
           </CardContent>
         </Card>
 
-        {/* Education */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -555,27 +690,80 @@ export function CandidateProfileTab() {
           </CardContent>
         </Card>
 
-        {/* Certifications & Achievements */}
         <Card>
           <CardHeader>
             <CardTitle>Chứng chỉ & Thành tích</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Chứng chỉ (phân cách bằng dấu phẩy)</Label>
-              <Input
-                value={certsInput}
-                onChange={(e) => setCertsInput(e.target.value)}
-                placeholder="VD: AWS Solutions Architect, CKA"
-              />
+              <div className="mb-2 flex items-center justify-between">
+                <Label>Chứng chỉ</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addListItem("certifications")}
+                  className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  Thêm
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {(certificationsInput.length > 0 ? certificationsInput : [""]).map(
+                  (cert, index) => (
+                    <div key={`cert-${index}`} className="flex items-center gap-2">
+                      <Input
+                        value={cert}
+                        onChange={(e) => updateListItem("certifications", index, e.target.value)}
+                        placeholder="VD: AWS Solutions Architect"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeListItem("certifications", index)}
+                        disabled={certificationsInput.length <= 1}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
             <div>
-              <Label>Thành tích (phân cách bằng dấu phẩy)</Label>
-              <Input
-                value={achievementsInput}
-                onChange={(e) => setAchievementsInput(e.target.value)}
-                placeholder="VD: Dean's List 2021, Hackathon Winner"
-              />
+              <div className="mb-2 flex items-center justify-between">
+                <Label>Thành tích</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addListItem("achievements")}
+                  className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  Thêm
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {(achievementsInput.length > 0 ? achievementsInput : [""]).map(
+                  (achievement, index) => (
+                    <div key={`achievement-${index}`} className="flex items-center gap-2">
+                      <Input
+                        value={achievement}
+                        onChange={(e) => updateListItem("achievements", index, e.target.value)}
+                        placeholder="VD: Dean's List 2021"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeListItem("achievements", index)}
+                        disabled={achievementsInput.length <= 1}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -583,7 +771,6 @@ export function CandidateProfileTab() {
     );
   }
 
-  // View mode
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -591,7 +778,6 @@ export function CandidateProfileTab() {
         <Button onClick={startEditing}>Chỉnh sửa</Button>
       </div>
 
-      {/* Basic Info */}
       <Card>
         <CardHeader>
           <CardTitle>Thông tin cơ bản</CardTitle>
@@ -614,7 +800,6 @@ export function CandidateProfileTab() {
         </CardContent>
       </Card>
 
-      {/* Skills */}
       <Card>
         <CardHeader>
           <CardTitle>Kỹ năng</CardTitle>
@@ -665,7 +850,6 @@ export function CandidateProfileTab() {
         </CardContent>
       </Card>
 
-      {/* Projects */}
       <Card>
         <CardHeader>
           <CardTitle>Dự án</CardTitle>
@@ -675,14 +859,18 @@ export function CandidateProfileTab() {
             <div className="space-y-4">
               {profile.projects!.map((project, index) => (
                 <div key={index} className="rounded-lg border p-4 dark:border-slate-700">
-                  <h4 className="font-semibold">{project.name}</h4>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
+                  <h4 className="font-semibold break-words">{project.name}</h4>
+                  <p className="mt-1 text-sm break-words whitespace-pre-wrap text-gray-600 dark:text-slate-300">
                     {project.description}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-500 dark:text-slate-400">
-                    {project.role && <span>Vai trò: {project.role}</span>}
-                    {project.teamSize && <span>Đội: {project.teamSize} người</span>}
-                    {project.outcome && <span>Kết quả: {project.outcome}</span>}
+                  <div className="mt-3 space-y-1 text-sm text-gray-500 dark:text-slate-400">
+                    {project.role && (
+                      <p className="break-words whitespace-pre-wrap">Vai trò: {project.role}</p>
+                    )}
+                    {project.teamSize && <p>Đội: {project.teamSize} người</p>}
+                    {project.outcome && (
+                      <p className="break-words whitespace-pre-wrap">Kết quả: {project.outcome}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -693,7 +881,6 @@ export function CandidateProfileTab() {
         </CardContent>
       </Card>
 
-      {/* Work Experience */}
       <Card>
         <CardHeader>
           <CardTitle>Kinh nghiệm làm việc</CardTitle>
@@ -718,7 +905,6 @@ export function CandidateProfileTab() {
         </CardContent>
       </Card>
 
-      {/* Education */}
       <Card>
         <CardHeader>
           <CardTitle>Học vấn</CardTitle>
@@ -745,7 +931,6 @@ export function CandidateProfileTab() {
         </CardContent>
       </Card>
 
-      {/* Certifications & Achievements */}
       <Card>
         <CardHeader>
           <CardTitle>Chứng chỉ & Thành tích</CardTitle>

@@ -234,6 +234,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/proctoring/track": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["trackBehavior"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/interview/submit": {
         parameters: {
             query?: never;
@@ -1192,6 +1208,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interview-sessions/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllSessionsForUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interview-sessions/config-options": {
         parameters: {
             query?: never;
@@ -1522,6 +1554,12 @@ export interface components {
             start_date?: string;
             end_date?: string;
         };
+        FaceSnapshotRequest: {
+            sessionKey?: string;
+            /** Format: int32 */
+            globalQuestionOrder?: number;
+            imageBase64?: string;
+        };
         SubmitAnswerRequest: {
             sessionKey?: string;
             answer?: string;
@@ -1820,6 +1858,65 @@ export interface components {
             userAvatar?: string;
             /** Format: date-time */
             createdAt?: string;
+        };
+        InterviewBlueprintResponse: {
+            strategy_analysis?: string;
+            blueprint?: components["schemas"]["InterviewPhase"][];
+        };
+        InterviewPhase: {
+            phase_name?: string;
+            /** Format: int32 */
+            duration_minutes?: number;
+            questions?: components["schemas"]["InterviewQuestion"][];
+        };
+        InterviewQuestion: {
+            /** Format: int32 */
+            order?: number;
+            question_text?: string;
+            rag_keyword?: string;
+            question_type?: string;
+        };
+        InterviewResultDetail: {
+            aiOverviewFeedback?: string;
+            improvementPlan?: string;
+            history?: components["schemas"]["QAResult"][];
+        };
+        InterviewSession: {
+            /** Format: int32 */
+            id?: number;
+            user?: components["schemas"]["User"];
+            blueprint?: components["schemas"]["InterviewBlueprintResponse"];
+            candidateProfile?: components["schemas"]["CandidateProfile"];
+            jobRequirement?: components["schemas"]["JobRequirementData"];
+            sessionConfig?: components["schemas"]["SessionConfigData"];
+            /** @enum {string} */
+            mode?: "STANDARD_MOCK" | "THEORY_CHECK" | "PROJECT_DEFENSE";
+            /** @enum {string} */
+            domain?: "IT" | "NON_IT";
+            /** @enum {string} */
+            status?: "CREATED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: double */
+            overallScore?: number;
+            /** @enum {string} */
+            result?: "STRONG_HIRE" | "HIRE" | "CONSIDER" | "REJECT";
+            resultDetail?: components["schemas"]["InterviewResultDetail"];
+        };
+        QAResult: {
+            /** Format: int32 */
+            questionOrder?: number;
+            questionText?: string;
+            answerText?: string;
+            feedback?: string;
+            /** Format: double */
+            score?: number;
+            suggestion?: string;
+            behavioralWarnings?: string[];
         };
     };
     responses: never;
@@ -2613,6 +2710,28 @@ export interface operations {
                 content: {
                     "*/*": Record<string, never>;
                 };
+            };
+        };
+    };
+    trackBehavior: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaceSnapshotRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4077,6 +4196,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": boolean;
+                };
+            };
+        };
+    };
+    getAllSessionsForUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewSession"][];
                 };
             };
         };
