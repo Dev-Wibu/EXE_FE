@@ -170,7 +170,7 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "relative flex h-screen flex-col border-r border-slate-100 bg-slate-50 transition-all duration-300 dark:border-slate-800 dark:bg-slate-900",
+          "relative sticky top-0 flex h-screen flex-shrink-0 flex-col border-r border-slate-100 bg-slate-50 transition-all duration-300 dark:border-slate-800 dark:bg-slate-900",
           isCollapsed ? "w-20" : "w-72"
         )}>
         {/* Collapse Toggle Button */}

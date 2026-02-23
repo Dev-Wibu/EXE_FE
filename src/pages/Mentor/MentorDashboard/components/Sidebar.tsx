@@ -184,7 +184,11 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className={cn("flex flex-1 flex-col gap-1 py-4", isCollapsed ? "px-2" : "px-3")}>
+        <nav
+          className={cn(
+            "flex flex-1 flex-col gap-1 overflow-y-auto py-4",
+            isCollapsed ? "px-2" : "px-3"
+          )}>
           {!isCollapsed && (
             <p className="mb-2 px-3 text-xs font-semibold tracking-wider text-emerald-600/70 uppercase dark:text-slate-500">
               Nghiệp vụ

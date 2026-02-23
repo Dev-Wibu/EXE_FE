@@ -132,6 +132,37 @@
   }
 }
 
+/* Global custom scrollbar - replaces default browser scrollbar across entire project */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ring);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Toast styling enhancements (Toaster component) */
 .toaster {
   --toast-max-width: 420px;

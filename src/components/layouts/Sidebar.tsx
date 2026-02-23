@@ -136,7 +136,7 @@ export function Sidebar() {
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "relative flex h-screen flex-col border-r border-slate-100 bg-slate-50 transition-all duration-300 dark:border-slate-800 dark:bg-slate-900",
+          "relative sticky top-0 flex h-screen flex-shrink-0 flex-col border-r border-slate-100 bg-slate-50 transition-all duration-300 dark:border-slate-800 dark:bg-slate-900",
           isCollapsed ? "w-20" : "w-72"
         )}>
         {/* Collapse Toggle Button */}
@@ -163,7 +163,11 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className={cn("flex flex-1 flex-col gap-1 py-4", isCollapsed ? "px-2" : "px-3")}>
+        <nav
+          className={cn(
+            "flex flex-1 flex-col gap-1 overflow-y-auto py-4",
+            isCollapsed ? "px-2" : "px-3"
+          )}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path, item.exactMatch);
