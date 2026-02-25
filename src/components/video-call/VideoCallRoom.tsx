@@ -4,10 +4,11 @@
  * Matches VideoCall-Fe: full Daily.co UI with pre-call lobby, device settings, call controls
  */
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +79,13 @@ export function VideoCallRoom({
     onLeave?.();
   }, [onLeave]);
 
+  const normalizedError = (error || "").toLowerCase();
+  const isRoomUnavailableError =
+    normalizedError.includes("room is no longer available") ||
+    normalizedError.includes("không còn khả dụng") ||
+    normalizedError.includes("hết hạn") ||
+    normalizedError.includes("exp-room");
+
   // Trigger leave callback when room state becomes "left"
   useEffect(() => {
     if (roomState === "left") {
@@ -87,6 +95,37 @@ export function VideoCallRoom({
 
   // Render error state
   if (roomState === "error") {
+    if (isRoomUnavailableError) {
+      return (
+        <Card className={cn("border-destructive/30 bg-destructive/5 w-full", className)}>
+          <CardContent className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center">
+            <div className="bg-destructive/10 mb-5 rounded-full p-4">
+              <XCircle className="text-destructive h-10 w-10" />
+            </div>
+            <h3 className="text-foreground text-xl font-semibold">Phòng họp không còn khả dụng</h3>
+            <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
+              Liên kết phòng này đã hết hạn hoặc phòng đã bị đóng từ phía hệ thống. Bạn không thể
+              tham gia bằng link hiện tại.
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button variant="default" onClick={() => window.location.reload()}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Tải lại phòng
+              </Button>
+              <Button variant="outline" onClick={handleLeave}>
+                Quay lại danh sách phiên
+              </Button>
+            </div>
+
+            <p className="text-muted-foreground mt-4 text-xs">
+              Nếu lỗi vẫn tiếp diễn, vui lòng tạo phiên mới hoặc liên hệ quản trị viên.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <Card className={cn("w-full", className)}>
         <CardContent className="flex flex-col items-center justify-center p-8">
@@ -95,6 +134,16 @@ export function VideoCallRoom({
             <AlertTitle>Lỗi kết nối</AlertTitle>
             <AlertDescription>{error || "Đã xảy ra lỗi khi kết nối cuộc gọi."}</AlertDescription>
           </Alert>
+
+          <div className="mt-4 flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Thử lại
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLeave}>
+              Quay lại
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

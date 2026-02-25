@@ -19,6 +19,49 @@ interface VideoCallProviderProps {
 
 const DAILY_URL_REGEX = /^https?:\/\//i;
 
+function extractErrorMessage(error: unknown): string {
+  if (!error) {
+    return "Đã xảy ra lỗi khi kết nối cuộc gọi.";
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object") {
+    const errorLike = error as {
+      errorMsg?: string;
+      message?: string;
+      error?: {
+        msg?: string;
+      };
+    };
+
+    return (
+      errorLike.errorMsg ||
+      errorLike.error?.msg ||
+      errorLike.message ||
+      "Đã xảy ra lỗi khi kết nối cuộc gọi."
+    );
+  }
+
+  return "Đã xảy ra lỗi khi kết nối cuộc gọi.";
+}
+
+function isRoomUnavailableError(errorMessage: string): boolean {
+  const normalized = errorMessage.toLowerCase();
+  return (
+    normalized.includes("room is no longer available") ||
+    normalized.includes("không còn khả dụng") ||
+    normalized.includes("hết hạn") ||
+    normalized.includes("exp-room")
+  );
+}
+
 function normalizeRoomUrl(rawRoomUrl: string): string | null {
   const trimmed = rawRoomUrl.trim();
   if (!trimmed) return null;
@@ -73,6 +116,8 @@ export function VideoCallProvider({ children }: VideoCallProviderProps) {
         return;
       }
 
+      let hasDailyErrorEvent = false;
+
       try {
         setRoomState("joining");
         setError(null);
@@ -116,8 +161,16 @@ export function VideoCallProvider({ children }: VideoCallProviderProps) {
         });
 
         newCallObject.on("error", (event) => {
+          hasDailyErrorEvent = true;
+
+          const rawErrorMessage = extractErrorMessage(event);
+          const isUnavailableByType = event?.error?.type === "exp-room";
+          const isUnavailableByMessage = isRoomUnavailableError(rawErrorMessage);
+
           const errorMessage =
-            event?.errorMsg || event?.error?.msg || "Đã xảy ra lỗi khi kết nối cuộc gọi.";
+            isUnavailableByType || isUnavailableByMessage
+              ? "Phòng họp này không còn khả dụng (đã hết hạn hoặc đã bị đóng)."
+              : rawErrorMessage;
 
           console.error("[Daily.co] init/join error", {
             roomUrl: normalizedRoomUrl,
@@ -141,7 +194,19 @@ export function VideoCallProvider({ children }: VideoCallProviderProps) {
           userName,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Không thể tham gia phòng họp.");
+        if (hasDailyErrorEvent) {
+          // Daily error event has already set a specific, user-friendly error message.
+          return;
+        }
+
+        const rawErrorMessage = extractErrorMessage(err);
+        const isUnavailable = isRoomUnavailableError(rawErrorMessage);
+
+        setError(
+          isUnavailable
+            ? "Phòng họp này không còn khả dụng (đã hết hạn hoặc đã bị đóng)."
+            : rawErrorMessage || "Không thể tham gia phòng họp."
+        );
         setRoomState("error");
       }
     },

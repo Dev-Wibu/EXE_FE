@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -29,9 +30,17 @@ interface DeviceCheckDialogProps {
   onOpenChange: (open: boolean) => void;
   /** Called when user confirms devices are ready and wants to join */
   onConfirm?: () => void;
+  displayName?: string;
+  onDisplayNameChange?: (value: string) => void;
 }
 
-export function DeviceCheckDialog({ isOpen, onOpenChange, onConfirm }: DeviceCheckDialogProps) {
+export function DeviceCheckDialog({
+  isOpen,
+  onOpenChange,
+  onConfirm,
+  displayName,
+  onDisplayNameChange,
+}: DeviceCheckDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
@@ -174,6 +183,15 @@ export function DeviceCheckDialog({ isOpen, onOpenChange, onConfirm }: DeviceChe
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <div className="space-y-1">
+            <p className="text-xs text-slate-500">Tên hiển thị trong phòng họp:</p>
+            <Input
+              value={displayName ?? ""}
+              onChange={(e) => onDisplayNameChange?.(e.target.value)}
+              placeholder="Tên tài khoản"
+            />
+          </div>
+
           {error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/20 dark:text-red-400">
               {error}
@@ -187,10 +205,10 @@ export function DeviceCheckDialog({ isOpen, onOpenChange, onConfirm }: DeviceChe
               autoPlay
               playsInline
               muted
-              className={`h-[240px] w-full object-cover ${!isCameraOn ? "hidden" : ""}`}
+              className={`h-60 w-full object-cover ${!isCameraOn ? "hidden" : ""}`}
             />
             {!isCameraOn && (
-              <div className="flex h-[240px] items-center justify-center">
+              <div className="flex h-60 items-center justify-center">
                 <CameraOff className="h-12 w-12 text-slate-500" />
               </div>
             )}
