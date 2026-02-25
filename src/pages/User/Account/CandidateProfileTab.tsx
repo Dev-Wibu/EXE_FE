@@ -369,7 +369,7 @@ export function CandidateProfileTab() {
                 <Input
                   value={formData.targetRole ?? ""}
                   onChange={(e) => setFormData((prev) => ({ ...prev, targetRole: e.target.value }))}
-                  placeholder="VD: Software Engineer"
+                  placeholder="VD: Kỹ sư phần mềm"
                 />
               </div>
               <div>
@@ -379,7 +379,7 @@ export function CandidateProfileTab() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, targetLevel: e.target.value }))
                   }
-                  placeholder="VD: Senior, Junior, Mid"
+                  placeholder="VD: Cao cấp, Mới vào nghề, Trung cấp"
                 />
               </div>
             </div>
@@ -715,7 +715,7 @@ export function CandidateProfileTab() {
                       <Input
                         value={cert}
                         onChange={(e) => updateListItem("certifications", index, e.target.value)}
-                        placeholder="VD: AWS Solutions Architect"
+                        placeholder="VD: Kiến trúc sư giải pháp AWS"
                       />
                       <Button
                         type="button"
@@ -750,7 +750,7 @@ export function CandidateProfileTab() {
                       <Input
                         value={achievement}
                         onChange={(e) => updateListItem("achievements", index, e.target.value)}
-                        placeholder="VD: Dean's List 2021"
+                        placeholder="VD: Danh sách sinh viên xuất sắc 2021"
                       />
                       <Button
                         type="button"

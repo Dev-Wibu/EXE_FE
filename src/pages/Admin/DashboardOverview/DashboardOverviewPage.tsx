@@ -28,36 +28,36 @@ import { cn } from "@/lib/utils";
 // Placeholder stats for the dashboard
 const OVERVIEW_STATS = [
   {
-    title: "Total Users",
-    value: "2,847",
-    change: "+12.5%",
+    title: "Tổng người dùng",
+    value: "2.847",
+    change: "+12,5%",
     trend: "up" as const,
     icon: Users,
     color: "text-blue-600",
     bgColor: "bg-blue-50 dark:bg-blue-950/30",
   },
   {
-    title: "Active Mentors",
+    title: "Mentor đang hoạt động",
     value: "156",
-    change: "+8.2%",
+    change: "+8,2%",
     trend: "up" as const,
     icon: UserCheck,
     color: "text-emerald-600",
     bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
   },
   {
-    title: "Sessions This Month",
+    title: "Phiên trong tháng",
     value: "423",
-    change: "+23.1%",
+    change: "+23,1%",
     trend: "up" as const,
     icon: Video,
     color: "text-violet-600",
     bgColor: "bg-violet-50 dark:bg-violet-950/30",
   },
   {
-    title: "Revenue",
-    value: "$12,450",
-    change: "-4.3%",
+    title: "Doanh thu",
+    value: "12.450.000₫",
+    change: "-4,3%",
     trend: "down" as const,
     icon: DollarSign,
     color: "text-amber-600",
@@ -67,30 +67,30 @@ const OVERVIEW_STATS = [
 
 const SECONDARY_STATS = [
   {
-    title: "New Registrations",
+    title: "Đăng ký mới",
     value: "89",
-    subtitle: "This week",
+    subtitle: "Tuần này",
     icon: UserPlus,
     color: "text-cyan-600",
   },
   {
-    title: "Pending Reviews",
+    title: "Đánh giá chờ duyệt",
     value: "24",
-    subtitle: "Need attention",
+    subtitle: "Cần xử lý",
     icon: Star,
     color: "text-yellow-600",
   },
   {
-    title: "Unread Feedback",
+    title: "Phản hồi chưa đọc",
     value: "18",
-    subtitle: "From users",
+    subtitle: "Từ người dùng",
     icon: MessageSquare,
     color: "text-pink-600",
   },
   {
-    title: "Notifications Sent",
+    title: "Thông báo đã gửi",
     value: "156",
-    subtitle: "Last 7 days",
+    subtitle: "7 ngày qua",
     icon: Bell,
     color: "text-red-600",
   },
@@ -101,47 +101,47 @@ const RECENT_ACTIVITY = [
   {
     id: 1,
     type: "user_registered",
-    title: "New user registered",
-    description: "John Doe joined the platform",
-    time: "2 minutes ago",
+    title: "Người dùng mới đăng ký",
+    description: "Nguyễn Văn A đã tham gia nền tảng",
+    time: "2 phút trước",
     avatar: null,
-    name: "John Doe",
+    name: "Nguyễn Văn A",
   },
   {
     id: 2,
     type: "session_completed",
-    title: "Session completed",
-    description: "Interview session #423 completed",
-    time: "15 minutes ago",
+    title: "Phiên phỏng vấn hoàn thành",
+    description: "Phiên phỏng vấn #423 đã kết thúc",
+    time: "15 phút trước",
     avatar: null,
-    name: "Session",
+    name: "Phiên",
   },
   {
     id: 3,
     type: "mentor_approved",
-    title: "Mentor approved",
-    description: "Sarah Smith's mentor application approved",
-    time: "1 hour ago",
+    title: "Mentor được duyệt",
+    description: "Hồ sơ mentor của Trần Thị B đã được duyệt",
+    time: "1 giờ trước",
     avatar: null,
-    name: "Sarah Smith",
+    name: "Trần Thị B",
   },
   {
     id: 4,
     type: "review_posted",
-    title: "New review posted",
-    description: "5-star review for mentor Mike Johnson",
-    time: "2 hours ago",
+    title: "Đánh giá mới",
+    description: "Đánh giá 5 sao cho mentor Lê Văn C",
+    time: "2 giờ trước",
     avatar: null,
-    name: "Review",
+    name: "Đánh giá",
   },
   {
     id: 5,
     type: "payment_received",
-    title: "Payment received",
-    description: "$150 payment for premium session",
-    time: "3 hours ago",
+    title: "Thanh toán nhận được",
+    description: "Thanh toán 500.000₫ cho phiên cao cấp",
+    time: "3 giờ trước",
     avatar: null,
-    name: "Payment",
+    name: "Thanh toán",
   },
 ];
 
@@ -149,45 +149,45 @@ const RECENT_ACTIVITY = [
 const UPCOMING_SESSIONS = [
   {
     id: 1,
-    mentor: "Dr. Emily Chen",
-    user: "Alex Wilson",
-    time: "Today, 2:00 PM",
-    type: "Technical Interview",
+    mentor: "Ts. Nguyễn Thị Hương",
+    user: "Trần Văn Minh",
+    time: "Hôm nay, 14:00",
+    type: "Phỏng vấn kỹ thuật",
     status: "confirmed",
   },
   {
     id: 2,
-    mentor: "James Smith",
-    user: "Maria Garcia",
-    time: "Today, 4:30 PM",
-    type: "Behavioral Interview",
+    mentor: "Lê Quốc Hưng",
+    user: "Phạm Thị Lan",
+    time: "Hôm nay, 16:30",
+    type: "Phỏng vấn hành vi",
     status: "pending",
   },
   {
     id: 3,
-    mentor: "Lisa Wang",
-    user: "Robert Brown",
-    time: "Tomorrow, 10:00 AM",
-    type: "Mock Interview",
+    mentor: "Vương Thị Mai",
+    user: "Hoàng Văn Long",
+    time: "Ngày mai, 10:00",
+    type: "Phỏng vấn thử",
     status: "confirmed",
   },
   {
     id: 4,
-    mentor: "Michael Lee",
-    user: "Jennifer Davis",
-    time: "Tomorrow, 2:00 PM",
-    type: "System Design",
+    mentor: "Bùi Văn Tùng",
+    user: "Trương Thị Thu",
+    time: "Ngày mai, 14:00",
+    type: "Thiết kế hệ thống",
     status: "confirmed",
   },
 ];
 
 // Top performing mentors placeholder
 const TOP_MENTORS = [
-  { id: 1, name: "Dr. Emily Chen", sessions: 45, rating: 4.9, earnings: "$2,850" },
-  { id: 2, name: "James Smith", sessions: 38, rating: 4.8, earnings: "$2,280" },
-  { id: 3, name: "Lisa Wang", sessions: 34, rating: 4.9, earnings: "$2,040" },
-  { id: 4, name: "Michael Lee", sessions: 31, rating: 4.7, earnings: "$1,860" },
-  { id: 5, name: "Sarah Johnson", sessions: 28, rating: 4.8, earnings: "$1,680" },
+  { id: 1, name: "Ts. Nguyễn Thị Hương", sessions: 45, rating: 4.9, earnings: "2.850.000₫" },
+  { id: 2, name: "Lê Quốc Hưng", sessions: 38, rating: 4.8, earnings: "2.280.000₫" },
+  { id: 3, name: "Vương Thị Mai", sessions: 34, rating: 4.9, earnings: "2.040.000₫" },
+  { id: 4, name: "Bùi Văn Tùng", sessions: 31, rating: 4.7, earnings: "1.860.000₫" },
+  { id: 5, name: "Trần Thị Hà", sessions: 28, rating: 4.8, earnings: "1.680.000₫" },
 ];
 
 export function DashboardOverviewPage() {
@@ -196,10 +196,10 @@ export function DashboardOverviewPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Dashboard Overview
+          Tổng quan bảng điều khiển
         </h1>
         <p className="mt-1 text-slate-500 dark:text-slate-400">
-          Welcome back! Here&apos;s what&apos;s happening with your platform today.
+          Chào mững trở lại! Dưới đây là những gì đang xảy ra trên nền tảng hôm nay.
         </p>
       </div>
 
@@ -232,7 +232,7 @@ export function DashboardOverviewPage() {
                 <span className={stat.trend === "up" ? "text-emerald-600" : "text-red-600"}>
                   {stat.change}
                 </span>
-                <span className="ml-1 text-slate-500 dark:text-slate-400">vs last month</span>
+                <span className="ml-1 text-slate-500 dark:text-slate-400">so với tháng trước</span>
               </div>
             </CardContent>
           </Card>
@@ -269,9 +269,9 @@ export function DashboardOverviewPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-violet-600" />
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
+              <CardTitle className="text-lg">Hoạt động gần đây</CardTitle>
             </div>
-            <CardDescription>Latest updates from your platform</CardDescription>
+            <CardDescription>Cập nhật mới nhất từ nền tảng</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -305,9 +305,9 @@ export function DashboardOverviewPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-emerald-600" />
-              <CardTitle className="text-lg">Upcoming Sessions</CardTitle>
+              <CardTitle className="text-lg">Phiên sắp tới</CardTitle>
             </div>
-            <CardDescription>Scheduled interviews</CardDescription>
+            <CardDescription>Các buổi phỏng vấn đã lịch</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -360,19 +360,19 @@ export function DashboardOverviewPage() {
               <thead>
                 <tr className="border-b border-slate-100 text-left dark:border-slate-800">
                   <th className="pb-3 text-sm font-medium text-slate-500 dark:text-slate-400">
-                    Rank
+                    Hạng
                   </th>
                   <th className="pb-3 text-sm font-medium text-slate-500 dark:text-slate-400">
                     Mentor
                   </th>
                   <th className="pb-3 text-sm font-medium text-slate-500 dark:text-slate-400">
-                    Sessions
+                    Phiên
                   </th>
                   <th className="pb-3 text-sm font-medium text-slate-500 dark:text-slate-400">
-                    Rating
+                    Đánh giá
                   </th>
                   <th className="pb-3 text-right text-sm font-medium text-slate-500 dark:text-slate-400">
-                    Earnings
+                    Thu nhập
                   </th>
                 </tr>
               </thead>
@@ -432,8 +432,8 @@ export function DashboardOverviewPage() {
       {/* Placeholder Note */}
       <div className="mt-6 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
         <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-          <span className="font-medium">Note:</span> This dashboard displays placeholder data. Real
-          statistics will be available when the backend dashboard API is implemented.
+          <span className="font-medium">Lưu ý:</span> Bảng điều khiển này hiển thị dữ liệu mẫu.
+          Thống kê thực tế sẽ có khi backend triển khai API.
         </p>
       </div>
     </div>

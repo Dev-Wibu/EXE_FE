@@ -121,10 +121,10 @@ export function PracticeSetsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="INTERN">Intern</SelectItem>
-                <SelectItem value="FRESHER">Fresher</SelectItem>
-                <SelectItem value="JUNIOR">Junior</SelectItem>
-                <SelectItem value="MIDDLE">Middle</SelectItem>
+                <SelectItem value="INTERN">Thực tập</SelectItem>
+                <SelectItem value="FRESHER">Mới tốt nghiệp</SelectItem>
+                <SelectItem value="JUNIOR">Mới vào nghề</SelectItem>
+                <SelectItem value="MIDDLE">Trung cấp</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -151,7 +151,7 @@ export function PracticeSetsPage() {
               <div className="text-muted-foreground flex items-center gap-6 border-t pt-4 text-sm">
                 {ps.major?.majorName && <span>🎓 {ps.major.majorName}</span>}
               </div>
-              <Button className="w-full">Xem Chi Tiết</Button>
+              <Button className="w-full">Xem chi tiết</Button>
             </CardContent>
           </Card>
         ))}

@@ -43,7 +43,7 @@ const MENU_ITEMS = [
   {
     type: "mockInterview" as TabType,
     icon: Users,
-    label: "Phỏng vấn với Mentor",
+    label: "Phỏng vấn với người hướng dẫn",
     color: "text-purple-600",
   },
   {
@@ -55,7 +55,7 @@ const MENU_ITEMS = [
   {
     type: "feedback" as TabType,
     icon: MessageSquare,
-    label: "Phản hồi từ Mentor",
+    label: "Phản hồi từ người hướng dẫn",
     color: "text-cyan-600",
   },
 ];
@@ -70,7 +70,7 @@ const AI_MENU_ITEMS = [
   {
     type: "aiChat" as TabType,
     icon: MessageSquare,
-    label: "AI Chat",
+    label: "Trò chuyện AI",
     color: "text-teal-600",
   },
   {

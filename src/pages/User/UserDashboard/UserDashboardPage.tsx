@@ -19,11 +19,11 @@ import { ChromeTabs, Sidebar } from "./components";
  */
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "overview", label: "Tổng quan" },
-  { type: "mockInterview", label: "Phỏng vấn với Mentor" },
+  { type: "mockInterview", label: "Phỏng vấn với người hướng dẫn" },
   { type: "interviewHistory", label: "Lịch sử phỏng vấn" },
-  { type: "feedback", label: "Phản hồi từ Mentor" },
+  { type: "feedback", label: "Phản hồi từ người hướng dẫn" },
   { type: "aiInterview", label: "Phỏng vấn với AI" },
-  { type: "aiChat", label: "AI Chat" },
+  { type: "aiChat", label: "Trò chuyện AI" },
   { type: "questions", label: "Bộ câu hỏi" },
   { type: "community", label: "Cộng đồng" },
   { type: "notifications", label: "Thông báo" },
@@ -110,7 +110,7 @@ export function UserDashboardPage() {
       case "account":
         return <AccountPage />;
       default:
-        return <div>Unknown tab type</div>;
+        return <div>Loại tab không hợp lệ</div>;
     }
   };
 

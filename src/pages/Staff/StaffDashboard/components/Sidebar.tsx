@@ -190,7 +190,7 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="font-semibold text-gray-900 dark:text-white">Staff Panel</h1>
+              <h1 className="font-semibold text-gray-900 dark:text-white">Bảng Điều Phối</h1>
               <p className="text-xs text-gray-500 dark:text-slate-400">Xử lý thường trực</p>
             </div>
           )}

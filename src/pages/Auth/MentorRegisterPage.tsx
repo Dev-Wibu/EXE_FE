@@ -251,7 +251,7 @@ export function MentorRegisterPage() {
                         name="currentCompany"
                         value={formData.currentCompany}
                         onChange={handleChange}
-                        placeholder="Google Vietnam"
+                        placeholder="Tên công ty hiện tại"
                         required
                       />
                     </div>
@@ -273,14 +273,14 @@ export function MentorRegisterPage() {
                     </div>
 
                     <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="linkedInUrl">LinkedIn Profile</Label>
+                      <Label htmlFor="linkedInUrl">Hồ sơ LinkedIn</Label>
                       <Input
                         id="linkedInUrl"
                         name="linkedInUrl"
                         type="url"
                         value={formData.linkedInUrl}
                         onChange={handleChange}
-                        placeholder="https://linkedin.com/in/your-profile"
+                        placeholder="https://www.linkedin.com/in/ho-so-cua-ban"
                       />
                     </div>
                   </div>
@@ -294,7 +294,7 @@ export function MentorRegisterPage() {
                       name="expertise"
                       value={formData.expertise}
                       onChange={handleChange}
-                      placeholder="Ví dụ: AI, Machine Learning, Python, Data Science..."
+                      placeholder="Ví dụ: AI, Học máy, Python, Khoa học dữ liệu..."
                       className="min-h-[80px]"
                       required
                     />
@@ -307,7 +307,7 @@ export function MentorRegisterPage() {
                       name="bio"
                       value={formData.bio}
                       onChange={handleChange}
-                      placeholder="Viết vài dòng giới thiệu về kinh nghiệm và phong cách mentoring của bạn..."
+                      placeholder="Viết vài dòng giới thiệu về kinh nghiệm và phong cách cố vấn của bạn..."
                       className="min-h-[100px]"
                     />
                   </div>
@@ -317,7 +317,7 @@ export function MentorRegisterPage() {
                 <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-semibold text-slate-900">Giấy tờ chứng minh</h3>
                   <p className="text-sm text-slate-500">
-                    Upload các giấy tờ để xác minh danh tính và năng lực của bạn
+                    Tải lên các giấy tờ để xác minh danh tính và năng lực của bạn
                   </p>
 
                   <div className="grid gap-4 sm:grid-cols-2">

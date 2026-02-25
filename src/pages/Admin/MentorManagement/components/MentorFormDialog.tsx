@@ -306,7 +306,7 @@ export function MentorFormDialog({
               id="expertise"
               value={formData.expertise || ""}
               onChange={(e) => onFormChange({ ...formData, expertise: e.target.value })}
-              placeholder="VD: React, Node.js, AWS, System Design, Coaching phỏng vấn, v.v."
+              placeholder="VD: React, Node.js, AWS, Thiết kế hệ thống, Cố vấn phỏng vấn, v.v."
               rows={2}
             />
           </div>
@@ -339,12 +339,12 @@ export function MentorFormDialog({
           {/* Note: Rate field removed as MentorInfo schema doesn't include it */}
           {/* MentorInfo only contains: id, name, email, password, bio, expertise, yearsOfExperience, linkedInUrl, currentCompany */}
           <div className="space-y-1.5">
-            <Label htmlFor="linkedInUrl">LinkedIn URL</Label>
+            <Label htmlFor="linkedInUrl">Đường dẫn LinkedIn</Label>
             <Input
               id="linkedInUrl"
               value={formData.linkedInUrl || ""}
               onChange={(e) => onFormChange({ ...formData, linkedInUrl: e.target.value })}
-              placeholder="https://linkedin.com/in/..."
+              placeholder="https://www.linkedin.com/in/..."
             />
           </div>
           {/* File Upload Section with Previews */}

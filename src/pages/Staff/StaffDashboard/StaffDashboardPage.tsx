@@ -135,7 +135,7 @@ export function StaffDashboardPage() {
       case "postModeration":
         return <PostModerationPage />;
       default:
-        return <div>Unknown tab type</div>;
+        return <div>Loại tab không hợp lệ</div>;
     }
   };
 

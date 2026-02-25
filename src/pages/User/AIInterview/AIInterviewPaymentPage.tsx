@@ -334,13 +334,15 @@ export function AIInterviewPaymentPage() {
     try {
       const response = await usersAdminManager.uploadCv(userId, file);
       if (!response.success || !response.data) {
-        throw new Error(response.error || "Upload failed");
+        throw new Error(response.error || "Tải CV lên thất bại");
       }
       setUploadedProfile(response.data as unknown as Record<string, unknown>);
       setProfileMode("upload");
-      toast.success("Upload CV thành công! Hồ sơ đã được tạo từ CV.");
+      toast.success("Tải CV lên thành công! Hồ sơ đã được tạo từ CV.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload CV thất bại. Vui lòng thử lại.");
+      toast.error(
+        error instanceof Error ? error.message : "Tải CV lên thất bại. Vui lòng thử lại."
+      );
     } finally {
       setIsUploading(false);
     }
@@ -531,7 +533,7 @@ export function AIInterviewPaymentPage() {
                   <CardTitle className="text-lg">Hồ sơ ứng viên</CardTitle>
                 </div>
                 <CardDescription>
-                  Chọn hồ sơ có sẵn, upload CV hoặc nhập thông tin thủ công
+                  Chọn hồ sơ có sẵn, tải CV lên hoặc nhập thông tin thủ công
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -586,7 +588,7 @@ export function AIInterviewPaymentPage() {
                       />
                     )}
                     <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-foreground text-sm font-semibold">Upload CV</span>
+                    <span className="text-foreground text-sm font-semibold">Tải CV lên</span>
                     <span className="text-muted-foreground text-xs">Tạo hồ sơ từ CV</span>
                   </button>
 
@@ -671,7 +673,7 @@ export function AIInterviewPaymentPage() {
                   <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-800 dark:bg-amber-950/30">
                     <AlertCircle className="h-6 w-6 text-amber-500" />
                     <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                      Bạn chưa có hồ sơ ứng viên. Vui lòng upload CV hoặc nhập thủ công.
+                      Bạn chưa có hồ sơ ứng viên. Vui lòng tải CV lên hoặc nhập thủ công.
                     </p>
                   </div>
                 )}
@@ -683,7 +685,7 @@ export function AIInterviewPaymentPage() {
                       <div className="flex flex-col items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/30">
                         <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
                         <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                          Đang upload và phân tích CV...
+                          Đang tải và phân tích CV...
                         </p>
                       </div>
                     )}
@@ -710,8 +712,8 @@ export function AIInterviewPaymentPage() {
                           </h4>
                         </div>
                         <p className="text-muted-foreground text-sm">
-                          Vị trí: {(uploadedProfile.targetRole as string) || "N/A"} • Cấp độ:{" "}
-                          {(uploadedProfile.targetLevel as string) || "N/A"}
+                          Vị trí: {(uploadedProfile.targetRole as string) || "Không có"} • Cấp độ:{" "}
+                          {(uploadedProfile.targetLevel as string) || "Không có"}
                         </p>
                         <Button
                           variant="outline"
@@ -720,7 +722,7 @@ export function AIInterviewPaymentPage() {
                             setUploadedProfile(null);
                             fileInputRef.current?.click();
                           }}>
-                          Upload lại
+                          Tải lại CV
                         </Button>
                       </div>
                     )}
@@ -737,7 +739,7 @@ export function AIInterviewPaymentPage() {
                         </Label>
                         <Input
                           id="targetRole"
-                          placeholder="VD: Backend Developer"
+                          placeholder="VD: Lập trình viên Backend"
                           value={candidateForm.targetRole}
                           onChange={(e) => updateCandidateForm("targetRole", e.target.value)}
                         />
@@ -746,7 +748,7 @@ export function AIInterviewPaymentPage() {
                         <Label htmlFor="targetLevel">Cấp độ</Label>
                         <Input
                           id="targetLevel"
-                          placeholder="VD: Junior, Senior"
+                          placeholder="VD: Mới vào nghề, Trung cấp, Cao cấp"
                           value={candidateForm.targetLevel}
                           onChange={(e) => updateCandidateForm("targetLevel", e.target.value)}
                         />
@@ -777,7 +779,7 @@ export function AIInterviewPaymentPage() {
                       <Label htmlFor="softSkills">Kỹ năng mềm</Label>
                       <Input
                         id="softSkills"
-                        placeholder="Giao tiếp, Teamwork (phân cách bằng dấu phẩy)"
+                        placeholder="Giao tiếp, Làm việc nhóm (phân cách bằng dấu phẩy)"
                         value={candidateForm.softSkills}
                         onChange={(e) => updateCandidateForm("softSkills", e.target.value)}
                       />
@@ -786,7 +788,7 @@ export function AIInterviewPaymentPage() {
                       <Label htmlFor="tools">Công cụ</Label>
                       <Input
                         id="tools"
-                        placeholder="Git, Docker, VS Code (phân cách bằng dấu phẩy)"
+                        placeholder="Git, Docker, Visual Studio Code (phân cách bằng dấu phẩy)"
                         value={candidateForm.tools}
                         onChange={(e) => updateCandidateForm("tools", e.target.value)}
                       />
@@ -806,25 +808,25 @@ export function AIInterviewPaymentPage() {
                   <CardTitle className="text-lg">Yêu cầu công việc</CardTitle>
                 </div>
                 <CardDescription>
-                  Nhập mô tả công việc (Job Description) để hệ thống tạo yêu cầu phỏng vấn phù hợp
+                  Nhập mô tả công việc để hệ thống tạo yêu cầu phỏng vấn phù hợp
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="jobDescription">
-                    Mô tả công việc (Job Description) <span className="text-red-500">*</span>
+                    Mô tả công việc <span className="text-red-500">*</span>
                   </Label>
                   <Textarea
                     id="jobDescription"
-                    placeholder="Dán hoặc nhập mô tả công việc bạn muốn phỏng vấn. VD: Tuyển Backend Developer có kinh nghiệm Java, Spring Boot, microservices..."
+                    placeholder="Dán hoặc nhập mô tả công việc bạn muốn phỏng vấn. VD: Tuyển lập trình viên Backend có kinh nghiệm Java, Spring Boot, microservices..."
                     value={jobDescription}
                     onChange={(e) => setJobDescription(e.target.value)}
                     rows={8}
                     className="resize-y"
                   />
                   <p className="text-muted-foreground text-xs">
-                    Hệ thống sẽ phân tích JD và tạo yêu cầu phỏng vấn chi tiết (kỹ năng, công cụ,
-                    trách nhiệm...) để AI đặt câu hỏi chính xác hơn.
+                    Hệ thống sẽ phân tích mô tả công việc và tạo yêu cầu phỏng vấn chi tiết (kỹ
+                    năng, công cụ, trách nhiệm...) để AI đặt câu hỏi chính xác hơn.
                   </p>
                 </div>
 
@@ -835,7 +837,7 @@ export function AIInterviewPaymentPage() {
                   {isGeneratingJR ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang phân tích JD...
+                      Đang phân tích mô tả công việc...
                     </>
                   ) : (
                     <>
@@ -864,7 +866,7 @@ export function AIInterviewPaymentPage() {
                             <span className="text-foreground font-medium">
                               {String(
                                 (generatedJR.basic_info as Record<string, string>).job_title ||
-                                  "N/A"
+                                  "Không có"
                               )}
                             </span>
                           </p>
@@ -873,7 +875,7 @@ export function AIInterviewPaymentPage() {
                             <span className="text-foreground font-medium">
                               {String(
                                 (generatedJR.basic_info as Record<string, string>)
-                                  .industry_domain || "N/A"
+                                  .industry_domain || "Không có"
                               )}
                             </span>
                           </p>
@@ -882,7 +884,7 @@ export function AIInterviewPaymentPage() {
                             <span className="text-foreground font-medium">
                               {String(
                                 (generatedJR.basic_info as Record<string, string>)
-                                  .seniority_level || "N/A"
+                                  .seniority_level || "Không có"
                               )}
                             </span>
                           </p>
@@ -898,7 +900,7 @@ export function AIInterviewPaymentPage() {
                           ) && (
                             <div>
                               <span className="text-muted-foreground text-xs font-medium">
-                                Hard Skills:
+                                Kỹ năng cứng:
                               </span>
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {(
@@ -917,7 +919,7 @@ export function AIInterviewPaymentPage() {
                           ) && (
                             <div>
                               <span className="text-muted-foreground text-xs font-medium">
-                                Soft Skills:
+                                Kỹ năng mềm:
                               </span>
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {(
@@ -937,7 +939,7 @@ export function AIInterviewPaymentPage() {
                           ) && (
                             <div>
                               <span className="text-muted-foreground text-xs font-medium">
-                                Tools & Platforms:
+                                Công cụ và nền tảng:
                               </span>
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {(
@@ -1049,7 +1051,7 @@ export function AIInterviewPaymentPage() {
                       {profileMode === "existing"
                         ? "Hồ sơ có sẵn"
                         : profileMode === "upload"
-                          ? "Từ CV upload"
+                          ? "Từ CV đã tải lên"
                           : "Nhập thủ công"}
                     </Badge>
                   ) : (

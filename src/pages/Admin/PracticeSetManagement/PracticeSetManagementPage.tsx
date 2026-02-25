@@ -231,10 +231,10 @@ export function PracticeSetManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả cấp độ</SelectItem>
-              <SelectItem value="INTERN">Intern</SelectItem>
-              <SelectItem value="FRESHER">Fresher</SelectItem>
-              <SelectItem value="JUNIOR">Junior</SelectItem>
-              <SelectItem value="MIDDLE">Middle</SelectItem>
+              <SelectItem value="INTERN">Thực tập</SelectItem>
+              <SelectItem value="FRESHER">Mới tốt nghiệp</SelectItem>
+              <SelectItem value="JUNIOR">Mới vào nghề</SelectItem>
+              <SelectItem value="MIDDLE">Trung cấp</SelectItem>
             </SelectContent>
           </Select>
         </div>

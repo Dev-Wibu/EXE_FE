@@ -162,12 +162,12 @@ export function QuestionDetailPage() {
         <div className="flex items-center gap-0">
           <div className="border-r border-zinc-100 pr-6">
             <span className="font-['Inter'] text-xs font-normal text-zinc-500">
-              Ngành: <strong>{questionSet.industry || "N/A"}</strong>
+              Ngành: <strong>{questionSet.industry || "Không có"}</strong>
             </span>
           </div>
           <div className="border-r border-zinc-100 px-6">
             <span className="font-['Inter'] text-xs font-normal text-zinc-500">
-              Cấp độ: <strong>{questionSet.level || "N/A"}</strong>
+              Cấp độ: <strong>{questionSet.level || "Không có"}</strong>
             </span>
           </div>
           <div className="px-6">

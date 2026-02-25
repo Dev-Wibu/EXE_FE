@@ -514,7 +514,7 @@ export function MentorAccountPage() {
                   value={formData.expertise || ""}
                   onChange={(e) => handleInputChange("expertise", e.target.value)}
                   className="mt-1"
-                  placeholder="VD: React, Node.js, AWS, System Design..."
+                  placeholder="VD: React, Node.js, AWS, Thiết kế hệ thống..."
                   rows={2}
                 />
               ) : (
@@ -566,7 +566,7 @@ export function MentorAccountPage() {
                   value={formData.currentCompany || ""}
                   onChange={(e) => handleInputChange("currentCompany", e.target.value)}
                   className="mt-1"
-                  placeholder="VD: Google, Microsoft, FPT..."
+                  placeholder="VD: Tập đoàn công nghệ lớn, công ty sản phẩm, công ty outsourcing..."
                 />
               ) : (
                 <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
@@ -582,13 +582,15 @@ export function MentorAccountPage() {
               <Linkedin className="h-5 w-5 text-blue-600" />
             </div>
             <div className="flex-1">
-              <Label className="text-sm text-gray-500 dark:text-slate-400">LinkedIn URL</Label>
+              <Label className="text-sm text-gray-500 dark:text-slate-400">
+                Đường dẫn LinkedIn
+              </Label>
               {isEditing ? (
                 <Input
                   value={formData.linkedInUrl || ""}
                   onChange={(e) => handleInputChange("linkedInUrl", e.target.value)}
                   className="mt-1"
-                  placeholder="https://linkedin.com/in/..."
+                  placeholder="https://www.linkedin.com/in/..."
                 />
               ) : mentorProfile.linkedInUrl ? (
                 <a

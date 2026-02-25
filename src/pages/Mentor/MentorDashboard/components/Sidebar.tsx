@@ -178,7 +178,7 @@ export function Sidebar({ onNavigate, currentView }: SidebarProps) {
           {!isCollapsed && (
             <div className="flex flex-col">
               <span className="text-lg font-bold text-emerald-700 dark:text-white">INBLUE AI</span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400">Mentor Portal</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400">Cổng Mentor</span>
             </div>
           )}
         </div>

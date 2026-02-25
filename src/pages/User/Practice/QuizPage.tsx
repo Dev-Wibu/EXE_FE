@@ -50,12 +50,12 @@ export function QuizPage() {
             }
           }
         } else {
-          toast.error("Không thể tạo quiz. Vui lòng thử lại.");
+          toast.error("Không thể tạo bài trắc nghiệm. Vui lòng thử lại.");
         }
       }
     } catch (error) {
       console.error("Error loading quiz:", error);
-      toast.error("Không thể tải dữ liệu quiz");
+      toast.error("Không thể tải dữ liệu bài trắc nghiệm");
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export function QuizPage() {
   const handleSubmit = async () => {
     const quizId = quizSet?.quizId;
     if (!quizId) {
-      toast.error("Không tìm thấy quiz để nộp bài");
+      toast.error("Không tìm thấy bài trắc nghiệm để nộp bài");
       return;
     }
 
@@ -128,7 +128,7 @@ export function QuizPage() {
       <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          <p className="text-muted-foreground">Đang tải quiz...</p>
+          <p className="text-muted-foreground">Đang tải bài trắc nghiệm...</p>
         </div>
       </div>
     );
@@ -138,7 +138,9 @@ export function QuizPage() {
     return (
       <div className="bg-background flex min-h-screen items-center justify-center">
         <Card className="max-w-md p-8 text-center">
-          <p className="text-foreground font-medium">Không có câu hỏi nào trong quiz này</p>
+          <p className="text-foreground font-medium">
+            Không có câu hỏi nào trong bài trắc nghiệm này
+          </p>
           <Button
             variant="outline"
             className="mt-4"

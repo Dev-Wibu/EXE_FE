@@ -103,7 +103,7 @@ export function MentorDashboardPage() {
       case "account":
         return <MentorAccountPage />;
       default:
-        return <div>Unknown tab type</div>;
+        return <div>Loại tab không hợp lệ</div>;
     }
   };
 

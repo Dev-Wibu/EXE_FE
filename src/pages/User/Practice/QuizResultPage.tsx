@@ -34,7 +34,7 @@ export function QuizResultPage() {
       }
     } catch (error) {
       console.error("Error loading quiz result:", error);
-      toast.error("Không thể tải kết quả quiz");
+      toast.error("Không thể tải kết quả bài trắc nghiệm");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export function QuizResultPage() {
             className="gap-2"
             onClick={() => navigate(`/dashboard/practice/${id}/quiz`)}>
             <RefreshCw className="h-4 w-4" />
-            Làm lại Quiz
+            Làm lại bài trắc nghiệm
           </Button>
           <Button
             variant="outline"

@@ -46,9 +46,9 @@ const MENU_ITEMS = [
     label: "Dashboard",
     color: "text-indigo-600",
   },
-  { type: "users" as TabType, icon: Users, label: "Users", color: "text-blue-600" },
-  { type: "mentors" as TabType, icon: UserCog, label: "Mentors", color: "text-orange-600" },
-  { type: "sessions" as TabType, icon: Video, label: "Sessions", color: "text-green-600" },
+  { type: "users" as TabType, icon: Users, label: "Người dùng", color: "text-blue-600" },
+  { type: "mentors" as TabType, icon: UserCog, label: "Người hướng dẫn", color: "text-orange-600" },
+  { type: "sessions" as TabType, icon: Video, label: "Phiên phỏng vấn", color: "text-green-600" },
 ];
 
 const REVIEW_MENU_ITEMS = [
@@ -66,31 +66,31 @@ const QUESTION_MENU_ITEMS = [
   {
     type: "questionCategories" as TabType,
     icon: FolderOpen,
-    label: "Categories",
+    label: "Bài học",
     color: "text-purple-600",
   },
   {
     type: "questionMajors" as TabType,
     icon: GraduationCap,
-    label: "Majors",
+    label: "Chuyên ngành",
     color: "text-pink-600",
   },
   {
     type: "practiceSets" as TabType,
     icon: BookOpen,
-    label: "Practice Sets",
+    label: "Bộ câu hỏi ôn tập",
     color: "text-teal-600",
   },
   {
     type: "practiceQuestions" as TabType,
     icon: FileQuestion,
-    label: "Practice Questions",
+    label: "Câu hỏi ôn tập",
     color: "text-emerald-600",
   },
   {
     type: "quizSets" as TabType,
     icon: Trophy,
-    label: "Quiz Sets",
+    label: "Bộ câu hỏi trắc nghiệm",
     color: "text-amber-600",
   },
 ];

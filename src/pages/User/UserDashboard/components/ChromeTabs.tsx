@@ -141,7 +141,7 @@ export function ChromeTabs({
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700">
                 <Users className="h-4 w-4 text-purple-600" />
-                Phỏng vấn với Mentor
+                Phỏng vấn với người hướng dẫn
               </button>
               <button
                 onClick={() => {
@@ -159,7 +159,7 @@ export function ChromeTabs({
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700">
                 <MessageSquare className="h-4 w-4 text-cyan-600" />
-                Phản hồi từ Mentor
+                Phản hồi từ người hướng dẫn
               </button>
               <div className="my-1 border-t dark:border-slate-600" />
               <button
@@ -178,7 +178,7 @@ export function ChromeTabs({
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700">
                 <MessageSquare className="h-4 w-4 text-teal-600" />
-                AI Chat
+                Trò chuyện AI
               </button>
               <button
                 onClick={() => {

@@ -167,10 +167,10 @@ export function PracticeSetDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Start Quiz */}
+          {/* Bắt đầu trắc nghiệm */}
           <Card>
             <CardHeader>
-              <CardTitle>Bắt đầu Quiz</CardTitle>
+              <CardTitle>Bắt đầu trắc nghiệm</CardTitle>
               <CardDescription>Kiểm tra kiến thức của bạn</CardDescription>
             </CardHeader>
             <CardContent>
@@ -178,21 +178,21 @@ export function PracticeSetDetailPage() {
                 className="w-full gap-2"
                 onClick={() => navigate(`/dashboard/practice/${id}/quiz`)}>
                 <Play className="h-4 w-4" />
-                Bắt Đầu Quiz
+                Bắt đầu trắc nghiệm
               </Button>
             </CardContent>
           </Card>
 
-          {/* Quiz History */}
+          {/* Lịch sử trắc nghiệm */}
           <Card>
             <CardHeader>
-              <CardTitle>Lịch sử Quiz</CardTitle>
-              <CardDescription>Các lần làm quiz trước đây</CardDescription>
+              <CardTitle>Lịch sử trắc nghiệm</CardTitle>
+              <CardDescription>Các lần làm trước đây</CardDescription>
             </CardHeader>
             <CardContent>
               {quizHistory.length === 0 ? (
                 <p className="text-muted-foreground py-4 text-center text-sm">
-                  Chưa có lịch sử quiz nào
+                  Chưa có lịch sử trắc nghiệm nào
                 </p>
               ) : (
                 <div className="space-y-3">

@@ -40,12 +40,12 @@ export function useMutationHandler<TData = unknown, TVariables = unknown, TError
         message =
           (response.message as string) ||
           (response.msg as string) ||
-          "Operation completed successfully";
+          "Thao tác đã hoàn tất thành công";
       }
 
       // Show success toast
       if (showSuccessToast && message) {
-        toast.success("Success", {
+        toast.success("Thành công", {
           description: message,
         });
       }
@@ -57,7 +57,7 @@ export function useMutationHandler<TData = unknown, TVariables = unknown, TError
     },
     onError: (error: TError, variables) => {
       // Try to extract error message
-      let message = errorMessage || (error as Error).message || "An error occurred";
+      let message = errorMessage || (error as Error).message || "Đã xảy ra lỗi";
 
       // Try to parse error response
       try {
@@ -69,7 +69,7 @@ export function useMutationHandler<TData = unknown, TVariables = unknown, TError
 
       // Show error toast
       if (showErrorToast) {
-        toast.error("Error", {
+        toast.error("Lỗi", {
           description: message,
         });
       }
