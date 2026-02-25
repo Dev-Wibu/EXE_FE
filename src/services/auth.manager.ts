@@ -78,7 +78,9 @@ export class AuthManager {
    * Map backend role to frontend role
    */
   private mapBackendRoleToFrontend(backendRole?: string): "admin" | "user" | "mentor" | "staff" {
-    switch (backendRole) {
+    const normalized = backendRole?.replace(/^ROLE_/i, "").toUpperCase();
+
+    switch (normalized) {
       case "ADMIN":
         return "admin";
       case "MENTOR":
@@ -138,51 +140,48 @@ export class AuthManager {
 
     // TEMPORARY: Fetch all users and compare credentials
     try {
-      // Try to find user in /api/users first
       const { data: users, error: userError } = await fetchClient.GET("/api/users");
+      const { data: mentors, error: mentorError } = await fetchClient.GET("/api/mentors");
 
-      let foundUser: BackendUser | undefined;
+      const emailLower = credentials.email.toLowerCase();
 
-      if (!userError && users) {
-        // Find user by email in users endpoint
-        foundUser = (users as BackendUser[]).find(
-          (u) => u.email?.toLowerCase() === credentials.email.toLowerCase()
-        );
-      }
+      const matchedUser =
+        !userError && users
+          ? (users as BackendUser[]).find((u) => u.email?.toLowerCase() === emailLower)
+          : undefined;
 
-      // If not found in users, try mentors endpoint
-      if (!foundUser) {
-        const { data: mentors, error: mentorError } = await fetchClient.GET("/api/mentors");
+      const matchedMentorRaw =
+        !mentorError && mentors
+          ? (mentors as BackendUser[]).find((m) => m.email?.toLowerCase() === emailLower)
+          : undefined;
 
-        if (!mentorError && mentors) {
-          // Find mentor by email in mentors endpoint - mentors from backend use same structure as users
-          const foundMentor = (mentors as BackendUser[]).find(
-            (m) => m.email?.toLowerCase() === credentials.email.toLowerCase()
-          );
+      const matchedMentor = matchedMentorRaw
+        ? ({
+            id: matchedMentorRaw.id,
+            name: matchedMentorRaw.name,
+            email: matchedMentorRaw.email,
+            password: matchedMentorRaw.password,
+            role: "MENTOR",
+            avatarUrl: matchedMentorRaw.avatarUrl,
+          } as BackendUser)
+        : undefined;
 
-          if (foundMentor) {
-            // Map mentor to User structure
-            foundUser = {
-              id: foundMentor.id,
-              name: foundMentor.name,
-              email: foundMentor.email,
-              password: foundMentor.password,
-              role: "MENTOR",
-              avatarUrl: foundMentor.avatarUrl,
-            } as BackendUser;
-          }
-        }
-      }
+      const candidates: BackendUser[] = [matchedMentor, matchedUser].filter(
+        (candidate): candidate is BackendUser => Boolean(candidate)
+      );
 
-      if (!foundUser) {
+      if (candidates.length === 0) {
         return {
           success: false,
           error: "Email không tồn tại trong hệ thống",
         };
       }
 
+      // Prefer mentor candidate if both sources contain same email and password matches
+      const foundUser = candidates.find((candidate) => candidate.password === credentials.password);
+
       // Compare password (TEMPORARY - insecure, for development only)
-      if (foundUser.password !== credentials.password) {
+      if (!foundUser) {
         return {
           success: false,
           error: "Mật khẩu không chính xác",
