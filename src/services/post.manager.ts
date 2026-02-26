@@ -624,7 +624,6 @@ export class PostManager implements BaseManager<Post> {
     }
 
     try {
-      // Note: Backend confirmed POST should be used for updates (not PUT)
       const response = await this.api.post(API_ENDPOINTS.POSTS.UPDATE, {
         ...data,
         postId: Number(id),

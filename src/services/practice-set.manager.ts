@@ -209,8 +209,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
 
   /**
    * Update practice set
-   * POST /api/practice-sets (JSON body)
-   * Note: Backend confirmed POST should be used for updates (not PUT)
+   * PUT /api/practice-sets (JSON body)
    */
   async update(id: string | number, data: Partial<PracticeSet>): Promise<ApiResponse<PracticeSet>> {
     if (this.mode === "mock") {
@@ -230,8 +229,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
 
     try {
       const practiceSetData: PracticeSet = { ...data, id: Number(id) };
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(API_ENDPOINTS.PRACTICE_SETS.UPDATE, practiceSetData);
+      const response = await this.api.put(API_ENDPOINTS.PRACTICE_SETS.UPDATE, practiceSetData);
       return {
         success: true,
         data: response.data,

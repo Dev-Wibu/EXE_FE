@@ -191,13 +191,12 @@ export class SessionManager implements BaseManager<Session> {
 
   /**
    * Update session
-   * POST /api/sessions (JSON body with Session object)
-   * Note: Backend team confirmed POST should be used for updates
+   * PUT /api/sessions (JSON body with Session object)
    */
   async update(_id: string | number, _data: Partial<Session>): Promise<ApiResponse<Session>> {
     try {
       const sessionData: Session = { ..._data, id: Number(_id) };
-      const response = await this.api.post(API_ENDPOINTS.SESSIONS.UPDATE, sessionData);
+      const response = await this.api.put(API_ENDPOINTS.SESSIONS.UPDATE, sessionData);
       return {
         success: true,
         data: response.data,
@@ -216,7 +215,7 @@ export class SessionManager implements BaseManager<Session> {
   async delete(_id: string | number): Promise<ApiResponse<void>> {
     try {
       const sessionData: Session = { id: Number(_id), status: "CANCELED" };
-      await this.api.post(API_ENDPOINTS.SESSIONS.UPDATE, sessionData);
+      await this.api.put(API_ENDPOINTS.SESSIONS.UPDATE, sessionData);
       return {
         success: true,
       };
@@ -242,6 +241,26 @@ export class SessionManager implements BaseManager<Session> {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to join session",
+      };
+    }
+  }
+
+  /**
+   * Update session status (approve/reject DRAFT sessions)
+   * GET /api/sessions/update-status?sessionId=X&isApproved=Y
+   */
+  async updateStatus(sessionId: number, isApproved: boolean): Promise<ApiResponse<void>> {
+    try {
+      await this.api.get(API_ENDPOINTS.SESSIONS.UPDATE_STATUS, {
+        params: { sessionId, isApproved },
+      });
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update session status",
       };
     }
   }

@@ -133,6 +133,7 @@ export const API_ENDPOINTS = {
     DETAIL: "/api/sessions/:id",
     CREATE: "/api/sessions/create-session",
     UPDATE: "/api/sessions",
+    UPDATE_STATUS: "/api/sessions/update-status",
     BY_USER: "/api/sessions/:userId/by-user",
     JOIN: "/api/sessions/join-session",
   },

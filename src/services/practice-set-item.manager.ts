@@ -265,8 +265,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
 
   /**
    * Update practice set item
-   * POST /api/practice-set-items (JSON body)
-   * Note: Backend confirmed POST should be used for updates (not PUT)
+   * PUT /api/practice-set-items (JSON body)
    */
   async update(
     id: string | number,
@@ -289,8 +288,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
 
     try {
       const itemData: PracticeSetItem = { ...data, id: Number(id) };
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(API_ENDPOINTS.PRACTICE_SET_ITEMS.UPDATE, itemData);
+      const response = await this.api.put(API_ENDPOINTS.PRACTICE_SET_ITEMS.UPDATE, itemData);
       return {
         success: true,
         data: response.data,
@@ -306,7 +304,6 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
   /**
    * Delete practice set item
    * POST /api/practice-set-items/{id}
-   * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -325,7 +322,6 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SET_ITEMS.DELETE, { id });
-      // Note: Backend requires POST method for delete operations (PUT/DELETE not used)
       await this.api.post(endpoint);
       return {
         success: true,

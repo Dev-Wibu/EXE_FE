@@ -193,7 +193,6 @@ export class ChatManager {
 
   /**
    * Delete a chat session
-   * Note: Backend requires POST method for all operations including delete (PUT/DELETE not used)
    */
   async deleteChatSession(sessionId: number): Promise<ApiResponse<void>> {
     if (this.mode === "mock") {
@@ -206,7 +205,6 @@ export class ChatManager {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, { id: sessionId });
-      // Note: Backend requires POST method for delete operations (PUT/DELETE not used)
       await this.api.post(endpoint);
       return {
         success: true,

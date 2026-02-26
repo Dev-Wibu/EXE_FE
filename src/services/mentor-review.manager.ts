@@ -198,8 +198,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
 
   /**
    * Update mentor review
-   * POST /api/mentor-reviews (JSON body with UpdateMentorReviewRequest)
-   * Note: Backend confirmed POST should be used for updates (not PUT)
+   * PUT /api/mentor-reviews (JSON body with UpdateMentorReviewRequest)
    */
   async update(
     id: string | number,
@@ -225,8 +224,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
         id: Number(id),
         ...(data as UpdateMentorReviewRequest),
       };
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(API_ENDPOINTS.MENTOR_REVIEWS.UPDATE, updateData);
+      const response = await this.api.put(API_ENDPOINTS.MENTOR_REVIEWS.UPDATE, updateData);
       return {
         success: true,
         data: response.data,

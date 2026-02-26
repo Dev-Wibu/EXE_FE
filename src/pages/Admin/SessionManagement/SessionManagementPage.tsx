@@ -114,6 +114,7 @@ export function SessionManagementPage() {
       userId: session.userId,
       userId2: session.userId2,
       status: session.status,
+      joinTime: session.joinTime,
       start_video_off: true,
       start_audio_off: true,
     });
@@ -145,7 +146,15 @@ export function SessionManagementPage() {
     if (!selectedSession?.id) return;
 
     try {
-      const response = await sessionManager.update(selectedSession.id, formData);
+      // Merge full session data with form changes to prevent PUT from nulling fields
+      const mergedData: Partial<Session> = {
+        ...selectedSession,
+        userId: formData.userId,
+        userId2: formData.userId2,
+        status: formData.status,
+        joinTime: formData.joinTime,
+      };
+      const response = await sessionManager.update(selectedSession.id, mergedData);
       if (response.success) {
         toast.success("Đã cập nhật buổi học thành công");
         setIsEditDialogOpen(false);
@@ -163,7 +172,11 @@ export function SessionManagementPage() {
     if (!selectedSession?.id) return;
 
     try {
-      const response = await sessionManager.delete(selectedSession.id);
+      // Use update with full session data + CANCELED status to prevent PUT from nulling fields
+      const response = await sessionManager.update(selectedSession.id, {
+        ...selectedSession,
+        status: "CANCELED",
+      });
       if (response.success) {
         toast.success("Đã hủy buổi học thành công");
         setIsCancelDialogOpen(false);

@@ -211,3 +211,30 @@ export const useJoinSession = () => {
 
 // Re-export types
 export type { JoinSessionRequest, Session, SessionCreationRequest };
+
+/**
+ * Hook to approve or reject a DRAFT session
+ * Uses GET /api/sessions/update-status?sessionId=X&isApproved=Y
+ */
+export const useUpdateSessionStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ sessionId, isApproved }: { sessionId: number; isApproved: boolean }) => {
+      const response = await sessionManager.updateStatus(sessionId, isApproved);
+      if (!response.success) {
+        throw new Error(response.error || "Không thể cập nhật trạng thái phiên phỏng vấn");
+      }
+      return true;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.all });
+      toast.success(
+        variables.isApproved ? "Đã duyệt phiên phỏng vấn thành công" : "Đã từ chối phiên phỏng vấn"
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+};

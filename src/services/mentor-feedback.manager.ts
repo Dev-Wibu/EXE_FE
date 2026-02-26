@@ -204,8 +204,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
 
   /**
    * Update mentor feedback
-   * POST /api/mentor-feedbacks (JSON body with UpdateMentorFeedbackRequest)
-   * Note: Backend confirmed POST should be used for updates (not PUT)
+   * PUT /api/mentor-feedbacks (JSON body with UpdateMentorFeedbackRequest)
    */
   async update(
     id: string | number,
@@ -231,8 +230,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
         id: Number(id),
         ...(data as UpdateMentorFeedbackRequest),
       };
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(API_ENDPOINTS.MENTOR_FEEDBACKS.UPDATE, updateData);
+      const response = await this.api.put(API_ENDPOINTS.MENTOR_FEEDBACKS.UPDATE, updateData);
       return {
         success: true,
         data: response.data,

@@ -4,7 +4,6 @@
 
 - **Vietnamese UI**: All user-facing strings (labels, buttons, toasts, placeholders) must be in Vietnamese.
 - **Never edit `schema-from-be.d.ts`**: Auto-generated from backend OpenAPI. Regenerate with `pnpm generate-schema`.
-- **POST for updates**: All update operations use `POST`, never `PUT`. Backend team constraint applies to every `services/*.manager.ts`.
 - **Quality gate**: Run `pnpm format && pnpm lint && pnpm typecheck && pnpm build` before finishing. All must pass.
 
 ## Architecture Overview

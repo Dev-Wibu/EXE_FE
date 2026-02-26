@@ -187,8 +187,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
 
   /**
    * Update question category
-   * POST /api/question-categories (JSON body)
-   * Note: Backend confirmed POST should be used for updates (not PUT)
+   * PUT /api/question-categories (JSON body)
    */
   async update(
     id: string | number,
@@ -217,8 +216,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
         description: data.description,
         urlTutorial: data.urlTutorial,
       };
-      // Note: Backend confirmed POST should be used for updates (not PUT)
-      const response = await this.api.post(API_ENDPOINTS.QUESTION_CATEGORIES.UPDATE, categoryData);
+      const response = await this.api.put(API_ENDPOINTS.QUESTION_CATEGORIES.UPDATE, categoryData);
       return {
         success: true,
         data: this.mapFromBackend(response.data),
