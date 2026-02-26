@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 const questionCategories = [
   {
@@ -111,6 +112,9 @@ const difficultyColors: Record<string, string> = {
 
 export function QuestionBankPage() {
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuthStore();
+  const dashboardPath = isLoggedIn ? getDashboardPath(user?.role) : "/login";
+  const ctaPath = isLoggedIn ? getDashboardPath(user?.role) : "/select-role";
 
   return (
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">
@@ -205,7 +209,7 @@ export function QuestionBankPage() {
             <Button
               variant="ghost"
               className="text-[#0047AB] dark:text-[#66B2FF]"
-              onClick={() => navigate("/login")}>
+              onClick={() => navigate(dashboardPath)}>
               Xem tất cả
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -256,15 +260,17 @@ export function QuestionBankPage() {
               variant="secondary"
               className="rounded-full bg-white text-[#0047AB] hover:bg-slate-100"
               asChild>
-              <Link to="/signup">Đăng ký miễn phí</Link>
+              <Link to={ctaPath}>{isLoggedIn ? "Vào Dashboard" : "Đăng ký miễn phí"}</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full border-white text-white hover:bg-white/10"
-              asChild>
-              <Link to="/login">Đăng nhập</Link>
-            </Button>
+            {!isLoggedIn && (
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full border-white text-white hover:bg-white/10"
+                asChild>
+                <Link to="/login">Đăng nhập</Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>

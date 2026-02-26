@@ -1,9 +1,28 @@
-import { BookOpen, Bot, HelpCircle, Lightbulb, Newspaper, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  BookOpen,
+  Bot,
+  HelpCircle,
+  LayoutDashboard,
+  Lightbulb,
+  LogOut,
+  Newspaper,
+  UserCircle,
+  Users,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,8 +31,32 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
+
+/**
+ * Get user initials for the avatar fallback.
+ */
+function getInitials(name?: string): string {
+  if (!name) return "U";
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export function Header() {
+  const navigate = useNavigate();
+  const { isLoggedIn, user, clearAuth } = useAuthStore();
+
+  const handleLogout = () => {
+    clearAuth();
+    navigate("/");
+  };
+
+  const dashboardPath = getDashboardPath(user?.role);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -153,17 +196,72 @@ export function Header() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Auth Buttons & Theme Toggle */}
+        {/* Auth Area & Theme Toggle */}
         <div className="flex items-center gap-3">
           <ThemeToggle iconOnly />
-          <Button variant="ghost" className="text-slate-600 dark:text-slate-300" asChild>
-            <Link to="/login">Đăng nhập</Link>
-          </Button>
-          <Button
-            className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-6 shadow-sm hover:shadow-md"
-            asChild>
-            <Link to="/select-role">Bắt đầu</Link>
-          </Button>
+
+          {isLoggedIn && user ? (
+            /* ── Logged-in: avatar dropdown ── */
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-slate-100 focus:outline-none dark:hover:bg-slate-800">
+                  <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
+                    <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name ?? "User"} />
+                    <AvatarFallback className="bg-[#DCEEFF] text-xs font-semibold text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]">
+                      {getInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-700 md:inline dark:text-slate-200">
+                    {user.name}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-muted-foreground text-xs">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link to={dashboardPath} className="cursor-pointer gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link to={`${dashboardPath}?tab=account`} className="cursor-pointer gap-2">
+                    <UserCircle className="h-4 w-4" />
+                    Tài khoản
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                  onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            /* ── Logged-out: login & signup buttons ── */
+            <>
+              <Button variant="ghost" className="text-slate-600 dark:text-slate-300" asChild>
+                <Link to="/login">Đăng nhập</Link>
+              </Button>
+              <Button
+                className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-6 shadow-sm hover:shadow-md"
+                asChild>
+                <Link to="/select-role">Bắt đầu</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -15,6 +15,7 @@ import { Footer, Header } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 const mentorBenefits = [
   {
@@ -102,6 +103,9 @@ const howItWorks = [
 
 export function MentorInterviewFeaturePage() {
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuthStore();
+  const dashboardPath = isLoggedIn ? getDashboardPath(user?.role) : "/login";
+  const ctaPath = isLoggedIn ? getDashboardPath(user?.role) : "/select-role";
 
   return (
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">
@@ -138,9 +142,9 @@ export function MentorInterviewFeaturePage() {
                   size="lg"
                   className="h-14 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8"
                   asChild>
-                  <Link to="/signup">
+                  <Link to={ctaPath}>
                     <Play className="mr-2 h-5 w-5" />
-                    Đặt lịch ngay
+                    {isLoggedIn ? "Vào Dashboard" : "Đặt lịch ngay"}
                   </Link>
                 </Button>
               </div>
@@ -273,7 +277,7 @@ export function MentorInterviewFeaturePage() {
               variant="outline"
               size="lg"
               className="rounded-full dark:border-slate-700"
-              onClick={() => navigate("/login")}>
+              onClick={() => navigate(dashboardPath)}>
               Xem tất cả mentor
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -322,15 +326,17 @@ export function MentorInterviewFeaturePage() {
               variant="secondary"
               className="rounded-full bg-white text-[#0047AB] hover:bg-slate-100"
               asChild>
-              <Link to="/signup">Đăng ký miễn phí</Link>
+              <Link to={ctaPath}>{isLoggedIn ? "Vào Dashboard" : "Đăng ký miễn phí"}</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full border-white text-white hover:bg-white/10"
-              asChild>
-              <Link to="/login">Đăng nhập</Link>
-            </Button>
+            {!isLoggedIn && (
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full border-white text-white hover:bg-white/10"
+                asChild>
+                <Link to="/login">Đăng nhập</Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>

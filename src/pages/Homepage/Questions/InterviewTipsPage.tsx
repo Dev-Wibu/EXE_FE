@@ -17,6 +17,7 @@ import { Footer, Header } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 const interviewTips = [
   {
@@ -86,6 +87,9 @@ const quickTips = [
 
 export function InterviewTipsPage() {
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuthStore();
+  const dashboardPath = isLoggedIn ? getDashboardPath(user?.role) : "/login";
+  const ctaPath = isLoggedIn ? getDashboardPath(user?.role) : "/select-role";
 
   return (
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">
@@ -174,7 +178,7 @@ export function InterviewTipsPage() {
                         variant="ghost"
                         size="sm"
                         className="text-[#0047AB] dark:text-[#66B2FF]"
-                        onClick={() => navigate("/login")}>
+                        onClick={() => navigate(dashboardPath)}>
                         Đọc thêm
                         <ArrowRight className="ml-1 h-4 w-4" />
                       </Button>
@@ -203,7 +207,7 @@ export function InterviewTipsPage() {
               variant="secondary"
               className="rounded-full bg-white text-[#0047AB] hover:bg-slate-100"
               asChild>
-              <Link to="/signup">Bắt đầu luyện tập</Link>
+              <Link to={ctaPath}>{isLoggedIn ? "Vào Dashboard" : "Bắt đầu luyện tập"}</Link>
             </Button>
           </div>
         </div>

@@ -17,6 +17,7 @@ import { Footer, Header } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 const aiFeatures = [
   {
@@ -74,6 +75,9 @@ const interviewModes = [
 ];
 
 export function AIInterviewFeaturePage() {
+  const { isLoggedIn, user } = useAuthStore();
+  const ctaPath = isLoggedIn ? getDashboardPath(user?.role) : "/select-role";
+
   return (
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">
       <Header />
@@ -109,9 +113,9 @@ export function AIInterviewFeaturePage() {
                   size="lg"
                   className="h-14 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8"
                   asChild>
-                  <Link to="/signup">
+                  <Link to={ctaPath}>
                     <Play className="mr-2 h-5 w-5" />
-                    Thử ngay miễn phí
+                    {isLoggedIn ? "Vào Dashboard" : "Thử ngay miễn phí"}
                   </Link>
                 </Button>
               </div>
@@ -265,8 +269,8 @@ export function AIInterviewFeaturePage() {
             size="lg"
             className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8"
             asChild>
-            <Link to="/signup">
-              Đăng ký miễn phí
+            <Link to={ctaPath}>
+              {isLoggedIn ? "Vào Dashboard" : "Đăng ký miễn phí"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

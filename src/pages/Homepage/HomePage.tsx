@@ -26,6 +26,7 @@ import { Footer, Header } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 // import { ImageCarousel } from "@/components/ui/image-carousel";
 import { TestimonialCarousel } from "@/components/ui/testimonial-carousel";
 import {
@@ -55,6 +56,10 @@ const jobRoleIcons: Record<string, React.ReactNode> = {
 };
 
 export function HomePage() {
+  const { isLoggedIn, user } = useAuthStore();
+  const ctaPath = isLoggedIn ? getDashboardPath(user?.role) : "/select-role";
+  const loginPath = isLoggedIn ? getDashboardPath(user?.role) : "/login";
+
   return (
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">
       {/* Header - Using shared component */}
@@ -112,18 +117,20 @@ export function HomePage() {
                   size="lg"
                   className="h-14 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8 text-base shadow-lg hover:shadow-xl"
                   asChild>
-                  <Link to="/select-role">
+                  <Link to={ctaPath}>
                     <Play className="mr-2 h-5 w-5" />
-                    Thử phỏng vấn miễn phí
+                    {isLoggedIn ? "Vào Dashboard" : "Thử phỏng vấn miễn phí"}
                   </Link>
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-14 rounded-full px-8 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                  asChild>
-                  <Link to="/login">Đăng nhập</Link>
-                </Button>
+                {!isLoggedIn && (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 rounded-full px-8 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    asChild>
+                    <Link to="/login">Đăng nhập</Link>
+                  </Button>
+                )}
               </div>
 
               {/* Stats */}
@@ -213,7 +220,7 @@ export function HomePage() {
                 </CardContent>
               </Card>
             ))}
-            <Link to="/login">
+            <Link to={loginPath}>
               <Card className="group h-full cursor-pointer border-dashed border-slate-300 transition-all hover:border-[#007BFF] dark:border-slate-600 dark:bg-slate-800">
                 <CardContent className="flex h-full flex-col items-center justify-center p-6">
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
@@ -301,7 +308,7 @@ export function HomePage() {
                 <Button
                   className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
                   asChild>
-                  <Link to="/select-role">
+                  <Link to={ctaPath}>
                     {mockFeatures[0].cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -322,7 +329,7 @@ export function HomePage() {
                 <Button
                   className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
                   asChild>
-                  <Link to="/select-role">
+                  <Link to={ctaPath}>
                     {mockFeatures[1].cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
@@ -367,7 +374,7 @@ export function HomePage() {
                 <Button
                   className="mt-4 rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
                   asChild>
-                  <Link to="/select-role">
+                  <Link to={ctaPath}>
                     {mockFeatures[2].cta}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>

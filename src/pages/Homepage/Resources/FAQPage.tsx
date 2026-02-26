@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 const faqCategories = [
   {
@@ -106,6 +107,8 @@ const faqs = [
 
 export function FAQPage() {
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuthStore();
+  const dashboardPath = isLoggedIn ? getDashboardPath(user?.role) : "/login";
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -243,7 +246,7 @@ export function FAQPage() {
           <Button
             size="lg"
             className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF]"
-            onClick={() => navigate("/login")}>
+            onClick={() => navigate(dashboardPath)}>
             <MessageCircle className="mr-2 h-5 w-5" />
             Liên hệ hỗ trợ
           </Button>

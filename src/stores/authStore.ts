@@ -65,3 +65,19 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+/**
+ * Get the dashboard path for a given user role.
+ */
+export function getDashboardPath(role?: string): string {
+  switch (role?.toUpperCase()) {
+    case "ADMIN":
+      return "/admin";
+    case "MENTOR":
+      return "/mentor";
+    case "STAFF":
+      return "/staff";
+    default:
+      return "/dashboard";
+  }
+}

@@ -18,9 +18,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import type { Post } from "@/interfaces/schema.types";
 import { postManager } from "@/services/post.manager";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 export function BlogPage() {
   const navigate = useNavigate();
+  const { isLoggedIn, user } = useAuthStore();
+  const dashboardPath = isLoggedIn ? getDashboardPath(user?.role) : "/login";
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -145,7 +148,7 @@ export function BlogPage() {
                     <Card
                       key={post.postId}
                       className="group cursor-pointer transition-all hover:shadow-lg dark:border-slate-700 dark:bg-slate-800"
-                      onClick={() => navigate("/login")}>
+                      onClick={() => navigate(dashboardPath)}>
                       {/* Image */}
                       {post.coverImgUrl ? (
                         <div className="h-48 w-full overflow-hidden">
@@ -208,7 +211,7 @@ export function BlogPage() {
                   variant="outline"
                   size="lg"
                   className="rounded-full dark:border-slate-700"
-                  onClick={() => navigate("/login")}>
+                  onClick={() => navigate(dashboardPath)}>
                   Xem thêm bài viết
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -229,7 +232,7 @@ export function BlogPage() {
                         key={category.name}
                         variant="ghost"
                         className="w-full justify-between dark:hover:bg-slate-700"
-                        onClick={() => navigate("/login")}>
+                        onClick={() => navigate(dashboardPath)}>
                         <span>{category.name}</span>
                         <Badge
                           variant="secondary"
@@ -258,7 +261,7 @@ export function BlogPage() {
                     />
                     <Button
                       className="w-full bg-white text-[#0047AB] hover:bg-slate-100"
-                      onClick={() => navigate("/signup")}>
+                      onClick={() => navigate(isLoggedIn ? dashboardPath : "/signup")}>
                       Đăng ký
                     </Button>
                   </div>
