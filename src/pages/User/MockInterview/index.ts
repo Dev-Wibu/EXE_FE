@@ -1,4 +1,5 @@
 // Mock Interview Module exports
+export { BookingSuccessPage } from "./BookingSuccessPage";
 export { MockInterviewConfirmPage } from "./MockInterviewConfirmPage";
 export { MockInterviewListPage } from "./MockInterviewListPage";
 export { MockInterviewPaymentRedirectPage } from "./MockInterviewPaymentRedirectPage";

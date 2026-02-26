@@ -1,4 +1,4 @@
-import { Edit, Eye, Search, XCircle } from "lucide-react";
+import { Check, Edit, Eye, Search, X, XCircle } from "lucide-react";
 
 import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,8 @@ interface SessionTableProps {
   onView: (session: Session) => void;
   onEdit: (session: Session) => void;
   onCancel: (session: Session) => void;
+  onApprove?: (session: Session) => void;
+  onReject?: (session: Session) => void;
   getSortProps?: (key: keyof Session) => SortProps;
 }
 
@@ -70,6 +72,8 @@ export function SessionTable({
   onView,
   onEdit,
   onCancel,
+  onApprove,
+  onReject,
   getSortProps,
 }: SessionTableProps) {
   if (sessions.length === 0) {
@@ -135,6 +139,26 @@ export function SessionTable({
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
+                {session.status === "DRAFT" && onApprove && onReject && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onApprove(session)}
+                      className="h-8 w-8 p-0 hover:bg-emerald-50"
+                      title="Duyệt phiên">
+                      <Check className="h-4 w-4 text-emerald-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onReject(session)}
+                      className="h-8 w-8 p-0 hover:bg-rose-50"
+                      title="Từ chối phiên">
+                      <X className="h-4 w-4 text-rose-600" />
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"

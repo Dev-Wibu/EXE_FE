@@ -13,6 +13,7 @@ export {
 
 // Mock Interview exports
 export {
+  BookingSuccessPage,
   MockInterviewConfirmPage,
   MockInterviewListPage,
   MockInterviewPaymentRedirectPage,

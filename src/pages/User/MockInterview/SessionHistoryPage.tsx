@@ -3,7 +3,7 @@
  * Displays user's interview sessions with option to join or write reviews
  */
 
-import { Calendar, Clock, Star, User, Video } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Star, User, Video } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -41,8 +41,11 @@ interface SessionCardProps {
 }
 
 function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: SessionCardProps) {
+  const navigate = useNavigate();
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
   const isCompleted = session.status === "COMPLETED";
+  const isDraft = session.status === "DRAFT";
+  const isRejected = session.status === "REJECTED";
 
   return (
     <Card className="transition-all hover:shadow-md">
@@ -66,15 +69,39 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
         </div>
       </CardHeader>
       <CardContent>
+        {/* DRAFT banner */}
+        {isDraft && (
+          <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <Clock className="mr-1 inline h-3.5 w-3.5" />
+            Yêu cầu đang chờ Staff/Admin xét duyệt
+          </div>
+        )}
+        {/* REJECTED banner */}
+        {isRejected && (
+          <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            Yêu cầu đã bị từ chối. Bạn có thể đặt lịch lại.
+          </div>
+        )}
+
         <div className="mb-4 flex items-center gap-4 text-sm text-slate-500">
+          {session.joinTime && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              Giờ hẹn:{" "}
+              {new Date(session.joinTime).toLocaleString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
           {session.startTime1 && (
             <>
               <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {new Date(session.startTime1).toLocaleDateString("vi-VN")}
-              </span>
-              <span className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
+                Bắt đầu:{" "}
                 {new Date(session.startTime1).toLocaleTimeString("vi-VN", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -82,7 +109,7 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
               </span>
             </>
           )}
-          {!session.startTime1 && (
+          {!session.joinTime && !session.startTime1 && (
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               Phiên #{session.id}
@@ -104,6 +131,16 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
             <Button variant="secondary" size="sm" disabled className="gap-1">
               <Star className="h-4 w-4 text-[#FFD700]" />
               Đã đánh giá
+            </Button>
+          )}
+          {isRejected && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/dashboard/mock-interview/schedule")}
+              className="gap-1 border-blue-200 text-blue-600 hover:bg-blue-50">
+              <ArrowRight className="h-4 w-4" />
+              Đặt lịch lại
             </Button>
           )}
         </div>
@@ -147,9 +184,10 @@ export function SessionHistoryPage() {
     navigate(`/dashboard/mock-interview/history/${session.id}/review`);
   };
 
-  // Stats
+  // Stats — DRAFT is counted separately
+  const draftCount = sessions.filter((s) => s.status === "DRAFT").length;
   const scheduledCount = sessions.filter(
-    (s) => s.status === "DRAFT" || s.status === "SCHEDULED" || s.status === "ONGOING"
+    (s) => s.status === "SCHEDULED" || s.status === "ONGOING"
   ).length;
   const completedCount = sessions.filter((s) => s.status === "COMPLETED").length;
 
@@ -174,13 +212,21 @@ export function SessionHistoryPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Tổng phiên</CardDescription>
             <CardTitle className="text-2xl">{sessions.length}</CardTitle>
           </CardHeader>
         </Card>
+        {draftCount > 0 && (
+          <Card className="border-amber-200 dark:border-amber-900">
+            <CardHeader className="pb-2">
+              <CardDescription>Chờ duyệt</CardDescription>
+              <CardTitle className="text-2xl text-amber-600">{draftCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        )}
         <Card className="border-blue-200 dark:border-blue-900">
           <CardHeader className="pb-2">
             <CardDescription>Sắp diễn ra</CardDescription>

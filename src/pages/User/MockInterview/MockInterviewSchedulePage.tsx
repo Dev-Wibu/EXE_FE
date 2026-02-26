@@ -173,7 +173,7 @@ export function MockInterviewSchedulePage() {
     setIsCreating(true);
     try {
       const joinTime = calculateJoinTime();
-      const result = await createSession.mutateAsync({
+      await createSession.mutateAsync({
         userId: user.id,
         mentorId: selectedMentorId,
         joinTime,
@@ -190,11 +190,13 @@ export function MockInterviewSchedulePage() {
           },
         },
       });
-      if (result?.id) {
-        navigate(`/dashboard/mock-interview/room/${result.id}`);
-      } else {
-        navigate("/dashboard/mock-interview");
-      }
+      // Navigate to confirmation page instead of room (session is DRAFT, needs approval)
+      navigate("/dashboard/mock-interview/booking-success", {
+        state: {
+          mentorName: selectedMentor?.name || "Mentor",
+          joinTime: formatSelectedDateTime(),
+        },
+      });
     } catch {
       // Error toast handled by useCreateSession hook
     } finally {

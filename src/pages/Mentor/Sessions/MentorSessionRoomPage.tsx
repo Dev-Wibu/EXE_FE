@@ -31,9 +31,7 @@ export function MentorSessionRoomPage() {
   // Validate session and user
   const canJoin =
     session &&
-    (session.status === "DRAFT" ||
-      session.status === "SCHEDULED" ||
-      session.status === "ONGOING") &&
+    (session.status === "SCHEDULED" || session.status === "ONGOING") &&
     session.roomUrl &&
     user;
 
@@ -106,9 +104,17 @@ export function MentorSessionRoomPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Không thể tham gia</AlertTitle>
           <AlertDescription>
+            {session.status === "DRAFT" &&
+              "Phiên phỏng vấn chưa được duyệt. Vui lòng chờ Staff/Admin xét duyệt."}
+            {session.status === "REJECTED" && "Phiên phỏng vấn này đã bị từ chối."}
             {session.status === "COMPLETED" && "Phiên phỏng vấn này đã kết thúc."}
             {session.status === "CANCELED" && "Phiên phỏng vấn này đã bị hủy."}
-            {!session.roomUrl && "Phòng họp chưa được tạo."}
+            {!session.roomUrl &&
+              session.status !== "DRAFT" &&
+              session.status !== "REJECTED" &&
+              session.status !== "COMPLETED" &&
+              session.status !== "CANCELED" &&
+              "Phòng họp chưa được tạo."}
           </AlertDescription>
         </Alert>
         <Button className="mt-4" variant="outline" onClick={() => navigate(-1)}>

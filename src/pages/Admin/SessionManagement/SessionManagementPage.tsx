@@ -126,6 +126,38 @@ export function SessionManagementPage() {
     setIsCancelDialogOpen(true);
   };
 
+  const handleApprove = async (session: Session) => {
+    if (!session.id) return;
+    try {
+      const response = await sessionManager.updateStatus(session.id, true);
+      if (response.success) {
+        toast.success("Đã duyệt phiên phỏng vấn");
+        loadSessions();
+      } else {
+        toast.error(response.error || "Không thể duyệt phiên");
+      }
+    } catch (error) {
+      console.error("Error approving session:", error);
+      toast.error("Không thể duyệt phiên");
+    }
+  };
+
+  const handleReject = async (session: Session) => {
+    if (!session.id) return;
+    try {
+      const response = await sessionManager.updateStatus(session.id, false);
+      if (response.success) {
+        toast.success("Đã từ chối phiên phỏng vấn");
+        loadSessions();
+      } else {
+        toast.error(response.error || "Không thể từ chối phiên");
+      }
+    } catch (error) {
+      console.error("Error rejecting session:", error);
+      toast.error("Không thể từ chối phiên");
+    }
+  };
+
   const handleSubmitCreate = async () => {
     try {
       const response = await sessionManager.create(formData);
@@ -256,6 +288,8 @@ export function SessionManagementPage() {
           onView={handleView}
           onEdit={handleEdit}
           onCancel={handleCancel}
+          onApprove={handleApprove}
+          onReject={handleReject}
           getSortProps={getSortProps}
         />
 

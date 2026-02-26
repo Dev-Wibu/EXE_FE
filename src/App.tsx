@@ -59,6 +59,7 @@ import {
   AIInterviewPaymentSuccessPage,
   AIInterviewResultPage,
   AIInterviewSessionPage,
+  BookingSuccessPage,
   CreatePostPage,
   EditPostPage,
   FeedbackDetailPage,
@@ -147,6 +148,10 @@ function App() {
               <Route
                 path="/dashboard/mock-interview/schedule"
                 element={<MockInterviewSchedulePage />}
+              />
+              <Route
+                path="/dashboard/mock-interview/booking-success"
+                element={<BookingSuccessPage />}
               />
               <Route
                 path="/dashboard/mock-interview/room/:sessionId"

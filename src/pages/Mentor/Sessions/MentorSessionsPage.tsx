@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMentorFeedbacks } from "@/hooks/useMentorFeedback";
 import { usePagination } from "@/hooks/usePagination";
 import { useSessions } from "@/hooks/useSession";
@@ -52,10 +53,9 @@ function SessionCard({
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
   const isCompleted = session.status === "COMPLETED";
   const isTimeReached = session.joinTime ? new Date(session.joinTime).getTime() <= now : true;
+  const isDraft = session.status === "DRAFT";
   const canJoin =
-    (session.status === "DRAFT" ||
-      session.status === "SCHEDULED" ||
-      session.status === "ONGOING") &&
+    (session.status === "SCHEDULED" || session.status === "ONGOING") &&
     !!session.roomUrl &&
     isTimeReached;
 
@@ -99,6 +99,19 @@ function SessionCard({
                 <LogIn className="h-3.5 w-3.5" />
                 Join
               </Button>
+            )}
+            {isDraft && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className="cursor-help border-amber-200 bg-amber-50 text-amber-700">
+                      <Clock className="mr-1 h-3 w-3" />
+                      Chờ xét duyệt
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>Yêu cầu từ học viên, đang chờ Staff xét duyệt</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>
@@ -214,9 +227,10 @@ export function MentorSessionsPage() {
     navigate(`/mentor/sessions/${session.id}/feedback`);
   };
 
-  // Stats
+  // Stats — DRAFT is counted separately, not in "Sắp diễn ra"
+  const draftCount = mentorSessions.filter((s: Session) => s.status === "DRAFT").length;
   const scheduledCount = mentorSessions.filter(
-    (s: Session) => s.status === "DRAFT" || s.status === "SCHEDULED" || s.status === "ONGOING"
+    (s: Session) => s.status === "SCHEDULED" || s.status === "ONGOING"
   ).length;
 
   return (
@@ -230,13 +244,21 @@ export function MentorSessionsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
         <Card className="border-emerald-100 dark:border-slate-800">
           <CardHeader className="pb-2">
             <CardDescription>Tổng phiên</CardDescription>
             <CardTitle className="text-2xl">{mentorSessions.length}</CardTitle>
           </CardHeader>
         </Card>
+        {draftCount > 0 && (
+          <Card className="border-amber-200 dark:border-amber-900">
+            <CardHeader className="pb-2">
+              <CardDescription>Chờ duyệt</CardDescription>
+              <CardTitle className="text-2xl text-amber-600">{draftCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        )}
         <Card className="border-emerald-100 dark:border-slate-800">
           <CardHeader className="pb-2">
             <CardDescription>Sắp diễn ra</CardDescription>

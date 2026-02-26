@@ -126,7 +126,7 @@ export const useCreateSession = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.all });
-      toast.success("Đã tạo phiên phỏng vấn thành công");
+      toast.success("Đã gửi yêu cầu đặt lịch. Chờ Staff/Admin xét duyệt.");
     },
     onError: (error: Error) => {
       toast.error(error.message);
