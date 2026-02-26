@@ -1,4 +1,4 @@
-import { Edit, Power, Search } from "lucide-react";
+import { Edit, Eye, Power, Search } from "lucide-react";
 
 import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ interface PracticeSetTableProps {
   practiceSets: PracticeSet[];
   onEdit: (practiceSet: PracticeSet) => void;
   onDelete: (practiceSet: PracticeSet) => void;
+  onViewItems: (practiceSet: PracticeSet) => void;
   getSortProps?: (key: keyof PracticeSet) => SortProps;
 }
 
@@ -45,6 +46,7 @@ export function PracticeSetTable({
   practiceSets,
   onEdit,
   onDelete,
+  onViewItems,
   getSortProps,
 }: PracticeSetTableProps) {
   if (practiceSets.length === 0) {
@@ -94,6 +96,14 @@ export function PracticeSetTable({
             <TableCell>{ps.major?.majorName || "-"}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewItems(ps)}
+                  className="h-8 w-8 p-0 hover:bg-green-50"
+                  title="Xem câu hỏi">
+                  <Eye className="h-4 w-4 text-green-600" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { practiceSetManager, quizSetManager } from "@/services";
+import { practiceSetItemManager, practiceSetManager, quizSetManager } from "@/services";
 import type { PracticeSetItem } from "@/services/practice-set-item.manager";
 import type { PracticeSet } from "@/services/practice-set.manager";
 import type { QuizSet } from "@/services/quiz-set.manager";
@@ -29,18 +29,33 @@ export function PracticeSetDetailPage() {
     if (!id) return;
     setLoading(true);
     try {
-      const [fullSetResponse, quizResponse] = await Promise.all([
-        practiceSetManager.getFullSet(id),
-        quizSetManager.getByPracticeSet(Number(id)),
-      ]);
+      // Try getFullSet first, fallback to getById + getByPracticeSetId
+      const fullSetResponse = await practiceSetManager.getFullSet(id);
 
       if (fullSetResponse.success && fullSetResponse.data) {
         setPracticeSet(fullSetResponse.data.practiceSet);
         setItems(fullSetResponse.data.practiceSetItem || []);
       } else {
-        toast.error(fullSetResponse.error || "Không thể tải thông tin bộ luyện tập");
+        // Fallback: load practice set info and items separately
+        // Use api/practice-set-item/by-question-set/{id} as BE stated
+        const [setResponse, itemsResponse] = await Promise.all([
+          practiceSetManager.getById(id),
+          practiceSetItemManager.getByPracticeSetId(id),
+        ]);
+
+        if (setResponse.success && setResponse.data) {
+          setPracticeSet(setResponse.data);
+        } else {
+          toast.error(setResponse.error || "Không thể tải thông tin bộ luyện tập");
+        }
+
+        if (itemsResponse.success && itemsResponse.data) {
+          setItems(itemsResponse.data);
+        }
       }
 
+      // Load quiz history
+      const quizResponse = await quizSetManager.getByPracticeSet(Number(id));
       if (quizResponse.success && quizResponse.data) {
         setQuizHistory(quizResponse.data);
       }

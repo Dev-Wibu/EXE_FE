@@ -29,7 +29,7 @@ export function PostListPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
-      const result = await postManager.getAll();
+      const result = await postManager.getPublished();
       if (result.success && result.data) {
         setPosts(extractDataArray<Post>(result));
       }

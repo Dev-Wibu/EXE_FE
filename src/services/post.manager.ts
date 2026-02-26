@@ -540,22 +540,15 @@ export class PostManager implements BaseManager<Post> {
     }
 
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DETAIL, { postId: id });
-      const response = await this.api.get(endpoint);
-      // Handle if backend returns PostResponse wrapper or flat Post
-      const raw = response.data;
-      if (raw && typeof raw === "object" && "post" in raw && raw.post) {
-        const wrapper = raw as PostResponseWrapper;
-        return {
-          success: true,
-          data: normalizePost({
-            ...wrapper.post,
-            likeCount: wrapper.likeCount ?? 0,
-            commentCount: wrapper.commentCount ?? 0,
-          }),
-        };
+      // No GET /api/posts/{postId} endpoint in schema.
+      // Fetch all posts and filter by postId as a workaround.
+      const response = await this.api.get(API_ENDPOINTS.POSTS.LIST);
+      const posts = unwrapPostResponses(response.data);
+      const post = posts.find((p) => p.postId === Number(id));
+      if (!post) {
+        return { success: false, error: "Post not found" };
       }
-      return { success: true, data: normalizePost(raw as Post) };
+      return { success: true, data: post };
     } catch (error) {
       return {
         success: false,

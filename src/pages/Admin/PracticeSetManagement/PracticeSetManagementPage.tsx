@@ -17,7 +17,12 @@ import { extractDataArray } from "@/lib/utils";
 import { practiceSetManager, questionMajorManager } from "@/services";
 import { toast } from "sonner";
 
-import { DeletePracticeSetDialog, PracticeSetFormDialog, PracticeSetTable } from "./components";
+import {
+  DeletePracticeSetDialog,
+  PracticeSetFormDialog,
+  PracticeSetTable,
+  ViewPracticeSetItemsDialog,
+} from "./components";
 import type { Major, PracticeSet, PracticeSetFormData } from "./types";
 
 export function PracticeSetManagementPage() {
@@ -29,6 +34,7 @@ export function PracticeSetManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewItemsDialogOpen, setIsViewItemsDialogOpen] = useState(false);
   const [selectedPracticeSet, setSelectedPracticeSet] = useState<PracticeSet | null>(null);
   const [formData, setFormData] = useState<Partial<PracticeSetFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,6 +125,11 @@ export function PracticeSetManagementPage() {
   const handleDelete = (practiceSet: PracticeSet) => {
     setSelectedPracticeSet(practiceSet);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleViewItems = (practiceSet: PracticeSet) => {
+    setSelectedPracticeSet(practiceSet);
+    setIsViewItemsDialogOpen(true);
   };
 
   const handleSubmitCreate = async () => {
@@ -231,10 +242,10 @@ export function PracticeSetManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả cấp độ</SelectItem>
-              <SelectItem value="INTERN">Thực tập</SelectItem>
-              <SelectItem value="FRESHER">Mới tốt nghiệp</SelectItem>
-              <SelectItem value="JUNIOR">Mới vào nghề</SelectItem>
-              <SelectItem value="MIDDLE">Trung cấp</SelectItem>
+              <SelectItem value="INTERN">Intern</SelectItem>
+              <SelectItem value="FRESHER">Fresher</SelectItem>
+              <SelectItem value="JUNIOR">Junior</SelectItem>
+              <SelectItem value="MIDDLE">Middle</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -252,6 +263,7 @@ export function PracticeSetManagementPage() {
           practiceSets={pageData}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onViewItems={handleViewItems}
           getSortProps={getSortProps}
         />
 
@@ -308,6 +320,14 @@ export function PracticeSetManagementPage() {
         onOpenChange={setIsDeleteDialogOpen}
         practiceSet={selectedPracticeSet}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* View Items Dialog */}
+      <ViewPracticeSetItemsDialog
+        isOpen={isViewItemsDialogOpen}
+        onOpenChange={setIsViewItemsDialogOpen}
+        practiceSet={selectedPracticeSet}
+        onItemsChanged={loadData}
       />
     </div>
   );
