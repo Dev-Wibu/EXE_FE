@@ -83,7 +83,7 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Bot className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">AI Interview</span>
+                          <span className="text-sm font-medium">Phỏng Vấn AI</span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           Phỏng vấn với trí tuệ nhân tạo 24/7
@@ -98,7 +98,7 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Users className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Mock Interview</span>
+                          <span className="text-sm font-medium">Phỏng Vấn Với Mentor</span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           Phỏng vấn với mentor chuyên nghiệp
@@ -139,7 +139,7 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Newspaper className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Blog</span>
+                          <span className="text-sm font-medium">Bài viết</span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           Kiến thức và hướng dẫn phỏng vấn

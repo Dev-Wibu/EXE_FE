@@ -44,7 +44,9 @@ export function ForbiddenPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">Mã lỗi: 403 - Forbidden</div>
+      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
+        Mã lỗi: 403 - Truy cập bị từ chối
+      </div>
     </div>
   );
 }

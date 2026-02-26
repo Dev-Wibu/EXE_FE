@@ -158,7 +158,11 @@ export function HomePage() {
               <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-[#66B2FF]/20 to-[#A5C8F2]/20 blur-2xl" />
               <Card className="relative w-[400px] overflow-hidden border-slate-200/50 shadow-2xl lg:w-[500px]">
                 <div className="relative h-[400px] overflow-hidden bg-gradient-to-br from-[#F0F8FF] to-[#DCEEFF]">
-                  <img src={image1} alt="AI Interviewer" className="h-full w-full object-cover" />
+                  <img
+                    src={image1}
+                    alt="Phỏng Vấn Viên AI"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <CardContent className="border-t bg-white p-6">
                   <div className="flex items-center gap-3">
@@ -166,7 +170,7 @@ export function HomePage() {
                       <Bot className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">AI Interviewer</p>
+                      <p className="font-semibold text-slate-900">Phỏng Vấn Viên AI</p>
                       <p className="text-sm text-slate-500">Sẵn sàng phỏng vấn...</p>
                     </div>
                   </div>

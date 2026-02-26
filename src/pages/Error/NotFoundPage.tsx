@@ -44,7 +44,9 @@ export function NotFoundPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">Mã lỗi: 404 - Not Found</div>
+      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
+        Mã lỗi: 404 - Không tìm thấy trang
+      </div>
     </div>
   );
 }

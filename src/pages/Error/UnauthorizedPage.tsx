@@ -44,7 +44,7 @@ export function UnauthorizedPage() {
 
       {/* Footer */}
       <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        Mã lỗi: 401 - Unauthorized
+        Mã lỗi: 401 - Chưa xác thực
       </div>
     </div>
   );

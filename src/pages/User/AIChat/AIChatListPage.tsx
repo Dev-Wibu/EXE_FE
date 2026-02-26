@@ -49,7 +49,7 @@ export function AIChatListPage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-6 w-6 text-white" />
-              <h1 className="text-3xl font-bold text-white">AI Chat</h1>
+              <h1 className="text-3xl font-bold text-white">Trò Chuyện AI</h1>
             </div>
             <p className="max-w-md text-lg text-white/90">
               Trò chuyện với AI để luyện tập phỏng vấn và nhận phản hồi chi tiết về câu trả lời của

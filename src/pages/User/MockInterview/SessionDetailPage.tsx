@@ -102,12 +102,12 @@ export function SessionDetailPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-slate-400" />
-              <span className="text-slate-600 dark:text-slate-400">Mentor:</span>
+              <span className="text-slate-600 dark:text-slate-400">Người hướng dẫn:</span>
               <span className="font-medium">ID #{session.userId2}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-slate-400" />
-              <span className="text-slate-600 dark:text-slate-400">Session ID:</span>
+              <span className="text-slate-600 dark:text-slate-400">Mã phiên:</span>
               <span className="font-medium">{session.id}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
@@ -119,7 +119,7 @@ export function SessionDetailPage() {
               (session.status === "SCHEDULED" || session.status === "ONGOING") && (
                 <div className="flex items-center gap-2 text-sm">
                   <Video className="h-4 w-4 text-slate-400" />
-                  <span className="text-slate-600 dark:text-slate-400">Room:</span>
+                  <span className="text-slate-600 dark:text-slate-400">Phòng:</span>
                   <button
                     onClick={() => navigate(`/dashboard/mock-interview/room/${session.id}`)}
                     className="font-medium text-[#0047AB] hover:underline">

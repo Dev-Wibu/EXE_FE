@@ -47,7 +47,7 @@ export function GatewayTimeoutPage() {
 
       {/* Footer */}
       <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        Mã lỗi: 504 - Gateway Timeout
+        Mã lỗi: 504 - Hết thời gian chờ cổng
       </div>
     </div>
   );

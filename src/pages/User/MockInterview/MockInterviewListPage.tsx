@@ -223,7 +223,7 @@ export function MockInterviewListPage() {
                       }}
                       className="gap-1 bg-green-600 hover:bg-green-700">
                       <LogIn className="h-3.5 w-3.5" />
-                      Join
+                      Tham gia
                     </Button>
                   )}
                   {!interview.isTimeReached &&

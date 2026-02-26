@@ -56,7 +56,7 @@ export function ServiceUnavailablePage() {
 
       {/* Footer */}
       <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        Mã lỗi: 503 - Service Unavailable
+        Mã lỗi: 503 - Dịch vụ không khả dụng
       </div>
     </div>
   );

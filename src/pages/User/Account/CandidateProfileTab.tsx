@@ -379,7 +379,7 @@ export function CandidateProfileTab() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, targetLevel: e.target.value }))
                   }
-                  placeholder="VD: Cao cấp, Mới vào nghề, Trung cấp"
+                  placeholder="VD: Intern, Fresher, Junior, Middle"
                 />
               </div>
             </div>

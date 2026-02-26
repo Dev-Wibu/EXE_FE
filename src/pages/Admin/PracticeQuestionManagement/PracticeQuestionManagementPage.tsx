@@ -286,9 +286,9 @@ export function PracticeQuestionManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả cấp độ</SelectItem>
-              <SelectItem value="EASY">Dễ</SelectItem>
-              <SelectItem value="MEDIUM">Trung bình</SelectItem>
-              <SelectItem value="HARD">Khó</SelectItem>
+              <SelectItem value="EASY">Easy</SelectItem>
+              <SelectItem value="MEDIUM">Medium</SelectItem>
+              <SelectItem value="HARD">Hard</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -495,9 +495,9 @@ function QuestionFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EASY">Dễ</SelectItem>
-                  <SelectItem value="MEDIUM">Trung bình</SelectItem>
-                  <SelectItem value="HARD">Khó</SelectItem>
+                  <SelectItem value="EASY">Easy</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="HARD">Hard</SelectItem>
                 </SelectContent>
               </Select>
             </div>

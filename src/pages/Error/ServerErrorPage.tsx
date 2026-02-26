@@ -47,7 +47,7 @@ export function ServerErrorPage() {
 
       {/* Footer */}
       <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        Mã lỗi: 500 - Internal Server Error
+        Mã lỗi: 500 - Lỗi máy chủ nội bộ
       </div>
     </div>
   );

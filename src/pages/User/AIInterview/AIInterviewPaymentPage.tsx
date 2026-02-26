@@ -748,7 +748,7 @@ export function AIInterviewPaymentPage() {
                         <Label htmlFor="targetLevel">Cấp độ</Label>
                         <Input
                           id="targetLevel"
-                          placeholder="VD: Mới vào nghề, Trung cấp, Cao cấp"
+                          placeholder="VD: Intern, Fresher, Junior, Middle"
                           value={candidateForm.targetLevel}
                           onChange={(e) => updateCandidateForm("targetLevel", e.target.value)}
                         />

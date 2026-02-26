@@ -70,43 +70,43 @@ const trendingQuestions = [
     id: 1,
     question: "Hãy giới thiệu về bản thân bạn",
     category: "Behavioral",
-    difficulty: "Dễ",
+    difficulty: "Easy",
     views: 15420,
   },
   {
     id: 2,
     question: "Điểm mạnh và điểm yếu lớn nhất của bạn là gì?",
     category: "Behavioral",
-    difficulty: "Trung bình",
+    difficulty: "Medium",
     views: 12350,
   },
   {
     id: 3,
     question: "Tại sao bạn muốn làm việc tại công ty chúng tôi?",
     category: "Behavioral",
-    difficulty: "Trung bình",
+    difficulty: "Medium",
     views: 11280,
   },
   {
     id: 4,
     question: "Hãy kể về một dự án mà bạn tự hào nhất",
     category: "Behavioral",
-    difficulty: "Trung bình",
+    difficulty: "Medium",
     views: 9850,
   },
   {
     id: 5,
     question: "Bạn xử lý xung đột trong nhóm như thế nào?",
     category: "Behavioral",
-    difficulty: "Khó",
+    difficulty: "Hard",
     views: 8920,
   },
 ];
 
 const difficultyColors: Record<string, string> = {
-  Dễ: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  "Trung bình": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Khó: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  Easy: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  Medium: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  Hard: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
 export function QuestionBankPage() {
