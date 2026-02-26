@@ -435,6 +435,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/practice-sets/create-by-ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createPracticeSetByAI"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/practice-set-items/create-items": {
         parameters: {
             query?: never;
@@ -1339,7 +1355,7 @@ export interface components {
             joinTime?: string;
             recordUrl?: string;
             /** @enum {string} */
-            status?: "SCHEDULED" | "ACCEPTED" | "REJECTED" | "ONGOING" | "COMPLETED" | "CANCELED";
+            status?: "DRAFT" | "SCHEDULED" | "REJECTED" | "ONGOING" | "COMPLETED" | "CANCELED";
         };
         QuestionLesson: {
             /** Format: int32 */
@@ -1354,6 +1370,17 @@ export interface components {
             majorName?: string;
             description?: string;
         };
+        PracticeQuestion: {
+            /** Format: int32 */
+            questionId?: number;
+            title?: string;
+            content?: string;
+            /** @enum {string} */
+            level?: "EASY" | "MEDIUM" | "HARD";
+            lesson?: components["schemas"]["QuestionLesson"];
+            answer?: string;
+            hint?: string;
+        };
         PracticeSet: {
             /** Format: int32 */
             id?: number;
@@ -1365,6 +1392,7 @@ export interface components {
             startDate?: string;
             major?: components["schemas"]["Major"];
             user?: components["schemas"]["User"];
+            questions?: components["schemas"]["PracticeQuestion"][];
         };
         User: {
             /** Format: int32 */
@@ -1381,17 +1409,6 @@ export interface components {
             major?: string;
             cvUrl?: string;
             cv_public_id?: string;
-        };
-        PracticeQuestion: {
-            /** Format: int32 */
-            questionId?: number;
-            title?: string;
-            content?: string;
-            /** @enum {string} */
-            level?: "EASY" | "MEDIUM" | "HARD";
-            lesson?: components["schemas"]["QuestionLesson"];
-            answer?: string;
-            hint?: string;
         };
         PracticeSetItem: {
             /** Format: int32 */
@@ -1708,12 +1725,29 @@ export interface components {
             hint?: string;
         };
         PracticeRequest: {
+            /** Format: int32 */
+            aiInterviewId?: number;
             practiceSetName?: string;
             objective?: string;
             /** @enum {string} */
             target?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
             /** Format: int32 */
             majorId?: number;
+            /** Format: int32 */
+            dateNumber?: number;
+            questions?: components["schemas"]["PracticeQuestionRequest"][];
+        };
+        PracticeGenerateRequest: {
+            /** Format: int32 */
+            aiInterviewId?: number;
+            /** Format: int32 */
+            majorId?: number;
+            /** Format: int32 */
+            dateNumber?: number;
+        };
+        PracticeSetAIResponse: {
+            practiceSetName?: string;
+            objective?: string;
             /** Format: int32 */
             dateNumber?: number;
             questions?: components["schemas"]["PracticeQuestionRequest"][];
@@ -3058,6 +3092,30 @@ export interface operations {
             };
         };
     };
+    createPracticeSetByAI: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PracticeGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PracticeSetAIResponse"][];
+                };
+            };
+        };
+    };
     createQuestionSetItems: {
         parameters: {
             query: {
@@ -3493,7 +3551,7 @@ export interface operations {
         parameters: {
             query: {
                 sessionId: number;
-                status: "SCHEDULED" | "ACCEPTED" | "REJECTED" | "ONGOING" | "COMPLETED" | "CANCELED";
+                isApproved: boolean;
             };
             header?: never;
             path?: never;
