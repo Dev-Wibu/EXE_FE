@@ -285,6 +285,7 @@ export const API_ENDPOINTS = {
     CREATE: "/api/interview-sessions/create-session",
     GENERATE_JOB_REQUIREMENT: "/api/interview-sessions/generate-job-requirement",
     CONFIG_OPTIONS: "/api/interview-sessions/config-options",
+    USER_SESSIONS: "/api/interview-sessions/user/:userId",
   },
 
   // Interview V1 endpoints - Based on schema-from-be.d.ts

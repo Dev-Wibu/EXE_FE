@@ -5,15 +5,19 @@ import {
   Briefcase,
   Check,
   CheckCircle2,
+  Clock,
   FileText,
   Globe,
   Layers,
   Loader2,
+  Pencil,
+  Plus,
   Settings,
   Sparkles,
   Target,
   Upload,
   User,
+  X,
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import type { InterviewConfigOptionItem, InterviewConfigOptions } from "@/interfaces/schema.types";
-import { $api } from "@/lib/api";
+import { $api, fetchClient } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useCandidateProfile } from "@/services/candidate-profile.manager";
 import { usersAdminManager } from "@/services/users-admin.manager";
@@ -101,8 +105,8 @@ interface CandidateFormData {
   targetLevel: string;
   introduction: string;
   technicalSkills: string;
-  softSkills: string;
-  tools: string;
+  softSkills: string[];
+  tools: string[];
 }
 
 const INITIAL_CANDIDATE_FORM: CandidateFormData = {
@@ -110,9 +114,16 @@ const INITIAL_CANDIDATE_FORM: CandidateFormData = {
   targetLevel: "",
   introduction: "",
   technicalSkills: "",
-  softSkills: "",
-  tools: "",
+  softSkills: [],
+  tools: [],
 };
+
+const DURATION_OPTIONS = [
+  { value: 15, label: "15 phút" },
+  { value: 30, label: "30 phút" },
+  { value: 45, label: "45 phút" },
+  { value: 60, label: "60 phút" },
+] as const;
 
 // ============================================================================
 // Sub-components
@@ -263,9 +274,14 @@ export function AIInterviewPaymentPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
 
+  // Step 1: Duration state
+  const [selectedDuration, setSelectedDuration] = useState<number>(30);
+
   // Step 2: Candidate profile state
   const [profileMode, setProfileMode] = useState<"existing" | "manual" | "upload">("existing");
   const [candidateForm, setCandidateForm] = useState<CandidateFormData>(INITIAL_CANDIDATE_FORM);
+  const [softSkillInput, setSoftSkillInput] = useState("");
+  const [toolInput, setToolInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedProfile, setUploadedProfile] = useState<Record<string, unknown> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -277,6 +293,7 @@ export function AIInterviewPaymentPage() {
 
   // Creating session state
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const isCreatingRef = useRef(false);
 
   // API: config options
   const {
@@ -292,7 +309,6 @@ export function AIInterviewPaymentPage() {
     existingProfile && typeof existingProfile === "object" && "id" in existingProfile;
 
   // API mutations
-  const createSessionMutation = $api.useMutation("post", "/api/interview-sessions/create-session");
   const generateJRMutation = $api.useMutation(
     "post",
     "/api/interview-sessions/generate-job-requirement"
@@ -323,8 +339,54 @@ export function AIInterviewPaymentPage() {
     return found?.label ?? "Chưa chọn";
   };
 
-  const updateCandidateForm = (field: keyof CandidateFormData, value: string) => {
+  const updateCandidateForm = (field: keyof CandidateFormData, value: string | string[]) => {
     setCandidateForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const addSoftSkill = () => {
+    const value = softSkillInput.trim();
+    if (!value) return;
+    if (candidateForm.softSkills.some((s) => s.toLowerCase() === value.toLowerCase())) return;
+    setCandidateForm((prev) => ({ ...prev, softSkills: [...prev.softSkills, value] }));
+    setSoftSkillInput("");
+  };
+
+  const removeSoftSkill = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      softSkills: prev.softSkills.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addTool = () => {
+    const value = toolInput.trim();
+    if (!value) return;
+    if (candidateForm.tools.some((t) => t.toLowerCase() === value.toLowerCase())) return;
+    setCandidateForm((prev) => ({ ...prev, tools: [...prev.tools, value] }));
+    setToolInput("");
+  };
+
+  const removeTool = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      tools: prev.tools.filter((_, i) => i !== index),
+    }));
+  };
+
+  const populateFormFromProfile = (source: Record<string, unknown>) => {
+    setCandidateForm({
+      targetRole: String(source.targetRole ?? ""),
+      targetLevel: String(source.targetLevel ?? ""),
+      introduction: String(source.introduction ?? ""),
+      technicalSkills: Array.isArray(source.technicalSkills)
+        ? (source.technicalSkills as string[]).join(", ")
+        : String(source.technicalSkills ?? ""),
+      softSkills: Array.isArray(source.softSkills) ? (source.softSkills as string[]) : [],
+      tools: Array.isArray(source.tools) ? (source.tools as string[]) : [],
+    });
+    setSoftSkillInput("");
+    setToolInput("");
+    setProfileMode("manual");
   };
 
   // ---- Actions ----
@@ -370,7 +432,6 @@ export function AIInterviewPaymentPage() {
   const buildCandidateProfile = () => {
     if (profileMode === "existing" && hasExistingProfile) return existingProfile;
     if (profileMode === "upload" && uploadedProfile) return uploadedProfile;
-    // manual
     return {
       targetRole: candidateForm.targetRole,
       targetLevel: candidateForm.targetLevel,
@@ -379,19 +440,21 @@ export function AIInterviewPaymentPage() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
-      softSkills: candidateForm.softSkills
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      tools: candidateForm.tools
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      softSkills: candidateForm.softSkills.filter(Boolean),
+      tools: candidateForm.tools.filter(Boolean),
     };
   };
 
   const handleCreateSession = async () => {
-    if (!isStep1Complete || !isStep2Complete || !isStep3Complete || !userId) return;
+    if (
+      isCreatingRef.current ||
+      !isStep1Complete ||
+      !isStep2Complete ||
+      !isStep3Complete ||
+      !userId
+    )
+      return;
+    isCreatingRef.current = true;
     setIsCreatingSession(true);
     try {
       const body = {
@@ -399,19 +462,51 @@ export function AIInterviewPaymentPage() {
         candidate_profile: buildCandidateProfile(),
         job_requirement: generatedJR,
         session_config: {
-          duration_minutes: 30,
+          duration_minutes: selectedDuration,
           interview_mode: selectedMode,
           difficulty: selectedDifficulty,
           language: selectedLanguage,
           domain: selectedDomain,
         },
       };
-      await createSessionMutation.mutateAsync({ body: body as never });
+
+      // parseAs: "text" vì endpoint trả về plain text UUID, không phải JSON
+      const { data, error } = await fetchClient.POST("/api/interview-sessions/create-session", {
+        body: body as never,
+        parseAs: "text",
+      });
+
+      if (error || !data) {
+        throw new Error("Create session failed");
+      }
+
+      const rawKey = (data as string).trim().replace(/^"|"$/g, "");
+
+      // Đảm bảo nhận đúng UUID (8-4-4-4-12) từ backend
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawKey)) {
+        throw new Error(`Phản hồi không hợp lệ từ server: "${rawKey.slice(0, 100)}"`);
+      }
+
+      const key = rawKey;
+
+      // Lưu session key vào localStorage
+      localStorage.setItem("current-interview-session-key", key);
+      try {
+        const stored = JSON.parse(localStorage.getItem("interview-session-keys") ?? "{}");
+        stored[key] = { createdAt: new Date().toISOString() };
+        localStorage.setItem("interview-session-keys", JSON.stringify(stored));
+      } catch {
+        /* ignore */
+      }
+
       toast.success("Đã tạo phiên phỏng vấn thành công!");
       navigate("/dashboard/ai-interview/session");
-    } catch {
-      toast.error("Không thể tạo phiên phỏng vấn. Vui lòng thử lại.");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Không thể tạo phiên phỏng vấn. Vui lòng thử lại."
+      );
     } finally {
+      isCreatingRef.current = false;
       setIsCreatingSession(false);
     }
   };
@@ -518,6 +613,47 @@ export function AIInterviewPaymentPage() {
                         onSelect={setSelectedDomain}
                       />
                     )}
+
+                    {/* Duration config */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                          <Clock className="h-5 w-5" />
+                        </div>
+                        <h4 className="text-foreground text-sm font-semibold">
+                          Thời lượng phỏng vấn
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {DURATION_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setSelectedDuration(opt.value)}
+                            className={`relative flex w-full flex-col items-center gap-1 rounded-lg border-2 p-4 transition-all ${
+                              selectedDuration === opt.value
+                                ? "border-rose-500 bg-rose-50 shadow-sm dark:bg-rose-950/40"
+                                : "border-border bg-card hover:border-border/80 hover:bg-accent/50"
+                            }`}>
+                            {selectedDuration === opt.value && (
+                              <CheckCircle2
+                                className="absolute top-2 right-2 h-4 w-4 text-rose-600 dark:text-rose-400"
+                                fill="currentColor"
+                                strokeWidth={0}
+                              />
+                            )}
+                            <span
+                              className={`text-lg font-bold ${
+                                selectedDuration === opt.value
+                                  ? "text-rose-700 dark:text-rose-300"
+                                  : "text-foreground"
+                              }`}>
+                              {opt.value}
+                            </span>
+                            <span className="text-muted-foreground text-xs">phút</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </>
                 )}
               </CardContent>
@@ -629,9 +765,23 @@ export function AIInterviewPaymentPage() {
                 {/* Existing profile display */}
                 {profileMode === "existing" && hasExistingProfile && (
                   <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
-                    <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300">
-                      Hồ sơ hiện tại của bạn
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                        Hồ sơ hiện tại của bạn
+                      </h4>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          populateFormFromProfile(
+                            existingProfile as unknown as Record<string, unknown>
+                          )
+                        }
+                        className="gap-1.5 text-xs">
+                        <Pencil className="h-3.5 w-3.5" />
+                        Chỉnh sửa
+                      </Button>
+                    </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <span className="text-muted-foreground">Vị trí mục tiêu: </span>
@@ -776,22 +926,78 @@ export function AIInterviewPaymentPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="softSkills">Kỹ năng mềm</Label>
-                      <Input
-                        id="softSkills"
-                        placeholder="Giao tiếp, Làm việc nhóm (phân cách bằng dấu phẩy)"
-                        value={candidateForm.softSkills}
-                        onChange={(e) => updateCandidateForm("softSkills", e.target.value)}
-                      />
+                      <Label>Kỹ năng mềm</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {candidateForm.softSkills.map((skill, i) => (
+                          <Badge
+                            key={`soft-${skill}-${i}`}
+                            variant="secondary"
+                            className="flex items-center gap-1 pr-1">
+                            <span>{skill}</span>
+                            <button
+                              type="button"
+                              className="rounded-full p-0.5 hover:bg-black/10"
+                              onClick={() => removeSoftSkill(i)}
+                              aria-label={`Xóa ${skill}`}>
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nhập kỹ năng mềm và nhấn Thêm"
+                          value={softSkillInput}
+                          onChange={(e) => setSoftSkillInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addSoftSkill();
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addSoftSkill}>
+                          <Plus className="mr-1 h-4 w-4" />
+                          Thêm
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="tools">Công cụ</Label>
-                      <Input
-                        id="tools"
-                        placeholder="Git, Docker, Visual Studio Code (phân cách bằng dấu phẩy)"
-                        value={candidateForm.tools}
-                        onChange={(e) => updateCandidateForm("tools", e.target.value)}
-                      />
+                      <Label>Công cụ</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {candidateForm.tools.map((tool, i) => (
+                          <Badge
+                            key={`tool-${tool}-${i}`}
+                            variant="secondary"
+                            className="flex items-center gap-1 pr-1">
+                            <span>{tool}</span>
+                            <button
+                              type="button"
+                              className="rounded-full p-0.5 hover:bg-black/10"
+                              onClick={() => removeTool(i)}
+                              aria-label={`Xóa ${tool}`}>
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nhập công cụ và nhấn Thêm"
+                          value={toolInput}
+                          onChange={(e) => setToolInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addTool();
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addTool}>
+                          <Plus className="mr-1 h-4 w-4" />
+                          Thêm
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1028,6 +1234,12 @@ export function AIInterviewPaymentPage() {
                       variant={selectedDomain ? "default" : "secondary"}
                       className="max-w-40 truncate text-xs">
                       {getSelectedLabel("domains", selectedDomain)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-xs">Thời lượng</span>
+                    <Badge variant="default" className="max-w-40 truncate text-xs">
+                      {selectedDuration} phút
                     </Badge>
                   </div>
                 </div>

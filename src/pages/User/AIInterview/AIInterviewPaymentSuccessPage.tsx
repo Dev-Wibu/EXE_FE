@@ -1,15 +1,16 @@
 import { CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { mockPaymentInfo } from "@/mocks/interviews.mock";
 
 // Display amount as shown in the design (440,000 VND)
 const DISPLAY_AMOUNT = 440000;
 
 export function AIInterviewPaymentSuccessPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionKey = searchParams.get("sessionKey");
 
   // Generate mock transaction details
   const transactionDetails = {
@@ -65,7 +66,7 @@ export function AIInterviewPaymentSuccessPage() {
             <div className="flex w-full items-center justify-between">
               <span className="text-foreground font-bold">Số tiền</span>
               <span className="text-foreground font-bold">
-                {formatCurrency(mockPaymentInfo.total)} VND
+                {formatCurrency(transactionDetails.amount)} VND
               </span>
             </div>
           </CardContent>
@@ -73,10 +74,14 @@ export function AIInterviewPaymentSuccessPage() {
 
         {/* Start Interview Button */}
         <Button
-          onClick={() => navigate("/dashboard/ai-interview/session")}
+          onClick={() =>
+            sessionKey
+              ? navigate(`/dashboard/ai-interview/session/${sessionKey}`)
+              : navigate("/dashboard/ai-interview")
+          }
           size="lg"
           className="w-full bg-[#0047AB] text-white hover:bg-[#005B9A]">
-          Bắt đầu phỏng vấn
+          {sessionKey ? "Bắt đầu phỏng vấn" : "Quay lại danh sách"}
         </Button>
       </div>
     </div>
