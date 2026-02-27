@@ -1,9 +1,13 @@
-import { BookOpen, ChevronLeft, ChevronRight, Target, Video } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Clock, Target, Video } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUserSessions } from "@/hooks/useSession";
+import type { Session } from "@/interfaces";
 
 // Calendar utility functions
 const getDaysInMonth = (year: number, month: number): number => {
@@ -32,73 +36,108 @@ const getMonthName = (month: number): string => {
   return months[month];
 };
 
-interface SessionEvent {
-  date: string;
-  title: string;
-  color: "green" | "sky" | "purple" | "orange" | "zinc";
+/** Consistent status config used across the app (same colors as SessionHistoryPage & MentorSessionsPage) */
+const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+  DRAFT: {
+    label: "Chờ duyệt",
+    bg: "bg-amber-100 dark:bg-amber-900/30",
+    text: "text-amber-700 dark:text-amber-400",
+    dot: "bg-amber-500",
+  },
+  SCHEDULED: {
+    label: "Sắp diễn ra",
+    bg: "bg-blue-100 dark:bg-blue-900/30",
+    text: "text-blue-700 dark:text-blue-400",
+    dot: "bg-blue-500",
+  },
+  ONGOING: {
+    label: "Đang diễn ra",
+    bg: "bg-green-100 dark:bg-green-900/30",
+    text: "text-green-700 dark:text-green-400",
+    dot: "bg-green-500",
+  },
+  COMPLETED: {
+    label: "Hoàn thành",
+    bg: "bg-slate-100 dark:bg-slate-800",
+    text: "text-slate-600 dark:text-slate-400",
+    dot: "bg-slate-500",
+  },
+  REJECTED: {
+    label: "Bị từ chối",
+    bg: "bg-red-100 dark:bg-red-900/30",
+    text: "text-red-600 dark:text-red-400",
+    dot: "bg-red-500",
+  },
+  CANCELED: {
+    label: "Đã hủy",
+    bg: "bg-red-100 dark:bg-red-900/30",
+    text: "text-red-600 dark:text-red-400",
+    dot: "bg-red-500",
+  },
+};
+
+const defaultStatusConfig = statusConfig.SCHEDULED;
+
+/** Max visible session dots per calendar cell before showing "+N" */
+const MAX_VISIBLE_DOTS = 3;
+
+function formatTime(dateStr?: string): string {
+  if (!dateStr) return "--:--";
+  const d = new Date(dateStr);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-// Map session status to calendar event color
-const statusColorMap: Record<string, SessionEvent["color"]> = {
-  SCHEDULED: "sky",
-  ONGOING: "green",
-  COMPLETED: "purple",
-  DRAFT: "orange",
-  REJECTED: "zinc",
-  CANCELED: "zinc",
-};
+function toDateKey(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
-// Map color to Tailwind classes
-const getEventColorClasses = (color: SessionEvent["color"]): { bg: string; text: string } => {
-  const colorMap: Record<SessionEvent["color"], { bg: string; text: string }> = {
-    green: { bg: "bg-green-500", text: "text-white" },
-    sky: { bg: "bg-sky-500", text: "text-white" },
-    purple: { bg: "bg-purple-500", text: "text-white" },
-    orange: { bg: "bg-orange-400", text: "text-white" },
-    zinc: { bg: "bg-zinc-500", text: "text-white" },
-  };
-  return colorMap[color];
-};
-
-// Check if a date has an event
-const getEventForDate = (
-  year: number,
-  month: number,
-  day: number,
-  events: SessionEvent[]
-): SessionEvent | undefined => {
-  const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  return events.find((event) => event.date === dateStr);
-};
+/** A single session entry shown in the popover or inline */
+function SessionEntry({ session, onClick }: { session: Session; onClick: () => void }) {
+  const cfg = statusConfig[session.status || "SCHEDULED"] || defaultStatusConfig;
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800`}>
+      <span className={`h-2 w-2 shrink-0 rounded-full ${cfg.dot}`} />
+      <span className="text-muted-foreground shrink-0">
+        {formatTime(session.joinTime || session.startTime1)}
+      </span>
+      <span className="text-foreground flex-1 truncate font-medium">
+        {session.roomName || `Phiên #${session.id}`}
+      </span>
+      <Badge
+        className={`${cfg.bg} ${cfg.text} shrink-0 border-0 px-1.5 py-0 text-[10px] leading-4 hover:${cfg.bg}`}>
+        {cfg.label}
+      </Badge>
+    </button>
+  );
+}
 
 export function OverviewPage() {
+  const navigate = useNavigate();
   const { data: sessions = [] } = useUserSessions();
 
-  // Convert sessions to calendar events
-  const calendarEvents: SessionEvent[] = useMemo(() => {
-    return sessions
-      .filter((s) => s.joinTime || s.startTime1)
-      .map((s) => {
-        const dateObj = new Date(s.joinTime || s.startTime1 || "");
-        const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
-        const statusLabel =
-          s.status === "SCHEDULED"
-            ? "Sắp diễn ra"
-            : s.status === "ONGOING"
-              ? "Đang diễn ra"
-              : s.status === "COMPLETED"
-                ? "Hoàn thành"
-                : s.status === "DRAFT"
-                  ? "Chờ duyệt"
-                  : s.status === "CANCELED"
-                    ? "Đã hủy"
-                    : s.status || "";
-        return {
-          date: dateStr,
-          title: `${s.roomName || `Phiên #${s.id}`} - ${statusLabel}`,
-          color: statusColorMap[s.status || "SCHEDULED"] || ("sky" as SessionEvent["color"]),
-        };
+  // Group sessions by date key (YYYY-MM-DD) from joinTime
+  const sessionsByDate = useMemo(() => {
+    const map = new Map<string, Session[]>();
+    for (const s of sessions) {
+      const raw = s.joinTime || s.startTime1;
+      if (!raw) continue;
+      const key = toDateKey(raw);
+      const arr = map.get(key) || [];
+      arr.push(s);
+      map.set(key, arr);
+    }
+    // Sort each day's sessions by time
+    for (const [, arr] of map) {
+      arr.sort((a, b) => {
+        const tA = new Date(a.joinTime || a.startTime1 || "").getTime();
+        const tB = new Date(b.joinTime || b.startTime1 || "").getTime();
+        return tA - tB;
       });
+    }
+    return map;
   }, [sessions]);
 
   // Compute dashboard stats from actual sessions
@@ -107,6 +146,7 @@ export function OverviewPage() {
 
   // Initialize with current date
   const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
 
@@ -137,18 +177,12 @@ export function OverviewPage() {
 
   // Generate calendar days
   const calendarDays: (number | null)[] = [];
-
-  // Add empty cells for days before the first day of the month
   for (let i = 0; i < adjustedFirstDay; i++) {
     calendarDays.push(null);
   }
-
-  // Add days of the month
   for (let day = 1; day <= daysInMonth; day++) {
     calendarDays.push(day);
   }
-
-  // Fill remaining cells to complete the grid (up to 35 or 42 cells)
   while (calendarDays.length < 35) {
     calendarDays.push(null);
   }
@@ -159,14 +193,12 @@ export function OverviewPage() {
     weeks.push(calendarDays.slice(i, i + 7));
   }
 
-  // Helper function to get event and color for a specific day
-  const getDayEventInfo = (day: number | null) => {
-    if (day === null) {
-      return { event: undefined, colorClasses: null };
+  const navigateToSession = (sessionId?: number) => {
+    if (sessionId) {
+      navigate(`/dashboard/mock-interview/history/${sessionId}`);
+    } else {
+      navigate(`/dashboard/mock-interview/history`);
     }
-    const event = getEventForDate(currentYear, currentMonth, day, calendarEvents);
-    const colorClasses = event ? getEventColorClasses(event.color) : null;
-    return { event, colorClasses };
   };
 
   return (
@@ -233,17 +265,32 @@ export function OverviewPage() {
             </CardTitle>
             <CardDescription>Lịch hoạt động của bạn</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePrevMonth}
-              aria-label="Previous month">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Next month">
-              <ChevronRight className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center gap-4">
+            {/* Legend */}
+            <div className="hidden flex-wrap items-center gap-3 text-xs lg:flex">
+              {Object.entries(statusConfig).map(([key, cfg]) => (
+                <span key={key} className="flex items-center gap-1">
+                  <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
+                  <span className="text-muted-foreground">{cfg.label}</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePrevMonth}
+                aria-label="Tháng trước">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNextMonth}
+                aria-label="Tháng sau">
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -263,32 +310,93 @@ export function OverviewPage() {
             {weeks.map((week, weekIndex) => (
               <div key={weekIndex} className="grid grid-cols-7 gap-1">
                 {week.map((day, dayIndex) => {
-                  const { event, colorClasses } = getDayEventInfo(day);
+                  if (day === null) {
+                    return (
+                      <div
+                        key={dayIndex}
+                        className="border-border min-h-[100px] rounded-lg border p-2 opacity-30"
+                      />
+                    );
+                  }
+
+                  const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                  const daySessions = sessionsByDate.get(dateKey) || [];
+                  const isToday = dateKey === todayStr;
+                  const hasEvents = daySessions.length > 0;
+                  const visibleSessions = daySessions.slice(0, MAX_VISIBLE_DOTS);
+                  const overflowCount = daySessions.length - MAX_VISIBLE_DOTS;
 
                   return (
                     <div
                       key={dayIndex}
-                      className={`relative min-h-[100px] rounded-lg border p-2 transition-colors ${
-                        colorClasses
-                          ? `${colorClasses.bg} border-transparent`
-                          : "border-border hover:bg-muted/50"
+                      className={`border-border relative min-h-[100px] rounded-lg border p-2 transition-colors ${
+                        isToday
+                          ? "border-blue-400 bg-blue-50/50 dark:border-blue-600 dark:bg-blue-950/20"
+                          : hasEvents
+                            ? "hover:bg-muted/50"
+                            : "hover:bg-muted/30"
                       }`}>
-                      {day !== null && (
-                        <>
-                          <div
-                            className={`text-sm font-medium ${
-                              colorClasses ? "text-white/70" : "text-muted-foreground"
-                            }`}>
-                            {String(day).padStart(2, "0")}
-                          </div>
-                          {event && (
-                            <div className="mt-2 text-center">
-                              <p className="line-clamp-2 text-xs font-semibold text-white">
-                                {event.title}
-                              </p>
-                            </div>
+                      {/* Day number */}
+                      <div
+                        className={`mb-1 text-sm font-medium ${
+                          isToday
+                            ? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white"
+                            : "text-muted-foreground"
+                        }`}>
+                        {String(day).padStart(2, "0")}
+                      </div>
+
+                      {/* Session dots & inline entries */}
+                      {hasEvents && (
+                        <div className="flex flex-col gap-0.5">
+                          {visibleSessions.map((s) => {
+                            const cfg =
+                              statusConfig[s.status || "SCHEDULED"] || defaultStatusConfig;
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() => navigateToSession(s.id)}
+                                className={`flex items-center gap-1 rounded px-1 py-0.5 text-left transition-colors hover:opacity-80 ${cfg.bg}`}
+                                title={`${formatTime(s.joinTime || s.startTime1)} — ${s.roomName || `Phiên #${s.id}`} (${cfg.label})`}>
+                                <Clock className={`h-2.5 w-2.5 shrink-0 ${cfg.text}`} />
+                                <span className={`truncate text-[10px] font-medium ${cfg.text}`}>
+                                  {formatTime(s.joinTime || s.startTime1)}
+                                </span>
+                              </button>
+                            );
+                          })}
+
+                          {/* Overflow: show "+N more" with Popover */}
+                          {overflowCount > 0 && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="text-muted-foreground hover:text-foreground mt-0.5 text-center text-[10px] font-medium transition-colors">
+                                  +{overflowCount} phiên khác
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-72 p-2"
+                                side="right"
+                                align="start"
+                                sideOffset={8}>
+                                <p className="mb-2 text-xs font-semibold">
+                                  {String(day).padStart(2, "0")}/
+                                  {String(currentMonth + 1).padStart(2, "0")}/{currentYear} —{" "}
+                                  {daySessions.length} phiên
+                                </p>
+                                <div className="flex max-h-48 flex-col gap-0.5 overflow-y-auto">
+                                  {daySessions.map((s) => (
+                                    <SessionEntry
+                                      key={s.id}
+                                      session={s}
+                                      onClick={() => navigateToSession(s.id)}
+                                    />
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   );

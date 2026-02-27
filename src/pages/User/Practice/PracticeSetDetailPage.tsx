@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Clock, Play } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock, Eye, Lightbulb, Play } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -16,6 +16,89 @@ const questionLevelBadgeMap: Record<string, string> = {
   MEDIUM: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
   HARD: "bg-red-100 text-red-700 hover:bg-red-100",
 };
+
+function QuestionCard({ item, index }: { item: PracticeSetItem; index: number }) {
+  const [showHint, setShowHint] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  return (
+    <div className="rounded-lg border p-4">
+      <div className="flex items-center gap-4">
+        <span className="text-muted-foreground text-sm font-medium">{index + 1}.</span>
+        <div className="flex-1">
+          <p className="text-foreground font-medium">{item.practiceQuestion?.title}</p>
+          {item.practiceQuestion?.content && (
+            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+              {item.practiceQuestion.content}
+            </p>
+          )}
+        </div>
+        <Badge
+          className={
+            questionLevelBadgeMap[item.practiceQuestion?.level || ""] || "bg-gray-100 text-gray-700"
+          }>
+          {item.practiceQuestion?.level}
+        </Badge>
+      </div>
+
+      {/* Action buttons */}
+      {(item.practiceQuestion?.hint || item.practiceQuestion?.answer) && (
+        <div className="mt-3 flex items-center gap-2">
+          {item.practiceQuestion?.hint && (
+            <Button
+              variant={showHint ? "default" : "outline"}
+              size="sm"
+              className={
+                showHint
+                  ? "gap-1.5 bg-amber-500 text-white hover:bg-amber-600"
+                  : "gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/30"
+              }
+              onClick={() => setShowHint(!showHint)}>
+              <Lightbulb className="h-3.5 w-3.5" />
+              {showHint ? "Ẩn gợi ý" : "Gợi ý"}
+            </Button>
+          )}
+          {item.practiceQuestion?.answer && (
+            <Button
+              variant={showAnswer ? "default" : "outline"}
+              size="sm"
+              className={
+                showAnswer
+                  ? "gap-1.5 bg-emerald-500 text-white hover:bg-emerald-600"
+                  : "gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+              }
+              onClick={() => setShowAnswer(!showAnswer)}>
+              <Eye className="h-3.5 w-3.5" />
+              {showAnswer ? "Ẩn đáp án" : "Đáp án"}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Hint section */}
+      {showHint && item.practiceQuestion?.hint && (
+        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+          <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-400">Gợi ý:</p>
+          <p className="text-sm whitespace-pre-line text-amber-900 dark:text-amber-200">
+            {item.practiceQuestion.hint}
+          </p>
+        </div>
+      )}
+
+      {/* Answer section */}
+      {showAnswer && item.practiceQuestion?.answer && (
+        <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
+          <p className="mb-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            Đáp án:
+          </p>
+          <p className="text-sm whitespace-pre-line text-emerald-900 dark:text-emerald-200">
+            {item.practiceQuestion.answer}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function PracticeSetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -151,50 +234,7 @@ export function PracticeSetDetailPage() {
               ) : (
                 <div className="space-y-3">
                   {items.map((item, index) => (
-                    <div key={item.id} className="rounded-lg border p-4">
-                      <div className="flex items-center gap-4">
-                        <span className="text-muted-foreground text-sm font-medium">
-                          {index + 1}.
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-foreground font-medium">
-                            {item.practiceQuestion?.title}
-                          </p>
-                          {item.practiceQuestion?.content && (
-                            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-                              {item.practiceQuestion.content}
-                            </p>
-                          )}
-                        </div>
-                        <Badge
-                          className={
-                            questionLevelBadgeMap[item.practiceQuestion?.level || ""] ||
-                            "bg-gray-100 text-gray-700"
-                          }>
-                          {item.practiceQuestion?.level}
-                        </Badge>
-                      </div>
-                      {item.practiceQuestion?.answer && (
-                        <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
-                          <p className="mb-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                            Đáp án:
-                          </p>
-                          <p className="text-sm whitespace-pre-line text-emerald-900 dark:text-emerald-200">
-                            {item.practiceQuestion.answer}
-                          </p>
-                        </div>
-                      )}
-                      {item.practiceQuestion?.hint && (
-                        <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
-                          <p className="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                            Gợi ý:
-                          </p>
-                          <p className="text-sm whitespace-pre-line text-amber-900 dark:text-amber-200">
-                            {item.practiceQuestion.hint}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    <QuestionCard key={item.id} item={item} index={index} />
                   ))}
                 </div>
               )}
