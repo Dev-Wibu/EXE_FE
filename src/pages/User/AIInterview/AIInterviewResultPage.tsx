@@ -3,13 +3,23 @@ import {
   ArrowLeft,
   Award,
   BookOpen,
+  Briefcase,
+  Calendar,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Clock,
+  Globe,
+  Info,
+  Layers,
   Lightbulb,
   MessageSquare,
   Plus,
+  RefreshCw,
   Star,
   TrendingUp,
+  User,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,7 +31,6 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { $api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/authStore";
 
 const RESULT_MAP: Record<string, { label: string; color: string; bg: string }> = {
   STRONG_HIRE: {
@@ -44,6 +53,34 @@ const RESULT_MAP: Record<string, { label: string; color: string; bg: string }> =
     color: "text-red-700 dark:text-red-300",
     bg: "bg-red-100 dark:bg-red-900/40",
   },
+};
+
+const MODE_LABELS: Record<string, string> = {
+  STANDARD_MOCK: "Phỏng vấn thử",
+  THEORY_CHECK: "Kiểm tra lý thuyết",
+  PROJECT_DEFENSE: "Bảo vệ dự án",
+};
+
+const DIFFICULTY_LABELS: Record<string, string> = {
+  FRESHER_BASIC: "Fresher cơ bản",
+  FRESHER_ADVANCED: "Fresher nâng cao",
+};
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  VI: "Tiếng Việt",
+  EN: "English",
+};
+
+const DOMAIN_LABELS: Record<string, string> = {
+  IT: "Công nghệ thông tin (IT)",
+  NON_IT: "Ngoài IT",
+};
+
+const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+  CREATED: { label: "Đã tạo", className: "bg-blue-100 text-blue-700" },
+  IN_PROGRESS: { label: "Đang diễn ra", className: "bg-amber-100 text-amber-700" },
+  COMPLETED: { label: "Hoàn thành", className: "bg-emerald-100 text-emerald-700" },
+  CANCELLED: { label: "Đã hủy", className: "bg-red-100 text-red-700" },
 };
 
 function ResultSkeleton() {
@@ -178,21 +215,33 @@ function QACard({
 export function AIInterviewResultPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const userId = useAuthStore((s) => s.user?.id);
+
+  const formatDateTime = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    // Backend trả về timestamp không có suffix timezone — ép parse UTC bằng cách gắn "Z"
+    const normalized =
+      dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + "Z";
+    return new Date(normalized).toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const {
-    data: sessions,
+    data: session,
     isLoading,
     isError,
   } = $api.useQuery(
     "get",
-    "/api/interview-sessions/user/{userId}",
-    { params: { path: { userId: userId ?? 0 } } },
-    { enabled: !!userId }
+    "/api/interview-sessions/{sessionId}",
+    { params: { path: { sessionId: Number(id) } } },
+    { enabled: !!id }
   );
 
-  const sessionList = Array.isArray(sessions) ? sessions : [];
-  const session = sessionList.find((s) => String(s.id) === id);
   const detail = session?.resultDetail;
   const history = detail?.history ?? [];
   const resultConfig = RESULT_MAP[session?.result ?? ""] ?? null;
@@ -235,7 +284,91 @@ export function AIInterviewResultPage() {
     );
   }
 
+  // CANCELLED session — hiển thị card riêng vì không có điểm/kết quả
+  if (session.status === "CANCELLED") {
+    const cfg = session.sessionConfig;
+    return (
+      <div className="bg-background min-h-screen p-6">
+        <div className="mx-auto max-w-2xl">
+          <div className="mb-6 flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard/ai-interview")}
+              className="shrink-0">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-foreground text-2xl font-bold">Kết quả Phỏng vấn AI</h1>
+              <p className="text-muted-foreground mt-0.5 text-sm">
+                {MODE_LABELS[session.mode ?? ""] ?? session.mode ?? "Phỏng vấn AI"}
+              </p>
+            </div>
+          </div>
+          <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
+            <CardContent className="flex flex-col items-center gap-4 p-10 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
+                <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-foreground text-xl font-bold">Phiên phỏng vấn đã bị hủy</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Phiên này đã bị hủy và không có kết quả đánh giá.
+                </p>
+              </div>
+              <div className="w-full max-w-xs space-y-2 text-left text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Chế độ</span>
+                  <span className="font-medium">
+                    {MODE_LABELS[session.mode ?? ""] ?? session.mode ?? "—"}
+                  </span>
+                </div>
+                {cfg?.difficulty && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Độ khó</span>
+                    <span>{DIFFICULTY_LABELS[cfg.difficulty] ?? cfg.difficulty}</span>
+                  </div>
+                )}
+                {cfg?.language && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ngôn ngữ</span>
+                    <span>{LANGUAGE_LABELS[cfg.language] ?? cfg.language}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tạo lúc</span>
+                  <span>{formatDateTime(session.createdAt)}</span>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => navigate("/dashboard/ai-interview")}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Quay lại danh sách
+                </Button>
+                <Button
+                  onClick={() => navigate("/dashboard/ai-interview/payment")}
+                  className="bg-[#0047AB] text-white hover:bg-[#005B9A]">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tạo phỏng vấn mới
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   const overallScore = session.overallScore ?? 0;
+  const cfg = session.sessionConfig;
+  const profile = session.candidateProfile;
+  const blueprint = session.blueprint;
+  const statusConfig = STATUS_LABELS[session.status ?? ""] ?? {
+    label: session.status ?? "",
+    className: "bg-gray-100 text-gray-700",
+  };
+  const jobTitle = (session.jobRequirement?.basic_info as Record<string, string> | undefined)
+    ?.job_title;
 
   return (
     <div className="bg-background min-h-screen p-6">
@@ -251,15 +384,11 @@ export function AIInterviewResultPage() {
           </Button>
           <div>
             <h1 className="text-foreground text-2xl font-bold">Kết quả Đánh giá Phỏng vấn AI</h1>
-            <p className="text-muted-foreground text-sm">
-              {session.mode === "STANDARD_MOCK"
-                ? "Phỏng vấn thử"
-                : session.mode === "THEORY_CHECK"
-                  ? "Kiểm tra lý thuyết"
-                  : session.mode === "PROJECT_DEFENSE"
-                    ? "Bảo vệ dự án"
-                    : "Phỏng vấn AI"}{" "}
-              • {session.domain ?? ""}
+            <p className="text-muted-foreground mt-0.5 text-sm">
+              {MODE_LABELS[session.mode ?? ""] ?? session.mode ?? "Phỏng vấn AI"}
+              {session.domain ? ` • ${DOMAIN_LABELS[session.domain] ?? session.domain}` : ""}
+              {cfg?.difficulty ? ` • ${DIFFICULTY_LABELS[cfg.difficulty] ?? cfg.difficulty}` : ""}
+              {cfg?.language ? ` • ${LANGUAGE_LABELS[cfg.language] ?? cfg.language}` : ""}
             </p>
           </div>
         </div>
@@ -280,6 +409,206 @@ export function AIInterviewResultPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* ────────────────────────────────────────────────────────────────
+            Session info + Candidate profile grid
+        ──────────────────────────────────────────────────────────────── */}
+        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Session config card */}
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <CardTitle className="text-foreground text-base">Thông tin phiên</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
+                {/* Status */}
+                <span className="text-muted-foreground">Ấnh hưởng</span>
+                <Badge className={statusConfig.className}>{statusConfig.label}</Badge>
+                {/* Mode */}
+                <span className="text-muted-foreground">Chế độ</span>
+                <span className="text-foreground font-medium">
+                  {MODE_LABELS[session.mode ?? ""] ?? session.mode ?? "—"}
+                </span>
+                {/* Domain */}
+                {session.domain && (
+                  <>
+                    <span className="text-muted-foreground">Lĩnh vực</span>
+                    <span className="text-foreground">
+                      {DOMAIN_LABELS[session.domain] ?? session.domain}
+                    </span>
+                  </>
+                )}
+                {/* Difficulty */}
+                {cfg?.difficulty && (
+                  <>
+                    <span className="text-muted-foreground">Độ khó</span>
+                    <span className="flex items-center gap-1 font-medium">
+                      <Zap className="h-3.5 w-3.5 text-amber-500" />
+                      {DIFFICULTY_LABELS[cfg.difficulty] ?? cfg.difficulty}
+                    </span>
+                  </>
+                )}
+                {/* Language */}
+                {cfg?.language && (
+                  <>
+                    <span className="text-muted-foreground">Ngôn ngữ</span>
+                    <span className="flex items-center gap-1">
+                      <Globe className="h-3.5 w-3.5" />
+                      {LANGUAGE_LABELS[cfg.language] ?? cfg.language}
+                    </span>
+                  </>
+                )}
+                {/* Duration */}
+                {cfg?.duration_minutes && (
+                  <>
+                    <span className="text-muted-foreground">Thời lượng</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {cfg.duration_minutes} phút
+                    </span>
+                  </>
+                )}
+                {/* createdAt */}
+                <span className="text-muted-foreground">Tạo lúc</span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {formatDateTime(session.createdAt)}
+                </span>
+                {/* updatedAt */}
+                {session.updatedAt && (
+                  <>
+                    <span className="text-muted-foreground">Cập nhật</span>
+                    <span className="flex items-center gap-1">
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      {formatDateTime(session.updatedAt)}
+                    </span>
+                  </>
+                )}
+                {/* completedAt */}
+                {session.completedAt && (
+                  <>
+                    <span className="text-muted-foreground">Hoàn thành</span>
+                    <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {formatDateTime(session.completedAt)}
+                    </span>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Candidate / Job info card */}
+          <Card className="border-l-4 border-l-purple-500">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <CardTitle className="text-foreground text-base">Ứng viên &amp; Vị trí</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {(profile?.targetRole || profile?.targetLevel) && (
+                <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
+                  {profile.targetRole && (
+                    <>
+                      <span className="text-muted-foreground">Vị trí</span>
+                      <span className="text-foreground font-semibold">{profile.targetRole}</span>
+                    </>
+                  )}
+                  {profile.targetLevel && (
+                    <>
+                      <span className="text-muted-foreground">Cấp độ</span>
+                      <span className="text-foreground">{profile.targetLevel}</span>
+                    </>
+                  )}
+                </div>
+              )}
+              {jobTitle && (
+                <div className="flex items-center gap-2">
+                  <Briefcase className="text-muted-foreground h-4 w-4 shrink-0" />
+                  <span className="text-foreground font-medium">{jobTitle}</span>
+                </div>
+              )}
+              {profile?.technicalSkills && profile.technicalSkills.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-wide uppercase">
+                    Kỹ năng kỹ thuật
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.technicalSkills.slice(0, 10).map((s, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {s}
+                      </Badge>
+                    ))}
+                    {profile.technicalSkills.length > 10 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{profile.technicalSkills.length - 10}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+              {profile?.softSkills && profile.softSkills.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-wide uppercase">
+                    Kỹ năng mềm
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.softSkills.slice(0, 8).map((s, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">
+                        {s}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {profile?.tools && profile.tools.length > 0 && (
+                <div>
+                  <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-wide uppercase">
+                    Công cụ & Công nghệ
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.tools.slice(0, 8).map((t, i) => (
+                      <Badge
+                        key={i}
+                        className="bg-blue-50 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                        {t}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!profile?.targetRole &&
+                !profile?.targetLevel &&
+                !jobTitle &&
+                !profile?.technicalSkills?.length && (
+                  <p className="text-muted-foreground text-xs italic">Không có thông tin hồ sơ</p>
+                )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Blueprint strategy analysis */}
+        {blueprint?.strategy_analysis && (
+          <Card className="mb-6 border-l-4 border-l-indigo-500">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <CardTitle className="text-foreground text-base">
+                  Chiến lược phỏng vấn (AI Blueprint)
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                {blueprint.strategy_analysis}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* AI Overview Feedback & Improvement Plan */}
         <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">

@@ -11,4 +11,6 @@ export * from "./useNotification";
 export * from "./usePagination";
 export * from "./useSession";
 export * from "./useSortable";
+export * from "./useSpeechRecognition";
+export * from "./useSpeechSynthesis";
 export * from "./useTabsState";

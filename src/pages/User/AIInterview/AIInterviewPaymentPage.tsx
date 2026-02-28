@@ -104,7 +104,7 @@ interface CandidateFormData {
   targetRole: string;
   targetLevel: string;
   introduction: string;
-  technicalSkills: string;
+  technicalSkills: string[];
   softSkills: string[];
   tools: string[];
 }
@@ -113,7 +113,7 @@ const INITIAL_CANDIDATE_FORM: CandidateFormData = {
   targetRole: "",
   targetLevel: "",
   introduction: "",
-  technicalSkills: "",
+  technicalSkills: [],
   softSkills: [],
   tools: [],
 };
@@ -282,6 +282,7 @@ export function AIInterviewPaymentPage() {
   const [candidateForm, setCandidateForm] = useState<CandidateFormData>(INITIAL_CANDIDATE_FORM);
   const [softSkillInput, setSoftSkillInput] = useState("");
   const [toolInput, setToolInput] = useState("");
+  const [techSkillInput, setTechSkillInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedProfile, setUploadedProfile] = useState<Record<string, unknown> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -290,6 +291,11 @@ export function AIInterviewPaymentPage() {
   const [jobDescription, setJobDescription] = useState("");
   const [isGeneratingJR, setIsGeneratingJR] = useState(false);
   const [generatedJR, setGeneratedJR] = useState<Record<string, unknown> | null>(null);
+  const [isEditingJR, setIsEditingJR] = useState(false);
+  const [hardSkillInputJR, setHardSkillInputJR] = useState("");
+  const [softSkillInputJR, setSoftSkillInputJR] = useState("");
+  const [toolInputJR, setToolInputJR] = useState("");
+  const [responsibilityInputJR, setResponsibilityInputJR] = useState("");
 
   // Creating session state
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -343,6 +349,21 @@ export function AIInterviewPaymentPage() {
     setCandidateForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const addTechSkill = () => {
+    const value = techSkillInput.trim();
+    if (!value) return;
+    if (candidateForm.technicalSkills.some((s) => s.toLowerCase() === value.toLowerCase())) return;
+    setCandidateForm((prev) => ({ ...prev, technicalSkills: [...prev.technicalSkills, value] }));
+    setTechSkillInput("");
+  };
+
+  const removeTechSkill = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      technicalSkills: prev.technicalSkills.filter((_, i) => i !== index),
+    }));
+  };
+
   const addSoftSkill = () => {
     const value = softSkillInput.trim();
     if (!value) return;
@@ -379,11 +400,12 @@ export function AIInterviewPaymentPage() {
       targetLevel: String(source.targetLevel ?? ""),
       introduction: String(source.introduction ?? ""),
       technicalSkills: Array.isArray(source.technicalSkills)
-        ? (source.technicalSkills as string[]).join(", ")
-        : String(source.technicalSkills ?? ""),
+        ? (source.technicalSkills as string[])
+        : [],
       softSkills: Array.isArray(source.softSkills) ? (source.softSkills as string[]) : [],
       tools: Array.isArray(source.tools) ? (source.tools as string[]) : [],
     });
+    setTechSkillInput("");
     setSoftSkillInput("");
     setToolInput("");
     setProfileMode("manual");
@@ -421,12 +443,88 @@ export function AIInterviewPaymentPage() {
         body: jobDescription as unknown as never,
       });
       setGeneratedJR(result as unknown as Record<string, unknown>);
+      setIsEditingJR(false);
       toast.success("Đã tạo yêu cầu công việc thành công!");
     } catch {
       toast.error("Không thể tạo yêu cầu công việc. Vui lòng thử lại.");
     } finally {
       setIsGeneratingJR(false);
     }
+  };
+
+  const updateJRBasicInfo = (field: string, value: string) => {
+    setGeneratedJR((prev) =>
+      prev
+        ? {
+            ...prev,
+            basic_info: { ...(prev.basic_info as Record<string, string>), [field]: value },
+          }
+        : prev
+    );
+  };
+
+  const addJRCompetency = (
+    type: "hard_skills" | "soft_skills" | "tools_and_platforms",
+    value: string
+  ) => {
+    if (!value.trim()) return;
+    setGeneratedJR((prev) => {
+      if (!prev) return prev;
+      const competencies = (prev.competencies as Record<string, unknown>) ?? {};
+      const current = Array.isArray(competencies[type]) ? (competencies[type] as string[]) : [];
+      if (current.some((s) => s.toLowerCase() === value.trim().toLowerCase())) return prev;
+      return {
+        ...prev,
+        competencies: { ...competencies, [type]: [...current, value.trim()] },
+      };
+    });
+  };
+
+  const removeJRCompetency = (
+    type: "hard_skills" | "soft_skills" | "tools_and_platforms",
+    index: number
+  ) => {
+    setGeneratedJR((prev) => {
+      if (!prev) return prev;
+      const competencies = (prev.competencies as Record<string, unknown>) ?? {};
+      const current = Array.isArray(competencies[type]) ? (competencies[type] as string[]) : [];
+      return {
+        ...prev,
+        competencies: { ...competencies, [type]: current.filter((_, i) => i !== index) },
+      };
+    });
+  };
+
+  const addJRResponsibility = (value: string) => {
+    if (!value.trim()) return;
+    setGeneratedJR((prev) => {
+      if (!prev) return prev;
+      const current = Array.isArray(prev.responsibilities)
+        ? (prev.responsibilities as string[])
+        : [];
+      return { ...prev, responsibilities: [...current, value.trim()] };
+    });
+  };
+
+  const removeJRResponsibility = (index: number) => {
+    setGeneratedJR((prev) => {
+      if (!prev) return prev;
+      const current = Array.isArray(prev.responsibilities)
+        ? (prev.responsibilities as string[])
+        : [];
+      return { ...prev, responsibilities: current.filter((_, i) => i !== index) };
+    });
+  };
+
+  const updateJRResponsibility = (index: number, value: string) => {
+    setGeneratedJR((prev) => {
+      if (!prev) return prev;
+      const current = Array.isArray(prev.responsibilities)
+        ? [...(prev.responsibilities as string[])]
+        : [];
+      current[index] = value;
+      return { ...prev, responsibilities: current };
+    });
   };
 
   const buildCandidateProfile = () => {
@@ -436,10 +534,7 @@ export function AIInterviewPaymentPage() {
       targetRole: candidateForm.targetRole,
       targetLevel: candidateForm.targetLevel,
       introduction: candidateForm.introduction,
-      technicalSkills: candidateForm.technicalSkills
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      technicalSkills: candidateForm.technicalSkills.filter(Boolean),
       softSkills: candidateForm.softSkills.filter(Boolean),
       tools: candidateForm.tools.filter(Boolean),
     };
@@ -489,8 +584,7 @@ export function AIInterviewPaymentPage() {
 
       const key = rawKey;
 
-      // Lưu session key vào localStorage
-      localStorage.setItem("current-interview-session-key", key);
+      // Lưu vào interview-session-keys để khôi phục lịch sử chat khi tải lại trang
       try {
         const stored = JSON.parse(localStorage.getItem("interview-session-keys") ?? "{}");
         stored[key] = { createdAt: new Date().toISOString() };
@@ -500,7 +594,7 @@ export function AIInterviewPaymentPage() {
       }
 
       toast.success("Đã tạo phiên phỏng vấn thành công!");
-      navigate("/dashboard/ai-interview/session");
+      navigate(`/dashboard/ai-interview/session?sessionKey=${key}`);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Không thể tạo phiên phỏng vấn. Vui lòng thử lại."
@@ -803,19 +897,55 @@ export function AIInterviewPaymentPage() {
                         {String((existingProfile as Record<string, unknown>).introduction)}
                       </p>
                     )}
-                    {Array.isArray(
-                      (existingProfile as Record<string, unknown>).technicalSkills
-                    ) && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {(
-                          (existingProfile as Record<string, unknown>).technicalSkills as string[]
-                        ).map((skill) => (
-                          <Badge key={skill} variant="secondary" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    {Array.isArray((existingProfile as Record<string, unknown>).technicalSkills) &&
+                      ((existingProfile as Record<string, unknown>).technicalSkills as string[])
+                        .length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground text-xs">Kỹ năng kỹ thuật:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(
+                              (existingProfile as Record<string, unknown>)
+                                .technicalSkills as string[]
+                            ).map((skill) => (
+                              <Badge key={skill} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    {Array.isArray((existingProfile as Record<string, unknown>).softSkills) &&
+                      ((existingProfile as Record<string, unknown>).softSkills as string[]).length >
+                        0 && (
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground text-xs">Kỹ năng mềm:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(
+                              (existingProfile as Record<string, unknown>).softSkills as string[]
+                            ).map((skill) => (
+                              <Badge key={skill} variant="outline" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    {Array.isArray((existingProfile as Record<string, unknown>).tools) &&
+                      ((existingProfile as Record<string, unknown>).tools as string[]).length >
+                        0 && (
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground text-xs">Công cụ:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {((existingProfile as Record<string, unknown>).tools as string[]).map(
+                              (tool) => (
+                                <Badge key={tool} variant="secondary" className="text-xs">
+                                  {tool}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 )}
 
@@ -917,13 +1047,41 @@ export function AIInterviewPaymentPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="technicalSkills">Kỹ năng kỹ thuật</Label>
-                      <Input
-                        id="technicalSkills"
-                        placeholder="Java, React, Spring Boot (phân cách bằng dấu phẩy)"
-                        value={candidateForm.technicalSkills}
-                        onChange={(e) => updateCandidateForm("technicalSkills", e.target.value)}
-                      />
+                      <Label>Kỹ năng kỹ thuật</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {candidateForm.technicalSkills.map((skill, i) => (
+                          <Badge
+                            key={`tech-${skill}-${i}`}
+                            variant="secondary"
+                            className="flex items-center gap-1 pr-1">
+                            <span>{skill}</span>
+                            <button
+                              type="button"
+                              className="rounded-full p-0.5 hover:bg-black/10"
+                              onClick={() => removeTechSkill(i)}
+                              aria-label={`Xóa ${skill}`}>
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nhập kỹ năng kỹ thuật và nhấn Thêm"
+                          value={techSkillInput}
+                          onChange={(e) => setTechSkillInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addTechSkill();
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addTechSkill}>
+                          <Plus className="mr-1 h-4 w-4" />
+                          Thêm
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label>Kỹ năng mềm</Label>
@@ -1056,129 +1214,321 @@ export function AIInterviewPaymentPage() {
                 {/* Generated JR result */}
                 {generatedJR !== null && (
                   <div className="space-y-4 rounded-lg border border-green-200 bg-green-50/50 p-4 dark:border-green-800 dark:bg-green-950/30">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <h4 className="text-sm font-semibold text-green-800 dark:text-green-300">
-                        Yêu cầu công việc đã được tạo
-                      </h4>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <h4 className="text-sm font-semibold text-green-800 dark:text-green-300">
+                          Yêu cầu công việc đã được tạo
+                        </h4>
+                      </div>
+                      {!isEditingJR && (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditingJR(true)}>
+                          <Pencil className="mr-1 h-3.5 w-3.5" />
+                          Chỉnh sửa
+                        </Button>
+                      )}
                     </div>
 
-                    {/* Basic info */}
-                    {Boolean(generatedJR.basic_info) &&
-                      typeof generatedJR.basic_info === "object" && (
-                        <div className="space-y-1 text-sm">
-                          <p>
-                            <span className="text-muted-foreground">Vị trí: </span>
-                            <span className="text-foreground font-medium">
-                              {String(
-                                (generatedJR.basic_info as Record<string, string>).job_title ||
-                                  "Không có"
-                              )}
-                            </span>
-                          </p>
-                          <p>
-                            <span className="text-muted-foreground">Lĩnh vực: </span>
-                            <span className="text-foreground font-medium">
-                              {String(
-                                (generatedJR.basic_info as Record<string, string>)
-                                  .industry_domain || "Không có"
-                              )}
-                            </span>
-                          </p>
-                          <p>
-                            <span className="text-muted-foreground">Cấp độ: </span>
-                            <span className="text-foreground font-medium">
-                              {String(
-                                (generatedJR.basic_info as Record<string, string>)
-                                  .seniority_level || "Không có"
-                              )}
-                            </span>
-                          </p>
-                        </div>
-                      )}
+                    {/* ── VIEW MODE ── */}
+                    {!isEditingJR && (
+                      <>
+                        {Boolean(generatedJR.basic_info) &&
+                          typeof generatedJR.basic_info === "object" && (
+                            <div className="space-y-1 text-sm">
+                              <p>
+                                <span className="text-muted-foreground">Vị trí: </span>
+                                <span className="text-foreground font-medium">
+                                  {String(
+                                    (generatedJR.basic_info as Record<string, string>).job_title ||
+                                      "Không có"
+                                  )}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="text-muted-foreground">Lĩnh vực: </span>
+                                <span className="text-foreground font-medium">
+                                  {String(
+                                    (generatedJR.basic_info as Record<string, string>)
+                                      .industry_domain || "Không có"
+                                  )}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="text-muted-foreground">Cấp độ: </span>
+                                <span className="text-foreground font-medium">
+                                  {String(
+                                    (generatedJR.basic_info as Record<string, string>)
+                                      .seniority_level || "Không có"
+                                  )}
+                                </span>
+                              </p>
+                            </div>
+                          )}
 
-                    {/* Competencies */}
-                    {Boolean(generatedJR.competencies) &&
-                      typeof generatedJR.competencies === "object" && (
-                        <div className="space-y-2">
-                          {Array.isArray(
-                            (generatedJR.competencies as Record<string, unknown>).hard_skills
-                          ) && (
-                            <div>
-                              <span className="text-muted-foreground text-xs font-medium">
-                                Kỹ năng cứng:
-                              </span>
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {(
-                                  (generatedJR.competencies as Record<string, unknown>)
-                                    .hard_skills as string[]
-                                ).map((s) => (
-                                  <Badge key={s} variant="secondary" className="text-xs">
-                                    {s}
-                                  </Badge>
-                                ))}
-                              </div>
+                        {Boolean(generatedJR.competencies) &&
+                          typeof generatedJR.competencies === "object" && (
+                            <div className="space-y-2">
+                              {Array.isArray(
+                                (generatedJR.competencies as Record<string, unknown>).hard_skills
+                              ) && (
+                                <div>
+                                  <span className="text-muted-foreground text-xs font-medium">
+                                    Kỹ năng cứng:
+                                  </span>
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {(
+                                      (generatedJR.competencies as Record<string, unknown>)
+                                        .hard_skills as string[]
+                                    ).map((s) => (
+                                      <Badge key={s} variant="secondary" className="text-xs">
+                                        {s}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {Array.isArray(
+                                (generatedJR.competencies as Record<string, unknown>).soft_skills
+                              ) && (
+                                <div>
+                                  <span className="text-muted-foreground text-xs font-medium">
+                                    Kỹ năng mềm:
+                                  </span>
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {(
+                                      (generatedJR.competencies as Record<string, unknown>)
+                                        .soft_skills as string[]
+                                    ).map((s) => (
+                                      <Badge key={s} variant="outline" className="text-xs">
+                                        {s}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {Array.isArray(
+                                (generatedJR.competencies as Record<string, unknown>)
+                                  .tools_and_platforms
+                              ) && (
+                                <div>
+                                  <span className="text-muted-foreground text-xs font-medium">
+                                    Công cụ và nền tảng:
+                                  </span>
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {(
+                                      (generatedJR.competencies as Record<string, unknown>)
+                                        .tools_and_platforms as string[]
+                                    ).map((s) => (
+                                      <Badge key={s} variant="secondary" className="text-xs">
+                                        {s}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
-                          {Array.isArray(
-                            (generatedJR.competencies as Record<string, unknown>).soft_skills
-                          ) && (
-                            <div>
-                              <span className="text-muted-foreground text-xs font-medium">
-                                Kỹ năng mềm:
-                              </span>
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {(
-                                  (generatedJR.competencies as Record<string, unknown>)
-                                    .soft_skills as string[]
-                                ).map((s) => (
-                                  <Badge key={s} variant="outline" className="text-xs">
-                                    {s}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {Array.isArray(
-                            (generatedJR.competencies as Record<string, unknown>)
-                              .tools_and_platforms
-                          ) && (
-                            <div>
-                              <span className="text-muted-foreground text-xs font-medium">
-                                Công cụ và nền tảng:
-                              </span>
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {(
-                                  (generatedJR.competencies as Record<string, unknown>)
-                                    .tools_and_platforms as string[]
-                                ).map((s) => (
-                                  <Badge key={s} variant="secondary" className="text-xs">
-                                    {s}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
 
-                    {/* Responsibilities */}
-                    {Array.isArray(generatedJR.responsibilities) && (
-                      <div>
-                        <span className="text-muted-foreground text-xs font-medium">
-                          Trách nhiệm chính:
-                        </span>
-                        <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-0.5 text-sm">
-                          {(generatedJR.responsibilities as string[]).map((r, i) => (
-                            <li key={i}>{r}</li>
-                          ))}
-                        </ul>
-                      </div>
+                        {Array.isArray(generatedJR.responsibilities) && (
+                          <div>
+                            <span className="text-muted-foreground text-xs font-medium">
+                              Trách nhiệm chính:
+                            </span>
+                            <ul className="text-muted-foreground mt-1 list-inside list-disc space-y-0.5 text-sm">
+                              {(generatedJR.responsibilities as string[]).map((r, i) => (
+                                <li key={i}>{r}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <Button variant="outline" size="sm" onClick={() => setGeneratedJR(null)}>
+                          Tạo lại
+                        </Button>
+                      </>
                     )}
 
-                    <Button variant="outline" size="sm" onClick={() => setGeneratedJR(null)}>
-                      Tạo lại
-                    </Button>
+                    {/* ── EDIT MODE ── */}
+                    {isEditingJR && (
+                      <div className="space-y-4">
+                        {/* Basic info editable */}
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">Vị trí</Label>
+                            <Input
+                              value={String(
+                                (generatedJR.basic_info as Record<string, string>)?.job_title ?? ""
+                              )}
+                              onChange={(e) => updateJRBasicInfo("job_title", e.target.value)}
+                              placeholder="Vị trí công việc"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Lĩnh vực</Label>
+                            <Input
+                              value={String(
+                                (generatedJR.basic_info as Record<string, string>)
+                                  ?.industry_domain ?? ""
+                              )}
+                              onChange={(e) => updateJRBasicInfo("industry_domain", e.target.value)}
+                              placeholder="Lĩnh vực"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">Cấp độ</Label>
+                            <Input
+                              value={String(
+                                (generatedJR.basic_info as Record<string, string>)
+                                  ?.seniority_level ?? ""
+                              )}
+                              onChange={(e) => updateJRBasicInfo("seniority_level", e.target.value)}
+                              placeholder="Cấp độ"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Competencies editable */}
+                        {[
+                          {
+                            type: "hard_skills" as const,
+                            label: "Kỹ năng cứng",
+                            inputVal: hardSkillInputJR,
+                            setInputVal: setHardSkillInputJR,
+                          },
+                          {
+                            type: "soft_skills" as const,
+                            label: "Kỹ năng mềm",
+                            inputVal: softSkillInputJR,
+                            setInputVal: setSoftSkillInputJR,
+                          },
+                          {
+                            type: "tools_and_platforms" as const,
+                            label: "Công cụ và nền tảng",
+                            inputVal: toolInputJR,
+                            setInputVal: setToolInputJR,
+                          },
+                        ].map(({ type, label, inputVal, setInputVal }) => {
+                          const items = Array.isArray(
+                            (generatedJR.competencies as Record<string, unknown>)?.[type]
+                          )
+                            ? ((generatedJR.competencies as Record<string, unknown>)[
+                                type
+                              ] as string[])
+                            : [];
+                          return (
+                            <div key={type} className="space-y-1.5">
+                              <Label className="text-xs">{label}</Label>
+                              <div className="flex flex-wrap gap-1.5">
+                                {items.map((s, i) => (
+                                  <Badge
+                                    key={`${type}-${s}-${i}`}
+                                    variant="secondary"
+                                    className="flex items-center gap-1 pr-1 text-xs">
+                                    <span>{s}</span>
+                                    <button
+                                      type="button"
+                                      className="rounded-full p-0.5 hover:bg-black/10"
+                                      onClick={() => removeJRCompetency(type, i)}
+                                      aria-label={`Xóa ${s}`}>
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input
+                                  className="h-8 text-xs"
+                                  placeholder={`Thêm ${label.toLowerCase()}`}
+                                  value={inputVal}
+                                  onChange={(e) => setInputVal(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      addJRCompetency(type, inputVal);
+                                      setInputVal("");
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8"
+                                  onClick={() => {
+                                    addJRCompetency(type, inputVal);
+                                    setInputVal("");
+                                  }}>
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Responsibilities editable */}
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Trách nhiệm chính</Label>
+                          <div className="space-y-1.5">
+                            {(Array.isArray(generatedJR.responsibilities)
+                              ? (generatedJR.responsibilities as string[])
+                              : []
+                            ).map((r, i) => (
+                              <div key={i} className="flex gap-2">
+                                <Input
+                                  className="h-8 text-xs"
+                                  value={r}
+                                  onChange={(e) => updateJRResponsibility(i, e.target.value)}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2 text-red-500 hover:text-red-600"
+                                  onClick={() => removeJRResponsibility(i)}
+                                  aria-label="Xóa trách nhiệm">
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              className="h-8 text-xs"
+                              placeholder="Thêm trách nhiệm mới"
+                              value={responsibilityInputJR}
+                              onChange={(e) => setResponsibilityInputJR(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  addJRResponsibility(responsibilityInputJR);
+                                  setResponsibilityInputJR("");
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => {
+                                addJRResponsibility(responsibilityInputJR);
+                                setResponsibilityInputJR("");
+                              }}>
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-[#0047AB] text-white hover:bg-[#005B9A]"
+                            onClick={() => setIsEditingJR(false)}>
+                            Lưu thay đổi
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
