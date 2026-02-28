@@ -1320,6 +1320,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interview-sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSessionById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interview-sessions/user/{userId}": {
         parameters: {
             query?: never;
@@ -1344,6 +1360,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getInterviewConfigOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-sessions/cache/{sessionKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSessionFromCache"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2059,6 +2091,7 @@ export interface components {
         InterviewSession: {
             /** Format: int32 */
             id?: number;
+            sessionKey?: string;
             user?: components["schemas"]["User"];
             blueprint?: components["schemas"]["InterviewBlueprintResponse"];
             candidateProfile?: components["schemas"]["CandidateProfile"];
@@ -2083,6 +2116,7 @@ export interface components {
             resultDetail?: components["schemas"]["InterviewResultDetail"];
         };
         QAResult: {
+            questionType?: string;
             /** Format: int32 */
             questionOrder?: number;
             questionText?: string;
@@ -2092,6 +2126,33 @@ export interface components {
             score?: number;
             suggestion?: string;
             behavioralWarnings?: string[];
+        };
+        InterviewExchange: {
+            phaseName?: string;
+            /** Format: int32 */
+            questionId?: number;
+            /** Format: int32 */
+            questionOrder?: number;
+            questionText?: string;
+            answerText?: string;
+            submittedAt?: string;
+            currentQuestionText?: string;
+            /** @enum {string} */
+            type?: "BLUEPRINT" | "FOLLOW_UP";
+        };
+        InterviewSessionRedis: {
+            id?: string;
+            blueprint?: components["schemas"]["InterviewBlueprintResponse"];
+            /** Format: int32 */
+            dbId?: number;
+            /** Format: int32 */
+            currentPhaseIndex?: number;
+            /** Format: int32 */
+            currentQuestionIndex?: number;
+            currentQuestionText?: string;
+            /** @enum {string} */
+            currentQuestionType?: "BLUEPRINT" | "FOLLOW_UP";
+            chatHistory?: components["schemas"]["InterviewExchange"][];
         };
     };
     responses: never;
@@ -4552,6 +4613,28 @@ export interface operations {
             };
         };
     };
+    getSessionById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewSession"];
+                };
+            };
+        };
+    };
     getAllSessionsForUser: {
         parameters: {
             query?: never;
@@ -4592,6 +4675,28 @@ export interface operations {
                     "*/*": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    getSessionFromCache: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewSessionRedis"];
                 };
             };
         };
