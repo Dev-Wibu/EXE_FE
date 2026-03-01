@@ -36,7 +36,6 @@ export function AIInterviewSetupPage() {
     isStep2Complete,
     isStep3Complete,
     getSelectedLabel,
-    profileMode,
   } = hook;
 
   return (
@@ -141,11 +140,7 @@ export function AIInterviewSetupPage() {
                 <div className="pl-6">
                   {isStep2Complete ? (
                     <Badge variant="default" className="text-xs">
-                      {profileMode === "existing"
-                        ? "Hồ sơ có sẵn"
-                        : profileMode === "upload"
-                          ? "Từ CV đã tải lên"
-                          : "Nhập thủ công"}
+                      Hồ sơ đã lưu
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground text-xs">Chưa hoàn thành</span>

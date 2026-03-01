@@ -163,3 +163,34 @@ Daily.co integration in `components/video-call/` uses React context pattern:
 - **Form validation**: Zod schemas + react-hook-form (`@hookform/resolvers`).
 - **`JoinSessionRequest.isMentor`**: Must be explicitly `true` or `false` — backend cannot deserialize `null`/`undefined` to boolean.
 - **Prettier auto-sorts imports**: Don't add manual import grouping comments — they'll be removed on `pnpm format`.
+
+## Code Quality Anti-Patterns (Do NOT repeat)
+
+These patterns were found and catalogued in `md/error.md`. Avoid introducing them in new code.
+
+### ❌ Dead Code
+
+- Do NOT leave files that are not imported anywhere in `src/`. Delete them immediately.
+- Do NOT leave commented-out `export` lines in barrel files (e.g., `// export * from "./foo"`).
+- Do NOT leave commented-out `import` statements or large JSX blocks. Delete them.
+- Do NOT keep mock data files (`mocks/*.ts`) that are no longer imported by any real code.
+- Do NOT keep legacy components that have been replaced — delete once the replacement is in place.
+
+### ❌ DRY Violations
+
+- Do NOT define `formatDate` / `formatDateTime` inline inside a component or page. **Always import from `@/lib/formatting`**.
+- Do NOT define `formatCurrency` inline. **Always import from `@/lib/formatting`**.
+- Do NOT define inline `getStatusBadge` / `getStatusBadgeClass` / `getStatusBadgeVariant` helpers. Use the shared `<StatusBadge>` component from `@/components/shared/StatusBadge`.
+- Do NOT copy-paste ChromeTabs or Sidebar implementations per-role. Use the shared `DashboardChromeTabs` / `DashboardSidebar` components from `@/components/shared/`.
+
+### ❌ God Components (>500 LOC)
+
+- Do NOT put step wizard logic, form state, and API calls all in a single file. Extract each step into its own component file and keep a dedicated hook for state/API logic.
+- Do NOT mix unrelated domain concerns in one component (e.g., wallet + security + profile in one file). Split by tab/domain.
+- A component file should ideally stay under **300 LOC**. Files approaching 500 LOC must be split into sub-components.
+
+### ❌ Misleading Names
+
+- Do NOT name a file `PaymentPage` if it contains no payment logic. Name it after what it actually does.
+- Do NOT put production-used utility functions (e.g., `formatCurrency`) inside `mocks/` files. `mocks/` is for test/mock data only.
+- Do NOT place real page components inside a `mock/` sub-folder — that name implies test data.

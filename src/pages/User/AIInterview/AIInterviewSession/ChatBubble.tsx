@@ -6,6 +6,19 @@ import { cn } from "@/lib/utils";
 
 import type { ChatMessage } from "./types";
 
+const QUESTION_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
+  BLUEPRINT: {
+    label: "Câu chính",
+    className:
+      "border-indigo-300 bg-indigo-100 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  },
+  FOLLOW_UP: {
+    label: "Câu tiếp theo",
+    className:
+      "border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  },
+};
+
 export function ChatBubble({
   message,
   userAvatarUrl,
@@ -41,11 +54,21 @@ export function ChatBubble({
 
       {/* Bubble */}
       <div className="group flex max-w-[75%] flex-col gap-1">
-        {isAI && message.meta?.questionType && (
-          <Badge variant="outline" className="w-fit text-[10px]">
-            {message.meta.questionType}
-          </Badge>
-        )}
+        {isAI &&
+          message.meta?.questionType &&
+          (() => {
+            const typeConfig = QUESTION_TYPE_CONFIG[message.meta.questionType];
+            return (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "w-fit px-2 py-0.5 text-[10px] font-semibold",
+                  typeConfig?.className
+                )}>
+                {typeConfig?.label ?? message.meta.questionType}
+              </Badge>
+            );
+          })()}
         <div
           className={cn(
             "rounded-2xl px-4 py-3",

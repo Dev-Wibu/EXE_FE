@@ -1,7 +1,12 @@
 import { BookOpen, Briefcase, Globe, Layers, Settings, Target, User } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ElementType } from "react";
 
-import type { InterviewConfigOptions } from "@/interfaces/schema.types";
+import type {
+  EducationEntry,
+  InterviewConfigOptions,
+  ProjectDetail,
+  WorkExperience,
+} from "@/interfaces/schema.types";
 
 // ============================================================================
 // Constants
@@ -13,11 +18,12 @@ export const STEPS = [
   { id: 3, label: "Yêu cầu công việc", icon: Briefcase },
 ] as const;
 
-export const CATEGORY_ICONS: Record<string, ReactNode> = {
-  interview_modes: Layers({ className: "h-5 w-5" }),
-  difficulties: Target({ className: "h-5 w-5" }),
-  languages: Globe({ className: "h-5 w-5" }),
-  domains: BookOpen({ className: "h-5 w-5" }),
+// Store component references — rendered as <Icon className="h-5 w-5" /> at call site
+export const CATEGORY_ICONS: Record<string, ElementType> = {
+  interview_modes: Layers,
+  difficulties: Target,
+  languages: Globe,
+  domains: BookOpen,
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -67,6 +73,11 @@ export interface CandidateFormData {
   technicalSkills: string[];
   softSkills: string[];
   tools: string[];
+  certifications: string[];
+  achievements: string[];
+  projects: ProjectDetail[];
+  workExperiences: WorkExperience[];
+  educations: EducationEntry[];
 }
 
 export const INITIAL_CANDIDATE_FORM: CandidateFormData = {
@@ -76,6 +87,11 @@ export const INITIAL_CANDIDATE_FORM: CandidateFormData = {
   technicalSkills: [],
   softSkills: [],
   tools: [],
+  certifications: [],
+  achievements: [],
+  projects: [],
+  workExperiences: [],
+  educations: [],
 };
 
 export const DURATION_OPTIONS = [
