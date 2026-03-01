@@ -11,6 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatDateTime } from "@/lib/formatting";
+import { getSessionStatusBadge } from "@/lib/status-utils";
 
 import type { Session } from "../types";
 
@@ -28,34 +30,6 @@ interface SessionTableProps {
   onReject?: (session: Session) => void;
   getSortProps?: (key: keyof Session) => SortProps;
 }
-
-const getStatusBadgeClass = (status?: string): string => {
-  switch (status) {
-    case "COMPLETED":
-      return "bg-green-600 hover:bg-green-600 text-white";
-    case "ONGOING":
-      return "bg-blue-600 hover:bg-blue-600 text-white";
-    case "DRAFT":
-      return "bg-amber-500 hover:bg-amber-500 text-white";
-    case "SCHEDULED":
-      return "bg-yellow-500 hover:bg-yellow-500 text-white";
-    case "REJECTED":
-      return "bg-rose-600 hover:bg-rose-600 text-white";
-    case "CANCELED":
-      return "bg-red-600 hover:bg-red-600 text-white";
-    default:
-      return "";
-  }
-};
-
-const formatDateTime = (dateString?: string) => {
-  if (!dateString) return "-";
-  try {
-    return new Date(dateString).toLocaleString();
-  } catch {
-    return "-";
-  }
-};
 
 const formatDuration = (seconds?: number) => {
   if (!seconds) return "-";
@@ -133,9 +107,14 @@ export function SessionTable({
             </TableCell>
             <TableCell>{formatDuration(session.durationSeconds1)}</TableCell>
             <TableCell>
-              <Badge variant="default" className={getStatusBadgeClass(session.status)}>
-                {session.status}
-              </Badge>
+              {(() => {
+                const statusConfig = getSessionStatusBadge(session.status);
+                return (
+                  <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                    {statusConfig.label}
+                  </Badge>
+                );
+              })()}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">

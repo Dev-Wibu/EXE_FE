@@ -63,12 +63,12 @@ export function BookingSuccessPage() {
           {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button
-              onClick={() => navigate("/dashboard/mock-interview/history")}
+              onClick={() => navigate("/user/mock-interview/history")}
               className="gap-2 bg-[#0047AB] hover:bg-[#003d91]">
               <ArrowRight className="h-4 w-4" />
               Xem lịch sử phỏng vấn
             </Button>
-            <Button variant="outline" onClick={() => navigate("/dashboard/mock-interview")}>
+            <Button variant="outline" onClick={() => navigate("/user/mock-interview")}>
               Về trang chính
             </Button>
           </div>

@@ -60,7 +60,7 @@ export function AIChatConversationPage() {
   }, [messages]);
 
   const handleBack = () => {
-    navigate("/dashboard/ai-chat");
+    navigate("/user/ai-chat");
   };
 
   const handleSendMessage = async () => {

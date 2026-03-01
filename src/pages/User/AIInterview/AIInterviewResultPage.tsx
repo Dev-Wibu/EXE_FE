@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { $api } from "@/lib/api";
+import { formatDateTime } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 
 const RESULT_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -216,21 +217,6 @@ export function AIInterviewResultPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const formatDateTime = (dateStr?: string) => {
-    if (!dateStr) return "—";
-    // Backend trả về timestamp không có suffix timezone — ép parse UTC bằng cách gắn "Z"
-    const normalized =
-      dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + "Z";
-    return new Date(normalized).toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const {
     data: session,
     isLoading,
@@ -260,7 +246,7 @@ export function AIInterviewResultPage() {
         <AlertCircle className="h-10 w-10 text-red-500" />
         <p className="text-foreground font-semibold">Không thể tải kết quả phỏng vấn</p>
         <p className="text-muted-foreground text-sm">Vui lòng thử lại sau</p>
-        <Button variant="outline" onClick={() => navigate("/dashboard/ai-interview")}>
+        <Button variant="outline" onClick={() => navigate("/user?tab=aiInterview")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại
         </Button>
@@ -276,7 +262,7 @@ export function AIInterviewResultPage() {
         <p className="text-muted-foreground text-sm">
           Phiên phỏng vấn không tồn tại hoặc đã bị xóa
         </p>
-        <Button variant="outline" onClick={() => navigate("/dashboard/ai-interview")}>
+        <Button variant="outline" onClick={() => navigate("/user?tab=aiInterview")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại danh sách
         </Button>
@@ -294,7 +280,7 @@ export function AIInterviewResultPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/dashboard/ai-interview")}
+              onClick={() => navigate("/user?tab=aiInterview")}
               className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -341,12 +327,12 @@ export function AIInterviewResultPage() {
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <Button variant="outline" onClick={() => navigate("/dashboard/ai-interview")}>
+                <Button variant="outline" onClick={() => navigate("/user?tab=aiInterview")}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Quay lại danh sách
                 </Button>
                 <Button
-                  onClick={() => navigate("/dashboard/ai-interview/payment")}
+                  onClick={() => navigate("/user/ai-interview/setup")}
                   className="bg-[#0047AB] text-white hover:bg-[#005B9A]">
                   <Plus className="mr-2 h-4 w-4" />
                   Tạo phỏng vấn mới
@@ -378,7 +364,7 @@ export function AIInterviewResultPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/dashboard/ai-interview")}
+            onClick={() => navigate("/user?tab=aiInterview")}
             className="shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -681,12 +667,12 @@ export function AIInterviewResultPage() {
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4">
-          <Button variant="outline" onClick={() => navigate("/dashboard/ai-interview")}>
+          <Button variant="outline" onClick={() => navigate("/user?tab=aiInterview")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại danh sách
           </Button>
           <Button
-            onClick={() => navigate("/dashboard/ai-interview/payment")}
+            onClick={() => navigate("/user/ai-interview/setup")}
             className="bg-[#0047AB] text-white hover:bg-[#005B9A]">
             <Plus className="mr-2 h-4 w-4" />
             Bắt đầu Buổi Phỏng vấn Mới

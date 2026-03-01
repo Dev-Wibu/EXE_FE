@@ -137,7 +137,7 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigate("/dashboard/mock-interview/schedule")}
+              onClick={() => navigate("/user/mock-interview/schedule")}
               className="gap-1 border-blue-200 text-blue-600 hover:bg-blue-50">
               <ArrowRight className="h-4 w-4" />
               Đặt lịch lại
@@ -204,7 +204,7 @@ export function SessionHistoryPage() {
           </p>
         </div>
         <Button
-          onClick={() => navigate("/dashboard/mock-interview/schedule")}
+          onClick={() => navigate("/user/mock-interview/schedule")}
           className="gap-2 bg-[#0047AB] hover:bg-[#003d91]">
           <Video className="h-4 w-4" />
           Đặt lịch phỏng vấn mới
@@ -261,7 +261,7 @@ export function SessionHistoryPage() {
           title="Chưa có phiên phỏng vấn"
           description="Bạn chưa có phiên phỏng vấn nào. Hãy đặt lịch phỏng vấn với mentor!"
           action={
-            <Button onClick={() => navigate("/dashboard/mock-interview/schedule")}>
+            <Button onClick={() => navigate("/user/mock-interview/schedule")}>
               Đặt lịch phỏng vấn
             </Button>
           }

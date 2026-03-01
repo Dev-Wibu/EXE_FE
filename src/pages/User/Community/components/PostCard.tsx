@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import type { Post } from "@/interfaces/schema.types";
+import { formatDate } from "@/lib/formatting";
 import { usePostCommentsCount } from "@/services/post.manager";
 import { useAuthStore } from "@/stores/authStore";
 import { MessageCircle } from "lucide-react";
@@ -11,15 +12,6 @@ import { LikeButton } from "./LikeButton";
 interface PostCardProps {
   post: Post;
   onClick?: () => void;
-}
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export function PostCard({ post, onClick }: PostCardProps) {

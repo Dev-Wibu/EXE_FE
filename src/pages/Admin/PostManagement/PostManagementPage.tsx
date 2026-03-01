@@ -1,6 +1,9 @@
 import { Eye, MessageSquare, Search, ThumbsUp, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { formatDate } from "@/lib/formatting";
+
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Post, PostCommentResponse } from "@/interfaces";
+import { getPostStatusBadge } from "@/lib/status-utils";
 import { postManager } from "@/services/post.manager";
 import { toast } from "sonner";
 
@@ -83,31 +87,6 @@ export function PostManagementPage() {
     });
   }, [posts, statusFilter, searchQuery]);
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case "DRAFT":
-        return (
-          <Badge variant="outline" className="border-yellow-200 bg-yellow-50 text-yellow-700">
-            Bản nháp
-          </Badge>
-        );
-      case "PUBLISHED":
-        return (
-          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
-            Đã xuất bản
-          </Badge>
-        );
-      case "ARCHIVED":
-        return (
-          <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-700">
-            Đã lưu trữ
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   const handleViewDetail = async (post: Post) => {
     setSelectedPost(post);
     setIsDetailOpen(true);
@@ -143,15 +122,6 @@ export function PostManagementPage() {
       console.error("Error deleting comment:", error);
       toast.error("Không thể xóa bình luận");
     }
-  };
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
   };
 
   const getPostRowKey = (post: Post, index: number) => {
@@ -236,7 +206,9 @@ export function PostManagementPage() {
                   {post.title || "—"}
                 </TableCell>
                 <TableCell>{post.author?.name || "—"}</TableCell>
-                <TableCell>{getStatusBadge(post.status)}</TableCell>
+                <TableCell>
+                  <StatusBadge {...getPostStatusBadge(post.status)} />
+                </TableCell>
                 <TableCell>{post.major?.name || post.major?.majorName || "—"}</TableCell>
                 <TableCell>{formatDate(post.creationDate)}</TableCell>
                 <TableCell>
@@ -290,7 +262,7 @@ export function PostManagementPage() {
 
               {/* Meta Info */}
               <div className="flex flex-wrap gap-2">
-                {getStatusBadge(selectedPost.status)}
+                <StatusBadge {...getPostStatusBadge(selectedPost.status)} />
                 {selectedPost.major && (
                   <Badge variant="outline">
                     {selectedPost.major.name || selectedPost.major.majorName}

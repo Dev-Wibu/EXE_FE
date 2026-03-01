@@ -16,8 +16,6 @@
 export * from "./auth.manager";
 export * from "./candidate-profile.manager";
 export * from "./chat.manager";
-// interview.manager dead code — tất cả trang AI Interview đã dùng $api trực tiếp
-// export * from "./interview.manager";
 export * from "./mentor-feedback.manager";
 export * from "./mentor-review.manager";
 export * from "./mentor.manager";

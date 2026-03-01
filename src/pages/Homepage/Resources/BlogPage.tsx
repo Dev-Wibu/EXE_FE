@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { Post } from "@/interfaces/schema.types";
+import { formatDate } from "@/lib/formatting";
 import { postManager } from "@/services/post.manager";
 import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
@@ -67,15 +68,6 @@ export function BlogPage() {
     });
     return result.slice(0, 6);
   })();
-
-  const formatDate = (dateStr?: string): string => {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
 
   return (
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">

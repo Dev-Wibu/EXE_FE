@@ -124,7 +124,7 @@ export function QuestionDetailPage() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white">
         <div className="font-['Inter'] text-lg text-gray-500">Không tìm thấy bộ câu hỏi</div>
         <button
-          onClick={() => navigate("/dashboard/questions")}
+          onClick={() => navigate("/user/questions")}
           className="rounded-md bg-indigo-500 px-4 py-2 font-['Inter'] text-sm font-bold text-white hover:bg-indigo-600">
           Quay lại Danh sách
         </button>
@@ -138,7 +138,7 @@ export function QuestionDetailPage() {
       <div className="relative h-20">
         {/* Back Link */}
         <button
-          onClick={() => navigate("/dashboard/questions")}
+          onClick={() => navigate("/user/questions")}
           className="mb-2 font-['Inter'] text-xl font-normal text-stone-500 hover:text-indigo-500">
           ← Quay lại Danh sách
         </button>

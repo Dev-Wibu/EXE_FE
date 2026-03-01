@@ -1,7 +1,7 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AuthLayout, MentorDashboardLayout, UserDashboardLayout } from "@/components/layouts";
+import { AuthLayout } from "@/components/layouts";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/contexts/QueryProvider";
 import { AdminDashboardPage } from "@/pages/Admin";
@@ -30,17 +30,10 @@ import {
   QuestionBankPage,
 } from "@/pages/Homepage";
 import {
-  GivenFeedbackListPage,
-  MentorAccountPage,
   MentorDashboardPage,
-  MentorNotificationsPage,
-  MentorOverviewPage,
-  MentorReviewsPage,
   MentorSessionRoomPage,
-  MentorSessionsPage,
   ReviewDetailPage,
   StudentDetailPage,
-  StudentsListPage,
   WriteFeedbackPage,
 } from "@/pages/Mentor";
 import {
@@ -50,42 +43,34 @@ import {
   StaffDashboardPage,
 } from "@/pages/Staff";
 import {
-  AccountPage,
   AIChatConversationPage,
-  AIChatListPage,
-  AIInterviewListPage,
-  AIInterviewPaymentPage,
-  AIInterviewPaymentRedirectPage,
-  AIInterviewPaymentSuccessPage,
   AIInterviewResultPage,
   AIInterviewSessionPage,
+  AIInterviewSetupPage,
   BookingSuccessPage,
   CreatePostPage,
   EditPostPage,
   FeedbackDetailPage,
-  MockInterviewListPage,
-  MockInterviewPaymentRedirectPage,
-  MockInterviewPaymentSuccessPage,
   MockInterviewSchedulePage,
   MockInterviewSelectMentorPage,
-  OverviewPage,
   PostDetailPage,
-  PostListPage,
-  PracticeQuestionsPage,
   PracticeSetDetailPage,
-  PracticeSetsPage,
   QuestionDetailPage,
-  QuestionListPage,
   QuizPage,
   QuizResultPage,
   SessionDetailPage,
-  SessionHistoryPage,
   SessionRoomPage,
   UserDashboardPage,
-  UserFeedbackListPage,
-  UserNotificationsPage,
   WriteReviewPage,
 } from "@/pages/User";
+
+/** Preserves the path suffix after a given prefix when redirecting /dashboard/* → /user/* */
+function DashboardSubRedirect({ prefix }: { prefix: string }) {
+  const { pathname, search } = useLocation();
+  // Remove the /dashboard/<segment> part to get the suffix
+  const suffix = pathname.replace(/^\/dashboard\/[^/]+/, "");
+  return <Navigate to={`${prefix}${suffix}${search}`} replace />;
+}
 
 function App() {
   return (
@@ -120,185 +105,145 @@ function App() {
             <Route path="/mentor-register" element={<MentorRegisterPage />} />
             <Route path="/waiting-accept" element={<WaitingAcceptMentorPage />} />
 
-            {/* User Dashboard routes with UserDashboardLayout */}
-            <Route element={<UserDashboardLayout />}>
-              <Route path="/dashboard" element={<OverviewPage />} />
-              <Route path="/dashboard/ai-interview" element={<AIInterviewListPage />} />
-              <Route path="/dashboard/ai-interview/payment" element={<AIInterviewPaymentPage />} />
+            {/* User Dashboard — ChromeTabs shell at /user, sub-pages nested inside */}
+            <Route path="/user" element={<UserDashboardPage />}>
+              <Route path="ai-interview/setup" element={<AIInterviewSetupPage />} />
+              <Route path="ai-interview/session" element={<AIInterviewSessionPage />} />
+              <Route path="ai-interview/result/:id" element={<AIInterviewResultPage />} />
               <Route
-                path="/dashboard/ai-interview/payment-redirect"
-                element={<AIInterviewPaymentRedirectPage />}
-              />
-              <Route
-                path="/dashboard/ai-interview/payment-success"
-                element={<AIInterviewPaymentSuccessPage />}
-              />
-              <Route path="/dashboard/ai-interview/session" element={<AIInterviewSessionPage />} />
-              <Route
-                path="/dashboard/ai-interview/result/:id"
-                element={<AIInterviewResultPage />}
-              />
-
-              {/* Mock Interview routes */}
-              <Route path="/dashboard/mock-interview" element={<MockInterviewListPage />} />
-              <Route
-                path="/dashboard/mock-interview/select-mentor"
+                path="mock-interview/select-mentor"
                 element={<MockInterviewSelectMentorPage />}
               />
+              <Route path="mock-interview/schedule" element={<MockInterviewSchedulePage />} />
+              <Route path="mock-interview/booking-success" element={<BookingSuccessPage />} />
+              <Route path="mock-interview/room/:sessionId" element={<SessionRoomPage />} />
               <Route
-                path="/dashboard/mock-interview/schedule"
-                element={<MockInterviewSchedulePage />}
-              />
-              <Route
-                path="/dashboard/mock-interview/booking-success"
-                element={<BookingSuccessPage />}
-              />
-              <Route
-                path="/dashboard/mock-interview/room/:sessionId"
-                element={<SessionRoomPage />}
-              />
-              <Route
-                path="/dashboard/mock-interview/payment-redirect"
-                element={<MockInterviewPaymentRedirectPage />}
-              />
-              <Route
-                path="/dashboard/mock-interview/payment-success"
-                element={<MockInterviewPaymentSuccessPage />}
-              />
-              <Route path="/dashboard/mock-interview/history" element={<SessionHistoryPage />} />
-              <Route
-                path="/dashboard/mock-interview/history/:sessionId"
-                element={<SessionDetailPage />}
-              />
-              <Route
-                path="/dashboard/mock-interview/history/:sessionId/review"
+                path="mock-interview/history/:sessionId/review"
                 element={<WriteReviewPage />}
               />
-
-              {/* AI Chat routes */}
-              <Route path="/dashboard/ai-chat" element={<AIChatListPage />} />
-              <Route path="/dashboard/ai-chat/:id" element={<AIChatConversationPage />} />
-
-              {/* Question Bank routes */}
-              <Route path="/dashboard/questions" element={<QuestionListPage />} />
-              <Route path="/dashboard/questions/:id" element={<QuestionDetailPage />} />
-
-              {/* Practice routes */}
-              <Route path="/dashboard/practice" element={<PracticeSetsPage />} />
-              <Route path="/dashboard/practice/questions" element={<PracticeQuestionsPage />} />
-              <Route path="/dashboard/practice/:id" element={<PracticeSetDetailPage />} />
-              <Route path="/dashboard/practice/:id/quiz" element={<QuizPage />} />
-              <Route
-                path="/dashboard/practice/:id/quiz/:quizId/result"
-                element={<QuizResultPage />}
-              />
-
-              {/* Feedback routes */}
-              <Route path="/dashboard/feedback" element={<UserFeedbackListPage />} />
-              <Route path="/dashboard/feedback/:id" element={<FeedbackDetailPage />} />
-
-              {/* Account routes */}
-              <Route path="/dashboard/account" element={<AccountPage />} />
-
-              {/* Notifications routes */}
-              <Route path="/dashboard/notifications" element={<UserNotificationsPage />} />
-
-              {/* Community routes */}
-              <Route path="/dashboard/community" element={<PostListPage />} />
-              <Route path="/dashboard/community/create" element={<CreatePostPage />} />
-              <Route path="/dashboard/community/:postId" element={<PostDetailPage />} />
-              <Route path="/dashboard/community/:postId/edit" element={<EditPostPage />} />
+              <Route path="mock-interview/history/:sessionId" element={<SessionDetailPage />} />
+              <Route path="ai-chat/:id" element={<AIChatConversationPage />} />
+              <Route path="questions/:id" element={<QuestionDetailPage />} />
+              <Route path="practice/:id/quiz/:quizId/result" element={<QuizResultPage />} />
+              <Route path="practice/:id/quiz" element={<QuizPage />} />
+              <Route path="practice/:id" element={<PracticeSetDetailPage />} />
+              <Route path="feedback/:id" element={<FeedbackDetailPage />} />
+              <Route path="community/create" element={<CreatePostPage />} />
+              <Route path="community/:postId/edit" element={<EditPostPage />} />
+              <Route path="community/:postId" element={<PostDetailPage />} />
             </Route>
-
-            {/* User Dashboard with Chrome Tabs (alternative route) */}
-            <Route path="/user" element={<UserDashboardPage />} />
-            {/* Redirect routes for User Dashboard tabs */}
-            <Route path="/user/overview" element={<Navigate to="/user?tab=overview" replace />} />
+            {/* Backward-compat redirects for old /dashboard/* URLs */}
+            <Route path="/dashboard" element={<Navigate to="/user" replace />} />
             <Route
-              path="/user/mock-interview"
+              path="/dashboard/mock-interview"
               element={<Navigate to="/user?tab=mockInterview" replace />}
             />
             <Route
-              path="/user/interview-history"
+              path="/dashboard/mock-interview/history"
               element={<Navigate to="/user?tab=interviewHistory" replace />}
             />
-            <Route path="/user/feedback" element={<Navigate to="/user?tab=feedback" replace />} />
             <Route
-              path="/user/ai-interview"
+              path="/dashboard/feedback"
+              element={<Navigate to="/user?tab=feedback" replace />}
+            />
+            <Route
+              path="/dashboard/ai-interview"
               element={<Navigate to="/user?tab=aiInterview" replace />}
             />
-            <Route path="/user/ai-chat" element={<Navigate to="/user?tab=aiChat" replace />} />
-            <Route path="/user/questions" element={<Navigate to="/user?tab=questions" replace />} />
+            <Route path="/dashboard/ai-chat" element={<Navigate to="/user?tab=aiChat" replace />} />
             <Route
-              path="/user/notifications"
+              path="/dashboard/questions"
+              element={<Navigate to="/user?tab=questions" replace />}
+            />
+            <Route
+              path="/dashboard/practice"
+              element={<Navigate to="/user?tab=practice" replace />}
+            />
+            <Route
+              path="/dashboard/community"
+              element={<Navigate to="/user?tab=community" replace />}
+            />
+            <Route
+              path="/dashboard/notifications"
               element={<Navigate to="/user?tab=notifications" replace />}
             />
-            <Route path="/user/account" element={<Navigate to="/user?tab=account" replace />} />
-            <Route path="/user/community" element={<Navigate to="/user?tab=community" replace />} />
+            <Route
+              path="/dashboard/account"
+              element={<Navigate to="/user?tab=account" replace />}
+            />
+            {/* Deep /dashboard/* sub-pages redirect preserving path suffix under /user */}
+            <Route
+              path="/dashboard/ai-interview/*"
+              element={<DashboardSubRedirect prefix="/user/ai-interview" />}
+            />
+            <Route
+              path="/dashboard/mock-interview/*"
+              element={<DashboardSubRedirect prefix="/user/mock-interview" />}
+            />
+            <Route
+              path="/dashboard/ai-chat/*"
+              element={<DashboardSubRedirect prefix="/user/ai-chat" />}
+            />
+            <Route
+              path="/dashboard/questions/*"
+              element={<DashboardSubRedirect prefix="/user/questions" />}
+            />
+            <Route
+              path="/dashboard/practice/*"
+              element={<DashboardSubRedirect prefix="/user/practice" />}
+            />
+            <Route
+              path="/dashboard/community/*"
+              element={<DashboardSubRedirect prefix="/user/community" />}
+            />
+            <Route
+              path="/dashboard/feedback/*"
+              element={<DashboardSubRedirect prefix="/user/feedback" />}
+            />
 
-            {/* Mentor Dashboard routes with MentorDashboardLayout */}
-            <Route element={<MentorDashboardLayout />}>
-              <Route path="/mentor" element={<MentorOverviewPage />} />
-              <Route path="/mentor/account" element={<MentorAccountPage />} />
-              <Route path="/mentor/notifications" element={<MentorNotificationsPage />} />
-
-              {/* Mentor Sessions & Feedback routes */}
-              <Route path="/mentor/sessions" element={<MentorSessionsPage />} />
-              <Route path="/mentor/sessions/room/:sessionId" element={<MentorSessionRoomPage />} />
-              <Route path="/mentor/sessions/:sessionId/feedback" element={<WriteFeedbackPage />} />
-
-              {/* Mentor Reviews routes */}
-              <Route path="/mentor/reviews" element={<MentorReviewsPage />} />
-              <Route path="/mentor/reviews/:id" element={<ReviewDetailPage />} />
-
-              {/* Mentor Feedback routes */}
-              <Route path="/mentor/feedback" element={<GivenFeedbackListPage />} />
-
-              {/* Mentor Students routes */}
-              <Route path="/mentor/students" element={<StudentsListPage />} />
-              <Route path="/mentor/students/:userId" element={<StudentDetailPage />} />
-
-              {/* Mentor Community routes */}
-              <Route path="/mentor/community" element={<PostListPage />} />
-              <Route path="/mentor/community/create" element={<CreatePostPage />} />
-              <Route path="/mentor/community/:postId" element={<PostDetailPage />} />
-              <Route path="/mentor/community/:postId/edit" element={<EditPostPage />} />
+            {/* Mentor Dashboard — ChromeTabs shell at /mentor, sub-pages nested inside */}
+            <Route path="/mentor" element={<MentorDashboardPage />}>
+              <Route path="sessions/room/:sessionId" element={<MentorSessionRoomPage />} />
+              <Route path="sessions/:sessionId/feedback" element={<WriteFeedbackPage />} />
+              <Route path="reviews/:id" element={<ReviewDetailPage />} />
+              <Route path="students/:userId" element={<StudentDetailPage />} />
+              <Route path="community/create" element={<CreatePostPage />} />
+              <Route path="community/:postId/edit" element={<EditPostPage />} />
+              <Route path="community/:postId" element={<PostDetailPage />} />
             </Route>
-
-            {/* Mentor Dashboard with Chrome Tabs (alternative route) */}
-            <Route path="/mentor-dashboard" element={<MentorDashboardPage />} />
-            {/* Redirect routes for Mentor Dashboard tabs */}
+            {/* Backward-compat redirects for /mentor-dashboard/* URLs */}
+            <Route path="/mentor-dashboard" element={<Navigate to="/mentor" replace />} />
             <Route
               path="/mentor-dashboard/overview"
-              element={<Navigate to="/mentor-dashboard?tab=overview" replace />}
+              element={<Navigate to="/mentor?tab=overview" replace />}
             />
             <Route
               path="/mentor-dashboard/sessions"
-              element={<Navigate to="/mentor-dashboard?tab=sessions" replace />}
+              element={<Navigate to="/mentor?tab=sessions" replace />}
             />
             <Route
               path="/mentor-dashboard/students"
-              element={<Navigate to="/mentor-dashboard?tab=students" replace />}
+              element={<Navigate to="/mentor?tab=students" replace />}
             />
             <Route
               path="/mentor-dashboard/reviews"
-              element={<Navigate to="/mentor-dashboard?tab=reviews" replace />}
+              element={<Navigate to="/mentor?tab=reviews" replace />}
             />
             <Route
               path="/mentor-dashboard/feedback"
-              element={<Navigate to="/mentor-dashboard?tab=feedback" replace />}
+              element={<Navigate to="/mentor?tab=feedback" replace />}
             />
             <Route
               path="/mentor-dashboard/notifications"
-              element={<Navigate to="/mentor-dashboard?tab=notifications" replace />}
+              element={<Navigate to="/mentor?tab=notifications" replace />}
             />
             <Route
               path="/mentor-dashboard/account"
-              element={<Navigate to="/mentor-dashboard?tab=account" replace />}
+              element={<Navigate to="/mentor?tab=account" replace />}
             />
             <Route
               path="/mentor-dashboard/community"
-              element={<Navigate to="/mentor-dashboard?tab=community" replace />}
+              element={<Navigate to="/mentor?tab=community" replace />}
             />
 
             {/* Admin Management routes */}

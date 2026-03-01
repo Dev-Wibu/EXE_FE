@@ -2,6 +2,8 @@ import { ArrowLeft, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { formatDate } from "@/lib/formatting";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,15 +15,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { CommentSection } from "./components/CommentSection";
 import { LikeButton } from "./components/LikeButton";
 import { LikeListModal } from "./components/LikeListModal";
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 export function PostDetailPage() {
   const { postId } = useParams<{ postId: string }>();

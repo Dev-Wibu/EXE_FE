@@ -34,7 +34,7 @@ export function AIChatListPage() {
 
   const handleNewChat = () => {
     // Navigate to a new chat conversation
-    navigate("/dashboard/ai-chat/new");
+    navigate("/user/ai-chat/new");
   };
 
   const handleOpenChat = (sessionId: number) => {

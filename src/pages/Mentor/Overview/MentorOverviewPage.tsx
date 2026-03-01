@@ -1,6 +1,7 @@
 import { Calendar, Star, TrendingUp, Users } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 
 export function MentorOverviewPage() {
@@ -14,14 +15,6 @@ export function MentorOverviewPage() {
     totalStudents: 15,
     averageRating: 4.8,
     totalEarnings: 12000000,
-  };
-
-  // Format currency
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
   };
 
   return (

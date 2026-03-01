@@ -1,22 +1,15 @@
-import {
-  Calendar,
-  Clock,
-  LoaderCircle,
-  LogIn,
-  Search,
-  User as UserIcon,
-  Users,
-  Video,
-} from "lucide-react";
+import { Calendar, Clock, LogIn, Search, User as UserIcon, Users, Video } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LoadingCardList } from "@/components/ui/loading-card";
 import { useUserSessions } from "@/hooks/useSession";
+import { getMockInterviewStatusBadge } from "@/lib/status-utils";
 
 export function MockInterviewListPage() {
   const navigate = useNavigate();
@@ -77,27 +70,6 @@ export function MockInterviewListPage() {
     );
   }, [interviews, searchQuery]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "upcoming":
-        return (
-          <Badge className="inline-flex items-center gap-1 border border-sky-200 bg-sky-50 px-2.5 py-1 text-sky-700 hover:bg-sky-100">
-            <Calendar className="h-3.5 w-3.5" />
-            Sắp diễn ra
-          </Badge>
-        );
-      case "ongoing":
-        return (
-          <Badge className="inline-flex items-center gap-1 border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700 hover:bg-emerald-100">
-            <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-            Đang diễn ra
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="bg-background min-h-screen p-8">
       {/* Top Banner */}
@@ -117,7 +89,7 @@ export function MockInterviewListPage() {
               variant="secondary"
               size="lg"
               className="mt-2 w-fit"
-              onClick={() => navigate("/dashboard/mock-interview/schedule")}>
+              onClick={() => navigate("/user/mock-interview/schedule")}>
               <Video className="mr-2 h-5 w-5" />
               Đặt lịch phỏng vấn mới
             </Button>
@@ -212,7 +184,7 @@ export function MockInterviewListPage() {
                         Chưa đến giờ
                       </Badge>
                     )}
-                  {getStatusBadge(interview.status)}
+                  <StatusBadge {...getMockInterviewStatusBadge(interview.status)} />
                 </div>
               </CardContent>
             </Card>
@@ -246,7 +218,7 @@ export function MockInterviewListPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center pb-6">
-                <Button size="lg" onClick={() => navigate("/dashboard/mock-interview/schedule")}>
+                <Button size="lg" onClick={() => navigate("/user/mock-interview/schedule")}>
                   <Users className="mr-2 h-5 w-5" />
                   Chọn Mentor
                 </Button>

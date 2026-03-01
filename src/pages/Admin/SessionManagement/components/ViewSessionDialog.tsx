@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { formatDateTime } from "@/lib/formatting";
+import { getSessionStatusBadge } from "@/lib/status-utils";
 
 import type { Session } from "../types";
 
@@ -17,15 +19,6 @@ interface ViewSessionDialogProps {
   onOpenChange: (open: boolean) => void;
   session: Session | null;
 }
-
-const formatDateTime = (dateString?: string) => {
-  if (!dateString) return "-";
-  try {
-    return new Date(dateString).toLocaleString();
-  } catch {
-    return "-";
-  }
-};
 
 const formatDuration = (seconds?: number) => {
   if (!seconds) return "-";
@@ -36,23 +29,6 @@ const formatDuration = (seconds?: number) => {
     return `${hours}g ${minutes}p ${secs}s`;
   }
   return `${minutes}p ${secs}s`;
-};
-
-const getStatusBadgeVariant = (
-  status?: string
-): "default" | "secondary" | "destructive" | "outline" => {
-  switch (status) {
-    case "COMPLETED":
-      return "default";
-    case "ONGOING":
-      return "secondary";
-    case "SCHEDULED":
-      return "outline";
-    case "CANCELED":
-      return "destructive";
-    default:
-      return "outline";
-  }
 };
 
 export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSessionDialogProps) {
@@ -74,7 +50,14 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Trạng thái</p>
-              <Badge variant={getStatusBadgeVariant(session.status)}>{session.status}</Badge>
+              {(() => {
+                const statusConfig = getSessionStatusBadge(session.status);
+                return (
+                  <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                    {statusConfig.label}
+                  </Badge>
+                );
+              })()}
             </div>
             <div className="col-span-2">
               <p className="text-sm font-medium text-gray-500">Tên phòng</p>

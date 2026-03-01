@@ -26,8 +26,6 @@ import { Footer, Header } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDashboardPath, useAuthStore } from "@/stores/authStore";
-// import { ImageCarousel } from "@/components/ui/image-carousel";
 import { TestimonialCarousel } from "@/components/ui/testimonial-carousel";
 import {
   mockFeatures,
@@ -36,14 +34,7 @@ import {
   mockStats,
   mockTestimonials,
 } from "@/mocks/homepage.mock";
-
-// Banner images - empty placeholders for now
-// const bannerImages = [
-//   { src: "", alt: "Banner 1 - Phỏng vấn thành công" },
-//   { src: "", alt: "Banner 2 - AI Interview" },
-//   { src: "", alt: "Banner 3 - Mentor hàng đầu" },
-//   { src: "", alt: "Banner 4 - Cơ hội việc làm" },
-// ];
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 // Icon mapping for job roles - using blue color from color.md
 const jobRoleIcons: Record<string, React.ReactNode> = {
@@ -64,18 +55,6 @@ export function HomePage() {
     <div className="relative w-full overflow-hidden bg-white dark:bg-slate-950">
       {/* Header - Using shared component */}
       <Header />
-
-      {/* Hero Banner Carousel - Temporarily disabled */}
-      {/* <section className="relative w-full bg-gradient-to-b from-slate-50 to-white pt-4 pb-8 dark:from-slate-900 dark:to-slate-950">
-        <div className="mx-auto max-w-7xl px-6">
-          <ImageCarousel
-            images={bannerImages}
-            autoPlay={true}
-            interval={5000}
-            className="shadow-xl"
-          />
-        </div>
-      </section> */}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-[#DCEEFF]/30 py-20 lg:py-32 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">

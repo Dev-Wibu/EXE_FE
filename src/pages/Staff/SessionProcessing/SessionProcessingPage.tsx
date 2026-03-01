@@ -2,7 +2,7 @@ import { Calendar, Check, Clock, Eye, Search, Video, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { PaginationControl } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +32,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { usePagination } from "@/hooks/usePagination";
 import { useSessions, useUpdateSessionStatus } from "@/hooks/useSession";
 import type { Session, SessionStatus } from "@/interfaces";
+import { formatDateTime } from "@/lib/formatting";
+import { getSessionStatusBadge } from "@/lib/status-utils";
 
 type StatusFilter = SessionStatus | "all";
 
@@ -109,69 +111,6 @@ export function SessionProcessingPage() {
       }
     );
   }, [confirmAction, updateStatusMutation]);
-
-  const formatDateTime = (dateStr?: string) => {
-    if (!dateStr) return "-";
-    try {
-      return new Date(dateStr).toLocaleString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case "DRAFT":
-        return (
-          <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-            <Clock className="mr-1 h-3 w-3" />
-            Chờ duyệt
-          </Badge>
-        );
-      case "SCHEDULED":
-        return (
-          <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
-            <Calendar className="mr-1 h-3 w-3" />
-            Đã lên lịch
-          </Badge>
-        );
-      case "REJECTED":
-        return (
-          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
-            <X className="mr-1 h-3 w-3" />
-            Bị từ chối
-          </Badge>
-        );
-      case "ONGOING":
-        return (
-          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
-            <Video className="mr-1 h-3 w-3 animate-pulse" />
-            Đang diễn ra
-          </Badge>
-        );
-      case "COMPLETED":
-        return (
-          <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-700">
-            <Check className="mr-1 h-3 w-3" />
-            Hoàn thành
-          </Badge>
-        );
-      case "CANCELED":
-        return (
-          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
-            Đã hủy
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status ?? "N/A"}</Badge>;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -287,7 +226,9 @@ export function SessionProcessingPage() {
                 <TableCell>{session.userId ?? "-"}</TableCell>
                 <TableCell>{session.userId2 ?? "-"}</TableCell>
                 <TableCell>{formatDateTime(session.joinTime)}</TableCell>
-                <TableCell>{getStatusBadge(session.status)}</TableCell>
+                <TableCell>
+                  <StatusBadge {...getSessionStatusBadge(session.status)} />
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <TooltipProvider>
@@ -432,7 +373,9 @@ export function SessionProcessingPage() {
               )}
               <div className="grid grid-cols-[140px_1fr] gap-2">
                 <span className="font-medium text-gray-600">Trạng thái:</span>
-                <span>{getStatusBadge(viewSession.status)}</span>
+                <span>
+                  <StatusBadge {...getSessionStatusBadge(viewSession.status)} />
+                </span>
               </div>
             </div>
           )}

@@ -1,4 +1,17 @@
+import {
+  ClipboardCheck,
+  Headphones,
+  LayoutDashboard,
+  MessageSquare,
+  Newspaper,
+  Star,
+  UserCheck,
+  Video,
+} from "lucide-react";
 import { useCallback, useState } from "react";
+
+import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
+import { DashboardChromeTabs, DashboardSidebar } from "@/components/shared";
 
 import { ContentModerationPage } from "../ContentModeration";
 import { FeedbackModerationPage } from "../FeedbackModeration";
@@ -7,13 +20,24 @@ import { PostModerationPage } from "../PostModeration";
 import { ReviewModerationPage } from "../ReviewModeration";
 import { SessionProcessingPage } from "../SessionProcessing";
 import { UserSupportPage } from "../UserSupport";
-import type { Tab, TabType } from "./components";
-import { ChromeTabs, Sidebar } from "./components";
 
-// Generate unique tab ID
+type TabType =
+  | "mentorApplications"
+  | "sessions"
+  | "userSupport"
+  | "contentModeration"
+  | "reviewModeration"
+  | "feedbackModeration"
+  | "postModeration";
+
+interface Tab {
+  id: string;
+  type: TabType;
+  title: string;
+}
+
 const generateTabId = () => `tab-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
-// Get tab title based on type
 const getTabTitle = (type: TabType): string => {
   switch (type) {
     case "mentorApplications":
@@ -35,50 +59,135 @@ const getTabTitle = (type: TabType): string => {
   }
 };
 
-/**
- * Staff Dashboard Page
- *
- * This page is designed for STAFF role users who handle operational tasks.
- * Key differences from Admin Dashboard:
- *
- * - Staff focuses on PROCESSING tasks (approvals, support, moderation)
- * - Admin focuses on MANAGEMENT tasks (configuration, user roles, settings)
- *
- * Staff features:
- * - Mentor application verification/approval
- * - Session monitoring and issue handling
- * - User support ticket management
- * - Content moderation (questions, resources)
- * - Review moderation
- * - Feedback moderation
- *
- * Admin features (not included here):
- * - User role management
- * - System configuration
- * - Question set configuration
- * - User CRUD operations
- */
+const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
+  {
+    items: [
+      { type: "mentorApplications", label: "Duyệt Mentor" },
+      { type: "sessions", label: "Phiên Phỏng Vấn" },
+      { type: "userSupport", label: "Hỗ Trợ" },
+      { type: "contentModeration", label: "Kiểm Duyệt Nội Dung" },
+    ],
+  },
+  {
+    items: [
+      {
+        type: "reviewModeration",
+        label: "Kiểm Duyệt Đánh Giá",
+        icon: Star,
+        iconColor: "text-yellow-600",
+      },
+      {
+        type: "feedbackModeration",
+        label: "Kiểm Duyệt Phản Hồi",
+        icon: MessageSquare,
+        iconColor: "text-cyan-600",
+      },
+      {
+        type: "postModeration",
+        label: "Kiểm Duyệt Bài Viết",
+        icon: Newspaper,
+        iconColor: "text-purple-600",
+      },
+    ],
+  },
+];
+
+const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
+  {
+    label: "Nghiệp Vụ",
+    items: [
+      {
+        type: "mentorApplications",
+        icon: UserCheck,
+        label: "Duyệt Mentor",
+        color: "text-green-600",
+        description: "Xử lý đăng ký mentor",
+      },
+      {
+        type: "sessions",
+        icon: Video,
+        label: "Phiên Phỏng Vấn",
+        color: "text-blue-600",
+        description: "Quản lý phiên phỏng vấn",
+      },
+      {
+        type: "userSupport",
+        icon: Headphones,
+        label: "Hỗ Trợ",
+        color: "text-orange-600",
+        description: "Hỗ trợ người dùng",
+      },
+      {
+        type: "contentModeration",
+        icon: ClipboardCheck,
+        label: "Kiểm Duyệt",
+        color: "text-purple-600",
+        description: "Kiểm duyệt nội dung",
+      },
+    ],
+  },
+  {
+    label: "Kiểm Duyệt",
+    items: [
+      {
+        type: "reviewModeration",
+        icon: Star,
+        label: "Đánh Giá",
+        color: "text-yellow-600",
+        description: "Kiểm duyệt đánh giá",
+      },
+      {
+        type: "feedbackModeration",
+        icon: MessageSquare,
+        label: "Phản Hồi",
+        color: "text-cyan-600",
+        description: "Kiểm duyệt phản hồi",
+      },
+      {
+        type: "postModeration",
+        icon: Newspaper,
+        label: "Bài Viết",
+        color: "text-purple-600",
+        description: "Kiểm duyệt bài viết",
+      },
+    ],
+  },
+];
+
+const STAFF_SIDEBAR_LOGO = (
+  <>
+    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-600">
+      <LayoutDashboard className="h-6 w-6 text-white" />
+    </div>
+    <div>
+      <h1 className="font-semibold text-gray-900 dark:text-white">Bảng Điều Phối</h1>
+      <p className="text-xs text-gray-500 dark:text-slate-400">Xử lý thường trực</p>
+    </div>
+  </>
+);
+
+const STAFF_SIDEBAR_LOGO_COLLAPSED = (
+  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-600">
+    <LayoutDashboard className="h-6 w-6 text-white" />
+  </div>
+);
+
 export function StaffDashboardPage() {
-  // Initialize with mentor applications as the default tab (most common task)
   const [tabs, setTabs] = useState<Tab[]>([
     { id: generateTabId(), type: "mentorApplications", title: "Duyệt Mentor" },
   ]);
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
 
-  // Get the active tab
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
-  // Handle tab selection
   const handleTabSelect = useCallback((tabId: string) => {
     setActiveTabId(tabId);
   }, []);
 
-  // Handle tab close
   const handleTabClose = useCallback(
     (tabId: string) => {
       setTabs((prevTabs) => {
         const newTabs = prevTabs.filter((tab) => tab.id !== tabId);
-        // If we're closing the active tab, switch to another tab
         if (tabId === activeTabId && newTabs.length > 0) {
           const closedIndex = prevTabs.findIndex((tab) => tab.id === tabId);
           const newActiveIndex = Math.min(closedIndex, newTabs.length - 1);
@@ -90,21 +199,18 @@ export function StaffDashboardPage() {
     [activeTabId]
   );
 
-  // Handle new tab creation
-  const handleNewTab = useCallback((type: TabType) => {
+  const handleNewTab = useCallback((type: string) => {
     const newTab: Tab = {
       id: generateTabId(),
-      type,
-      title: getTabTitle(type),
+      type: type as TabType,
+      title: getTabTitle(type as TabType),
     };
     setTabs((prevTabs) => [...prevTabs, newTab]);
     setActiveTabId(newTab.id);
   }, []);
 
-  // Handle sidebar navigation (opens in new tab or switches to existing)
   const handleSidebarNavigate = useCallback(
-    (type: TabType) => {
-      // Check if a tab of this type already exists
+    (type: string) => {
       const existingTab = tabs.find((tab) => tab.type === type);
       if (existingTab) {
         setActiveTabId(existingTab.id);
@@ -115,7 +221,6 @@ export function StaffDashboardPage() {
     [tabs, handleNewTab]
   );
 
-  // Render the content based on active tab type
   const renderContent = () => {
     if (!activeTab) return null;
 
@@ -141,21 +246,71 @@ export function StaffDashboardPage() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
-      {/* Sidebar */}
-      <Sidebar onNavigate={handleSidebarNavigate} currentView={activeTab?.type} />
+      <DashboardSidebar
+        menuGroups={SIDEBAR_MENU_GROUPS}
+        activeTab={activeTab?.type || "mentorApplications"}
+        onNavigate={handleSidebarNavigate}
+        storageKey="staff_sidebar_collapsed"
+        logo={STAFF_SIDEBAR_LOGO}
+        collapsedLogo={STAFF_SIDEBAR_LOGO_COLLAPSED}
+        showSettings
+        settingsLabel="Cài đặt"
+        theme={{
+          wrapper: "h-full border-r bg-white",
+          expandedWidth: "w-64",
+          toggleBtn:
+            "absolute top-16 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-colors hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+          toggleIconColor: "text-gray-600",
+          logoBorder: "border-b",
+          logoExpandedPadding: "gap-3 px-4 py-4",
+          logoCollapsedPadding: "justify-center px-2 py-4",
+          navWrapper: "flex-1 space-y-1 overflow-y-auto",
+          navExpandedPadding: "p-4",
+          navCollapsedPadding: "p-2",
+          sectionLabel:
+            "text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-slate-400",
+          divider: "",
+          itemPy: "py-2",
+          activeItem: "bg-gray-100 text-gray-900 dark:bg-slate-800 dark:text-white",
+          inactiveItem:
+            "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
+          footerBorder: "border-t",
+          footerExpandedPadding: "p-4",
+          footerCollapsedPadding: "p-2",
+          themeToggleLabel: "Giao diện",
+          logoutExpandedBtn:
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
+          logoutCollapsedBtn:
+            "flex items-center justify-center rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
+          logoutIcon: "",
+          logoutLabel: "Đăng xuất",
+        }}
+      />
 
-      {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Chrome Tabs */}
-        <ChromeTabs
+        <DashboardChromeTabs
           tabs={tabs}
           activeTabId={activeTabId}
           onTabSelect={handleTabSelect}
           onTabClose={handleTabClose}
           onNewTab={handleNewTab}
+          menuGroups={CHROME_TABS_MENU_GROUPS}
+          compact
+          theme={{
+            bg: "bg-gray-100",
+            tabActiveBorder: "border-gray-200",
+            tabActiveBg: "bg-white",
+            tabActiveText: "text-gray-900",
+            tabInactiveBg: "bg-gray-200",
+            tabInactiveHover: "hover:bg-gray-100",
+            tabInactiveText: "text-gray-600",
+            closeHover: "hover:bg-gray-200",
+            addBtnBg: "bg-transparent",
+            addBtnHover: "hover:bg-gray-200",
+            menuHover: "hover:bg-accent",
+          }}
         />
 
-        {/* Tab Content */}
         <div className="flex-1 overflow-auto">{renderContent()}</div>
       </div>
     </div>

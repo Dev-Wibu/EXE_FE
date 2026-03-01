@@ -1,6 +1,7 @@
 import { CheckCircle, Eye, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getContentStatusBadge } from "@/lib/status-utils";
 
 /**
  * Mock data for content moderation
@@ -87,27 +89,6 @@ export function ContentModerationPage() {
 
     return true;
   });
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="secondary">Chờ duyệt</Badge>;
-      case "approved":
-        return (
-          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
-            Đã duyệt
-          </Badge>
-        );
-      case "rejected":
-        return (
-          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
-            Từ chối
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
@@ -186,7 +167,9 @@ export function ContentModerationPage() {
                 <TableCell>{content.author}</TableCell>
                 <TableCell>{content.category}</TableCell>
                 <TableCell>{content.createdAt}</TableCell>
-                <TableCell>{getStatusBadge(content.status)}</TableCell>
+                <TableCell>
+                  <StatusBadge {...getContentStatusBadge(content.status)} />
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button size="sm" variant="ghost">

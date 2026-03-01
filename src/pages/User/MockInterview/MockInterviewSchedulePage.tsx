@@ -191,7 +191,7 @@ export function MockInterviewSchedulePage() {
         },
       });
       // Navigate to confirmation page instead of room (session is DRAFT, needs approval)
-      navigate("/dashboard/mock-interview/booking-success", {
+      navigate("/user/mock-interview/booking-success", {
         state: {
           mentorName: selectedMentor?.name || "Mentor",
           joinTime: formatSelectedDateTime(),
@@ -208,7 +208,7 @@ export function MockInterviewSchedulePage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard/mock-interview")}>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/user/mock-interview")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại
         </Button>

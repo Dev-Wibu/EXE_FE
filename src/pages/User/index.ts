@@ -4,20 +4,15 @@ export { OverviewPage } from "./Overview";
 // AI Interview exports
 export {
   AIInterviewListPage,
-  AIInterviewPaymentPage,
-  AIInterviewPaymentRedirectPage,
-  AIInterviewPaymentSuccessPage,
   AIInterviewResultPage,
   AIInterviewSessionPage,
+  AIInterviewSetupPage,
 } from "./AIInterview";
 
 // Mock Interview exports
 export {
   BookingSuccessPage,
-  MockInterviewConfirmPage,
   MockInterviewListPage,
-  MockInterviewPaymentRedirectPage,
-  MockInterviewPaymentSuccessPage,
   MockInterviewSchedulePage,
   MockInterviewSelectMentorPage,
   SessionDetailPage,

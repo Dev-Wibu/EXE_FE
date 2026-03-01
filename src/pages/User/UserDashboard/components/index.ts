@@ -1,2 +1,1 @@
-export { ChromeTabs, type Tab, type TabType } from "./ChromeTabs";
-export { Sidebar } from "./Sidebar";
+// Components moved to @/components/shared/DashboardChromeTabs and @/components/shared/DashboardSidebar

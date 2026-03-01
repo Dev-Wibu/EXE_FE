@@ -24,6 +24,7 @@ import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/c
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { $api } from "@/lib/api";
+import { formatDateTime } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 
 // Map interview mode enum → label tiếng Việt
@@ -67,6 +68,18 @@ const RESULT_LABELS: Record<string, string> = {
   REJECT: "Không đạt",
 };
 
+// Backend timestamps không có suffix timezone — cần append "Z" để parse đúng UTC
+const normalizeTs = (dateStr: string) =>
+  dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + "Z";
+
+// SessionKey hết hạn sau 1 giờ kể từ lúc tạo (backend chỉ cập nhật status CANCELLED lazily)
+const SESSION_EXPIRY_MS = 60 * 60 * 1000;
+
+const isSessionExpired = (createdAt?: string) => {
+  if (!createdAt) return true;
+  return Date.now() - new Date(normalizeTs(createdAt)).getTime() >= SESSION_EXPIRY_MS;
+};
+
 export function AIInterviewListPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,42 +105,33 @@ export function AIInterviewListPage() {
   );
 
   const activeSessions = useMemo(
-    () => allSessions.filter((s) => s.status === "IN_PROGRESS" && s.sessionKey != null),
+    () =>
+      allSessions.filter(
+        (s) => s.status === "IN_PROGRESS" && s.sessionKey != null && !isSessionExpired(s.createdAt)
+      ),
     [allSessions]
   );
 
   const historySessions = useMemo(() => {
-    const list = allSessions.filter((s) => s.status !== "IN_PROGRESS" || s.sessionKey == null);
+    // Session bị loại khỏi activeSessions (không phải IN_PROGRESS, không có sessionKey, hoặc đã hết hạn) → vào lịch sử
+    const list = allSessions.filter(
+      (s) => s.status !== "IN_PROGRESS" || s.sessionKey == null || isSessionExpired(s.createdAt)
+    );
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter((s) => {
-      const modeLabel = MODE_LABELS[s.mode ?? ""] ?? "";
+      const modeLabel = MODE_LABELS[s.mode ?? ""] ?? s.mode ?? "";
       const domain = s.domain ?? "";
       return modeLabel.toLowerCase().includes(q) || domain.toLowerCase().includes(q);
     });
   }, [allSessions, searchQuery]);
 
   const handleResume = (key: string) => {
-    navigate(`/dashboard/ai-interview/session?sessionKey=${key}`);
+    navigate(`/user/ai-interview/session?sessionKey=${key}`);
   };
 
   const handleViewResult = (sessionId: number | undefined) => {
-    navigate(`/dashboard/ai-interview/result/${sessionId}`);
-  };
-
-  const formatDateTime = (dateStr?: string) => {
-    if (!dateStr) return "—";
-    // Backend trả về timestamp không có suffix timezone — ép parse UTC bằng cách gắn "Z"
-    const normalized =
-      dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + "Z";
-    return new Date(normalized).toLocaleString("vi-VN", {
-      timeZone: "Asia/Ho_Chi_Minh",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    navigate(`/user/ai-interview/result/${sessionId}`);
   };
 
   return (
@@ -148,7 +152,7 @@ export function AIInterviewListPage() {
               variant="secondary"
               size="lg"
               className="mt-2 w-fit"
-              onClick={() => navigate("/dashboard/ai-interview/payment")}>
+              onClick={() => navigate("/user/ai-interview/setup")}>
               <Plus className="mr-2 h-5 w-5" />
               Bắt đầu phỏng vấn mới
             </Button>
@@ -317,9 +321,10 @@ export function AIInterviewListPage() {
             </div>
             <div className="space-y-4">
               {historySessions.map((session, index) => {
+                // "Đã hết hạn" nếu: sessionKey null, HOẶC session IN_PROGRESS nhưng đã qua 1 giờ
                 const isExpired =
-                  session.sessionKey == null &&
-                  (session.status === "CREATED" || session.status === "IN_PROGRESS");
+                  (session.status === "CREATED" || session.status === "IN_PROGRESS") &&
+                  (session.sessionKey == null || isSessionExpired(session.createdAt));
                 const statusConfig = isExpired
                   ? { label: "Đã hết hạn", className: "bg-gray-100 text-gray-600" }
                   : (STATUS_CONFIG[session.status ?? ""] ?? {
@@ -494,7 +499,7 @@ export function AIInterviewListPage() {
                   <Button
                     variant="secondary"
                     size="lg"
-                    onClick={() => navigate("/dashboard/ai-interview/payment")}>
+                    onClick={() => navigate("/user/ai-interview/setup")}>
                     Tạo phỏng vấn mới
                   </Button>
                 </CardContent>

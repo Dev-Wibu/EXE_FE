@@ -1,9 +1,10 @@
-import { CheckCircle, Clock, Loader2, Search, UserCheck, XCircle } from "lucide-react";
+import { CheckCircle, Loader2, Search, UserCheck, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
 import { SortButton } from "@/components/shared/SortButton";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,6 +25,7 @@ import {
 import { usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
 import type { Mentor } from "@/interfaces";
+import { getMentorApplicationBadge } from "@/lib/status-utils";
 import { mentorManager } from "@/services/mentor.manager";
 
 type ApplicationStatus = "pending" | "approved" | "rejected" | "all";
@@ -157,28 +159,6 @@ export function MentorApplicationsPage() {
     }
   };
 
-  const getStatusBadge = (mentor: Mentor) => {
-    const status = getApplicationStatus(mentor);
-    switch (status) {
-      case "pending":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
-            <Clock className="h-3 w-3" />
-            Chờ duyệt
-          </span>
-        );
-      case "approved":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
-            <CheckCircle className="h-3 w-3" />
-            Đã duyệt
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
   const pendingCount = mentors.filter((m) => !m.active).length;
 
   return (
@@ -280,7 +260,9 @@ export function MentorApplicationsPage() {
                     <TableCell className="max-w-[200px] truncate">{mentor.expertise}</TableCell>
                     <TableCell>{mentor.yearsOfExperience} năm</TableCell>
                     <TableCell>{mentor.currentCompany}</TableCell>
-                    <TableCell>{getStatusBadge(mentor)}</TableCell>
+                    <TableCell>
+                      <StatusBadge {...getMentorApplicationBadge(!!mentor.active)} />
+                    </TableCell>
                     <TableCell className="text-right">
                       {status === "pending" && (
                         <div className="flex justify-end gap-2">

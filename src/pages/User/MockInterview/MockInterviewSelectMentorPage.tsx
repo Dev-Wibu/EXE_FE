@@ -11,7 +11,7 @@ export function MockInterviewSelectMentorPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("/dashboard/mock-interview/schedule", { replace: true });
+    navigate("/user/mock-interview/schedule", { replace: true });
   }, [navigate]);
 
   return null;

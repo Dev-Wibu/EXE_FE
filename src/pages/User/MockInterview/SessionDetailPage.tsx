@@ -78,7 +78,7 @@ export function SessionDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate("/dashboard/mock-interview")}>
+      <Button variant="ghost" onClick={() => navigate("/user/mock-interview")}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại lịch sử
       </Button>
