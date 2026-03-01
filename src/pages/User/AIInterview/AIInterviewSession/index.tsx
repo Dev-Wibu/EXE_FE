@@ -94,7 +94,10 @@ export function AIInterviewSessionPage() {
         questionIndex={session.currentQuestionIndex}
         totalQuestions={session.totalQuestions}
         finished={session.interviewFinished}
-        onBack={() => session.navigate("/user?tab=aiInterview")}
+        isTTSSupported={session.isTTSSupported}
+        isMuted={session.isMuted}
+        onToggleMute={session.toggleMute}
+        onBack={session.handleNavigateBack}
       />
       <ChatPanel
         messages={session.messages}
@@ -104,11 +107,12 @@ export function AIInterviewSessionPage() {
         speakingId={session.speakingId}
         isEvaluating={session.isEvaluating}
         isSubmitting={session.isSubmitting}
+        isLastAnswer={session.isLastAnswer}
         hasStarted={session.hasStarted}
         messagesEndRef={session.messagesEndRef}
         interviewFinished={session.interviewFinished}
         sessionExpiredMidway={session.sessionExpiredMidway}
-        onNavigateToList={() => session.navigate("/user?tab=aiInterview")}
+        onNavigateToList={session.handleNavigateBack}
         onNavigateToSetup={() => session.navigate("/user/ai-interview/setup")}
         onViewResults={session.handleViewResults}
         onSendAnswer={session.handleSendAnswer}

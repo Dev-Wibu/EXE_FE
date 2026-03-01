@@ -29,8 +29,10 @@ export function useAIInterviewSession() {
   const {
     speakingId,
     isSupported: isTTSSupported,
+    isMuted,
     speak,
     cancel: cancelSpeech,
+    toggleMute,
   } = useSpeechSynthesis("vi-VN");
 
   // Toggle TTS cho một tin nhắn — nếu đang phát tin này thì dừng, ngược lại phát mới
@@ -98,6 +100,8 @@ export function useAIInterviewSession() {
   const hasProcessedStartRef = useRef(false);
   // Guard để tránh khôi phục từ cache nhiều lần
   const hasRestoredFromCacheRef = useRef(false);
+  // Ref đồng bộ với messages state để tránh stale closure trong các useEffect
+  const messagesRef = useRef<ChatMessage[]>([]);
 
   // Lấy trạng thái Redis của phiên đang chạy — dùng để:
   // 1. Lấy dbId (numeric session ID) cho navigate đến trang kết quả
@@ -126,11 +130,12 @@ export function useAIInterviewSession() {
 
   // Khôi phục lịch sử chat từ Redis khi localStorage bị xóa (ví dụ: private browsing)
   useEffect(() => {
-    if (!cacheData || hasRestoredFromCacheRef.current || messages.length > 0) return;
-    hasRestoredFromCacheRef.current = true;
+    // Dùng messagesRef thay vì messages để tránh stale closure khi start effect đã cập nhật messages
+    if (!cacheData || hasRestoredFromCacheRef.current || messagesRef.current.length > 0) return;
 
     const restored: ChatMessage[] = [];
     let counter = 1;
+    let lastPhaseName: string | undefined;
     for (const exchange of cacheData.chatHistory ?? []) {
       if (exchange.questionText) {
         restored.push({
@@ -138,10 +143,11 @@ export function useAIInterviewSession() {
           role: "ai",
           content: exchange.questionText,
           timestamp: exchange.submittedAt
-            ? new Date(exchange.submittedAt).toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+            ? new Date(
+                exchange.submittedAt.endsWith("Z")
+                  ? exchange.submittedAt
+                  : exchange.submittedAt + "Z"
+              ).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
             : "—",
         });
       }
@@ -153,9 +159,10 @@ export function useAIInterviewSession() {
           timestamp: "—",
         });
       }
+      if (exchange.phaseName) lastPhaseName = exchange.phaseName;
     }
-    // Câu hỏi hiện tại đang chờ user trả lời
-    if (cacheData.currentQuestionText) {
+    // Câu hỏi đang chờ user trả lời — chỉ thêm nếu start chưa xử lý (tránh trùng lặp race condition)
+    if (cacheData.currentQuestionText && !hasProcessedStartRef.current) {
       restored.push({
         id: counter++,
         role: "ai",
@@ -163,12 +170,15 @@ export function useAIInterviewSession() {
         timestamp: "—",
       });
     }
+
     if (restored.length > 0) {
+      hasRestoredFromCacheRef.current = true;
+      hasProcessedStartRef.current = true;
       setMessages(restored);
+      messagesRef.current = restored;
       msgIdCounter.current = counter;
       setHasStarted(true);
-      // Đánh dấu đã xử lý để startQuery không thêm câu hỏi trùng
-      hasProcessedStartRef.current = true;
+      if (lastPhaseName) setCurrentPhase(lastPhaseName);
     }
     if (cacheData.currentQuestionIndex != null) {
       setCurrentQuestionIndex(cacheData.currentQuestionIndex);
@@ -184,6 +194,11 @@ export function useAIInterviewSession() {
   }, []); // chỉ chạy 1 lần khi mount
 
   const submitMutation = $api.useMutation("post", "/api/v1/interview/submit");
+
+  // Giữ messagesRef luôn đồng bộ với messages state (tránh stale closure)
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Persist chat history to localStorage whenever messages change
   useEffect(() => {
@@ -242,6 +257,7 @@ export function useAIInterviewSession() {
         // Sau 3 giây ẩn evaluating và hiện completion card
         setTimeout(() => {
           setIsEvaluating(false);
+          setIsSubmitting(false);
           setInterviewFinished(true);
           setMessages((prev) => [
             ...prev,
@@ -274,13 +290,13 @@ export function useAIInterviewSession() {
             },
           },
         ]);
-        // Tự động đọc to câu hỏi mới của AI
-        if (isTTSSupported) {
+        // Tự động đọc to câu hỏi mới của AI — bỏ qua nếu người dùng đã tắt tiếng
+        if (isTTSSupported && !isMuted) {
           speak(data.questionContent, newId);
         }
       }
     },
-    [isTTSSupported, speak, cancelSpeech] // eslint-disable-line react-hooks/exhaustive-deps
+    [isTTSSupported, isMuted, speak, cancelSpeech] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // Start interview — GET /api/v1/interview/start/{sessionKey}
@@ -344,6 +360,8 @@ export function useAIInterviewSession() {
       }
 
       setTimeout(() => {
+        // Nếu khôi phục từ cache đã chạy trước timeout, bỏ qua để tránh thêm câu hỏi trùng
+        if (hasRestoredFromCacheRef.current) return;
         addAIMessage(startData);
       }, 600);
     }
@@ -365,10 +383,12 @@ export function useAIInterviewSession() {
       ]);
 
       setIsSubmitting(true);
+      let finished = false;
       try {
         const response = await submitMutation.mutateAsync({
           body: { sessionKey, answer },
         });
+        finished = !!response?.finished;
         addAIMessage(response);
       } catch (err) {
         const errMsg = (err as { message?: string })?.message?.toLowerCase() ?? "";
@@ -399,7 +419,11 @@ export function useAIInterviewSession() {
           ]);
         }
       } finally {
-        setIsSubmitting(false);
+        // Khi câu trả lời cuối cùng, addAIMessage đã gọi setIsEvaluating(true)
+        // → không tắt isSubmitting ở đây để EvaluatingIndicator hiển thị ngay
+        if (!finished) {
+          setIsSubmitting(false);
+        }
       }
     },
     [sessionKey, isSubmitting, interviewFinished, submitMutation, addAIMessage]
@@ -428,6 +452,18 @@ export function useAIInterviewSession() {
     }
   }, [sessionKey, sessionId, navigate]);
 
+  // Invalidate danh sách phiên rồi quay lại — đảm bảo trang list hiển thị đúng người dùng không cần F5
+  const handleNavigateBack = useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: ["get", "/api/interview-sessions/user/{userId}"],
+    });
+    navigate("/user?tab=aiInterview");
+  }, [navigate]);
+
+  // isLastAnswer = true khi đang chờ phản hồi câu cuối cùng — dùng để hiện EvaluatingIndicator sớm
+  const isLastAnswer =
+    isSubmitting && !isEvaluating && totalQuestions > 0 && currentQuestionIndex >= totalQuestions;
+
   return {
     navigate,
     user,
@@ -435,6 +471,7 @@ export function useAIInterviewSession() {
     messages,
     isSubmitting,
     isEvaluating,
+    isLastAnswer,
     interviewFinished,
     sessionExpiredMidway,
     currentPhase,
@@ -449,12 +486,15 @@ export function useAIInterviewSession() {
     startListening,
     stopListening,
     isTTSSupported,
+    isMuted,
+    toggleMute,
     handleToggleSpeak,
     speakingId,
     chatInputValue,
     setChatInputValue,
     handleSendAnswer,
     handleViewResults,
+    handleNavigateBack,
     messagesEndRef,
   };
 }

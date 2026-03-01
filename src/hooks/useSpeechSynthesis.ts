@@ -4,8 +4,10 @@ export interface UseSpeechSynthesisReturn {
   isSpeaking: boolean;
   speakingId: string | number | null;
   isSupported: boolean;
+  isMuted: boolean;
   speak: (_text: string, _id: string | number) => void;
   cancel: () => void;
+  toggleMute: () => void;
 }
 
 export function useSpeechSynthesis(lang = "vi-VN"): UseSpeechSynthesisReturn {
@@ -14,6 +16,7 @@ export function useSpeechSynthesis(lang = "vi-VN"): UseSpeechSynthesisReturn {
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | number | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Hủy TTS khi unmount để không tiếp tục phát sau khi rời trang
@@ -84,5 +87,17 @@ export function useSpeechSynthesis(lang = "vi-VN"): UseSpeechSynthesisReturn {
     setSpeakingId(null);
   }, [isSupported]);
 
-  return { isSpeaking, speakingId, isSupported, speak, cancel };
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      // Tắt âm thanh đang phát nếu người dùng chuyển sang chế độ tắt tiếng
+      if (!prev && isSupported) {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        setSpeakingId(null);
+      }
+      return !prev;
+    });
+  }, [isSupported]);
+
+  return { isSpeaking, speakingId, isSupported, isMuted, speak, cancel, toggleMute };
 }

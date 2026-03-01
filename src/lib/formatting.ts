@@ -1,9 +1,13 @@
 import { format, parseISO } from "date-fns";
 
+// Backend trả về timestamp không có suffix timezone ('T06:26:00' thay vì 'T06:26:00Z')
+// Nếu không có offset, 'parseISO' sẽ hiểu là giờ địa phương thay vì UTC — dẫn đến hiển thị sai 7 tiếng
+const toUtc = (s: string) => (s.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(s) ? s : s + "Z");
+
 export function formatDate(dateStr?: string | null): string {
   if (!dateStr) return "—";
   try {
-    return format(parseISO(dateStr), "dd/MM/yyyy");
+    return format(parseISO(toUtc(dateStr)), "dd/MM/yyyy");
   } catch {
     return "—";
   }
@@ -12,7 +16,7 @@ export function formatDate(dateStr?: string | null): string {
 export function formatDateTime(dateStr?: string | null): string {
   if (!dateStr) return "—";
   try {
-    return format(parseISO(dateStr), "dd/MM/yyyy HH:mm");
+    return format(parseISO(toUtc(dateStr)), "dd/MM/yyyy HH:mm");
   } catch {
     return "—";
   }

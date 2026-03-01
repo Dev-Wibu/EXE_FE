@@ -109,8 +109,10 @@ function ResultSkeleton() {
 function QACard({
   qa,
   index,
+  followUps,
 }: {
   qa: {
+    questionType?: string;
     questionOrder?: number;
     questionText?: string;
     answerText?: string;
@@ -120,6 +122,7 @@ function QACard({
     behavioralWarnings?: string[];
   };
   index: number;
+  followUps?: (typeof qa)[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const score = qa.score ?? 0;
@@ -141,6 +144,19 @@ function QACard({
             <span className="text-primary text-sm font-bold">{qa.questionOrder ?? index + 1}</span>
           </div>
           <div className="min-w-0 flex-1">
+            {qa.questionType && (
+              <div className="mb-1">
+                {qa.questionType === "BLUEPRINT" ? (
+                  <span className="inline-flex items-center rounded-full border border-indigo-300 bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                    Câu chính
+                  </span>
+                ) : qa.questionType === "FOLLOW_UP" ? (
+                  <span className="inline-flex items-center rounded-full border border-violet-300 bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                    Câu tiếp theo
+                  </span>
+                ) : null}
+              </div>
+            )}
             <p className="text-foreground text-sm leading-relaxed font-medium">
               {qa.questionText ?? "Câu hỏi không có nội dung"}
             </p>
@@ -209,6 +225,19 @@ function QACard({
           </div>
         </div>
       )}
+      {/* Follow-up questions grouped under this blueprint */}
+      {followUps && followUps.length > 0 && (
+        <div className="border-t px-5 pt-3 pb-4">
+          <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            Câu hỏi tiếp theo ({followUps.length})
+          </p>
+          <div className="space-y-2 border-l-2 border-violet-200 pl-4 dark:border-violet-800">
+            {followUps.map((fu, fuIdx) => (
+              <QACard key={fu.questionOrder ?? fuIdx} qa={fu} index={fuIdx} />
+            ))}
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
@@ -231,6 +260,21 @@ export function AIInterviewResultPage() {
   const detail = session?.resultDetail;
   const history = detail?.history ?? [];
   const resultConfig = RESULT_MAP[session?.result ?? ""] ?? null;
+
+  type QAItem = (typeof history)[number];
+
+  // Nhóm các câu FOLLOW_UP vào sau câu BLUEPRINT tương ứng
+  const groupedHistory = (() => {
+    const groups: { blueprint: QAItem; followUps: QAItem[] }[] = [];
+    for (const qa of history) {
+      if (qa.questionType === "FOLLOW_UP" && groups.length > 0) {
+        groups[groups.length - 1].followUps.push(qa);
+      } else {
+        groups.push({ blueprint: qa, followUps: [] });
+      }
+    }
+    return groups;
+  })();
 
   if (isLoading) {
     return (
@@ -643,11 +687,16 @@ export function AIInterviewResultPage() {
             <div className="flex items-center gap-2">
               <BookOpen className="text-primary h-5 w-5" />
               <h2 className="text-foreground text-xl font-bold">
-                Chi tiết câu hỏi & trả lời ({history.length})
+                Chi tiết câu hỏi &amp; trả lời ({history.length})
               </h2>
             </div>
-            {history.map((qa, index) => (
-              <QACard key={qa.questionOrder ?? index} qa={qa} index={index} />
+            {groupedHistory.map(({ blueprint, followUps }, index) => (
+              <QACard
+                key={blueprint.questionOrder ?? index}
+                qa={blueprint}
+                index={index}
+                followUps={followUps}
+              />
             ))}
           </div>
         )}

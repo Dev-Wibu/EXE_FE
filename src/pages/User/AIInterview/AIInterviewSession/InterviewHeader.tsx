@@ -1,20 +1,27 @@
-import { ArrowLeft, CheckCircle2, MessageSquare } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageSquare, Volume2, VolumeOff } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function InterviewHeader({
   phaseName,
   questionIndex,
   totalQuestions,
   finished,
+  isTTSSupported,
+  isMuted,
+  onToggleMute,
   onBack,
 }: {
   phaseName: string;
   questionIndex: number;
   totalQuestions: number;
   finished: boolean;
+  isTTSSupported: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onBack: () => void;
 }) {
   const progress = totalQuestions > 0 ? (questionIndex / totalQuestions) * 100 : 0;
@@ -49,6 +56,21 @@ export function InterviewHeader({
             )}
           </div>
         </div>
+        {isTTSSupported && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleMute}
+                className={isMuted ? "text-muted-foreground" : "text-[#0047AB]"}
+                aria-label={isMuted ? "Bật âm thanh AI" : "Tắt âm thanh AI"}>
+                {isMuted ? <VolumeOff className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isMuted ? "Âm thanh AI: Tắt" : "Âm thanh AI: Bật"}</TooltipContent>
+          </Tooltip>
+        )}
       </div>
       {!finished && totalQuestions > 0 && (
         <Progress value={progress} className="h-1 rounded-none" />

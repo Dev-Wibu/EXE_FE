@@ -57,12 +57,13 @@ export function ConfigSection({
   onSelect: (_key: string) => void;
 }) {
   const colors = CATEGORY_COLORS[categoryKey];
+  const Icon = CATEGORY_ICONS[categoryKey];
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <div
           className={`flex h-8 w-8 items-center justify-center rounded-lg ${colors.bg} ${colors.icon}`}>
-          {CATEGORY_ICONS[categoryKey]}
+          {Icon && <Icon className="h-5 w-5" />}
         </div>
         <h4 className="text-foreground text-sm font-semibold">{CATEGORY_LABELS[categoryKey]}</h4>
       </div>

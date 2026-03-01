@@ -1,13 +1,15 @@
 import {
   AlertCircle,
+  BookOpen,
+  BriefcaseBusiness,
   CheckCircle2,
   FileText,
+  GraduationCap,
   Loader2,
   Pencil,
   Plus,
-  Sparkles,
+  Save,
   Upload,
-  User,
   X,
 } from "lucide-react";
 
@@ -16,15 +18,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 import type { AIInterviewSetupHook } from "./useAIInterviewSetup";
 
 export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
   const {
-    profileMode,
-    setProfileMode,
+    isEditingProfile,
+    setIsEditingProfile,
+    isSavingProfile,
     candidateForm,
     updateCandidateForm,
     techSkillInput,
@@ -39,106 +42,54 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
     setToolInput,
     addTool,
     removeTool,
+    certificationInput,
+    setCertificationInput,
+    addCertification,
+    removeCertification,
+    achievementInput,
+    setAchievementInput,
+    addAchievement,
+    removeAchievement,
+    addProject,
+    updateProject,
+    removeProject,
+    addWorkExperience,
+    updateWorkExperience,
+    removeWorkExperience,
+    addEducation,
+    updateEducation,
+    removeEducation,
     isUploading,
-    uploadedProfile,
-    setUploadedProfile,
     fileInputRef,
     handleUploadCV,
-    populateFormFromProfile,
+    handleStartEditing,
+    handleCancelEditing,
+    handleSaveProfile,
     existingProfile,
     profileLoading,
     hasExistingProfile,
   } = hook;
 
+  const profile = existingProfile as Record<string, unknown> | undefined;
+  const canSave =
+    candidateForm.targetRole.trim() !== "" && candidateForm.introduction.trim() !== "";
+
   return (
     <Card>
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-600" />
+          <FileText className="h-5 w-5 text-blue-600" />
           <CardTitle className="text-lg">Hồ sơ ứng viên</CardTitle>
         </div>
         <CardDescription>
-          Chọn hồ sơ có sẵn, tải CV lên hoặc nhập thông tin thủ công
+          {hasExistingProfile && !isEditingProfile
+            ? "Hồ sơ của bạn đã sẵn sàng. Bạn có thể chỉnh sửa nếu cần."
+            : isEditingProfile
+              ? "Điền thông tin hồ sơ rồi nhấn Lưu để tiếp tục."
+              : "Tải CV lên để tự động điền hoặc nhập thông tin thủ công."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Profile mode selector */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {/* Existing profile option */}
-          <button
-            onClick={() => setProfileMode("existing")}
-            disabled={!hasExistingProfile && !profileLoading}
-            className={cn(
-              "relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
-              profileMode === "existing"
-                ? "border-blue-500 bg-blue-50 shadow-sm dark:bg-blue-950/40"
-                : "border-border bg-card hover:border-border/80",
-              !hasExistingProfile && !profileLoading && "cursor-not-allowed opacity-50"
-            )}>
-            {profileMode === "existing" && (
-              <CheckCircle2
-                className="absolute top-2 right-2 h-4 w-4 text-blue-600 dark:text-blue-400"
-                fill="currentColor"
-                strokeWidth={0}
-              />
-            )}
-            <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <span className="text-foreground text-sm font-semibold">Hồ sơ có sẵn</span>
-            <span className="text-muted-foreground text-xs">
-              {profileLoading
-                ? "Đang tải..."
-                : hasExistingProfile
-                  ? "Sử dụng hồ sơ đã lưu"
-                  : "Chưa có hồ sơ"}
-            </span>
-          </button>
-
-          {/* Upload CV option */}
-          <button
-            onClick={() => {
-              setProfileMode("upload");
-              if (!uploadedProfile) fileInputRef.current?.click();
-            }}
-            className={cn(
-              "relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
-              profileMode === "upload"
-                ? "border-emerald-500 bg-emerald-50 shadow-sm dark:bg-emerald-950/40"
-                : "border-border bg-card hover:border-border/80"
-            )}>
-            {profileMode === "upload" && (
-              <CheckCircle2
-                className="absolute top-2 right-2 h-4 w-4 text-emerald-600 dark:text-emerald-400"
-                fill="currentColor"
-                strokeWidth={0}
-              />
-            )}
-            <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-foreground text-sm font-semibold">Tải CV lên</span>
-            <span className="text-muted-foreground text-xs">Tạo hồ sơ từ CV</span>
-          </button>
-
-          {/* Manual entry option */}
-          <button
-            onClick={() => setProfileMode("manual")}
-            className={cn(
-              "relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all",
-              profileMode === "manual"
-                ? "border-violet-500 bg-violet-50 shadow-sm dark:bg-violet-950/40"
-                : "border-border bg-card hover:border-border/80"
-            )}>
-            {profileMode === "manual" && (
-              <CheckCircle2
-                className="absolute top-2 right-2 h-4 w-4 text-violet-600 dark:text-violet-400"
-                fill="currentColor"
-                strokeWidth={0}
-              />
-            )}
-            <Sparkles className="h-6 w-6 text-violet-600 dark:text-violet-400" />
-            <span className="text-foreground text-sm font-semibold">Nhập thủ công</span>
-            <span className="text-muted-foreground text-xs">Tự điền thông tin</span>
-          </button>
-        </div>
-
+      <CardContent className="space-y-5">
         {/* Hidden file input */}
         <input
           ref={fileInputRef}
@@ -147,23 +98,36 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleUploadCV(file);
+            if (file) {
+              void handleUploadCV(file);
+              e.target.value = "";
+            }
           }}
         />
 
-        {/* Existing profile display */}
-        {profileMode === "existing" && hasExistingProfile && (
+        {/* ── Loading skeleton ── */}
+        {profileLoading && (
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        )}
+
+        {/* ── Has profile + view mode ── */}
+        {!profileLoading && hasExistingProfile && !isEditingProfile && (
           <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300">
-                Hồ sơ hiện tại của bạn
-              </h4>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+                  Hồ sơ hiện tại
+                </h4>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  populateFormFromProfile(existingProfile as unknown as Record<string, unknown>)
-                }
+                onClick={handleStartEditing}
                 className="gap-1.5 text-xs">
                 <Pencil className="h-3.5 w-3.5" />
                 Chỉnh sửa
@@ -172,133 +136,257 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-muted-foreground">Vị trí mục tiêu: </span>
-                <span className="text-foreground font-medium">
-                  {((existingProfile as Record<string, unknown>).targetRole as string) ||
-                    "Chưa cập nhật"}
+                <span className="font-medium">
+                  {(profile?.targetRole as string) || "Chưa cập nhật"}
                 </span>
               </div>
               <div>
                 <span className="text-muted-foreground">Cấp độ: </span>
-                <span className="text-foreground font-medium">
-                  {((existingProfile as Record<string, unknown>).targetLevel as string) ||
-                    "Chưa cập nhật"}
+                <span className="font-medium">
+                  {(profile?.targetLevel as string) || "Chưa cập nhật"}
                 </span>
               </div>
             </div>
-            {Boolean((existingProfile as Record<string, unknown>).introduction) && (
-              <p className="text-muted-foreground text-sm">
-                {String((existingProfile as Record<string, unknown>).introduction)}
+            {Boolean(profile?.introduction) && (
+              <p className="text-muted-foreground line-clamp-3 text-sm">
+                {String(profile?.introduction)}
               </p>
             )}
-            {Array.isArray((existingProfile as Record<string, unknown>).technicalSkills) &&
-              ((existingProfile as Record<string, unknown>).technicalSkills as string[]).length >
-                0 && (
+            {Array.isArray(profile?.technicalSkills) &&
+              (profile.technicalSkills as string[]).length > 0 && (
                 <div className="space-y-1">
                   <span className="text-muted-foreground text-xs">Kỹ năng kỹ thuật:</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {((existingProfile as Record<string, unknown>).technicalSkills as string[]).map(
-                      (skill) => (
-                        <Badge key={skill} variant="secondary" className="text-xs">
-                          {skill}
-                        </Badge>
-                      )
-                    )}
+                    {(profile.technicalSkills as string[]).map((s) => (
+                      <Badge key={s} variant="secondary" className="text-xs">
+                        {s}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               )}
-            {Array.isArray((existingProfile as Record<string, unknown>).softSkills) &&
-              ((existingProfile as Record<string, unknown>).softSkills as string[]).length > 0 && (
+            {Array.isArray(profile?.softSkills) && (profile.softSkills as string[]).length > 0 && (
+              <div className="space-y-1">
+                <span className="text-muted-foreground text-xs">Kỹ năng mềm:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(profile.softSkills as string[]).map((s) => (
+                    <Badge key={s} variant="outline" className="text-xs">
+                      {s}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {Array.isArray(profile?.tools) && (profile.tools as string[]).length > 0 && (
+              <div className="space-y-1">
+                <span className="text-muted-foreground text-xs">Công cụ:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(profile.tools as string[]).map((t) => (
+                    <Badge key={t} variant="secondary" className="text-xs">
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {Array.isArray(profile?.certifications) &&
+              (profile.certifications as string[]).length > 0 && (
                 <div className="space-y-1">
-                  <span className="text-muted-foreground text-xs">Kỹ năng mềm:</span>
+                  <span className="text-muted-foreground text-xs">Chứng chỉ:</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {((existingProfile as Record<string, unknown>).softSkills as string[]).map(
-                      (skill) => (
-                        <Badge key={skill} variant="outline" className="text-xs">
-                          {skill}
-                        </Badge>
-                      )
-                    )}
+                    {(profile.certifications as string[]).map((c) => (
+                      <Badge key={c} variant="outline" className="text-xs">
+                        {c}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               )}
-            {Array.isArray((existingProfile as Record<string, unknown>).tools) &&
-              ((existingProfile as Record<string, unknown>).tools as string[]).length > 0 && (
+            {Array.isArray(profile?.achievements) &&
+              (profile.achievements as string[]).length > 0 && (
                 <div className="space-y-1">
-                  <span className="text-muted-foreground text-xs">Công cụ:</span>
+                  <span className="text-muted-foreground text-xs">Thành tích:</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {((existingProfile as Record<string, unknown>).tools as string[]).map(
-                      (tool) => (
-                        <Badge key={tool} variant="secondary" className="text-xs">
-                          {tool}
-                        </Badge>
-                      )
-                    )}
+                    {(profile.achievements as string[]).map((a) => (
+                      <Badge key={a} variant="outline" className="text-xs">
+                        {a}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            {/* Full detail: Projects */}
+            {Array.isArray(profile?.projects) &&
+              (profile.projects as Record<string, unknown>[]).length > 0 && (
+                <div className="space-y-1.5 border-t pt-2">
+                  <span className="flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Dự án ({(profile.projects as unknown[]).length})
+                  </span>
+                  <div className="space-y-1.5">
+                    {(profile.projects as Record<string, unknown>[]).map((p, i) => (
+                      <div
+                        key={i}
+                        className="rounded-md border border-zinc-200 bg-white/60 px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-900/40">
+                        <p className="font-medium text-zinc-800 dark:text-zinc-200">
+                          {String(p.name ?? "")}
+                        </p>
+                        {p.role != null && (
+                          <p className="text-zinc-500 dark:text-zinc-400">
+                            Vai trò: {String(p.role)}
+                          </p>
+                        )}
+                        {p.description != null && (
+                          <p className="mt-0.5 line-clamp-2 text-zinc-500 dark:text-zinc-400">
+                            {String(p.description)}
+                          </p>
+                        )}
+                        {p.outcome != null && (
+                          <p className="text-zinc-500 dark:text-zinc-400">
+                            Kết quả: {String(p.outcome)}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            {/* Full detail: Work Experiences */}
+            {Array.isArray(profile?.workExperiences) &&
+              (profile.workExperiences as Record<string, unknown>[]).length > 0 && (
+                <div className="space-y-1.5 border-t pt-2">
+                  <span className="flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                    <BriefcaseBusiness className="h-3.5 w-3.5" />
+                    Kinh nghiệm ({(profile.workExperiences as unknown[]).length})
+                  </span>
+                  <div className="space-y-1.5">
+                    {(profile.workExperiences as Record<string, unknown>[]).map((e, i) => (
+                      <div
+                        key={i}
+                        className="rounded-md border border-zinc-200 bg-white/60 px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-900/40">
+                        <p className="font-medium text-zinc-800 dark:text-zinc-200">
+                          {String(e.position ?? "")}{" "}
+                          {e.company != null ? `— ${String(e.company)}` : ""}
+                        </p>
+                        {(e.start_date != null || e.end_date != null) && (
+                          <p className="text-zinc-500 dark:text-zinc-400">
+                            {String(e.start_date ?? "")}{" "}
+                            {e.end_date != null ? `→ ${String(e.end_date)}` : ""}
+                          </p>
+                        )}
+                        {e.description != null && (
+                          <p className="mt-0.5 line-clamp-2 text-zinc-500 dark:text-zinc-400">
+                            {String(e.description)}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            {/* Full detail: Educations */}
+            {Array.isArray(profile?.educations) &&
+              (profile.educations as Record<string, unknown>[]).length > 0 && (
+                <div className="space-y-1.5 border-t pt-2">
+                  <span className="flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    Học vấn ({(profile.educations as unknown[]).length})
+                  </span>
+                  <div className="space-y-1.5">
+                    {(profile.educations as Record<string, unknown>[]).map((edu, i) => (
+                      <div
+                        key={i}
+                        className="rounded-md border border-zinc-200 bg-white/60 px-3 py-2 text-xs dark:border-zinc-700 dark:bg-zinc-900/40">
+                        <p className="font-medium text-zinc-800 dark:text-zinc-200">
+                          {String(edu.school ?? "")}{" "}
+                          {edu.major != null ? `— ${String(edu.major)}` : ""}
+                        </p>
+                        {edu.degree != null && (
+                          <p className="text-zinc-500 dark:text-zinc-400">
+                            {String(edu.degree)}
+                            {edu.gpa != null ? ` · GPA: ${String(edu.gpa)}` : ""}
+                          </p>
+                        )}
+                        {(edu.start_date != null || edu.end_date != null) && (
+                          <p className="text-zinc-500 dark:text-zinc-400">
+                            {String(edu.start_date ?? "")}{" "}
+                            {edu.end_date != null ? `→ ${String(edu.end_date)}` : ""}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
           </div>
         )}
 
-        {profileMode === "existing" && !hasExistingProfile && !profileLoading && (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-800 dark:bg-amber-950/30">
-            <AlertCircle className="h-6 w-6 text-amber-500" />
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-              Bạn chưa có hồ sơ ứng viên. Vui lòng tải CV lên hoặc nhập thủ công.
-            </p>
-          </div>
-        )}
-
-        {/* Upload CV result or uploading state */}
-        {profileMode === "upload" && (
-          <div className="space-y-3">
-            {isUploading && (
+        {/* ── No profile + view mode: two action buttons ── */}
+        {!profileLoading && !hasExistingProfile && !isEditingProfile && (
+          <div className="space-y-4">
+            {isUploading ? (
               <div className="flex flex-col items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/30">
                 <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
                 <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                  Đang tải và phân tích CV...
+                  Đang phân tích CV...
                 </p>
               </div>
-            )}
-            {!isUploading && !uploadedProfile && (
-              <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 p-8 dark:border-emerald-700 dark:bg-emerald-950/20">
-                <Upload className="h-10 w-10 text-emerald-400" />
-                <p className="text-muted-foreground text-sm">
-                  Kéo thả hoặc bấm để chọn file CV (.pdf, .doc, .docx)
-                </p>
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  Chọn file
-                </Button>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 p-6 transition-all hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/20">
+                  <Upload className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                    Tải CV lên
+                  </span>
+                  <span className="text-muted-foreground text-center text-xs">
+                    Tự động điền từ CV
+                  </span>
+                </button>
+                <button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-violet-300 bg-violet-50/50 p-6 transition-all hover:border-violet-400 hover:bg-violet-50 dark:border-violet-700 dark:bg-violet-950/20">
+                  <Pencil className="h-7 w-7 text-violet-600 dark:text-violet-400" />
+                  <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">
+                    Nhập thủ công
+                  </span>
+                  <span className="text-muted-foreground text-center text-xs">
+                    Tự điền thông tin
+                  </span>
+                </button>
               </div>
             )}
-            {uploadedProfile !== null && (
-              <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/30">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  <h4 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                    Hồ sơ đã được tạo từ CV
-                  </h4>
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  Vị trí: {(uploadedProfile.targetRole as string) || "Không có"} • Cấp độ:{" "}
-                  {(uploadedProfile.targetLevel as string) || "Không có"}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setUploadedProfile(null);
-                    fileInputRef.current?.click();
-                  }}>
-                  Tải lại CV
-                </Button>
-              </div>
-            )}
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Bạn chưa có hồ sơ ứng viên. Tải CV lên hoặc nhập thủ công, sau đó nhấn{" "}
+                <strong>Lưu hồ sơ</strong> để tiếp tục.
+              </p>
+            </div>
           </div>
         )}
 
-        {/* Manual entry form */}
-        {profileMode === "manual" && (
+        {/* ── Edit / Create form ── */}
+        {isEditingProfile && (
           <div className="space-y-4">
+            {/* Upload shortcut — always shown in edit mode */}
+            <div className="flex items-center justify-between rounded-lg border border-dashed border-emerald-300 bg-emerald-50/30 px-4 py-2.5 dark:border-emerald-700 dark:bg-emerald-950/10">
+              <span className="text-muted-foreground text-xs">Muốn tự động điền từ CV?</span>
+              {isUploading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs text-emerald-700 dark:text-emerald-300"
+                  onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="h-3.5 w-3.5" />
+                  Tải CV lên
+                </Button>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="targetRole">
@@ -321,6 +409,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                 />
               </div>
             </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="introduction">
                 Giới thiệu bản thân <span className="text-red-500">*</span>
@@ -333,6 +422,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                 rows={3}
               />
             </div>
+
             <div className="space-y-1.5">
               <Label>Kỹ năng kỹ thuật</Label>
               <div className="flex flex-wrap gap-1.5">
@@ -370,6 +460,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                 </Button>
               </div>
             </div>
+
             <div className="space-y-1.5">
               <Label>Kỹ năng mềm</Label>
               <div className="flex flex-wrap gap-1.5">
@@ -407,6 +498,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                 </Button>
               </div>
             </div>
+
             <div className="space-y-1.5">
               <Label>Công cụ</Label>
               <div className="flex flex-wrap gap-1.5">
@@ -443,6 +535,363 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                   Thêm
                 </Button>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Chứng chỉ</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {candidateForm.certifications.map((cert, i) => (
+                  <Badge
+                    key={`cert-${cert}-${i}`}
+                    variant="outline"
+                    className="flex items-center gap-1 pr-1">
+                    <span>{cert}</span>
+                    <button
+                      type="button"
+                      className="rounded-full p-0.5 hover:bg-black/10"
+                      onClick={() => removeCertification(i)}
+                      aria-label={`Xóa ${cert}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="VD: AWS Solutions Architect, TOEIC 850..."
+                  value={certificationInput}
+                  onChange={(e) => setCertificationInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCertification();
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={addCertification}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Thêm
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Thành tích</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {candidateForm.achievements.map((ach, i) => (
+                  <Badge
+                    key={`ach-${ach}-${i}`}
+                    variant="outline"
+                    className="flex items-center gap-1 pr-1">
+                    <span>{ach}</span>
+                    <button
+                      type="button"
+                      className="rounded-full p-0.5 hover:bg-black/10"
+                      onClick={() => removeAchievement(i)}
+                      aria-label={`Xóa ${ach}`}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="VD: Học sinh xuất sắc, Top 1 hackathon..."
+                  value={achievementInput}
+                  onChange={(e) => setAchievementInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addAchievement();
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={addAchievement}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Thêm
+                </Button>
+              </div>
+            </div>
+
+            {/* ── Projects ── */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <BookOpen className="h-4 w-4" />
+                  Dự án
+                </Label>
+                <Button type="button" variant="outline" size="sm" onClick={addProject}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Thêm dự án
+                </Button>
+              </div>
+              {candidateForm.projects.length === 0 && (
+                <p className="text-muted-foreground text-xs">
+                  Chưa có dự án nào. Nhấn Thêm dự án để thêm.
+                </p>
+              )}
+              {candidateForm.projects.map((project, index) => (
+                <div
+                  key={index}
+                  className="space-y-3 rounded-lg border border-dashed p-4 dark:border-zinc-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Dự án {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-red-500 hover:text-red-600"
+                      onClick={() => removeProject(index)}>
+                      <X className="mr-1 h-3.5 w-3.5" />
+                      Xóa
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Tên dự án</Label>
+                      <Input
+                        placeholder="VD: Hệ thống quản lý..."
+                        value={project.name ?? ""}
+                        onChange={(e) => updateProject(index, "name", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Vai trò</Label>
+                      <Input
+                        placeholder="VD: Backend Developer"
+                        value={project.role ?? ""}
+                        onChange={(e) => updateProject(index, "role", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Mô tả</Label>
+                    <Textarea
+                      placeholder="Mô tả dự án..."
+                      value={project.description ?? ""}
+                      onChange={(e) => updateProject(index, "description", e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Quy mô đội (người)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={project.teamSize ?? 1}
+                        onChange={(e) => updateProject(index, "teamSize", Number(e.target.value))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Kết quả đạt được</Label>
+                      <Input
+                        placeholder="VD: Giảm thời gian xử lý 30%"
+                        value={project.outcome ?? ""}
+                        onChange={(e) => updateProject(index, "outcome", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Work Experiences ── */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <BriefcaseBusiness className="h-4 w-4" />
+                  Kinh nghiệm làm việc
+                </Label>
+                <Button type="button" variant="outline" size="sm" onClick={addWorkExperience}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Thêm kinh nghiệm
+                </Button>
+              </div>
+              {candidateForm.workExperiences.length === 0 && (
+                <p className="text-muted-foreground text-xs">
+                  Chưa có kinh nghiệm nào. Nhấn Thêm kinh nghiệm để thêm.
+                </p>
+              )}
+              {candidateForm.workExperiences.map((exp, index) => (
+                <div
+                  key={index}
+                  className="space-y-3 rounded-lg border border-dashed p-4 dark:border-zinc-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Kinh nghiệm {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-red-500 hover:text-red-600"
+                      onClick={() => removeWorkExperience(index)}>
+                      <X className="mr-1 h-3.5 w-3.5" />
+                      Xóa
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Công ty</Label>
+                      <Input
+                        placeholder="VD: FPT Software"
+                        value={exp.company ?? ""}
+                        onChange={(e) => updateWorkExperience(index, "company", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Vị trí</Label>
+                      <Input
+                        placeholder="VD: .NET Developer"
+                        value={exp.position ?? ""}
+                        onChange={(e) => updateWorkExperience(index, "position", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Mô tả công việc</Label>
+                    <Textarea
+                      placeholder="Mô tả công việc..."
+                      value={exp.description ?? ""}
+                      onChange={(e) => updateWorkExperience(index, "description", e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Ngày bắt đầu</Label>
+                      <Input
+                        type="date"
+                        value={exp.start_date ?? ""}
+                        onChange={(e) => updateWorkExperience(index, "start_date", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Ngày kết thúc</Label>
+                      <Input
+                        type="date"
+                        value={exp.end_date ?? ""}
+                        onChange={(e) => updateWorkExperience(index, "end_date", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Educations ── */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <GraduationCap className="h-4 w-4" />
+                  Học vấn
+                </Label>
+                <Button type="button" variant="outline" size="sm" onClick={addEducation}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Thêm học vấn
+                </Button>
+              </div>
+              {candidateForm.educations.length === 0 && (
+                <p className="text-muted-foreground text-xs">
+                  Chưa có học vấn nào. Nhấn Thêm học vấn để thêm.
+                </p>
+              )}
+              {candidateForm.educations.map((edu, index) => (
+                <div
+                  key={index}
+                  className="space-y-3 rounded-lg border border-dashed p-4 dark:border-zinc-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Học vấn {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-red-500 hover:text-red-600"
+                      onClick={() => removeEducation(index)}>
+                      <X className="mr-1 h-3.5 w-3.5" />
+                      Xóa
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Trường</Label>
+                      <Input
+                        placeholder="VD: Đại học FPT"
+                        value={edu.school ?? ""}
+                        onChange={(e) => updateEducation(index, "school", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Chuyên ngành</Label>
+                      <Input
+                        placeholder="VD: Kỹ thuật phần mềm"
+                        value={edu.major ?? ""}
+                        onChange={(e) => updateEducation(index, "major", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Bằng cấp</Label>
+                      <Input
+                        placeholder="VD: Cử nhân"
+                        value={edu.degree ?? ""}
+                        onChange={(e) => updateEducation(index, "degree", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">GPA</Label>
+                      <Input
+                        placeholder="VD: 3.5"
+                        value={edu.gpa ?? ""}
+                        onChange={(e) => updateEducation(index, "gpa", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Ngày bắt đầu</Label>
+                      <Input
+                        type="date"
+                        value={edu.start_date ?? ""}
+                        onChange={(e) => updateEducation(index, "start_date", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Ngày kết thúc</Label>
+                      <Input
+                        type="date"
+                        value={edu.end_date ?? ""}
+                        onChange={(e) => updateEducation(index, "end_date", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Action bar */}
+            <div className="flex items-center justify-end gap-2 border-t pt-3">
+              {hasExistingProfile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEditing}
+                  disabled={isSavingProfile}>
+                  Hủy
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={() => void handleSaveProfile()}
+                disabled={!canSave || isSavingProfile}
+                className="gap-1.5 bg-[#0047AB] text-white hover:bg-[#005B9A]">
+                {isSavingProfile ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Lưu hồ sơ
+              </Button>
             </div>
           </div>
         )}

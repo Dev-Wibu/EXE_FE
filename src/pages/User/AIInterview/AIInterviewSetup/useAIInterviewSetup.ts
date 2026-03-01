@@ -2,9 +2,20 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import type { InterviewConfigOptionItem, InterviewConfigOptions } from "@/interfaces/schema.types";
+import type {
+  EducationEntry,
+  InterviewConfigOptionItem,
+  InterviewConfigOptions,
+  ProjectDetail,
+  WorkExperience,
+} from "@/interfaces/schema.types";
 import { $api, fetchClient } from "@/lib/api";
-import { useCandidateProfile } from "@/services/candidate-profile.manager";
+import { queryClient } from "@/lib/queryClient";
+import {
+  useCandidateProfile,
+  useCreateCandidateProfile,
+  useUpdateCandidateProfile,
+} from "@/services/candidate-profile.manager";
 import { usersAdminManager } from "@/services/users-admin.manager";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -32,13 +43,17 @@ export function useAIInterviewSetup() {
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
 
   // Step 2: Candidate profile state
-  const [profileMode, setProfileMode] = useState<"existing" | "manual" | "upload">("existing");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  // Stores the profile id returned by uploadCv (backend saves automatically on upload)
+  const [uploadedProfileId, setUploadedProfileId] = useState<number | null>(null);
   const [candidateForm, setCandidateForm] = useState<CandidateFormData>(INITIAL_CANDIDATE_FORM);
   const [softSkillInput, setSoftSkillInput] = useState("");
   const [toolInput, setToolInput] = useState("");
   const [techSkillInput, setTechSkillInput] = useState("");
+  const [certificationInput, setCertificationInput] = useState("");
+  const [achievementInput, setAchievementInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedProfile, setUploadedProfile] = useState<Record<string, unknown> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 3: Job requirement state
@@ -73,6 +88,8 @@ export function useAIInterviewSetup() {
     "post",
     "/api/interview-sessions/generate-job-requirement"
   );
+  const createProfileMutation = useCreateCandidateProfile();
+  const updateProfileMutation = useUpdateCandidateProfile();
 
   // ---- Step validation ----
   const isStep1Complete =
@@ -81,13 +98,7 @@ export function useAIInterviewSetup() {
     selectedLanguage !== null &&
     selectedDomain !== null;
 
-  const isStep2Complete = (() => {
-    if (profileMode === "existing") return !!hasExistingProfile;
-    if (profileMode === "upload") return !!uploadedProfile;
-    if (profileMode === "manual")
-      return candidateForm.targetRole.trim() !== "" && candidateForm.introduction.trim() !== "";
-    return false;
-  })();
+  const isStep2Complete = !!hasExistingProfile && !isEditingProfile;
 
   const isStep3Complete = !!generatedJR;
 
@@ -158,14 +169,92 @@ export function useAIInterviewSetup() {
         : [],
       softSkills: Array.isArray(source.softSkills) ? (source.softSkills as string[]) : [],
       tools: Array.isArray(source.tools) ? (source.tools as string[]) : [],
+      certifications: Array.isArray(source.certifications)
+        ? (source.certifications as string[])
+        : [],
+      achievements: Array.isArray(source.achievements) ? (source.achievements as string[]) : [],
+      projects: Array.isArray(source.projects) ? (source.projects as ProjectDetail[]) : [],
+      workExperiences: Array.isArray(source.workExperiences)
+        ? (source.workExperiences as WorkExperience[])
+        : [],
+      educations: Array.isArray(source.educations) ? (source.educations as EducationEntry[]) : [],
     });
     setTechSkillInput("");
     setSoftSkillInput("");
     setToolInput("");
-    setProfileMode("manual");
+    setCertificationInput("");
+    setAchievementInput("");
+    setIsEditingProfile(true);
   };
 
   // ---- Actions ----
+  const handleStartEditing = () => {
+    if (existingProfile) {
+      populateFormFromProfile(existingProfile as unknown as Record<string, unknown>);
+    }
+    setIsEditingProfile(true);
+  };
+
+  const handleCancelEditing = () => {
+    setCandidateForm(INITIAL_CANDIDATE_FORM);
+    setTechSkillInput("");
+    setSoftSkillInput("");
+    setToolInput("");
+    setCertificationInput("");
+    setAchievementInput("");
+    setUploadedProfileId(null);
+    setIsEditingProfile(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!userId || !candidateForm.targetRole.trim() || !candidateForm.introduction.trim()) return;
+    setIsSavingProfile(true);
+
+    // Determine the profile id: prefer the fetched profile id, then the id returned after CV upload
+    const fetchedId = hasExistingProfile
+      ? ((existingProfile as Record<string, unknown>).id as number | undefined)
+      : undefined;
+    const resolvedId = fetchedId ?? uploadedProfileId ?? undefined;
+    const isUpdate = resolvedId !== undefined;
+
+    const body = {
+      // PUT requires existing id; POST requires id: 0 (backend contract)
+      id: isUpdate ? resolvedId : 0,
+      user: { id: userId },
+      targetRole: candidateForm.targetRole,
+      targetLevel: candidateForm.targetLevel,
+      introduction: candidateForm.introduction,
+      technicalSkills: candidateForm.technicalSkills.filter(Boolean),
+      softSkills: candidateForm.softSkills.filter(Boolean),
+      tools: candidateForm.tools.filter(Boolean),
+      certifications: candidateForm.certifications.filter(Boolean),
+      achievements: candidateForm.achievements.filter(Boolean),
+      projects: candidateForm.projects,
+      workExperiences: candidateForm.workExperiences,
+      educations: candidateForm.educations,
+    };
+    try {
+      if (isUpdate) {
+        await updateProfileMutation.mutateAsync({ body: body as never });
+      } else {
+        await createProfileMutation.mutateAsync({ body: body as never });
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["get", "/api/candidate-profiles/{userId}"],
+      });
+      setCandidateForm(INITIAL_CANDIDATE_FORM);
+      setCertificationInput("");
+      setAchievementInput("");
+      setUploadedProfileId(null);
+      setIsEditingProfile(false);
+      toast.success("Đã lưu hồ sơ ứng viên thành công!");
+    } catch {
+      toast.error("Không thể lưu hồ sơ. Vui lòng thử lại.");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   const handleUploadCV = async (file: File) => {
     if (!userId) return;
     setIsUploading(true);
@@ -174,9 +263,15 @@ export function useAIInterviewSetup() {
       if (!response.success || !response.data) {
         throw new Error(response.error || "Tải CV lên thất bại");
       }
-      setUploadedProfile(response.data as unknown as Record<string, unknown>);
-      setProfileMode("upload");
-      toast.success("Tải CV lên thành công! Hồ sơ đã được tạo từ CV.");
+      const cvProfile = response.data as unknown as Record<string, unknown>;
+      // Tự động điền form từ kết quả CV — người dùng xem lại rồi nhấn Lưu
+      populateFormFromProfile(cvProfile);
+      // Backend lưu profile ngay khi upload CV -> dùng PUT khi người dùng nhấn Lưu
+      if (typeof cvProfile.id === "number" && cvProfile.id > 0) {
+        setUploadedProfileId(cvProfile.id);
+      }
+      setIsEditingProfile(true);
+      toast.success("Tải CV lên thành công! Kiểm tra lại thông tin và nhấn Lưu hồ sơ.");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Tải CV lên thất bại. Vui lòng thử lại."
@@ -184,6 +279,119 @@ export function useAIInterviewSetup() {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // ---- Certification / Achievement helpers (tag-style) ----
+  const addCertification = () => {
+    const value = certificationInput.trim();
+    if (!value) return;
+    if (candidateForm.certifications.some((c) => c.toLowerCase() === value.toLowerCase())) return;
+    setCandidateForm((prev) => ({ ...prev, certifications: [...prev.certifications, value] }));
+    setCertificationInput("");
+  };
+
+  const removeCertification = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addAchievement = () => {
+    const value = achievementInput.trim();
+    if (!value) return;
+    if (candidateForm.achievements.some((a) => a.toLowerCase() === value.toLowerCase())) return;
+    setCandidateForm((prev) => ({ ...prev, achievements: [...prev.achievements, value] }));
+    setAchievementInput("");
+  };
+
+  const removeAchievement = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      achievements: prev.achievements.filter((_, i) => i !== index),
+    }));
+  };
+
+  // ---- Project helpers ----
+  const addProject = () => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      projects: [
+        ...prev.projects,
+        { name: "", description: "", role: "", teamSize: 1, usedTools: [], outcome: "" },
+      ],
+    }));
+  };
+
+  const updateProject = (
+    index: number,
+    field: keyof ProjectDetail,
+    value: string | number | string[]
+  ) => {
+    setCandidateForm((prev) => {
+      const projects = [...prev.projects];
+      projects[index] = { ...projects[index], [field]: value };
+      return { ...prev, projects };
+    });
+  };
+
+  const removeProject = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      projects: prev.projects.filter((_, i) => i !== index),
+    }));
+  };
+
+  // ---- Work Experience helpers ----
+  const addWorkExperience = () => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      workExperiences: [
+        ...prev.workExperiences,
+        { company: "", position: "", description: "", start_date: "", end_date: "" },
+      ],
+    }));
+  };
+
+  const updateWorkExperience = (index: number, field: keyof WorkExperience, value: string) => {
+    setCandidateForm((prev) => {
+      const workExperiences = [...prev.workExperiences];
+      workExperiences[index] = { ...workExperiences[index], [field]: value };
+      return { ...prev, workExperiences };
+    });
+  };
+
+  const removeWorkExperience = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      workExperiences: prev.workExperiences.filter((_, i) => i !== index),
+    }));
+  };
+
+  // ---- Education helpers ----
+  const addEducation = () => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      educations: [
+        ...prev.educations,
+        { school: "", major: "", degree: "", gpa: "", start_date: "", end_date: "" },
+      ],
+    }));
+  };
+
+  const updateEducation = (index: number, field: keyof EducationEntry, value: string) => {
+    setCandidateForm((prev) => {
+      const educations = [...prev.educations];
+      educations[index] = { ...educations[index], [field]: value };
+      return { ...prev, educations };
+    });
+  };
+
+  const removeEducation = (index: number) => {
+    setCandidateForm((prev) => ({
+      ...prev,
+      educations: prev.educations.filter((_, i) => i !== index),
+    }));
   };
 
   const handleGenerateJR = async () => {
@@ -281,18 +489,8 @@ export function useAIInterviewSetup() {
     });
   };
 
-  const buildCandidateProfile = () => {
-    if (profileMode === "existing" && hasExistingProfile) return existingProfile;
-    if (profileMode === "upload" && uploadedProfile) return uploadedProfile;
-    return {
-      targetRole: candidateForm.targetRole,
-      targetLevel: candidateForm.targetLevel,
-      introduction: candidateForm.introduction,
-      technicalSkills: candidateForm.technicalSkills.filter(Boolean),
-      softSkills: candidateForm.softSkills.filter(Boolean),
-      tools: candidateForm.tools.filter(Boolean),
-    };
-  };
+  // Hồ sơ luôn được lấy từ DB sau bước lưu — đảm bảo dữ liệu nhất quán với backend
+  const buildCandidateProfile = () => existingProfile;
 
   const handleCreateSession = async () => {
     if (
@@ -401,8 +599,9 @@ export function useAIInterviewSetup() {
     getSelectedLabel,
 
     // Step 2
-    profileMode,
-    setProfileMode,
+    isEditingProfile,
+    setIsEditingProfile,
+    isSavingProfile,
     candidateForm,
     updateCandidateForm,
     techSkillInput,
@@ -417,12 +616,29 @@ export function useAIInterviewSetup() {
     setToolInput,
     addTool,
     removeTool,
+    certificationInput,
+    setCertificationInput,
+    addCertification,
+    removeCertification,
+    achievementInput,
+    setAchievementInput,
+    addAchievement,
+    removeAchievement,
+    addProject,
+    updateProject,
+    removeProject,
+    addWorkExperience,
+    updateWorkExperience,
+    removeWorkExperience,
+    addEducation,
+    updateEducation,
+    removeEducation,
     isUploading,
-    uploadedProfile,
-    setUploadedProfile,
     fileInputRef,
     handleUploadCV,
-    populateFormFromProfile,
+    handleStartEditing,
+    handleCancelEditing,
+    handleSaveProfile,
     existingProfile,
     profileLoading,
     hasExistingProfile,
