@@ -80,7 +80,7 @@ export function DashboardChromeTabs({
           <div className="fixed inset-0 z-10" onClick={() => setShowNewTabMenu(false)} />
           <div
             className={cn(
-              "absolute top-full left-0 z-20 mt-1 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "l absolute top-full right-0 z-20 mt-1 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
               theme.menuWidth || "w-48"
             )}>
             {menuGroups.map((group, groupIdx) => (
