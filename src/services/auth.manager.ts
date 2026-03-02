@@ -67,29 +67,29 @@ export class AuthManager {
   /**
    * Get demo user role based on email
    */
-  private getDemoUserRole(email: string): "admin" | "user" | "mentor" | "staff" {
-    if (email === "admin@example.com") return "admin";
-    if (email === "mentor@example.com") return "mentor";
-    if (email === "staff@example.com") return "staff";
-    return "user";
+  private getDemoUserRole(email: string): "ADMIN" | "USER" | "MENTOR" | "STAFF" {
+    if (email === "admin@example.com") return "ADMIN";
+    if (email === "mentor@example.com") return "MENTOR";
+    if (email === "staff@example.com") return "STAFF";
+    return "USER";
   }
 
   /**
    * Map backend role to frontend role
    */
-  private mapBackendRoleToFrontend(backendRole?: string): "admin" | "user" | "mentor" | "staff" {
+  private mapBackendRoleToFrontend(backendRole?: string): "ADMIN" | "USER" | "MENTOR" | "STAFF" {
     const normalized = backendRole?.replace(/^ROLE_/i, "").toUpperCase();
 
     switch (normalized) {
       case "ADMIN":
-        return "admin";
+        return "ADMIN";
       case "MENTOR":
-        return "mentor";
+        return "MENTOR";
       case "STAFF":
-        return "staff";
+        return "STAFF";
       case "USER":
       default:
-        return "user";
+        return "USER";
     }
   }
 
@@ -105,10 +105,10 @@ export class AuthManager {
    * USER and MENTOR use real user id=2; ADMIN/STAFF stay as demo placeholders.
    */
   private readonly DEMO_REAL_IDS: Record<string, number | null> = {
-    user: 2,
-    mentor: 2,
-    admin: null,
-    staff: null,
+    USER: 2,
+    MENTOR: 2,
+    ADMIN: null,
+    STAFF: null,
   };
 
   async login(credentials: LoginCredentials): Promise<ApiResponse<{ user: User; token?: string }>> {
@@ -120,7 +120,7 @@ export class AuthManager {
       // For USER and MENTOR: fetch real user from backend by id
       if (realId !== null) {
         try {
-          const endpoint = role === "mentor" ? `/api/mentors/${realId}` : `/api/users/${realId}`;
+          const endpoint = role === "MENTOR" ? `/api/mentors/${realId}` : `/api/users/${realId}`;
           const { data: backendUser } = await fetchClient.GET(endpoint as "/api/users/{id}", {
             params: { path: { id: realId } },
           });
@@ -156,11 +156,11 @@ export class AuthManager {
         id: `demo-${role}`,
         email: credentials.email,
         fullName:
-          role === "admin"
+          role === "ADMIN"
             ? "Demo Admin"
-            : role === "mentor"
+            : role === "MENTOR"
               ? "Demo Mentor"
-              : role === "staff"
+              : role === "STAFF"
                 ? "Demo Staff"
                 : "Demo User",
         role: role,
@@ -340,7 +340,7 @@ export class AuthManager {
         id: String(backendUser.id || ""),
         email: backendUser.email || "",
         fullName: backendUser.name || "",
-        role: "user",
+        role: "USER",
       };
 
       return {

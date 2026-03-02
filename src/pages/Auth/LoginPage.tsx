@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authManager } from "@/services/auth.manager";
-import { useAuthStore } from "@/stores/authStore";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -48,18 +48,7 @@ export function LoginPage() {
         localStorage.setItem("current-user-id", String(userId));
       }
 
-      // Navigate based on user role
-      const userRole = result.data.user.role;
-      if (userRole === "admin") {
-        navigate("/admin");
-      } else if (userRole === "mentor") {
-        navigate("/mentor");
-      } else if (userRole === "staff") {
-        navigate("/staff");
-      } else {
-        // For regular users, go directly to dashboard
-        navigate("/user");
-      }
+      navigate(getDashboardPath(result.data.user.role));
     } else {
       setError(result.error || "Đăng nhập thất bại");
     }

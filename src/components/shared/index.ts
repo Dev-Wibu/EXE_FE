@@ -17,5 +17,7 @@ export type {
 export { Filter } from "./Filter";
 export type { FilterCriteria, FilterGroup, FilterOption, FilterProps } from "./Filter";
 export { PaginationControl } from "./PaginationControl";
+export { ProtectedRoute } from "./ProtectedRoute";
+export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { SortButton } from "./SortButton";
 export type { SortDirection } from "./SortButton";

@@ -146,7 +146,6 @@ export function ChatPanel({
   speakingId,
   isEvaluating,
   isSubmitting,
-  isLastAnswer,
   hasStarted,
   messagesEndRef,
   interviewFinished,
@@ -170,7 +169,6 @@ export function ChatPanel({
   speakingId: string | number | null;
   isEvaluating: boolean;
   isSubmitting: boolean;
-  isLastAnswer: boolean;
   hasStarted: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   interviewFinished: boolean;
@@ -188,12 +186,11 @@ export function ChatPanel({
   onStopListening: () => void;
 }) {
   const inputDisabled = isSubmitting || isEvaluating || !hasStarted;
-  const inputPlaceholder =
-    isEvaluating || isLastAnswer
-      ? "AI đang đánh giá buổi phỏng vấn..."
-      : isSubmitting
-        ? "AI đang xử lý..."
-        : "Nhập câu trả lời của bạn... (Enter để gửi, Shift+Enter để xuống dòng)";
+  const inputPlaceholder = isEvaluating
+    ? "AI đang đánh giá buổi phỏng vấn..."
+    : isSubmitting
+      ? "AI đang xử lý..."
+      : "Nhập câu trả lời của bạn... (Enter để gửi, Shift+Enter để xuống dòng)";
 
   return (
     <>
@@ -209,8 +206,8 @@ export function ChatPanel({
               speakingId={speakingId}
             />
           ))}
-          {(isEvaluating || isLastAnswer) && <EvaluatingIndicator />}
-          {isSubmitting && !isEvaluating && !isLastAnswer && <TypingIndicator />}
+          {isEvaluating && <EvaluatingIndicator />}
+          {isSubmitting && !isEvaluating && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
       </div>

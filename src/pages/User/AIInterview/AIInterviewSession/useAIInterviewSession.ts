@@ -59,18 +59,7 @@ export function useAIInterviewSession() {
     return localStorage.getItem(`interview-finished-${sessionKey}`) === "true";
   });
 
-  // Khôi phục lịch sử chat từ localStorage khi tải lại trang
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    if (!sessionKey) return [];
-    try {
-      const saved = localStorage.getItem(`interview-chat-${sessionKey}`);
-      if (!saved) return [];
-      const parsed = JSON.parse(saved) as ChatMessage[];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   // isEvaluating = true trong khoảng 3 giây sau khi trả lời xong câu hỏi cuối cùng
@@ -80,19 +69,8 @@ export function useAIInterviewSession() {
   const [currentPhase, setCurrentPhase] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
-  // hasStarted = true ngay nếu đã có lịch sử chat hoặc phiên đã hoàn thành
-  const [hasStarted, setHasStarted] = useState<boolean>(() => {
-    if (isAlreadyFinished) return true;
-    if (!sessionKey) return false;
-    try {
-      const saved = localStorage.getItem(`interview-chat-${sessionKey}`);
-      if (!saved) return false;
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0;
-    } catch {
-      return false;
-    }
-  });
+  // hasStarted = true ngay nếu phiên đã hoàn thành — lịch sử chat luôn lấy từ /cache
+  const [hasStarted, setHasStarted] = useState<boolean>(isAlreadyFinished);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const msgIdCounter = useRef(1);
@@ -103,18 +81,20 @@ export function useAIInterviewSession() {
   // Ref đồng bộ với messages state để tránh stale closure trong các useEffect
   const messagesRef = useRef<ChatMessage[]>([]);
 
-  // Lấy trạng thái Redis của phiên đang chạy — dùng để:
+  // Lấy trạng thái Redis của phiên đang chạy — nguồn dữ liệu duy nhất cho:
   // 1. Lấy dbId (numeric session ID) cho navigate đến trang kết quả
-  // 2. Khôi phục lịch sử chat khi localStorage bị xóa
-  const { data: cacheData } = $api.useQuery(
+  // 2. Khôi phục lịch sử chat khi vào lại phiên (Tiếp tục phỏng vấn)
+  const {
+    data: cacheData,
+    isLoading: isCacheLoading,
+    isError: isCacheError,
+  } = $api.useQuery(
     "get",
     "/api/interview-sessions/cache/{sessionKey}",
     { params: { path: { sessionKey: sessionKey ?? "" } } },
     {
       enabled: !!sessionKey && !interviewFinished,
       refetchOnWindowFocus: false,
-      // Chỉ cần fetch 1 lần khi mount — dbId và history không thay đổi trong session
-      staleTime: Infinity,
     }
   );
 
@@ -128,10 +108,9 @@ export function useAIInterviewSession() {
     }
   }, [sessionId, sessionKey]);
 
-  // Khôi phục lịch sử chat từ Redis khi localStorage bị xóa (ví dụ: private browsing)
+  // Khôi phục lịch sử chat từ Redis cache — nguồn dữ liệu duy nhất cho chat history
   useEffect(() => {
-    // Dùng messagesRef thay vì messages để tránh stale closure khi start effect đã cập nhật messages
-    if (!cacheData || hasRestoredFromCacheRef.current || messagesRef.current.length > 0) return;
+    if (!cacheData || hasRestoredFromCacheRef.current) return;
 
     const restored: ChatMessage[] = [];
     let counter = 1;
@@ -142,21 +121,22 @@ export function useAIInterviewSession() {
           id: counter++,
           role: "ai",
           content: exchange.questionText,
-          timestamp: exchange.submittedAt
-            ? new Date(
-                exchange.submittedAt.endsWith("Z")
-                  ? exchange.submittedAt
-                  : exchange.submittedAt + "Z"
-              ).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-            : "—",
+          // Câu hỏi AI không cần timestamp hiển thị — thời gian quan trọng là lúc user trả lời
+          timestamp: "—",
         });
       }
       if (exchange.answerText) {
+        // Gắn submittedAt của server vào câu trả lời — đây là thời gian thực tế user gửi
+        const userTs = exchange.submittedAt
+          ? new Date(
+              exchange.submittedAt.endsWith("Z") ? exchange.submittedAt : exchange.submittedAt + "Z"
+            ).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+          : "—";
         restored.push({
           id: counter++,
           role: "user",
           content: exchange.answerText,
-          timestamp: "—",
+          timestamp: userTs,
         });
       }
       if (exchange.phaseName) lastPhaseName = exchange.phaseName;
@@ -183,15 +163,7 @@ export function useAIInterviewSession() {
     if (cacheData.currentQuestionIndex != null) {
       setCurrentQuestionIndex(cacheData.currentQuestionIndex);
     }
-  }, [cacheData]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Đặt lại msgIdCounter dựa trên các message đã khôi phục
-  useEffect(() => {
-    if (messages.length > 0) {
-      msgIdCounter.current = Math.max(...messages.map((m) => m.id)) + 1;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // chỉ chạy 1 lần khi mount
+  }, [cacheData]);
 
   const submitMutation = $api.useMutation("post", "/api/v1/interview/submit");
 
@@ -199,16 +171,6 @@ export function useAIInterviewSession() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
-
-  // Persist chat history to localStorage whenever messages change
-  useEffect(() => {
-    if (!sessionKey || messages.length === 0) return;
-    try {
-      localStorage.setItem(`interview-chat-${sessionKey}`, JSON.stringify(messages));
-    } catch {
-      // Bỏ qua nếu localStorage đầy
-    }
-  }, [messages, sessionKey]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -300,6 +262,8 @@ export function useAIInterviewSession() {
   );
 
   // Start interview — GET /api/v1/interview/start/{sessionKey}
+  // Chỉ gọi 1 lần duy nhất khi vừa tạo session (cache chưa có history)
+  // Khi reload giữa chừng: cache đã có history → skip /start, dùng restore từ cache
   const {
     data: startData,
     isLoading: isStarting,
@@ -308,7 +272,13 @@ export function useAIInterviewSession() {
     "get",
     "/api/v1/interview/start/{sessionKey}",
     { params: { path: { sessionKey: sessionKey ?? "" } } },
-    { enabled: !!sessionKey && !hasStarted }
+    {
+      enabled:
+        !!sessionKey &&
+        !hasStarted &&
+        !isCacheLoading &&
+        (isCacheError || (cacheData?.chatHistory?.length ?? 0) === 0),
+    }
   );
 
   // Process the start response once — dùng ref guard để tránh StrictMode chạy effect 2 lần
@@ -365,7 +335,7 @@ export function useAIInterviewSession() {
         addAIMessage(startData);
       }, 600);
     }
-  }, [startData, addAIMessage]); // messages không trong deps vì chỉ đọc giá trị tại thời điểm mount
+  }, [startData, addAIMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle send answer
   const handleSendAnswer = useCallback(
@@ -390,6 +360,11 @@ export function useAIInterviewSession() {
         });
         finished = !!response?.finished;
         addAIMessage(response);
+        // Invalidate cache để refetch chatHistory với submittedAt mới nhất từ server
+        // → effect sync sẽ cập nhật timestamp câu trả lời của user
+        void queryClient.invalidateQueries({
+          queryKey: ["get", "/api/interview-sessions/cache/{sessionKey}"],
+        });
       } catch (err) {
         const errMsg = (err as { message?: string })?.message?.toLowerCase() ?? "";
         const isExpiry =
@@ -436,7 +411,6 @@ export function useAIInterviewSession() {
         const stored = JSON.parse(localStorage.getItem("interview-session-keys") ?? "{}");
         delete stored[sessionKey];
         localStorage.setItem("interview-session-keys", JSON.stringify(stored));
-        localStorage.removeItem(`interview-chat-${sessionKey}`);
         localStorage.removeItem(`interview-finished-${sessionKey}`);
         localStorage.removeItem(`interview-session-id-${sessionKey}`);
       } catch {
@@ -452,17 +426,17 @@ export function useAIInterviewSession() {
     }
   }, [sessionKey, sessionId, navigate]);
 
-  // Invalidate danh sách phiên rồi quay lại — đảm bảo trang list hiển thị đúng người dùng không cần F5
+  // Invalidate danh sách phiên và cache chat rồi quay lại
+  // Invalidate cache để lần "Tiếp tục" tiếp theo luôn tải lịch sử mới nhất từ server
   const handleNavigateBack = useCallback(() => {
     void queryClient.invalidateQueries({
       queryKey: ["get", "/api/interview-sessions/user/{userId}"],
     });
+    void queryClient.invalidateQueries({
+      queryKey: ["get", "/api/interview-sessions/cache/{sessionKey}"],
+    });
     navigate("/user?tab=aiInterview");
   }, [navigate]);
-
-  // isLastAnswer = true khi đang chờ phản hồi câu cuối cùng — dùng để hiện EvaluatingIndicator sớm
-  const isLastAnswer =
-    isSubmitting && !isEvaluating && totalQuestions > 0 && currentQuestionIndex >= totalQuestions;
 
   return {
     navigate,
@@ -471,13 +445,13 @@ export function useAIInterviewSession() {
     messages,
     isSubmitting,
     isEvaluating,
-    isLastAnswer,
     interviewFinished,
     sessionExpiredMidway,
     currentPhase,
     currentQuestionIndex,
     totalQuestions,
     hasStarted,
+    isCacheLoading,
     isStarting,
     startError,
     isListening,

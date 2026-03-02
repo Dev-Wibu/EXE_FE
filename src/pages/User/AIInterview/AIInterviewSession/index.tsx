@@ -107,7 +107,6 @@ export function AIInterviewSessionPage() {
         speakingId={session.speakingId}
         isEvaluating={session.isEvaluating}
         isSubmitting={session.isSubmitting}
-        isLastAnswer={session.isLastAnswer}
         hasStarted={session.hasStarted}
         messagesEndRef={session.messagesEndRef}
         interviewFinished={session.interviewFinished}

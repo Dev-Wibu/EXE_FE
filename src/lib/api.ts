@@ -95,6 +95,13 @@ fetchClient.use({
       }
     }
 
+    // Auto-logout on 401 (token expired or invalid)
+    if (response.status === 401) {
+      const { useAuthStore } = await import("@/stores/authStore");
+      useAuthStore.getState().clearAuth();
+      window.location.href = "/login";
+    }
+
     return response;
   },
 });

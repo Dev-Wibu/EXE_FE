@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthLayout } from "@/components/layouts";
+import { ProtectedRoute, PublicOnlyRoute } from "@/components/shared";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/contexts/QueryProvider";
 import { AdminDashboardPage } from "@/pages/Admin";
@@ -37,10 +38,14 @@ import {
   WriteFeedbackPage,
 } from "@/pages/Mentor";
 import {
+  ContentModerationPage,
   FeedbackModerationPage,
+  MentorApplicationsPage,
   PostModerationPage,
   ReviewModerationPage,
+  SessionProcessingPage,
   StaffDashboardPage,
+  UserSupportPage,
 } from "@/pages/Staff";
 import {
   AIChatConversationPage,
@@ -94,10 +99,12 @@ function App() {
             <Route path="/resources/faq" element={<FAQPage />} />
             <Route path="/resources/blog" element={<BlogPage />} />
 
-            {/* Auth routes with AuthLayout */}
-            <Route element={<AuthLayout />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+            {/* Auth routes with AuthLayout — redirect to dashboard if already logged in */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+              </Route>
             </Route>
 
             {/* Auth routes without layout (full page) */}
@@ -106,31 +113,33 @@ function App() {
             <Route path="/waiting-accept" element={<WaitingAcceptMentorPage />} />
 
             {/* User Dashboard — ChromeTabs shell at /user, sub-pages nested inside */}
-            <Route path="/user" element={<UserDashboardPage />}>
-              <Route path="ai-interview/setup" element={<AIInterviewSetupPage />} />
-              <Route path="ai-interview/session" element={<AIInterviewSessionPage />} />
-              <Route path="ai-interview/result/:id" element={<AIInterviewResultPage />} />
-              <Route
-                path="mock-interview/select-mentor"
-                element={<MockInterviewSelectMentorPage />}
-              />
-              <Route path="mock-interview/schedule" element={<MockInterviewSchedulePage />} />
-              <Route path="mock-interview/booking-success" element={<BookingSuccessPage />} />
-              <Route path="mock-interview/room/:sessionId" element={<SessionRoomPage />} />
-              <Route
-                path="mock-interview/history/:sessionId/review"
-                element={<WriteReviewPage />}
-              />
-              <Route path="mock-interview/history/:sessionId" element={<SessionDetailPage />} />
-              <Route path="ai-chat/:id" element={<AIChatConversationPage />} />
-              <Route path="questions/:id" element={<QuestionDetailPage />} />
-              <Route path="practice/:id/quiz/:quizId/result" element={<QuizResultPage />} />
-              <Route path="practice/:id/quiz" element={<QuizPage />} />
-              <Route path="practice/:id" element={<PracticeSetDetailPage />} />
-              <Route path="feedback/:id" element={<FeedbackDetailPage />} />
-              <Route path="community/create" element={<CreatePostPage />} />
-              <Route path="community/:postId/edit" element={<EditPostPage />} />
-              <Route path="community/:postId" element={<PostDetailPage />} />
+            <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
+              <Route path="/user" element={<UserDashboardPage />}>
+                <Route path="ai-interview/setup" element={<AIInterviewSetupPage />} />
+                <Route path="ai-interview/session" element={<AIInterviewSessionPage />} />
+                <Route path="ai-interview/result/:id" element={<AIInterviewResultPage />} />
+                <Route
+                  path="mock-interview/select-mentor"
+                  element={<MockInterviewSelectMentorPage />}
+                />
+                <Route path="mock-interview/schedule" element={<MockInterviewSchedulePage />} />
+                <Route path="mock-interview/booking-success" element={<BookingSuccessPage />} />
+                <Route path="mock-interview/room/:sessionId" element={<SessionRoomPage />} />
+                <Route
+                  path="mock-interview/history/:sessionId/review"
+                  element={<WriteReviewPage />}
+                />
+                <Route path="mock-interview/history/:sessionId" element={<SessionDetailPage />} />
+                <Route path="ai-chat/:id" element={<AIChatConversationPage />} />
+                <Route path="questions/:id" element={<QuestionDetailPage />} />
+                <Route path="practice/:id/quiz/:quizId/result" element={<QuizResultPage />} />
+                <Route path="practice/:id/quiz" element={<QuizPage />} />
+                <Route path="practice/:id" element={<PracticeSetDetailPage />} />
+                <Route path="feedback/:id" element={<FeedbackDetailPage />} />
+                <Route path="community/create" element={<CreatePostPage />} />
+                <Route path="community/:postId/edit" element={<EditPostPage />} />
+                <Route path="community/:postId" element={<PostDetailPage />} />
+              </Route>
             </Route>
             {/* Backward-compat redirects for old /dashboard/* URLs */}
             <Route path="/dashboard" element={<Navigate to="/user" replace />} />
@@ -202,14 +211,16 @@ function App() {
             />
 
             {/* Mentor Dashboard — ChromeTabs shell at /mentor, sub-pages nested inside */}
-            <Route path="/mentor" element={<MentorDashboardPage />}>
-              <Route path="sessions/room/:sessionId" element={<MentorSessionRoomPage />} />
-              <Route path="sessions/:sessionId/feedback" element={<WriteFeedbackPage />} />
-              <Route path="reviews/:id" element={<ReviewDetailPage />} />
-              <Route path="students/:userId" element={<StudentDetailPage />} />
-              <Route path="community/create" element={<CreatePostPage />} />
-              <Route path="community/:postId/edit" element={<EditPostPage />} />
-              <Route path="community/:postId" element={<PostDetailPage />} />
+            <Route element={<ProtectedRoute allowedRoles={["MENTOR"]} />}>
+              <Route path="/mentor" element={<MentorDashboardPage />}>
+                <Route path="sessions/room/:sessionId" element={<MentorSessionRoomPage />} />
+                <Route path="sessions/:sessionId/feedback" element={<WriteFeedbackPage />} />
+                <Route path="reviews/:id" element={<ReviewDetailPage />} />
+                <Route path="students/:userId" element={<StudentDetailPage />} />
+                <Route path="community/create" element={<CreatePostPage />} />
+                <Route path="community/:postId/edit" element={<EditPostPage />} />
+                <Route path="community/:postId" element={<PostDetailPage />} />
+              </Route>
             </Route>
             {/* Backward-compat redirects for /mentor-dashboard/* URLs */}
             <Route path="/mentor-dashboard" element={<Navigate to="/mentor" replace />} />
@@ -247,7 +258,9 @@ function App() {
             />
 
             {/* Admin Management routes */}
-            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+              <Route path="/admin" element={<AdminDashboardPage />} />
+            </Route>
             {/* Redirect routes for backward compatibility - redirect /admin/* to /admin?tab=* */}
             <Route
               path="/admin/dashboard"
@@ -291,10 +304,16 @@ function App() {
             />
 
             {/* Staff Dashboard routes */}
-            <Route path="/staff" element={<StaffDashboardPage />} />
-            <Route path="/staff/reviews" element={<ReviewModerationPage />} />
-            <Route path="/staff/feedback" element={<FeedbackModerationPage />} />
-            <Route path="/staff/posts" element={<PostModerationPage />} />
+            <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
+              <Route path="/staff" element={<StaffDashboardPage />} />
+              <Route path="/staff/reviews" element={<ReviewModerationPage />} />
+              <Route path="/staff/feedback" element={<FeedbackModerationPage />} />
+              <Route path="/staff/posts" element={<PostModerationPage />} />
+              <Route path="/staff/content" element={<ContentModerationPage />} />
+              <Route path="/staff/mentor-applications" element={<MentorApplicationsPage />} />
+              <Route path="/staff/sessions" element={<SessionProcessingPage />} />
+              <Route path="/staff/support" element={<UserSupportPage />} />
+            </Route>
 
             {/* Error pages */}
             <Route path="/error/401" element={<UnauthorizedPage />} />

@@ -16,7 +16,8 @@ export function useSpeechSynthesis(lang = "vi-VN"): UseSpeechSynthesisReturn {
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | number | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  // Đọc từ localStorage để giữ trạng thái qua các lần điều hướng giữa các phòng phỏng vấn
+  const [isMuted, setIsMuted] = useState(() => localStorage.getItem("tts-muted") === "true");
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Hủy TTS khi unmount để không tiếp tục phát sau khi rời trang
@@ -95,7 +96,9 @@ export function useSpeechSynthesis(lang = "vi-VN"): UseSpeechSynthesisReturn {
         setIsSpeaking(false);
         setSpeakingId(null);
       }
-      return !prev;
+      const next = !prev;
+      localStorage.setItem("tts-muted", String(next));
+      return next;
     });
   }, [isSupported]);
 

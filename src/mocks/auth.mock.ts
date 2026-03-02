@@ -4,7 +4,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
-  role: "user" | "mentor" | "admin" | "staff";
+  role: "USER" | "MENTOR" | "ADMIN" | "STAFF";
   avatar?: string | null;
   bio?: string;
 }
@@ -22,7 +22,7 @@ export const mockUser: User = {
   id: "1",
   email: "user@example.com",
   fullName: "Nguyễn Văn A",
-  role: "user",
+  role: "USER",
   avatar: null,
 };
 
@@ -30,7 +30,7 @@ export const mockAdmin: User = {
   id: "2",
   email: "admin@example.com",
   fullName: "Admin",
-  role: "admin",
+  role: "ADMIN",
   avatar: null,
 };
 
@@ -38,7 +38,7 @@ export const mockStaff: User = {
   id: "4",
   email: "staff@example.com",
   fullName: "Staff Demo",
-  role: "staff",
+  role: "STAFF",
   avatar: null,
 };
 
@@ -94,7 +94,7 @@ export const mockSignup = async (data: {
     id: Date.now().toString(),
     email: data.email,
     fullName: data.fullName,
-    role: "user",
+    role: "USER",
     avatar: null,
   };
 
