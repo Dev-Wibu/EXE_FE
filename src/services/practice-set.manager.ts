@@ -21,6 +21,25 @@ import type { Major } from "./question-major.manager";
 export type PracticeSetLevel = "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
 
 /**
+ * A question embedded inside a PracticeSet returned by the session endpoint
+ * GET /api/practice-sets/interview-session/{id}
+ */
+export interface SessionQuestion {
+  questionId?: number;
+  title?: string;
+  content?: string;
+  level?: "EASY" | "MEDIUM" | "HARD";
+  lesson?: {
+    id?: number;
+    lessonName?: string;
+    description?: string | null;
+    urlTutorial?: string | null;
+  };
+  answer?: string;
+  hint?: string;
+}
+
+/**
  * PracticeSet type based on backend schema
  */
 export interface PracticeSet {
@@ -30,7 +49,11 @@ export interface PracticeSet {
   level?: PracticeSetLevel;
   major?: Major;
   startDate?: string;
+  dateNumber?: number;
   user?: { id?: number; name?: string; email?: string };
+  interviewSessionId?: number;
+  /** Populated when fetched via /api/practice-sets/interview-session/{id} */
+  questions?: SessionQuestion[];
 }
 
 /**
@@ -302,6 +325,59 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to fetch full practice set",
+      };
+    }
+  }
+
+  /**
+   * Get all practice sets for a given interview session
+   * GET /api/practice-sets/interview-session/{interviewSessionId}
+   */
+  async getByInterviewSession(interviewSessionId: number): Promise<ApiResponse<PracticeSet[]>> {
+    if (this.mode === "mock") {
+      return { success: true, data: [] };
+    }
+    try {
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_INTERVIEW_SESSION, {
+        interviewSessionId,
+      });
+      const response = await this.api.get(endpoint);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Không thể tải danh sách bộ luyện tập theo session",
+      };
+    }
+  }
+
+  /**
+   * Generate a practice set via AI from a completed interview session
+   * POST /api/practice-sets/create-by-ai
+   * Body: PracticeGenerateRequest — session must be COMPLETED with a result
+   */
+  async createByAI(data: {
+    userId?: number;
+    aiInterviewId?: number;
+    dateNumber: number;
+  }): Promise<ApiResponse<PracticeSet>> {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Tạo lộ trình AI không được hỗ trợ ở chế độ mock",
+      };
+    }
+
+    try {
+      const response = await this.api.post(API_ENDPOINTS.PRACTICE_SETS.CREATE_BY_AI, data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Không thể tạo lộ trình luyện tập AI",
       };
     }
   }

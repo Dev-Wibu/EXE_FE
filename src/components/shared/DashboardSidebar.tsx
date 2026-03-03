@@ -231,7 +231,7 @@ export function DashboardSidebar({
         {!isCollapsed && showFlyout === item.type && item.children && (
           <div
             className={cn(
-              "absolute top-0 left-full z-50 ml-1 w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "absolute top-0 left-full z-50 w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
               theme.flyoutBorder
             )}>
             {item.children.map((child) => {

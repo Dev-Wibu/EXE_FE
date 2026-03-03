@@ -82,7 +82,7 @@ export function CreatePostPage() {
 
       if (result.success) {
         toast.success("Đăng bài viết thành công!");
-        navigate("..");
+        navigate(-1);
       } else {
         toast.error(result.error ?? "Đăng bài viết thất bại");
       }

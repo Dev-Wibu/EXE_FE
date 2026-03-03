@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Plus,
   RefreshCw,
+  Sparkles,
   Star,
   TrendingUp,
   User,
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { $api } from "@/lib/api";
 import { formatDateTime } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
+import { practiceSetManager } from "@/services";
+import { useAuthStore } from "@/stores/authStore";
+import { SelectRoadmapModal } from "./components/SelectRoadmapModal";
 
 const RESULT_MAP: Record<string, { label: string; color: string; bg: string }> = {
   STRONG_HIRE: {
@@ -245,6 +250,9 @@ function QACard({
 export function AIInterviewResultPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuthStore();
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
 
   const {
     data: session,
@@ -256,6 +264,38 @@ export function AIInterviewResultPage() {
     { params: { path: { sessionId: Number(id) } } },
     { enabled: !!id }
   );
+
+  // Kiểm tra số lượng lộ trình lợn tập đã tạo cho session này
+  const { data: existingPracticeSets = [], refetch: refetchPracticeSets } = $api.useQuery(
+    "get",
+    "/api/practice-sets/interview-session/{interviewSessionId}",
+    { params: { path: { interviewSessionId: Number(id) } } },
+    { enabled: !!id }
+  );
+
+  const handleCreateRoadmap = async (dateNumber: number) => {
+    setRoadmapLoading(true);
+    try {
+      const result = await practiceSetManager.createByAI({
+        userId: user?.id,
+        aiInterviewId: Number(id),
+        dateNumber,
+      });
+      if (result.success) {
+        setRoadmapOpen(false);
+        toast.success("Đã tạo lộ trình luyện tập thành công!");
+        void refetchPracticeSets();
+        // Điều hướng theo interviewSessionId để tải toàn bộ lộ trình của session
+        navigate(`/user/practice/session/${id}`);
+      } else {
+        toast.error(result.error ?? "Không thể tạo lộ trình luyện tập");
+      }
+    } catch {
+      toast.error("Không thể tạo lộ trình luyện tập");
+    } finally {
+      setRoadmapLoading(false);
+    }
+  };
 
   const detail = session?.resultDetail;
   const history = detail?.history ?? [];
@@ -674,8 +714,32 @@ export function AIInterviewResultPage() {
                 <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
                   {detail.improvementPlan}
                 </p>
-              ) : (
+              ) : existingPracticeSets.length === 0 ? (
                 <p className="text-muted-foreground text-sm italic">Chưa có kế hoạch</p>
+              ) : null}
+              {session?.status === "COMPLETED" && !!detail && (
+                <div className="mt-4">
+                  {existingPracticeSets.length > 0 ? (
+                    // 1 session = 1 practice set: redirect khi đã tạo
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+                      onClick={() => navigate(`/user/practice/session/${id}`)}>
+                      <BookOpen className="h-3.5 w-3.5" />
+                      Xem lộ trình luyện tập
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                      onClick={() => setRoadmapOpen(true)}>
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Tạo lộ trình luyện tập
+                    </Button>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -728,6 +792,14 @@ export function AIInterviewResultPage() {
           </Button>
         </div>
       </div>
+
+      <SelectRoadmapModal
+        key={`roadmap-${String(roadmapOpen)}`}
+        open={roadmapOpen}
+        onClose={() => setRoadmapOpen(false)}
+        onConfirm={handleCreateRoadmap}
+        loading={roadmapLoading}
+      />
     </div>
   );
 }

@@ -419,6 +419,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/quiz-sets/create-full-ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createFullQuizSetByAI"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/practice-sets/create-full": {
         parameters: {
             query?: never;
@@ -861,22 +877,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/quiz-set-items/by-quiz-set/{quizSetId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getItemsByQuizSetId"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/question-categories/{id}": {
         parameters: {
             query?: never;
@@ -917,6 +917,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getQuestionSetsByTargetLevel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/practice-sets/interview-session/{interviewSessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllByInterviewSession"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1013,6 +1029,23 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getQuestionsByCategoryAndLevel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/posts/{postId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lấy chi tiết bài viết theo id */
+        get: operations["getPostById"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1118,6 +1151,26 @@ export interface paths {
         };
         /** Kiểm tra user đã like bài viết chưa */
         get: operations["checkLiked"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/posts/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lấy new feed
+         * @description Trả về danh sách bài viết mới nhất, có phân trang
+         */
+        get: operations["getNewFeed"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1489,6 +1542,8 @@ export interface components {
             major?: components["schemas"]["Major"];
             user?: components["schemas"]["User"];
             questions?: components["schemas"]["PracticeQuestion"][];
+            /** Format: int32 */
+            interviewSessionId?: number;
         };
         User: {
             /** Format: int32 */
@@ -1514,31 +1569,13 @@ export interface components {
             /** Format: int32 */
             orderIndex?: number;
         };
-        Post: {
-            /** Format: int32 */
-            postId?: number;
-            title?: string;
-            content?: string;
-            summary?: string;
-            /** @enum {string} */
-            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-            author?: components["schemas"]["User"];
-            /** Format: date-time */
-            creationDate?: string;
-            /** Format: date-time */
-            lastModifiedDate?: string;
-            major?: components["schemas"]["Major"];
-            coverImgUrl?: string;
-            public_id?: string;
-            tags?: string[];
-        };
         PostComment: {
             /** Format: int32 */
             id?: number;
-            post?: components["schemas"]["Post"];
             user?: components["schemas"]["User"];
             content?: string;
-            parentComment?: components["schemas"]["PostComment"];
+            /** Format: int32 */
+            parentCommentId?: number;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -1782,6 +1819,15 @@ export interface components {
             created_at?: string;
             config?: components["schemas"]["RoomConfig"];
         };
+        QuizItem: {
+            /** Format: int32 */
+            id?: number;
+            question?: string;
+            options?: string;
+            correctAnswer?: string;
+            userResponse?: string;
+            explanation?: string;
+        };
         QuizSet: {
             /** Format: int32 */
             quizId?: number;
@@ -1791,6 +1837,7 @@ export interface components {
             practiceSet?: components["schemas"]["PracticeSet"];
             /** Format: date-time */
             createdAt?: string;
+            questions?: components["schemas"]["QuizItem"][];
             submitted?: boolean;
         };
         QuizItemCreateRequest: {
@@ -1799,16 +1846,6 @@ export interface components {
                 [key: string]: string;
             };
             correctAnswer?: string;
-            explanation?: string;
-        };
-        QuizItem: {
-            /** Format: int32 */
-            id?: number;
-            quizSet?: components["schemas"]["QuizSet"];
-            question?: string;
-            options?: string;
-            correctAnswer?: string;
-            userResponse?: string;
             explanation?: string;
         };
         PracticeQuestionRequest: {
@@ -1841,8 +1878,6 @@ export interface components {
             /** Format: int32 */
             aiInterviewId?: number;
             /** Format: int32 */
-            majorId?: number;
-            /** Format: int32 */
             dateNumber?: number;
         };
         PracticeSetAIResponse: {
@@ -1870,19 +1905,38 @@ export interface components {
              */
             status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
         };
+        Post: {
+            /** Format: int32 */
+            postId?: number;
+            title?: string;
+            content?: string;
+            summary?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            author?: components["schemas"]["User"];
+            /** Format: date-time */
+            creationDate?: string;
+            /** Format: date-time */
+            lastModifiedDate?: string;
+            major?: components["schemas"]["Major"];
+            coverImgUrl?: string;
+            public_id?: string;
+            tags?: string[];
+            likes?: components["schemas"]["PostLike"][];
+            comments?: components["schemas"]["PostComment"][];
+        };
+        PostLike: {
+            /** Format: int32 */
+            id?: number;
+            user?: components["schemas"]["User"];
+            /** Format: date-time */
+            createdAt?: string;
+        };
         PostLikeRequest: {
             /** Format: int32 */
             postId?: number;
             /** Format: int32 */
             userId?: number;
-        };
-        PostLike: {
-            /** Format: int32 */
-            id?: number;
-            post?: components["schemas"]["Post"];
-            user?: components["schemas"]["User"];
-            /** Format: date-time */
-            createdAt?: string;
         };
         PostCommentRequest: {
             /** Format: int32 */
@@ -2028,13 +2082,13 @@ export interface components {
             practiceSet?: components["schemas"]["PracticeSet"];
             practiceSetItem?: components["schemas"]["PracticeSetItem"][];
         };
+        AuthorResponse: {
+            name?: string;
+            avatar?: string;
+        };
         PostCommentResponse: {
             /** Format: int32 */
             id?: number;
-            /** Format: int32 */
-            postId?: number;
-            /** Format: int32 */
-            userId?: number;
             userName?: string;
             userAvatar?: string;
             content?: string;
@@ -2045,26 +2099,68 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        PostDetailResponse: {
+            /** Format: int32 */
+            postId?: number;
+            title?: string;
+            content?: string;
+            summary?: string;
+            status?: string;
+            /** Format: date-time */
+            creationDate?: string;
+            /** Format: date-time */
+            lastModifiedDate?: string;
+            coverImgUrl?: string;
+            tags?: string[];
+            author?: components["schemas"]["AuthorResponse"];
+            majorName?: string;
+        };
+        PostLikeResponse: {
+            userName?: string;
+            userAvatar?: string;
+        };
         PostResponse: {
-            post?: components["schemas"]["Post"];
+            post?: components["schemas"]["PostDetailResponse"];
             /** Format: int32 */
             likeCount?: number;
             /** Format: int32 */
             commentCount?: number;
-            postLikes?: components["schemas"]["PostLike"][];
+            postLikes?: components["schemas"]["PostLikeResponse"][];
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
-        PostLikeResponse: {
+        PagePostResponse: {
             /** Format: int32 */
-            id?: number;
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            postId?: number;
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
-            userId?: number;
-            userName?: string;
-            userAvatar?: string;
-            /** Format: date-time */
-            createdAt?: string;
+            size?: number;
+            content?: components["schemas"]["PostResponse"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            empty?: boolean;
+        };
+        PageableObject: {
+            /** Format: int32 */
+            pageNumber?: number;
+            paged?: boolean;
+            /** Format: int32 */
+            pageSize?: number;
+            unpaged?: boolean;
+            /** Format: int64 */
+            offset?: number;
+            sort?: components["schemas"]["SortObject"];
+        };
+        SortObject: {
+            sorted?: boolean;
+            unsorted?: boolean;
+            empty?: boolean;
         };
         InterviewBlueprintResponse: {
             strategy_analysis?: string;
@@ -3238,6 +3334,28 @@ export interface operations {
             };
         };
     };
+    createFullQuizSetByAI: {
+        parameters: {
+            query: {
+                practiceSetId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QuizItem"][];
+                };
+            };
+        };
+    };
     createFullQuestionSet: {
         parameters: {
             query?: never;
@@ -3890,28 +4008,6 @@ export interface operations {
             };
         };
     };
-    getItemsByQuizSetId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                quizSetId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizItem"][];
-                };
-            };
-        };
-    };
     findById: {
         parameters: {
             query?: never;
@@ -4002,6 +4098,28 @@ export interface operations {
             header?: never;
             path: {
                 level: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PracticeSet"][];
+                };
+            };
+        };
+    };
+    getAllByInterviewSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                interviewSessionId: number;
             };
             cookie?: never;
         };
@@ -4192,6 +4310,28 @@ export interface operations {
             };
         };
     };
+    getPostById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PostResponse"];
+                };
+            };
+        };
+    };
     getCommentsByPostId: {
         parameters: {
             query?: never;
@@ -4321,6 +4461,29 @@ export interface operations {
                     "*/*": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    getNewFeed: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagePostResponse"];
                 };
             };
         };
