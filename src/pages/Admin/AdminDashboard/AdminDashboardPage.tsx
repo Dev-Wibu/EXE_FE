@@ -4,6 +4,7 @@ import {
   FileQuestion,
   FileText,
   FolderOpen,
+  Globe,
   GraduationCap,
   LayoutDashboard,
   MessageSquare,
@@ -20,6 +21,7 @@ import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
 import { DashboardChromeTabs, DashboardSidebar } from "@/components/shared";
 import { useTabsState } from "@/hooks/useTabsState";
 
+import { PostListPage } from "../../User/Community";
 import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
 import { DashboardOverviewPage } from "../DashboardOverview";
 import { FeedbackManagementPage } from "../FeedbackManagement";
@@ -49,7 +51,8 @@ type TabType =
   | "practiceQuestions"
   | "quizSets"
   | "posts"
-  | "candidateProfiles";
+  | "candidateProfiles"
+  | "community";
 
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "dashboard", label: "Dashboard" },
@@ -66,6 +69,7 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "quizSets", label: "Quiz Sets" },
   { type: "posts", label: "Quản lý bài viết" },
   { type: "candidateProfiles", label: "Hồ sơ ứng viên" },
+  { type: "community", label: "Cộng đồng" },
 ];
 
 const isValidTabType = (value: string): value is TabType => {
@@ -87,6 +91,7 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   quizSets: Trophy,
   posts: Newspaper,
   candidateProfiles: FileText,
+  community: Globe,
 };
 
 const TAB_COLORS: Record<TabType, string> = {
@@ -104,6 +109,7 @@ const TAB_COLORS: Record<TabType, string> = {
   quizSets: "text-amber-600",
   posts: "text-purple-500",
   candidateProfiles: "text-teal-600",
+  community: "text-orange-500",
 };
 
 const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
@@ -167,6 +173,7 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
         icon: FileText,
         iconColor: "text-teal-600",
       },
+      { type: "community", label: "Cộng đồng", icon: Globe, iconColor: "text-orange-500" },
     ],
   },
 ];
@@ -219,6 +226,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
         label: "Hồ sơ ứng viên",
         color: "text-teal-600",
       },
+      { type: "community", icon: Globe, label: "Cộng đồng", color: "text-orange-500" },
     ],
   },
 ];
@@ -310,6 +318,8 @@ export function AdminDashboardPage() {
         return <QuizSetManagementPage />;
       case "posts":
         return <PostManagementPage />;
+      case "community":
+        return <PostListPage />;
       case "candidateProfiles":
         return <CandidateProfileManagementPage />;
       default:

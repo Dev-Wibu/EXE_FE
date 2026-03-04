@@ -3,7 +3,19 @@
  * Displays detailed review from a student
  */
 
-import { ArrowLeft, Calendar, Star, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
+  Lightbulb,
+  Star,
+  Target,
+  ThumbsUp,
+  User,
+  Wrench,
+  Zap,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -151,8 +163,8 @@ export function ReviewDetailPage() {
           {/* Situation */}
           {review.situationNote && (
             <div>
-              <h4 className="mb-2 font-medium text-emerald-700 dark:text-emerald-400">
-                🎯 Situation (Tình huống)
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
+                <Target className="h-4 w-4" /> Situation (Tình huống)
               </h4>
               <div className="rounded-lg bg-emerald-50/50 p-4 dark:bg-emerald-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -165,8 +177,8 @@ export function ReviewDetailPage() {
           {/* Task */}
           {review.taskNote && (
             <div>
-              <h4 className="mb-2 font-medium text-blue-700 dark:text-blue-400">
-                📋 Task (Nhiệm vụ)
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-blue-700 dark:text-blue-400">
+                <ClipboardList className="h-4 w-4" /> Task (Nhiệm vụ)
               </h4>
               <div className="rounded-lg bg-blue-50/50 p-4 dark:bg-blue-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -179,8 +191,8 @@ export function ReviewDetailPage() {
           {/* Action */}
           {review.actionNote && (
             <div>
-              <h4 className="mb-2 font-medium text-purple-700 dark:text-purple-400">
-                🚀 Action (Hành động)
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-purple-700 dark:text-purple-400">
+                <Zap className="h-4 w-4" /> Action (Hành động)
               </h4>
               <div className="rounded-lg bg-purple-50/50 p-4 dark:bg-purple-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -193,8 +205,8 @@ export function ReviewDetailPage() {
           {/* Result */}
           {review.resultNote && (
             <div>
-              <h4 className="mb-2 font-medium text-amber-700 dark:text-amber-400">
-                ✅ Result (Kết quả)
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-400">
+                <CheckCircle2 className="h-4 w-4" /> Result (Kết quả)
               </h4>
               <div className="rounded-lg bg-amber-50/50 p-4 dark:bg-amber-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -223,7 +235,9 @@ export function ReviewDetailPage() {
           {/* Strengths */}
           {review.strength && (
             <div>
-              <h4 className="mb-2 font-medium text-green-700 dark:text-green-400">💪 Điểm mạnh</h4>
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-green-700 dark:text-green-400">
+                <ThumbsUp className="h-4 w-4" /> Điểm mạnh
+              </h4>
               <div className="rounded-lg bg-green-50/50 p-4 dark:bg-green-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
                   {review.strength}
@@ -235,8 +249,8 @@ export function ReviewDetailPage() {
           {/* Weaknesses */}
           {review.weakness && (
             <div>
-              <h4 className="mb-2 font-medium text-red-700 dark:text-red-400">
-                🔧 Điểm cần cải thiện
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-red-700 dark:text-red-400">
+                <Wrench className="h-4 w-4" /> Điểm cần cải thiện
               </h4>
               <div className="rounded-lg bg-red-50/50 p-4 dark:bg-red-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -249,8 +263,8 @@ export function ReviewDetailPage() {
           {/* Improvement Suggestions */}
           {review.improve && (
             <div>
-              <h4 className="mb-2 font-medium text-indigo-700 dark:text-indigo-400">
-                💡 Đề xuất cải tiến
+              <h4 className="mb-2 flex items-center gap-1.5 font-medium text-indigo-700 dark:text-indigo-400">
+                <Lightbulb className="h-4 w-4" /> Đề xuất cải tiến
               </h4>
               <div className="rounded-lg bg-indigo-50/50 p-4 dark:bg-indigo-900/20">
                 <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">

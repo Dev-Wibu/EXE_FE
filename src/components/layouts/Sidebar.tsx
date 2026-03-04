@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
-  Newspaper,
   User,
   Users,
 } from "lucide-react";
@@ -102,11 +101,6 @@ const menuItems: NavItem[] = [
         path: "/dashboard/practice/questions",
       },
     ],
-  },
-  {
-    label: "Cộng đồng",
-    icon: Newspaper,
-    path: "/dashboard/community",
   },
   {
     label: "Thông báo",

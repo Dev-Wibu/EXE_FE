@@ -1,4 +1,4 @@
-import { CheckCircle, Eye, Search, XCircle } from "lucide-react";
+import { CheckCircle, Eye, FileText, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -159,7 +159,10 @@ export function ContentModerationPage() {
             {filteredContent.map((content) => (
               <TableRow key={content.id}>
                 <TableCell>
-                  <Badge variant="outline">📝 Câu hỏi</Badge>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    Câu hỏi
+                  </Badge>
                 </TableCell>
                 <TableCell className="max-w-[300px] truncate font-medium">
                   {content.title}

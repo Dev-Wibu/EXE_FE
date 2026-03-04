@@ -1,24 +1,14 @@
-import {
-  Bell,
-  Calendar,
-  LayoutDashboard,
-  MessageSquare,
-  Newspaper,
-  Star,
-  User,
-  Users,
-} from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { Bell, Calendar, LayoutDashboard, MessageSquare, Star, User, Users } from "lucide-react";
+import { useCallback } from "react";
 import { useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
 import { NotificationBell } from "@/components/notification";
-import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
-import { DashboardChromeTabs, DashboardSidebar } from "@/components/shared";
+import type { SidebarMenuGroup } from "@/components/shared";
+import { DashboardSidebar } from "@/components/shared";
 import { useTabsState } from "@/hooks/useTabsState";
 
-import { PostListPage } from "../../User/Community";
 import { MentorAccountPage } from "../Account";
 import { GivenFeedbackListPage } from "../Feedback";
 import { MentorNotificationsPage } from "../Notifications";
@@ -33,7 +23,6 @@ type TabType =
   | "students"
   | "reviews"
   | "feedback"
-  | "community"
   | "notifications"
   | "account";
 
@@ -43,7 +32,6 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "students", label: "Học viên" },
   { type: "reviews", label: "Đánh giá" },
   { type: "feedback", label: "Phản hồi đã gửi" },
-  { type: "community", label: "Cộng đồng" },
   { type: "notifications", label: "Thông báo" },
   { type: "account", label: "Tài khoản" },
 ];
@@ -51,61 +39,6 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
 const isValidTabType = (value: string): value is TabType => {
   return AVAILABLE_TABS.some((tab) => tab.type === value);
 };
-
-const TAB_ICONS: Record<TabType, React.ElementType> = {
-  overview: LayoutDashboard,
-  sessions: Calendar,
-  students: Users,
-  reviews: Star,
-  feedback: MessageSquare,
-  community: Newspaper,
-  notifications: Bell,
-  account: User,
-};
-
-const TAB_COLORS: Record<TabType, string> = {
-  overview: "text-emerald-600",
-  sessions: "text-blue-600",
-  students: "text-purple-600",
-  reviews: "text-yellow-600",
-  feedback: "text-cyan-600",
-  community: "text-orange-500",
-  notifications: "text-red-600",
-  account: "text-gray-600",
-};
-
-const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
-  {
-    items: [
-      {
-        type: "overview",
-        label: "Tổng quan",
-        icon: LayoutDashboard,
-        iconColor: "text-emerald-600",
-      },
-      { type: "sessions", label: "Phiên phỏng vấn", icon: Calendar, iconColor: "text-blue-600" },
-      { type: "students", label: "Học viên", icon: Users, iconColor: "text-purple-600" },
-    ],
-  },
-  {
-    items: [
-      { type: "reviews", label: "Đánh giá", icon: Star, iconColor: "text-yellow-600" },
-      {
-        type: "feedback",
-        label: "Phản hồi đã gửi",
-        icon: MessageSquare,
-        iconColor: "text-cyan-600",
-      },
-      { type: "community", label: "Cộng đồng", icon: Newspaper, iconColor: "text-orange-500" },
-    ],
-  },
-  {
-    items: [
-      { type: "notifications", label: "Thông báo", icon: Bell, iconColor: "text-red-600" },
-      { type: "account", label: "Tài khoản", icon: User, iconColor: "text-gray-600" },
-    ],
-  },
-];
 
 const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
@@ -116,7 +49,6 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       { type: "students", icon: Users, label: "Học viên", color: "text-purple-600" },
       { type: "reviews", icon: Star, label: "Đánh giá", color: "text-yellow-600" },
       { type: "feedback", icon: MessageSquare, label: "Phản hồi đã gửi", color: "text-cyan-600" },
-      { type: "community", icon: Newspaper, label: "Cộng đồng", color: "text-orange-500" },
     ],
   },
   {
@@ -146,7 +78,7 @@ const DEFAULT_TAB: TabType = "overview";
 
 export function MentorDashboardPage() {
   const navigate = useNavigate();
-  const { activeTab, openTabs, setActiveTab, openTab, closeTab } = useTabsState({
+  const { activeTab, openTab } = useTabsState({
     storageKey: "mentor",
     defaultTab: DEFAULT_TAB,
     availableTabs: AVAILABLE_TABS,
@@ -168,46 +100,6 @@ export function MentorDashboardPage() {
     [outlet, openTab, navigate]
   );
 
-  const chromeTabsData = useMemo(() => {
-    return openTabs
-      .filter((tab) => isValidTabType(tab.type))
-      .map((tab) => ({
-        id: tab.id,
-        type: tab.type,
-        title: tab.label,
-      }));
-  }, [openTabs]);
-
-  const activeTabId = useMemo(() => {
-    const activeTabData = openTabs.find((tab) => tab.type === activeTab);
-    return activeTabData?.id || "";
-  }, [openTabs, activeTab]);
-
-  const handleTabSelect = useCallback(
-    (tabId: string) => {
-      const selectedTab = openTabs.find((tab) => tab.id === tabId);
-      if (selectedTab) {
-        if (outlet) {
-          navigate(`/mentor-dashboard?tab=${selectedTab.type}`);
-        } else {
-          setActiveTab(selectedTab.type);
-        }
-      }
-    },
-    [openTabs, setActiveTab, outlet, navigate]
-  );
-
-  const handleNewTab = useCallback(
-    (type: string) => {
-      if (outlet) {
-        navigate(`/mentor-dashboard?tab=${type}`);
-      } else {
-        openTab(type);
-      }
-    },
-    [openTab, outlet, navigate]
-  );
-
   const renderContent = () => {
     switch (typedActiveTab) {
       case "overview":
@@ -220,8 +112,6 @@ export function MentorDashboardPage() {
         return <MentorReviewsPage />;
       case "feedback":
         return <GivenFeedbackListPage />;
-      case "community":
-        return <PostListPage />;
       case "notifications":
         return <MentorNotificationsPage />;
       case "account":
@@ -275,29 +165,9 @@ export function MentorDashboardPage() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardChromeTabs
-          tabs={chromeTabsData}
-          activeTabId={activeTabId}
-          onTabSelect={handleTabSelect}
-          onTabClose={closeTab}
-          onNewTab={handleNewTab}
-          tabIcons={TAB_ICONS}
-          tabColors={TAB_COLORS}
-          menuGroups={CHROME_TABS_MENU_GROUPS}
-          rightSlot={<NotificationBell notificationsPath="/mentor?tab=notifications" />}
-          theme={{
-            bg: "bg-emerald-50",
-            tabActiveBorder: "border-emerald-200",
-            tabActiveBg: "bg-white",
-            tabInactiveBg: "bg-emerald-100",
-            tabInactiveHover: "hover:bg-emerald-50",
-            closeHover: "hover:bg-emerald-200",
-            addBtnBg: "bg-emerald-100",
-            addBtnHover: "hover:bg-emerald-200",
-            menuHover: "hover:bg-emerald-50",
-          }}
-        />
-
+        <div className="flex h-12 items-center justify-end px-4">
+          <NotificationBell notificationsPath="/mentor?tab=notifications" />
+        </div>
         <div className="flex-1 overflow-auto p-6">{outlet ?? renderContent()}</div>
       </div>
     </div>

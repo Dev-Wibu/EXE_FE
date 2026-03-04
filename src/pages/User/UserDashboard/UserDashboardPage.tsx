@@ -7,24 +7,22 @@ import {
   History,
   LayoutDashboard,
   MessageSquare,
-  Newspaper,
   User,
   Users,
 } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
 import { NotificationBell } from "@/components/notification";
-import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
-import { DashboardChromeTabs, DashboardSidebar } from "@/components/shared";
+import type { SidebarMenuGroup } from "@/components/shared";
+import { DashboardSidebar } from "@/components/shared";
 import { useTabsState } from "@/hooks/useTabsState";
 
 import { AccountPage } from "../Account";
 import { AIChatListPage } from "../AIChat";
 import { AIInterviewListPage } from "../AIInterview";
-import { PostListPage } from "../Community";
 import { UserFeedbackListPage } from "../Feedback";
 import { MockInterviewListPage, SessionHistoryPage } from "../MockInterview";
 import { UserNotificationsPage } from "../Notifications";
@@ -42,7 +40,6 @@ type TabType =
   | "questions"
   | "practice"
   | "practiceQuestions"
-  | "community"
   | "notifications"
   | "account";
 
@@ -56,7 +53,6 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "questions", label: "Bộ câu hỏi" },
   { type: "practice", label: "Bộ luyện tập" },
   { type: "practiceQuestions", label: "Câu hỏi luyện tập" },
-  { type: "community", label: "Cộng đồng" },
   { type: "notifications", label: "Thông báo" },
   { type: "account", label: "Tài khoản" },
 ];
@@ -64,88 +60,6 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
 const isValidTabType = (value: string): value is TabType => {
   return AVAILABLE_TABS.some((tab) => tab.type === value);
 };
-
-const TAB_ICONS: Record<TabType, React.ElementType> = {
-  overview: LayoutDashboard,
-  mockInterview: Users,
-  interviewHistory: History,
-  feedback: MessageSquare,
-  aiInterview: Bot,
-  aiChat: MessageSquare,
-  questions: CircleHelp,
-  practice: GraduationCap,
-  practiceQuestions: CircleHelp,
-  community: Newspaper,
-  notifications: Bell,
-  account: User,
-};
-
-const TAB_COLORS: Record<TabType, string> = {
-  overview: "text-blue-600",
-  mockInterview: "text-purple-600",
-  interviewHistory: "text-orange-600",
-  feedback: "text-cyan-600",
-  aiInterview: "text-green-600",
-  aiChat: "text-teal-600",
-  questions: "text-yellow-600",
-  practice: "text-indigo-600",
-  practiceQuestions: "text-violet-600",
-  community: "text-orange-500",
-  notifications: "text-red-600",
-  account: "text-gray-600",
-};
-
-const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
-  {
-    items: [
-      { type: "overview", label: "Tổng quan", icon: LayoutDashboard, iconColor: "text-blue-600" },
-      {
-        type: "mockInterview",
-        label: "Phỏng vấn với Mentor",
-        icon: Users,
-        iconColor: "text-purple-600",
-      },
-      {
-        type: "interviewHistory",
-        label: "Lịch sử phỏng vấn",
-        icon: History,
-        iconColor: "text-orange-600",
-      },
-      {
-        type: "feedback",
-        label: "Phản hồi từ Mentor",
-        icon: MessageSquare,
-        iconColor: "text-cyan-600",
-      },
-    ],
-  },
-  {
-    items: [
-      { type: "aiInterview", label: "Phỏng vấn với AI", icon: Bot, iconColor: "text-green-600" },
-      { type: "aiChat", label: "AI Chat", icon: MessageSquare, iconColor: "text-teal-600" },
-      { type: "questions", label: "Bộ câu hỏi", icon: CircleHelp, iconColor: "text-yellow-600" },
-      {
-        type: "practice",
-        label: "Bộ luyện tập",
-        icon: GraduationCap,
-        iconColor: "text-indigo-600",
-      },
-      {
-        type: "practiceQuestions",
-        label: "Câu hỏi luyện tập",
-        icon: CircleHelp,
-        iconColor: "text-violet-600",
-      },
-      { type: "community", label: "Cộng đồng", icon: Newspaper, iconColor: "text-orange-500" },
-    ],
-  },
-  {
-    items: [
-      { type: "notifications", label: "Thông báo", icon: Bell, iconColor: "text-red-600" },
-      { type: "account", label: "Tài khoản", icon: User, iconColor: "text-gray-600" },
-    ],
-  },
-];
 
 const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
@@ -178,7 +92,6 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       { type: "aiInterview", icon: Bot, label: "Phỏng vấn với AI", color: "text-green-600" },
       { type: "aiChat", icon: MessageSquare, label: "AI Chat", color: "text-teal-600" },
       { type: "questions", icon: CircleHelp, label: "Bộ câu hỏi", color: "text-yellow-600" },
-      { type: "community", icon: Newspaper, label: "Cộng đồng", color: "text-orange-500" },
       {
         type: "practice",
         icon: GraduationCap,
@@ -225,7 +138,7 @@ const DEFAULT_TAB: TabType = "overview";
 
 export function UserDashboardPage() {
   const navigate = useNavigate();
-  const { activeTab, openTabs, setActiveTab, openTab, closeTab } = useTabsState({
+  const { activeTab, openTab } = useTabsState({
     storageKey: "user",
     defaultTab: DEFAULT_TAB,
     availableTabs: AVAILABLE_TABS,
@@ -245,46 +158,6 @@ export function UserDashboardPage() {
       }
     },
     [outlet, openTab, navigate]
-  );
-
-  const chromeTabsData = useMemo(() => {
-    return openTabs
-      .filter((tab) => isValidTabType(tab.type))
-      .map((tab) => ({
-        id: tab.id,
-        type: tab.type,
-        title: tab.label,
-      }));
-  }, [openTabs]);
-
-  const activeTabId = useMemo(() => {
-    const activeTabData = openTabs.find((tab) => tab.type === activeTab);
-    return activeTabData?.id || "";
-  }, [openTabs, activeTab]);
-
-  const handleTabSelect = useCallback(
-    (tabId: string) => {
-      const selectedTab = openTabs.find((tab) => tab.id === tabId);
-      if (selectedTab) {
-        if (outlet) {
-          navigate(`/user?tab=${selectedTab.type}`);
-        } else {
-          setActiveTab(selectedTab.type);
-        }
-      }
-    },
-    [openTabs, setActiveTab, outlet, navigate]
-  );
-
-  const handleNewTab = useCallback(
-    (type: string) => {
-      if (outlet) {
-        navigate(`/user?tab=${type}`);
-      } else {
-        openTab(type);
-      }
-    },
-    [openTab, outlet, navigate]
   );
 
   const renderContent = () => {
@@ -307,8 +180,6 @@ export function UserDashboardPage() {
         return <PracticeSetsPage />;
       case "practiceQuestions":
         return <PracticeQuestionsPage />;
-      case "community":
-        return <PostListPage />;
       case "notifications":
         return <UserNotificationsPage />;
       case "account":
@@ -367,30 +238,9 @@ export function UserDashboardPage() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardChromeTabs
-          tabs={chromeTabsData}
-          activeTabId={activeTabId}
-          onTabSelect={handleTabSelect}
-          onTabClose={closeTab}
-          onNewTab={handleNewTab}
-          tabIcons={TAB_ICONS}
-          tabColors={TAB_COLORS}
-          menuGroups={CHROME_TABS_MENU_GROUPS}
-          rightSlot={<NotificationBell notificationsPath="/user?tab=notifications" />}
-          theme={{
-            bg: "bg-slate-50",
-            tabActiveBorder: "border-slate-200",
-            tabActiveBg: "bg-white",
-            tabInactiveBg: "bg-slate-100",
-            tabInactiveHover: "hover:bg-white",
-            closeHover: "hover:bg-slate-200",
-            addBtnBg: "bg-slate-100",
-            addBtnHover: "hover:bg-slate-200",
-            menuHover: "hover:bg-slate-50",
-            menuWidth: "w-52",
-          }}
-        />
-
+        <div className="flex h-12 items-center justify-end px-4">
+          <NotificationBell notificationsPath="/user?tab=notifications" />
+        </div>
         <div className="flex-1 overflow-auto p-6">{outlet ?? renderContent()}</div>
       </div>
     </div>

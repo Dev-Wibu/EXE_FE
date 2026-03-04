@@ -1,4 +1,4 @@
-import { BookOpen, Filter, Search } from "lucide-react";
+import { BookOpen, Building2, FileText, Filter, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -238,8 +238,14 @@ function QuestionSetCard({ questionSet, onClick }: QuestionSetCardProps) {
 
         {/* Metadata Row */}
         <div className="text-muted-foreground flex items-center gap-6 border-t pt-4 text-sm">
-          <span>📝 {questionSet.questionCount} câu hỏi</span>
-          <span>🏢 {questionSet.industry}</span>
+          <span className="flex items-center gap-1">
+            <FileText className="h-4 w-4" />
+            {questionSet.questionCount} câu hỏi
+          </span>
+          <span className="flex items-center gap-1">
+            <Building2 className="h-4 w-4" />
+            {questionSet.industry}
+          </span>
         </div>
 
         {/* View Detail Button */}

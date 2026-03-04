@@ -21,7 +21,7 @@ export function MentorOverviewPage() {
     <div className="flex flex-col gap-6">
       {/* Welcome Banner */}
       <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-600 p-8 text-white shadow-lg">
-        <h1 className="text-3xl font-bold">Chào mừng trở lại, {user?.name || "Mentor"}! 👋</h1>
+        <h1 className="text-3xl font-bold">Chào mừng trở lại, {user?.name || "Mentor"}!</h1>
         <p className="mt-2 text-emerald-100">
           Đây là tổng quan hoạt động của bạn trên nền tảng INBLUE AI
         </p>

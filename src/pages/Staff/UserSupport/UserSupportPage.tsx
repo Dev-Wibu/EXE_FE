@@ -1,4 +1,13 @@
-import { Headphones, Mail, MessageSquare, Search } from "lucide-react";
+import {
+  Calendar,
+  CreditCard,
+  Headphones,
+  Inbox,
+  Mail,
+  MessageSquare,
+  Search,
+  Wrench,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -69,16 +78,17 @@ export function UserSupportPage() {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (category: string): React.ReactNode => {
+    const cls = "h-5 w-5";
     switch (category) {
       case "technical":
-        return "🔧";
+        return <Wrench className={cls} />;
       case "billing":
-        return "💳";
+        return <CreditCard className={cls} />;
       case "booking":
-        return "📅";
+        return <Calendar className={cls} />;
       default:
-        return "📩";
+        return <Inbox className={cls} />;
     }
   };
 

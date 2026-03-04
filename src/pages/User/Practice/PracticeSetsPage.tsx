@@ -1,4 +1,13 @@
-import { BookOpen, ExternalLink, Filter, Plus, Search, Sparkles } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  ExternalLink,
+  Filter,
+  GraduationCap,
+  Plus,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -65,12 +74,14 @@ function PracticeSetCard({
             )}
             {ps.major?.majorName && (
               <Badge variant="secondary" className="text-xs">
-                🎓 {ps.major.majorName}
+                <GraduationCap className="mr-1 h-3 w-3" />
+                {ps.major.majorName}
               </Badge>
             )}
             {ps.startDate && (
               <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                📅 {formatDate(ps.startDate)}
+                <Calendar className="h-3 w-3" />
+                {formatDate(ps.startDate)}
               </span>
             )}
           </div>
@@ -141,12 +152,14 @@ function SessionGroupCard({
             )}
             {first.major?.majorName && (
               <Badge variant="secondary" className="text-xs">
-                🎓 {first.major.majorName}
+                <GraduationCap className="mr-1 h-3 w-3" />
+                {first.major.majorName}
               </Badge>
             )}
             {first.startDate && (
               <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                📅 {formatDate(first.startDate)}
+                <Calendar className="h-3 w-3" />
+                {formatDate(first.startDate)}
               </span>
             )}
           </div>

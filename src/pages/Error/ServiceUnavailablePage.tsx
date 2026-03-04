@@ -1,4 +1,4 @@
-import { Home, RefreshCcw, WifiOff } from "lucide-react";
+import { Home, Lightbulb, RefreshCcw, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,8 @@ export function ServiceUnavailablePage() {
         {/* Maintenance Notice */}
         <div className="mt-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-900/20">
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            💡 Mẹo: Thử kiểm tra kết nối internet của bạn hoặc quay lại sau 5-10 phút.
+            <Lightbulb className="mr-1 inline-block h-4 w-4" /> Mẹo: Thử kiểm tra kết nối internet
+            của bạn hoặc quay lại sau 5-10 phút.
           </p>
         </div>
       </div>

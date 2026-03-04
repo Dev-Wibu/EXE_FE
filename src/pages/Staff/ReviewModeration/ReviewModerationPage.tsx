@@ -3,7 +3,19 @@
  * Allows staff to moderate reviews (focus on low ratings)
  */
 
-import { AlertTriangle, Eye, Flag, Search, Star } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardList,
+  Eye,
+  Flag,
+  Lightbulb,
+  Search,
+  Star,
+  Target,
+  ThumbsUp,
+  Zap,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
@@ -188,7 +200,7 @@ export function ReviewModerationPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="low">⚠️ 1-{LOW_RATING_THRESHOLD} sao (Cần xem)</SelectItem>
+                <SelectItem value="low">1-{LOW_RATING_THRESHOLD} sao (Cần xem)</SelectItem>
                 <SelectItem value="high">{HIGH_RATING_MIN}-5 sao</SelectItem>
               </SelectContent>
             </Select>
@@ -313,7 +325,9 @@ export function ReviewModerationPage() {
               {/* STAR Notes */}
               {selectedReview.situationNote && (
                 <div>
-                  <h4 className="mb-1 font-medium text-emerald-600">🎯 Tình huống</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-emerald-600">
+                    <Target className="h-4 w-4" /> Tình huống
+                  </h4>
                   <p className="rounded bg-emerald-50 p-3 text-sm dark:bg-emerald-900/20">
                     {selectedReview.situationNote}
                   </p>
@@ -322,7 +336,9 @@ export function ReviewModerationPage() {
 
               {selectedReview.taskNote && (
                 <div>
-                  <h4 className="mb-1 font-medium text-blue-600">📋 Nhiệm vụ</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-blue-600">
+                    <ClipboardList className="h-4 w-4" /> Nhiệm vụ
+                  </h4>
                   <p className="rounded bg-blue-50 p-3 text-sm dark:bg-blue-900/20">
                     {selectedReview.taskNote}
                   </p>
@@ -331,7 +347,9 @@ export function ReviewModerationPage() {
 
               {selectedReview.actionNote && (
                 <div>
-                  <h4 className="mb-1 font-medium text-purple-600">🚀 Hành động</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-purple-600">
+                    <Zap className="h-4 w-4" /> Hành động
+                  </h4>
                   <p className="rounded bg-purple-50 p-3 text-sm dark:bg-purple-900/20">
                     {selectedReview.actionNote}
                   </p>
@@ -340,7 +358,9 @@ export function ReviewModerationPage() {
 
               {selectedReview.resultNote && (
                 <div>
-                  <h4 className="mb-1 font-medium text-amber-600">✅ Kết quả</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-amber-600">
+                    <CheckCircle2 className="h-4 w-4" /> Kết quả
+                  </h4>
                   <p className="rounded bg-amber-50 p-3 text-sm dark:bg-amber-900/20">
                     {selectedReview.resultNote}
                   </p>
@@ -350,7 +370,9 @@ export function ReviewModerationPage() {
               {/* Strength & Weakness */}
               {selectedReview.strength && (
                 <div>
-                  <h4 className="mb-1 font-medium text-green-600">💪 Điểm mạnh</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-green-600">
+                    <ThumbsUp className="h-4 w-4" /> Điểm mạnh
+                  </h4>
                   <p className="rounded bg-green-50 p-3 text-sm dark:bg-green-900/20">
                     {selectedReview.strength}
                   </p>
@@ -359,7 +381,9 @@ export function ReviewModerationPage() {
 
               {selectedReview.weakness && (
                 <div>
-                  <h4 className="mb-1 font-medium text-red-600">⚠️ Điểm yếu (Cần xem xét)</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-red-600">
+                    <AlertTriangle className="h-4 w-4" /> Điểm yếu (Cần xem xét)
+                  </h4>
                   <p className="rounded border border-red-200 bg-red-50 p-3 text-sm dark:border-red-800 dark:bg-red-900/20">
                     {selectedReview.weakness}
                   </p>
@@ -368,7 +392,9 @@ export function ReviewModerationPage() {
 
               {selectedReview.improve && (
                 <div>
-                  <h4 className="mb-1 font-medium text-indigo-600">💡 Đề xuất cải tiến</h4>
+                  <h4 className="mb-1 flex items-center gap-1.5 font-medium text-indigo-600">
+                    <Lightbulb className="h-4 w-4" /> Đề xuất cải tiến
+                  </h4>
                   <p className="rounded bg-indigo-50 p-3 text-sm dark:bg-indigo-900/20">
                     {selectedReview.improve}
                   </p>
