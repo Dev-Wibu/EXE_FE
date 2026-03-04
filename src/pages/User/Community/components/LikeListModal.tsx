@@ -25,7 +25,7 @@ export function LikeListModal({ postId, open, onOpenChange }: LikeListModalProps
           </p>
         ) : (
           <div className="max-h-64 space-y-3 overflow-y-auto">
-            {likes.map((like) => {
+            {likes.map((like, index) => {
               const initials = like.userName
                 ?.split(" ")
                 .map((w) => w[0])
@@ -33,7 +33,9 @@ export function LikeListModal({ postId, open, onOpenChange }: LikeListModalProps
                 .slice(0, 2)
                 .toUpperCase();
               return (
-                <div key={like.id} className="flex items-center gap-3">
+                <div
+                  key={`${like.userName ?? "user"}-${index}`}
+                  className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={like.userAvatar} alt={like.userName} />
                     <AvatarFallback>{initials || "?"}</AvatarFallback>
