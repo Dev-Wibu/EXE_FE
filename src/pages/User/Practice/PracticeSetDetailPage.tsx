@@ -7,8 +7,10 @@ import {
   Eye,
   GraduationCap,
   Lightbulb,
+  Loader2,
   Lock,
   MessageCircle,
+  Plus,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,6 +18,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { practiceSetItemManager, practiceSetManager, quizSetManager } from "@/services";
@@ -327,6 +330,68 @@ function SessionQuestionCard({ question, index, status, psId }: SessionItemCardP
   );
 }
 
+// ─── QuizHistoryPopover ───────────────────────────────────────────────────────
+
+interface QuizHistoryPopoverProps {
+  quizHistory: QuizSet[];
+  routePracticeSetId: string;
+  isCreating: boolean;
+  onCreateNew: () => void;
+}
+
+function QuizHistoryPopover({
+  quizHistory,
+  routePracticeSetId,
+  isCreating,
+  onCreateNew,
+}: QuizHistoryPopoverProps) {
+  const navigate = useNavigate();
+  const sorted = [...quizHistory].sort((a, b) => (b.quizId ?? 0) - (a.quizId ?? 0));
+
+  return (
+    <PopoverContent className="w-72 p-0" align="start">
+      <div className="border-b px-3 py-2">
+        <p className="text-foreground text-xs font-semibold">Bộ kiểm tra của bạn</p>
+      </div>
+      <div className="max-h-56 overflow-y-auto">
+        {sorted.map((quiz) => (
+          <button
+            key={quiz.quizId}
+            className="hover:bg-muted flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition-colors"
+            onClick={() =>
+              quiz.submitted
+                ? navigate(`/user/practice/${routePracticeSetId}/quiz/${quiz.quizId}/result`)
+                : navigate(`/user/practice/${routePracticeSetId}/quiz/${quiz.quizId}`)
+            }>
+            <span className="text-foreground truncate text-xs">
+              {quiz.quizName ?? `Quiz #${quiz.quizId}`}
+            </span>
+            {quiz.submitted ? (
+              <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                {quiz.score ?? 0} điểm
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-[#0047AB] dark:bg-blue-900/40 dark:text-blue-300">
+                Chưa nộp
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+      <div className="border-t p-2">
+        <Button
+          size="sm"
+          className="w-full gap-1.5 bg-[#0047AB] text-xs text-white hover:bg-[#005B9A]"
+          disabled={isCreating}
+          onClick={onCreateNew}>
+          {isCreating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+          Tạo quiz AI mới
+        </Button>
+      </div>
+    </PopoverContent>
+  );
+}
+
 // ─── SessionDayGroup (used only in session/roadmap view) ─────────────────────
 
 interface SessionDayGroupProps {
@@ -336,6 +401,40 @@ interface SessionDayGroupProps {
 }
 
 function SessionDayGroup({ ps, dayNumber, dayStatus }: SessionDayGroupProps) {
+  const navigate = useNavigate();
+  const [quizHistory, setQuizHistory] = useState<QuizSet[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    if (dayStatus !== "IN_PROGRESS" || !ps.id) return;
+    quizSetManager.getByPracticeSet(ps.id).then((res) => {
+      if (res.success && res.data) setQuizHistory(res.data);
+    });
+  }, [dayStatus, ps.id]);
+
+  const handleCreateAiQuiz = async () => {
+    if (!ps.id) return;
+    setIsCreating(true);
+    try {
+      const res = await quizSetManager.createFullAi(ps.id);
+      if (res.success && res.data && res.data.length > 0) {
+        const newQuizId = res.data[0].quizSet?.quizId;
+        if (newQuizId) {
+          toast.success("Đã tạo bài kiểm tra AI!");
+          navigate(`/user/practice/${ps.id}/quiz/${newQuizId}`);
+        } else {
+          toast.error("Không lấy được ID bài kiểm tra");
+        }
+      } else {
+        toast.error(res.error ?? "Không thể tạo bài kiểm tra AI");
+      }
+    } catch {
+      toast.error("Không thể tạo bài kiểm tra AI");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const statusConfig: Record<DayStatus, { label: string; className: string }> = {
     COMPLETED: {
       label: "HOÀN THÀNH",
@@ -367,6 +466,36 @@ function SessionDayGroup({ ps, dayNumber, dayStatus }: SessionDayGroupProps) {
           {ps.practiceSetName ?? `Ngày ${dayNumber}`}
         </h2>
         <Badge className={`text-[11px] font-semibold ${cfg.className}`}>{cfg.label}</Badge>
+        {dayStatus === "IN_PROGRESS" &&
+          (quizHistory.length === 0 ? (
+            <button
+              disabled={isCreating}
+              onClick={handleCreateAiQuiz}
+              title="Làm kiểm tra"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+              {isCreating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Plus className="h-3 w-3" />
+              )}
+            </button>
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  title="Làm kiểm tra"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80">
+                  <Plus className="h-3 w-3" />
+                </button>
+              </PopoverTrigger>
+              <QuizHistoryPopover
+                quizHistory={quizHistory}
+                routePracticeSetId={String(ps.id)}
+                isCreating={isCreating}
+                onCreateNew={handleCreateAiQuiz}
+              />
+            </Popover>
+          ))}
       </div>
       <div className="space-y-2">
         {questions.map((q, localIdx) => (
@@ -393,6 +522,7 @@ interface DayGroupProps {
   isCurrentDay: boolean;
   practiceSetId: string;
   lastQuizId?: number;
+  quizHistory: QuizSet[];
 }
 
 function DayGroup({
@@ -403,7 +533,33 @@ function DayGroup({
   isCurrentDay,
   practiceSetId,
   lastQuizId,
+  quizHistory,
 }: DayGroupProps) {
+  const navigate = useNavigate();
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleCreateAiQuiz = async () => {
+    setIsCreating(true);
+    try {
+      const res = await quizSetManager.createFullAi(Number(practiceSetId));
+      if (res.success && res.data && res.data.length > 0) {
+        const newQuizId = res.data[0].quizSet?.quizId;
+        if (newQuizId) {
+          toast.success("Đã tạo bài kiểm tra AI!");
+          navigate(`/user/practice/${practiceSetId}/quiz/${newQuizId}`);
+        } else {
+          toast.error("Không lấy được ID bài kiểm tra");
+        }
+      } else {
+        toast.error(res.error ?? "Không thể tạo bài kiểm tra AI");
+      }
+    } catch {
+      toast.error("Không thể tạo bài kiểm tra AI");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const statusConfig: Record<DayStatus, { label: string; className: string }> = {
     COMPLETED: {
       label: "HOÀN THÀNH",
@@ -438,6 +594,36 @@ function DayGroup({
       <div className="flex items-center gap-3">
         <h2 className="text-foreground text-base font-bold">{dayTitle}</h2>
         <Badge className={`text-[11px] font-semibold ${cfg.className}`}>{cfg.label}</Badge>
+        {dayStatus === "IN_PROGRESS" &&
+          (quizHistory.length === 0 ? (
+            <button
+              disabled={isCreating}
+              onClick={handleCreateAiQuiz}
+              title="Làm kiểm tra"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+              {isCreating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Plus className="h-3 w-3" />
+              )}
+            </button>
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  title="Làm kiểm tra"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80">
+                  <Plus className="h-3 w-3" />
+                </button>
+              </PopoverTrigger>
+              <QuizHistoryPopover
+                quizHistory={quizHistory}
+                routePracticeSetId={practiceSetId}
+                isCreating={isCreating}
+                onCreateNew={handleCreateAiQuiz}
+              />
+            </Popover>
+          ))}
       </div>
       <div className="space-y-2">
         {dayItems.map((item, localIdx) => (
@@ -786,6 +972,7 @@ export function PracticeSetDetailPage() {
                 isCurrentDay={dayIdx === completedDays}
                 practiceSetId={id!}
                 lastQuizId={lastSubmittedQuiz?.quizId}
+                quizHistory={dayIdx === completedDays ? quizHistory : []}
               />
             ))}
           </div>

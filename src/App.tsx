@@ -133,6 +133,7 @@ function App() {
                 <Route path="ai-chat/:id" element={<AIChatConversationPage />} />
                 <Route path="questions/:id" element={<QuestionDetailPage />} />
                 <Route path="practice/:id/quiz/:quizId/result" element={<QuizResultPage />} />
+                <Route path="practice/:id/quiz/:quizId" element={<QuizPage />} />
                 <Route path="practice/:id/quiz" element={<QuizPage />} />
                 <Route path="practice/session/:sessionId" element={<PracticeSetDetailPage />} />
                 <Route path="practice/:id" element={<PracticeSetDetailPage />} />

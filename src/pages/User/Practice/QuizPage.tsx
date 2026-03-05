@@ -10,7 +10,7 @@ import type { QuizItem, QuizSet } from "@/services/quiz-set.manager";
 import { toast } from "sonner";
 
 export function QuizPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, quizId } = useParams<{ id: string; quizId?: string }>();
   const navigate = useNavigate();
   const [quizSet, setQuizSet] = useState<QuizSet | null>(null);
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
@@ -23,34 +23,44 @@ export function QuizPage() {
     if (!id) return;
     setLoading(true);
     try {
-      // Create a new quiz for this practice set
-      const quizName = `Quiz - ${new Date().toLocaleDateString("vi-VN")}`;
-      const createResponse = await quizSetManager.createFull(Number(id), quizName, []);
-
-      if (createResponse.success && createResponse.data) {
-        // If createFull returns quiz items directly, use them
-        if (Array.isArray(createResponse.data) && createResponse.data.length > 0) {
-          const firstItem = createResponse.data[0];
-          if (firstItem.quizSet) {
-            setQuizSet(firstItem.quizSet);
-          }
-          setQuizItems(createResponse.data);
-        }
+      if (quizId) {
+        // Load mode: load an existing quiz by ID (no creation)
+        const [setRes, itemsRes] = await Promise.all([
+          quizSetManager.getById(Number(quizId)),
+          quizSetManager.getQuizItems(Number(quizId)),
+        ]);
+        if (setRes.success && setRes.data) setQuizSet(setRes.data);
+        else toast.error("Không tìm thấy bài kiểm tra");
+        if (itemsRes.success && itemsRes.data) setQuizItems(itemsRes.data);
       } else {
-        // Fallback: try to get existing quiz from history
-        const historyResponse = await quizSetManager.getByPracticeSet(Number(id));
-        if (historyResponse.success && historyResponse.data && historyResponse.data.length > 0) {
-          const latestQuiz = historyResponse.data[historyResponse.data.length - 1];
-          setQuizSet(latestQuiz);
+        // Create mode: create a new quiz for this practice set (legacy path)
+        const quizName = `Quiz - ${new Date().toLocaleDateString("vi-VN")}`;
+        const createResponse = await quizSetManager.createFull(Number(id), quizName, []);
 
-          if (latestQuiz.quizId) {
-            const itemsResponse = await quizSetManager.getQuizItems(latestQuiz.quizId);
-            if (itemsResponse.success && itemsResponse.data) {
-              setQuizItems(itemsResponse.data);
+        if (createResponse.success && createResponse.data) {
+          if (Array.isArray(createResponse.data) && createResponse.data.length > 0) {
+            const firstItem = createResponse.data[0];
+            if (firstItem.quizSet) {
+              setQuizSet(firstItem.quizSet);
             }
+            setQuizItems(createResponse.data);
           }
         } else {
-          toast.error("Không thể tạo bài trắc nghiệm. Vui lòng thử lại.");
+          // Fallback: try to get existing quiz from history
+          const historyResponse = await quizSetManager.getByPracticeSet(Number(id));
+          if (historyResponse.success && historyResponse.data && historyResponse.data.length > 0) {
+            const latestQuiz = historyResponse.data[historyResponse.data.length - 1];
+            setQuizSet(latestQuiz);
+
+            if (latestQuiz.quizId) {
+              const itemsResponse = await quizSetManager.getQuizItems(latestQuiz.quizId);
+              if (itemsResponse.success && itemsResponse.data) {
+                setQuizItems(itemsResponse.data);
+              }
+            }
+          } else {
+            toast.error("Không thể tạo bài trắc nghiệm. Vui lòng thử lại.");
+          }
         }
       }
     } catch (error) {
@@ -59,7 +69,7 @@ export function QuizPage() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, quizId]);
 
   useEffect(() => {
     loadData();

@@ -91,8 +91,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lấy chi tiết comment theo id */
-        get: operations["getCommentById"];
+        get?: never;
         /** Cập nhật nội dung comment */
         put: operations["updateComment"];
         post?: never;
@@ -909,6 +908,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/practice-sets/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getByUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/practice-sets/level/{level} ": {
         parameters: {
             query?: never;
@@ -1054,43 +1069,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/posts/{postId}/comments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Lấy tất cả comments của bài viết
-         * @description Trả về danh sách comments gốc kèm theo replies
-         */
-        get: operations["getCommentsByPostId"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/posts/{postId}/comments/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Đếm số lượng comments của bài viết */
-        get: operations["countComments"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/posts/published": {
         parameters: {
             query?: never;
@@ -1100,40 +1078,6 @@ export interface paths {
         };
         /** Lấy tất cả bài viết đã publish */
         get: operations["getPublishedPosts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/posts/likes/{postId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lấy danh sách người đã like bài viết */
-        get: operations["getLikesByPostId"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/posts/likes/{postId}/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Đếm số lượng like của bài viết */
-        get: operations["countLikes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1171,23 +1115,6 @@ export interface paths {
          * @description Trả về danh sách bài viết mới nhất, có phân trang
          */
         get: operations["getNewFeed"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/posts/comments/{parentCommentId}/replies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Lấy replies của một comment */
-        get: operations["getReplies"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1850,6 +1777,12 @@ export interface components {
             correctAnswer?: string;
             explanation?: string;
         };
+        QuizItemResponse: {
+            /** Format: int32 */
+            id?: number;
+            question?: string;
+            options?: string;
+        };
         PracticeQuestionRequest: {
             title?: string;
             content?: string;
@@ -1958,8 +1891,7 @@ export interface components {
             status?: "PENDING" | "COMPLETED" | "FAILED";
             /** Format: date-time */
             createdAt?: string;
-            /** Format: date-time */
-            payAt?: string;
+            transactionCode?: string;
         };
         Webhook: {
             code?: string;
@@ -2147,10 +2079,10 @@ export interface components {
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
         PagePostResponse: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
@@ -2165,9 +2097,9 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            unpaged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
-            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
@@ -2589,28 +2521,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PracticeQuestion"];
-                };
-            };
-        };
-    };
-    getCommentById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                commentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PostCommentResponse"];
                 };
             };
         };
@@ -3369,7 +3279,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["QuizItem"][];
+                    "*/*": components["schemas"]["QuizItemResponse"][];
                 };
             };
         };
@@ -4110,6 +4020,28 @@ export interface operations {
             };
         };
     };
+    getByUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PracticeSetResponse"][];
+                };
+            };
+        };
+    };
     getQuestionSetsByTargetLevel: {
         parameters: {
             query?: never;
@@ -4350,50 +4282,6 @@ export interface operations {
             };
         };
     };
-    getCommentsByPostId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                postId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PostCommentResponse"][];
-                };
-            };
-        };
-    };
-    countComments: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                postId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": number;
-                };
-            };
-        };
-    };
     getPublishedPosts: {
         parameters: {
             query?: never;
@@ -4410,50 +4298,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PostResponse"][];
-                };
-            };
-        };
-    };
-    getLikesByPostId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                postId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PostLikeResponse"][];
-                };
-            };
-        };
-    };
-    countLikes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                postId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": number;
                 };
             };
         };
@@ -4502,28 +4346,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PagePostResponse"];
-                };
-            };
-        };
-    };
-    getReplies: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                parentCommentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PostCommentResponse"][];
                 };
             };
         };

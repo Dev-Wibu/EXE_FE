@@ -192,12 +192,14 @@ export const API_ENDPOINTS = {
   // GET /api/quiz-sets/by-practice-set/{practiceSetId} - getHistoryByPracticeSet
   // POST /api/quiz-sets/submit/{quizId} - submitAndCalculateScore
   // POST /api/quiz-sets/create-full - createFullQuizSet
+  // POST /api/quiz-sets/create-full-ai - createFullQuizSetAI (query param only: practiceSetId)
   // GET /api/quiz-set-items/by-quiz-set/{quizSetId} - getItemsByQuizSetId
   QUIZ_SETS: {
     LIST: "/api/quiz-sets",
     DETAIL: "/api/quiz-sets/:quizId",
     CREATE: "/api/quiz-sets",
     CREATE_FULL: "/api/quiz-sets/create-full",
+    CREATE_FULL_AI: "/api/quiz-sets/create-full-ai",
     SUBMIT: "/api/quiz-sets/submit/:quizId",
     BY_PRACTICE_SET: "/api/quiz-sets/by-practice-set/:practiceSetId",
     DELETE: "/api/quiz-sets/:quizId",

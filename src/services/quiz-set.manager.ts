@@ -158,6 +158,32 @@ export class QuizSetManager {
   }
 
   /**
+   * Create full quiz set with AI-generated items
+   * POST /api/quiz-sets/create-full-ai?practiceSetId={practiceSetId}
+   * No body needed — AI generates the questions from the practice set content
+   */
+  async createFullAi(practiceSetId: number): Promise<ApiResponse<QuizItem[]>> {
+    if (this.mode === "mock") {
+      return {
+        success: false,
+        error: "Create AI quiz set not supported in mock mode",
+      };
+    }
+
+    try {
+      const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE_FULL_AI, null, {
+        params: { practiceSetId },
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Không thể tạo bài kiểm tra AI",
+      };
+    }
+  }
+
+  /**
    * Submit quiz answers and calculate score
    * POST /api/quiz-sets/submit/{quizId}
    * Body: Record<string, string> (question → answer mapping)

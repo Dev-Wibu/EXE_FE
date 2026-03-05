@@ -664,27 +664,69 @@ export class PostManager implements BaseManager<Post> {
 export const postManager = new PostManager();
 
 // React Query hooks using $api
+import { useQuery } from "@tanstack/react-query";
+
 import { $api } from "@/lib/api";
 
 export const useCreatePost = () => $api.useMutation("post", "/api/posts");
-export const usePostComments = (postId: number) =>
-  $api.useQuery("get", "/api/posts/{postId}/comments", { params: { path: { postId } } });
+export const usePostComments = (postId: number, enabled = true) =>
+  useQuery({
+    queryKey: ["postComments", postId],
+    queryFn: async () => {
+      const res = await postManager.getCommentsByPostId(postId);
+      return res.data ?? [];
+    },
+    enabled: enabled && postId > 0,
+  });
 export const usePostCommentsCount = (postId: number) =>
-  $api.useQuery("get", "/api/posts/{postId}/comments/count", { params: { path: { postId } } });
+  useQuery({
+    queryKey: ["postCommentsCount", postId],
+    queryFn: async () => {
+      const res = await postManager.getCommentsCount(postId);
+      return res.data ?? 0;
+    },
+    enabled: postId > 0,
+  });
 export const useCreateComment = () => $api.useMutation("post", "/api/posts/comments");
 export const useCommentDetail = (commentId: number) =>
-  $api.useQuery("get", "/api/posts/comments/{commentId}", { params: { path: { commentId } } });
+  useQuery({
+    queryKey: ["commentDetail", commentId],
+    queryFn: async () => {
+      const res = await postManager.getCommentById(commentId);
+      return res.data;
+    },
+    enabled: commentId > 0,
+  });
 export const useUpdateComment = () => $api.useMutation("put", "/api/posts/comments/{commentId}");
 export const useDeleteComment = () => $api.useMutation("delete", "/api/posts/comments/{commentId}");
 export const useCommentReplies = (parentCommentId: number) =>
-  $api.useQuery("get", "/api/posts/comments/{parentCommentId}/replies", {
-    params: { path: { parentCommentId } },
+  useQuery({
+    queryKey: ["commentReplies", parentCommentId],
+    queryFn: async () => {
+      const res = await postManager.getReplies(parentCommentId);
+      return res.data ?? [];
+    },
+    enabled: parentCommentId > 0,
   });
 export const useLikePost = () => $api.useMutation("post", "/api/posts/likes");
 export const usePostLikes = (postId: number) =>
-  $api.useQuery("get", "/api/posts/likes/{postId}", { params: { path: { postId } } });
-export const usePostLikesCount = (postId: number) =>
-  $api.useQuery("get", "/api/posts/likes/{postId}/count", { params: { path: { postId } } });
+  useQuery({
+    queryKey: ["postLikes", postId],
+    queryFn: async () => {
+      const res = await postManager.getLikesByPostId(postId);
+      return res.data ?? [];
+    },
+    enabled: postId > 0,
+  });
+export const usePostLikesCount = (postId: number, enabled = true) =>
+  useQuery({
+    queryKey: ["postLikesCount", postId],
+    queryFn: async () => {
+      const res = await postManager.getLikesCount(postId);
+      return res.data ?? 0;
+    },
+    enabled: enabled && postId > 0,
+  });
 export const useCheckLiked = (postId: number, userId: number, enabled = true) =>
   $api.useQuery(
     "get",
@@ -698,10 +740,10 @@ export const useChangePostStatus = () =>
   $api.useMutation("get", "/api/posts/change-status/{postId}");
 export const useNewFeed = (params?: { page?: number; size?: number }) =>
   $api.useQuery("get", "/api/posts/feed", { params: { query: params } });
-export const usePostById = (postId: number) =>
+export const usePostById = (postId: number, enabled = true) =>
   $api.useQuery(
     "get",
     "/api/posts/{postId}",
     { params: { path: { postId } } },
-    { enabled: postId > 0 }
+    { enabled: enabled && postId > 0 }
   );
