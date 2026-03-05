@@ -56,11 +56,11 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
 
   return (
     <>
-      <Card className="overflow-hidden transition-shadow hover:shadow-md">
-        {/* Author + major + date + title */}
+      <Card className="overflow-hidden rounded-xl border-slate-200/70 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800">
+        {/* Author + major + date */}
         <CardHeader className="pt-4 pb-2">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 shrink-0">
+            <Avatar className="h-10 w-10 shrink-0 ring-2 ring-slate-100 dark:ring-slate-800">
               <AvatarImage src={post?.author?.avatar} alt={authorName} />
               <AvatarFallback className="bg-[#0047AB]/10 text-sm font-semibold text-[#0047AB]">
                 {authorInitials}
@@ -80,25 +80,48 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
               <p className="text-muted-foreground text-xs">{formatDate(post?.creationDate)}</p>
             </div>
           </div>
+        </CardHeader>
 
-          {/* Title */}
+        {/* Title + Summary + Content */}
+        <CardContent className="space-y-2 pb-2">
+          {/* Title — clickable */}
           <button
             type="button"
-            className="mt-2 block w-full text-left"
+            className="block w-full text-left"
             onClick={() => setModalOpen(true)}>
-            <h3 className="line-clamp-2 text-base font-semibold hover:text-[#0047AB] dark:hover:text-[#66B2FF]">
+            <h3 className="line-clamp-2 text-base leading-snug font-bold hover:text-[#0047AB] dark:hover:text-[#66B2FF]">
               {post?.title}
             </h3>
           </button>
-        </CardHeader>
 
-        {/* Summary + Content + Tags */}
-        <CardContent className="pb-2">
+          {/* Summary — visually distinct as a highlighted intro block */}
           {post?.summary && (
-            <p className="text-muted-foreground line-clamp-3 text-sm">{post.summary}</p>
+            <div className="rounded-lg border-l-4 border-[#0047AB]/40 bg-slate-50 py-2 pr-3 pl-3 dark:border-[#66B2FF]/40 dark:bg-slate-800/50">
+              <p className="line-clamp-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                {post.summary}
+              </p>
+            </div>
           )}
+
+          {/* Content — regular body text, distinct from summary */}
           {post?.content && post.content !== post?.summary && (
-            <p className="text-muted-foreground mt-1 line-clamp-4 text-sm">{post.content}</p>
+            <p className="text-muted-foreground line-clamp-4 text-sm leading-relaxed">
+              {post.content}
+            </p>
+          )}
+
+          {/* Tags */}
+          {(post?.tags?.length ?? 0) > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {post!.tags!.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="text-xs text-slate-500 dark:text-slate-400">
+                  #{tag}
+                </Badge>
+              ))}
+            </div>
           )}
         </CardContent>
 
@@ -114,15 +137,7 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
             />
           </div>
         )}
-        {(post?.tags?.length ?? 0) > 0 && (
-          <div className="ml-3 flex flex-wrap gap-1.5">
-            {post!.tags!.map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs text-slate-500">
-                #{tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+
         {/* Like/comment count bar (Facebook-style) */}
         {(likeLabel || commentCount > 0) && (
           <div className="flex items-center gap-1 px-4 pt-2 pb-1">

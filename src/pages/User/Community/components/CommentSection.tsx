@@ -18,31 +18,41 @@ interface CommentSectionProps {
 function RepliesBlock({
   parentCommentId,
   currentUserId,
+  forceExpanded = false,
 }: {
   parentCommentId: number;
   currentUserId?: number;
+  forceExpanded?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { data } = useCommentReplies(parentCommentId);
   const replies = (Array.isArray(data) ? data : (data as unknown as PostCommentResponse[])) ?? [];
 
+  // Auto-expand when parent triggers forceExpanded (e.g., after posting a reply)
+  const isExpanded = expanded || forceExpanded;
+
   if (replies.length === 0) return null;
 
   return (
     <div className="ml-8 border-l pl-4">
-      {!expanded ? (
+      {!isExpanded ? (
         <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpanded(true)}>
           Xem phản hồi ({replies.length})
         </Button>
       ) : (
-        replies.map((reply) => (
-          <CommentItem
-            key={reply.id}
-            comment={reply}
-            currentUserId={currentUserId}
-            onReply={undefined}
-          />
-        ))
+        <>
+          {replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              currentUserId={currentUserId}
+              onReply={undefined}
+            />
+          ))}
+          <Button variant="ghost" size="sm" className="text-xs" onClick={() => setExpanded(false)}>
+            Thu gọn
+          </Button>
+        </>
       )}
     </div>
   );
@@ -68,6 +78,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
   // Track which top-level comment has its inline reply box open
   const [replyingToId, setReplyingToId] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  // Track which reply blocks have been auto-expanded (after replying)
+  const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set());
 
   const invalidate = () => {
     queryClient.invalidateQueries({
@@ -111,6 +123,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
         onSuccess: () => {
           setReplyContent("");
           setReplyingToId(null);
+          // Auto-expand the replies block so the new reply is visible immediately
+          setExpandedReplies((prev) => new Set(prev).add(parentCommentId));
           invalidate();
           invalidateReplies(parentCommentId);
         },
@@ -141,7 +155,11 @@ export function CommentSection({ postId }: CommentSectionProps) {
             <div key={comment.id}>
               <CommentItem comment={comment} currentUserId={currentUserId} onReply={handleReply} />
 
-              <RepliesBlock parentCommentId={comment.id!} currentUserId={currentUserId} />
+              <RepliesBlock
+                parentCommentId={comment.id!}
+                currentUserId={currentUserId}
+                forceExpanded={expandedReplies.has(comment.id!)}
+              />
 
               {/* Inline reply input shown directly under this comment thread */}
               {replyingToId === comment.id && (

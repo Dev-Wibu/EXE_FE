@@ -1,6 +1,6 @@
 import { Bell, Calendar, LayoutDashboard, MessageSquare, Star, User, Users } from "lucide-react";
 import { useCallback } from "react";
-import { useNavigate, useOutlet } from "react-router-dom";
+import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
@@ -76,8 +76,22 @@ const MENTOR_SIDEBAR_LOGO_COLLAPSED = (
 
 const DEFAULT_TAB: TabType = "overview";
 
+/** Map sub-route path segments to their parent tab so the sidebar highlights correctly */
+const MENTOR_ROUTE_TO_TAB: Record<string, TabType> = {
+  sessions: "sessions",
+  reviews: "reviews",
+  students: "students",
+  community: "overview",
+};
+
+function getTabFromRoute(pathname: string): TabType {
+  const segment = pathname.replace(/^\/mentor\//, "").split("/")[0];
+  return MENTOR_ROUTE_TO_TAB[segment] ?? DEFAULT_TAB;
+}
+
 export function MentorDashboardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeTab, openTab } = useTabsState({
     storageKey: "mentor",
     defaultTab: DEFAULT_TAB,
@@ -86,13 +100,18 @@ export function MentorDashboardPage() {
 
   const outlet = useOutlet();
 
-  const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : DEFAULT_TAB;
+  // When on a nested outlet route, derive active tab from the pathname
+  const typedActiveTab: TabType = outlet
+    ? getTabFromRoute(location.pathname)
+    : isValidTabType(activeTab)
+      ? activeTab
+      : DEFAULT_TAB;
 
   // When on a nested route (outlet), navigate back to the dashboard base with the tab param
   const handleNavigate = useCallback(
     (type: string) => {
       if (outlet) {
-        navigate(`/mentor-dashboard?tab=${type}`);
+        navigate(`/mentor?tab=${type}`);
       } else {
         openTab(type);
       }

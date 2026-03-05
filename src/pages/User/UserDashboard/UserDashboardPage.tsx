@@ -12,7 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback } from "react";
-import { useNavigate, useOutlet } from "react-router-dom";
+import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
@@ -144,8 +144,26 @@ const USER_SIDEBAR_LOGO_COLLAPSED = (
 
 const DEFAULT_TAB: TabType = "homeFeed";
 
+/** Map sub-route path segments to their parent tab so the sidebar highlights correctly */
+const ROUTE_TO_TAB: Record<string, TabType> = {
+  "ai-interview": "aiInterview",
+  "mock-interview": "mockInterview",
+  "ai-chat": "aiChat",
+  practice: "practice",
+  feedback: "feedback",
+  community: "homeFeed",
+  questions: "questions",
+};
+
+function getTabFromRoute(pathname: string): TabType {
+  // pathname looks like /user/ai-interview/setup — grab the first segment after /user/
+  const segment = pathname.replace(/^\/user\//, "").split("/")[0];
+  return ROUTE_TO_TAB[segment] ?? DEFAULT_TAB;
+}
+
 export function UserDashboardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeTab, openTab } = useTabsState({
     storageKey: "user",
     defaultTab: DEFAULT_TAB,
@@ -154,7 +172,12 @@ export function UserDashboardPage() {
 
   const outlet = useOutlet();
 
-  const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : DEFAULT_TAB;
+  // When on a nested outlet route, derive active tab from the pathname
+  const typedActiveTab: TabType = outlet
+    ? getTabFromRoute(location.pathname)
+    : isValidTabType(activeTab)
+      ? activeTab
+      : DEFAULT_TAB;
 
   // When on a nested route (outlet), navigate back to the dashboard base with the tab param
   const handleNavigate = useCallback(
