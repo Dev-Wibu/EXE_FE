@@ -10,11 +10,10 @@ import type { QuizItem, QuizSet } from "@/services/quiz-set.manager";
 import { toast } from "sonner";
 
 export function QuizResultPage() {
-  const { id, quizId } = useParams<{ id: string; quizId: string }>();
+  const { quizId } = useParams<{ id: string; quizId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const backUrl =
-    (location.state as { backUrl?: string } | null)?.backUrl ?? `/user/practice/${id ?? ""}`;
+  const backUrl = (location.state as { backUrl?: string } | null)?.backUrl ?? `/user?tab=practice`;
   const [quizSet, setQuizSet] = useState<QuizSet | null>(null);
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
   const [loading, setLoading] = useState(true);
