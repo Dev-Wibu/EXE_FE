@@ -181,7 +181,7 @@ export class QuizSetManager {
    * POST /api/quiz-sets/create-full-ai?practiceSetId={practiceSetId}
    * No body needed — AI generates the questions from the practice set content
    */
-  async createFullAi(practiceSetId: number): Promise<ApiResponse<QuizResponse>> {
+  async createFullAi(practiceSetId: number, userId: number): Promise<ApiResponse<QuizResponse>> {
     if (this.mode === "mock") {
       return {
         success: false,
@@ -192,7 +192,7 @@ export class QuizSetManager {
     try {
       // AI generation can take significantly longer than the default 30s timeout
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE_FULL_AI, null, {
-        params: { practiceSetId },
+        params: { practiceSetId, userId },
         timeout: 120000,
       });
       return { success: true, data: response.data };

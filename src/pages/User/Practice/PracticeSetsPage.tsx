@@ -32,15 +32,26 @@ function PracticeSetCard({
   ps,
   index,
   navigate,
+  allSets,
 }: {
   ps: PracticeSetResponse;
   index: number;
-  navigate: (path: string) => void;
+  navigate: ReturnType<typeof useNavigate>;
+  allSets: PracticeSetResponse[];
 }) {
+  const goToDetail = () => {
+    // Pass the sets for this session via location state so the detail page
+    // does NOT need to re-fetch from the API (requirement #9).
+    const sessionSets = allSets.filter((s) => s.interviewSessionId === ps.interviewSessionId);
+    navigate(`/user/practice/session/${ps.interviewSessionId}`, {
+      state: { sessionSets },
+    });
+  };
+
   return (
     <Card
       className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-md"
-      onClick={() => navigate(`/user/practice/${ps.id}`)}>
+      onClick={goToDetail}>
       <CardContent className="flex items-center gap-5 p-5">
         {/* Index badge */}
         <div className="bg-primary/10 flex h-14 w-14 shrink-0 items-center justify-center rounded-xl">
@@ -80,7 +91,7 @@ function PracticeSetCard({
           className="ml-2 shrink-0"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/user/practice/${ps.id}`);
+            goToDetail();
           }}>
           Xem chi tiết
         </Button>
@@ -96,16 +107,21 @@ function SessionGroupCard({
 }: {
   index: number;
   sets: PracticeSetResponse[];
-  navigate: (path: string) => void;
+  navigate: ReturnType<typeof useNavigate>;
 }) {
   const first = sets[0];
   const sessionId = first.interviewSessionId;
   const dayCount = sets.length;
 
+  const goToSession = () => {
+    // Pass the sets for this session via location state (requirement #9)
+    navigate(`/user/practice/session/${sessionId}`, { state: { sessionSets: sets } });
+  };
+
   return (
     <Card
       className="hover:border-primary/50 cursor-pointer transition-all hover:shadow-md"
-      onClick={() => navigate(`/user/practice/session/${sessionId}`)}>
+      onClick={goToSession}>
       <CardContent className="flex items-center gap-5 p-5">
         {/* Index badge */}
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-amber-100">
@@ -152,7 +168,7 @@ function SessionGroupCard({
           className="ml-2 shrink-0"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/user/practice/session/${sessionId}`);
+            goToSession();
           }}>
           Xem lộ trình
         </Button>
@@ -338,7 +354,13 @@ export function PracticeSetsPage() {
               </div>
               <div className="space-y-4">
                 {standaloneSets.map((ps, i) => (
-                  <PracticeSetCard key={ps.id} ps={ps} index={i} navigate={navigate} />
+                  <PracticeSetCard
+                    key={ps.id}
+                    ps={ps}
+                    index={i}
+                    navigate={navigate}
+                    allSets={practiceSets}
+                  />
                 ))}
               </div>
             </section>

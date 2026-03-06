@@ -15,8 +15,8 @@ import {
   MessageCircle,
   Plus,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,9 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { practiceSetItemManager, practiceSetManager, quizSetManager } from "@/services";
 import type { PracticeSetItem } from "@/services/practice-set-item.manager";
-import type { PracticeSet, SessionQuestion } from "@/services/practice-set.manager";
+import type { PracticeSet, PracticeSetResponse } from "@/services/practice-set.manager";
 import type { QuizResponse, QuizSet } from "@/services/quiz-set.manager";
+import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -195,7 +196,14 @@ function PracticeItemCard({ item, index, status, practiceSetId, lastQuizId }: It
 // ─── SessionQuestionCard (used only in session/roadmap view) ────────────────
 
 interface SessionItemCardProps {
-  question: SessionQuestion;
+  question: {
+    questionId?: number;
+    title?: string;
+    content?: string;
+    level?: string;
+    answer?: string;
+    hint?: string;
+  };
   index: number;
   status: ItemStatus;
 }
@@ -363,7 +371,7 @@ function QuizHistoryPopover({ quizHistory, routePracticeSetId }: QuizHistoryPopo
 // ─── SessionDayGroup (used only in session/roadmap view) ─────────────────────
 
 interface SessionDayGroupProps {
-  ps: PracticeSet;
+  ps: PracticeSetResponse;
   dayNumber: number;
   dayStatus: DayStatus;
   isOpen: boolean;
@@ -372,33 +380,41 @@ interface SessionDayGroupProps {
 
 function SessionDayGroup({ ps, dayNumber, dayStatus, isOpen, onToggle }: SessionDayGroupProps) {
   const navigate = useNavigate();
-  const [quizHistory, setQuizHistory] = useState<QuizSet[]>([]);
+  const { user } = useAuthStore();
+  const [quizHistory, setQuizHistory] = useState<QuizSet[]>(
+    () =>
+      ps.quizzes?.map((q) => ({
+        quizId: q.quizId,
+        quizName: q.quizName,
+        submitted: q.submit,
+      })) ?? []
+  );
   const [isCreating, setIsCreating] = useState(false);
-
-  useEffect(() => {
-    if (dayStatus === "LOCKED" || !ps.id) return;
-    quizSetManager.getByPracticeSet(ps.id).then((res) => {
-      if (res.success && res.data) setQuizHistory(res.data);
-    });
-  }, [dayStatus, ps.id]);
+  const [pendingQuiz, setPendingQuiz] = useState<{
+    quizId: number;
+    backUrl: string;
+    items?: unknown[];
+  } | null>(null);
 
   const handleCreateAiQuiz = async () => {
-    if (!ps.id) return;
+    if (!ps.id || !user?.id) return;
     setIsCreating(true);
     try {
-      const res = await quizSetManager.createFullAi(ps.id);
+      const res = await quizSetManager.createFullAi(ps.id, user.id);
       if (res.success && res.data) {
         const newQuizId = (res.data as QuizResponse).quizId;
         if (newQuizId) {
           toast.success("Đã tạo bài kiểm tra AI!");
-          navigate(`/user/practice/${ps.id}/quiz/${newQuizId}`, {
-            state: {
-              initialItems: (res.data as QuizResponse).items,
-              backUrl: ps.interviewSessionId
-                ? `/user/practice/session/${ps.interviewSessionId}`
-                : `/user/practice/${ps.id}`,
-            },
-          });
+          const backUrl = ps.interviewSessionId
+            ? `/user/practice/session/${ps.interviewSessionId}`
+            : `/user/practice/${ps.id}`;
+          // Add to local quiz history
+          setQuizHistory((prev) => [
+            ...prev,
+            { quizId: newQuizId, quizName: `AI Quiz #${newQuizId}`, submitted: false },
+          ]);
+          // Show confirmation dialog
+          setPendingQuiz({ quizId: newQuizId, backUrl, items: (res.data as QuizResponse).items });
         } else {
           toast.error("Không lấy được ID bài kiểm tra");
         }
@@ -437,79 +453,117 @@ function SessionDayGroup({ ps, dayNumber, dayStatus, isOpen, onToggle }: Session
   };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <div
-        className={`bg-card rounded-xl border shadow-sm ${
-          dayStatus === "IN_PROGRESS"
-            ? "border-[#0047AB]/40"
-            : dayStatus === "COMPLETED"
-              ? "border-emerald-200 dark:border-emerald-900/40"
-              : "border-border"
-        }`}>
-        <div className="flex items-center gap-3 px-4 py-3">
-          <h2 className="text-foreground text-base font-bold">
-            {ps.practiceSetName ?? `Ngày ${dayNumber}`}
-          </h2>
-          {ps.startDate && (
-            <span className="rounded-md bg-[#DCEEFF] px-2 py-0.5 text-xs font-bold text-[#0047AB] dark:bg-[#0047AB]/20 dark:text-blue-300">
-              {format(new Date(ps.startDate), "dd/MM/yyyy")}
-            </span>
-          )}
-          <Badge className={`text-[11px] font-semibold ${cfg.className}`}>{cfg.label}</Badge>
-          <div className="ml-auto flex items-center gap-1.5">
-            {(dayStatus === "IN_PROGRESS" || dayStatus === "COMPLETED") && (
-              <>
-                <button
-                  disabled={isCreating}
-                  onClick={handleCreateAiQuiz}
-                  title="Tạo quiz mới"
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-                  {isCreating ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Plus className="h-3 w-3" />
-                  )}
-                </button>
-                {quizHistory.length > 0 && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        title="Xem lịch sử kiểm tra"
-                        className="flex h-6 w-6 items-center justify-center rounded-full border border-[#0047AB] text-[#0047AB] transition-colors hover:bg-[#DCEEFF] dark:hover:bg-[#0047AB]/20">
-                        <History className="h-3 w-3" />
-                      </button>
-                    </PopoverTrigger>
-                    <QuizHistoryPopover
-                      quizHistory={quizHistory}
-                      routePracticeSetId={String(ps.id)}
-                    />
-                  </Popover>
-                )}
-              </>
+    <>
+      <Collapsible open={isOpen} onOpenChange={onToggle}>
+        <div
+          className={`bg-card rounded-xl border shadow-sm ${
+            dayStatus === "IN_PROGRESS"
+              ? "border-[#0047AB]/40"
+              : dayStatus === "COMPLETED"
+                ? "border-emerald-200 dark:border-emerald-900/40"
+                : "border-border"
+          }`}>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <h2 className="text-foreground text-base font-bold">
+              {ps.practiceSetName ?? `Ngày ${dayNumber}`}
+            </h2>
+            {ps.startDate && (
+              <span className="rounded-md bg-[#DCEEFF] px-2 py-0.5 text-xs font-bold text-[#0047AB] dark:bg-[#0047AB]/20 dark:text-blue-300">
+                {format(new Date(ps.startDate), "dd/MM/yyyy")}
+              </span>
             )}
-            <CollapsibleTrigger asChild>
-              <button
-                className="text-muted-foreground hover:text-foreground ml-1 flex h-6 w-6 items-center justify-center rounded transition-colors"
-                title={isOpen ? "Thu gọn" : "Mở rộng"}>
-                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-            </CollapsibleTrigger>
+            <Badge className={`text-[11px] font-semibold ${cfg.className}`}>{cfg.label}</Badge>
+            <div className="ml-auto flex items-center gap-1.5">
+              {(dayStatus === "IN_PROGRESS" || dayStatus === "COMPLETED") && (
+                <>
+                  <button
+                    disabled={isCreating}
+                    onClick={handleCreateAiQuiz}
+                    title="Tạo quiz mới"
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+                    {isCreating ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Plus className="h-3 w-3" />
+                    )}
+                  </button>
+                  {quizHistory.length > 0 && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          title="Xem lịch sử kiểm tra"
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-[#0047AB] text-[#0047AB] transition-colors hover:bg-[#DCEEFF] dark:hover:bg-[#0047AB]/20">
+                          <History className="h-3 w-3" />
+                        </button>
+                      </PopoverTrigger>
+                      <QuizHistoryPopover
+                        quizHistory={quizHistory}
+                        routePracticeSetId={String(ps.id)}
+                      />
+                    </Popover>
+                  )}
+                </>
+              )}
+              <CollapsibleTrigger asChild>
+                <button
+                  className="text-muted-foreground hover:text-foreground ml-1 flex h-6 w-6 items-center justify-center rounded transition-colors"
+                  title={isOpen ? "Thu gọn" : "Mở rộng"}>
+                  {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </CollapsibleTrigger>
+            </div>
           </div>
+          <CollapsibleContent>
+            <div className="border-border space-y-2 border-t px-4 pt-3 pb-4">
+              {questions.map((q, localIdx) => (
+                <SessionQuestionCard
+                  key={q.questionId ?? localIdx}
+                  question={q}
+                  index={localIdx}
+                  status={getItemStatus(localIdx)}
+                />
+              ))}
+            </div>
+          </CollapsibleContent>
         </div>
-        <CollapsibleContent>
-          <div className="border-border space-y-2 border-t px-4 pt-3 pb-4">
-            {questions.map((q, localIdx) => (
-              <SessionQuestionCard
-                key={q.questionId ?? localIdx}
-                question={q}
-                index={localIdx}
-                status={getItemStatus(localIdx)}
-              />
-            ))}
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
+      </Collapsible>
+
+      {/* Confirmation dialog after AI quiz creation */}
+      {pendingQuiz && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="bg-card mx-4 w-full max-w-sm">
+            <CardContent className="space-y-4 pt-6">
+              <div className="text-center">
+                <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-emerald-500" />
+                <p className="text-foreground text-base font-semibold">
+                  Tạo bài kiểm tra thành công!
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Bạn có muốn làm bài kiểm tra ngay không?
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setPendingQuiz(null)}>
+                  Để sau
+                </Button>
+                <Button
+                  className="flex-1 bg-[#0047AB] hover:bg-[#003580]"
+                  onClick={() => {
+                    navigate(`/user/practice/${ps.id}/quiz/${pendingQuiz.quizId}`, {
+                      state: {
+                        initialItems: pendingQuiz.items,
+                        backUrl: pendingQuiz.backUrl,
+                      },
+                    });
+                  }}>
+                  Làm bài ngay
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -541,12 +595,14 @@ function DayGroup({
   onToggle,
 }: DayGroupProps) {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateAiQuiz = async () => {
+    if (!user?.id) return;
     setIsCreating(true);
     try {
-      const res = await quizSetManager.createFullAi(Number(practiceSetId));
+      const res = await quizSetManager.createFullAi(Number(practiceSetId), user.id);
       if (res.success && res.data) {
         const newQuizId = (res.data as QuizResponse).quizId;
         if (newQuizId) {
@@ -676,31 +732,57 @@ function DayGroup({
 export function PracticeSetDetailPage() {
   const { id, sessionId } = useParams<{ id: string; sessionId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as { sessionSets?: PracticeSetResponse[] } | null;
+  // Capture location state once on mount — prevents re-reading stale state on re-renders
+  const preloadedSets = useRef(locationState?.sessionSets);
+
   const [practiceSet, setPracticeSet] = useState<PracticeSet | null>(null);
   const [items, setItems] = useState<PracticeSetItem[]>([]);
   const [quizHistory, setQuizHistory] = useState<QuizSet[]>([]);
   const [loading, setLoading] = useState(true);
 
   // State cho chế độ xem toàn session (nhiều practice-sets)
-  const [sessionDays, setSessionDays] = useState<PracticeSet[]>([]);
+  const [sessionDays, setSessionDays] = useState<PracticeSetResponse[]>([]);
   const [isSessionView, setIsSessionView] = useState(false);
 
   // Collapse state — each day group can be expanded/collapsed independently
   const [dayOpenStates, setDayOpenStates] = useState<boolean[]>([]);
   const [sessionOpenStates, setSessionOpenStates] = useState<boolean[]>([]);
 
+  const applySessionData = (data: PracticeSetResponse[]) => {
+    const first = data[0];
+    setPracticeSet({
+      id: first.id,
+      practiceSetName: first.practiceSetName,
+      objective: first.objective,
+      level: first.level,
+      startDate: first.startDate,
+      interviewSessionId: first.interviewSessionId,
+    });
+    setSessionDays(data);
+    setIsSessionView(true);
+  };
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // ── Chế độ session: chỉ lấy metadata, không nạp items hay quiz ─────────
+      // ── Chế độ session ──────────────────────────────────────────────────────
       if (sessionId) {
-        const sessionRes = await practiceSetManager.getByInterviewSession(Number(sessionId));
-        if (sessionRes.success && sessionRes.data && sessionRes.data.length > 0) {
-          setPracticeSet(sessionRes.data[0]);
-          setSessionDays(sessionRes.data);
-          setIsSessionView(true);
+        // If we have preloaded sets from navigation state, use them directly
+        // instead of calling the API (requirement #9 — only call API on F5/refresh).
+        const preloaded = preloadedSets.current;
+        if (preloaded && preloaded.length > 0) {
+          preloadedSets.current = undefined; // consume once
+          applySessionData(preloaded);
         } else {
-          toast.error("Không tìm thấy bộ luyện tập nào cho phiên này");
+          // F5 (page refresh) — no location state, call the API
+          const sessionRes = await practiceSetManager.getByInterviewSession(Number(sessionId));
+          if (sessionRes.success && sessionRes.data && sessionRes.data.length > 0) {
+            applySessionData(sessionRes.data);
+          } else {
+            toast.error("Không tìm thấy bộ luyện tập nào cho phiên này");
+          }
         }
         return;
       }
@@ -782,12 +864,23 @@ export function PracticeSetDetailPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const getSessionDayStatus = (ps: PracticeSet): DayStatus => {
-    if (!ps.startDate) return "LOCKED";
+  const getSessionDayStatus = (ps: PracticeSetResponse, index: number): DayStatus => {
+    // Days without a startDate are treated as IN_PROGRESS so users can still
+    // access their content (e.g. newly generated sets not yet scheduled).
+    if (!ps.startDate) return "IN_PROGRESS";
     const d = new Date(ps.startDate);
     d.setHours(0, 0, 0, 0);
     if (isSameDay(d, today)) return "IN_PROGRESS";
     if (d < today) return "COMPLETED";
+    // Always unlock the FIRST future day after all active (today + past) days
+    // so there is at least one upcoming day available for practice/testing.
+    const passedCount = sessionDays.filter((day) => {
+      if (!day.startDate) return false;
+      const dd = new Date(day.startDate);
+      dd.setHours(0, 0, 0, 0);
+      return dd <= today;
+    }).length;
+    if (index < passedCount + 1) return "IN_PROGRESS";
     return "LOCKED";
   };
 
@@ -932,7 +1025,7 @@ export function PracticeSetDetailPage() {
                   key={ps.id ?? dayIdx}
                   ps={ps}
                   dayNumber={dayIdx + 1}
-                  dayStatus={getSessionDayStatus(ps)}
+                  dayStatus={getSessionDayStatus(ps, dayIdx)}
                   isOpen={sessionOpenStates[dayIdx] ?? true}
                   onToggle={() =>
                     setSessionOpenStates((prev) => prev.map((v, i) => (i === dayIdx ? !v : v)))

@@ -31,7 +31,7 @@ export function QuizPage() {
   } | null;
   // Capture items passed via navigation state from createFullAi (read once on mount)
   const initialItemsRef = useRef(locationState?.initialItems);
-  const backUrl = locationState?.backUrl ?? `/user/practice/${id ?? ""}`;
+  const backUrl = locationState?.backUrl ?? `/user?tab=practice`;
 
   const loadData = useCallback(async () => {
     if (!quizId) return;
@@ -144,10 +144,7 @@ export function QuizPage() {
       <div className="bg-background flex min-h-screen items-center justify-center">
         <Card className="max-w-md p-8 text-center">
           <p className="text-foreground font-medium">Không có câu hỏi nào trong bài trắc nghiệm</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => navigate(`/user/practice/${id}`)}>
+          <Button variant="outline" className="mt-4" onClick={() => navigate(backUrl)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
           </Button>

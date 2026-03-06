@@ -59,6 +59,12 @@ export interface PracticeSetResponse {
     answer?: string;
     hint?: string;
   }>;
+  quizzes?: Array<{
+    quizId?: number;
+    quizName?: string;
+    index?: number;
+    submit?: boolean;
+  }>;
 }
 
 /**
@@ -355,7 +361,9 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * Get all practice sets for a given interview session
    * GET /api/practice-sets/interview-session/{interviewSessionId}
    */
-  async getByInterviewSession(interviewSessionId: number): Promise<ApiResponse<PracticeSet[]>> {
+  async getByInterviewSession(
+    interviewSessionId: number
+  ): Promise<ApiResponse<PracticeSetResponse[]>> {
     if (this.mode === "mock") {
       return { success: true, data: [] };
     }
