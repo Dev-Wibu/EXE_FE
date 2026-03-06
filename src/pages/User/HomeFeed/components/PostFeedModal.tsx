@@ -28,9 +28,15 @@ interface PostFeedModalProps {
   item: PostResponse;
   open: boolean;
   onOpenChange: (_open: boolean) => void;
+  onCommentCountChange?: (_count: number) => void;
 }
 
-export function PostFeedModal({ item, open, onOpenChange }: PostFeedModalProps) {
+export function PostFeedModal({
+  item,
+  open,
+  onOpenChange,
+  onCommentCountChange,
+}: PostFeedModalProps) {
   const { user } = useAuthStore();
   const post = item.post;
   const postId = post?.postId ?? 0;
@@ -52,6 +58,7 @@ export function PostFeedModal({ item, open, onOpenChange }: PostFeedModalProps) 
     queryClient.invalidateQueries({
       queryKey: ["get", "/api/posts/{postId}", { params: { path: { postId } } }],
     });
+    queryClient.invalidateQueries({ queryKey: ["get", "/api/posts/feed"] });
   };
 
   const handleCommentSubmit = () => {
@@ -61,6 +68,7 @@ export function PostFeedModal({ item, open, onOpenChange }: PostFeedModalProps) 
       onSuccess: () => {
         setNewComment("");
         invalidateLivePost();
+        onCommentCountChange?.((liveCommentCount ?? 0) + 1);
       },
       onError: () => toast.error("Không thể gửi bình luận"),
     });

@@ -1,6 +1,8 @@
 import { Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,18 +12,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useAuthStore } from "@/stores/authStore";
 
+import { CreatePostModal } from "./components/CreatePostModal";
 import { PostFeedCard } from "./components/PostFeedCard";
 import { useHomeFeed } from "./useHomeFeed";
 
 type SortBy = "newest" | "popular";
 
 export function HomeFeedPage() {
-  const { posts, hasMore, isLoading, isFetchingMore, loadMore } = useHomeFeed();
+  const { user } = useAuthStore();
+  const { posts, hasMore, isLoading, isFetchingMore, loadMore, refresh } = useHomeFeed();
   const [search, setSearch] = useState("");
   const [majorFilter, setMajorFilter] = useState("all");
   const [sortBy, setSortBy] = useState<SortBy>("newest");
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  const authorName = user?.name ?? "Bạn";
+  const authorInitials = authorName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   // Derive unique major list from loaded posts
   const allMajors = useMemo(() => {
@@ -73,6 +87,22 @@ export function HomeFeedPage() {
         <h1 className="text-xl font-bold">Trang chủ</h1>
         <p className="text-muted-foreground text-sm">Cập nhật bài viết mới nhất từ cộng đồng</p>
       </div>
+
+      {/* Create post prompt */}
+      <Card className="flex items-center gap-3 p-4">
+        <Avatar className="h-10 w-10 shrink-0">
+          <AvatarImage src={user?.avatarUrl ?? undefined} alt={authorName} />
+          <AvatarFallback className="bg-[#0047AB]/10 text-sm font-semibold text-[#0047AB]">
+            {authorInitials}
+          </AvatarFallback>
+        </Avatar>
+        <button
+          type="button"
+          className="text-muted-foreground hover:bg-muted flex-1 rounded-full border px-4 py-2.5 text-left text-sm transition-colors"
+          onClick={() => setCreateModalOpen(true)}>
+          Bạn đang nghĩ gì?
+        </button>
+      </Card>
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2">
@@ -153,6 +183,12 @@ export function HomeFeedPage() {
           Bạn đã xem hết bài viết rồi.
         </p>
       )}
+
+      <CreatePostModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onCreated={refresh}
+      />
     </div>
   );
 }

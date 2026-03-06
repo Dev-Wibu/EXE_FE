@@ -124,8 +124,9 @@ function ReplyInput({ userName, value, onChange, onSubmit, onCancel }: ReplyInpu
 }
 
 // ---------------------------------------------------------------------------
-// CommentThread — Facebook-style flat display (all replies in one indented block,
-// single "Thu gọn" button at the bottom — no per-reply collapse buttons)
+// CommentThread — Tiered reply system: up to 3 levels of nesting.
+// Level 0: root, Level 1: direct replies, Level 2: replies to level-1.
+// Level 3+: rendered at level 2 depth with @mention (no further indentation).
 // ---------------------------------------------------------------------------
 
 interface CommentThreadProps {
@@ -141,6 +142,7 @@ interface CommentThreadProps {
   commentById: Map<number, PostCommentResponse>;
   highlightedCommentId: number | null;
   onMentionClick: (_parentCommentId: number) => void;
+  depth?: number;
 }
 
 function CommentThread({
@@ -156,15 +158,25 @@ function CommentThread({
   commentById,
   highlightedCommentId,
   onMentionClick,
+  depth = 0,
 }: CommentThreadProps) {
   const { comment } = node;
   const isExpanded = comment.id != null && expandedIds.has(comment.id);
-  const allReplies = useMemo(() => flattenDescendants(node), [node]);
-  const isReplyingToRoot = replyingToId === comment.id;
+  const isReplyingToThis = replyingToId === comment.id;
+
+  // At max nesting depth (2), flatten all deeper descendants
+  const maxDepth = 2;
+  const atMaxDepth = depth >= maxDepth;
+  const flatChildren = useMemo(
+    () => (atMaxDepth ? flattenDescendants(node) : []),
+    [node, atMaxDepth]
+  );
+  const directChildren = atMaxDepth ? [] : node.children;
+  const totalReplies = atMaxDepth ? flatChildren.length : node.children.length;
 
   return (
     <div>
-      {/* Root comment */}
+      {/* Current comment */}
       <CommentItem
         comment={comment}
         currentUserId={currentUserId}
@@ -172,12 +184,18 @@ function CommentThread({
           onSetReplyingId(c.id ?? null);
           onReplyContentChange("");
         }}
+        mentionedUserName={
+          depth > 0 && comment.parentCommentId
+            ? commentById.get(comment.parentCommentId)?.userName
+            : undefined
+        }
+        parentCommentId={depth > 0 ? comment.parentCommentId : undefined}
         isHighlighted={highlightedCommentId === comment.id}
         onMentionClick={onMentionClick}
       />
 
-      {/* Reply input for root comment */}
-      {isReplyingToRoot && (
+      {/* Reply input for this comment */}
+      {isReplyingToThis && (
         <ReplyInput
           userName={comment.userName ?? ""}
           value={replyContent}
@@ -190,9 +208,14 @@ function CommentThread({
         />
       )}
 
-      {/* Flat reply block — single expand/collapse toggle for the whole thread */}
-      {allReplies.length > 0 && (
-        <div className="ml-11 border-l border-slate-200 pl-3 dark:border-slate-700">
+      {/* Nested replies */}
+      {totalReplies > 0 && (
+        <div
+          className={
+            depth < maxDepth
+              ? "ml-11 border-l border-slate-200 pl-3 dark:border-slate-700"
+              : "ml-6 border-l border-slate-200 pl-3 dark:border-slate-700"
+          }>
           {!isExpanded ? (
             <Button
               variant="ghost"
@@ -200,45 +223,64 @@ function CommentThread({
               className="text-muted-foreground gap-1 text-xs"
               onClick={() => comment.id != null && onToggleExpand(comment.id)}>
               <ChevronDown className="h-3.5 w-3.5" />
-              Xem {allReplies.length} phản hồi
+              Xem {totalReplies} phản hồi
             </Button>
           ) : (
             <>
-              {allReplies.map((reply) => {
-                const isReplyingToThis = replyingToId === reply.id;
-                return (
-                  <div key={reply.id}>
-                    <CommentItem
-                      comment={reply}
+              {atMaxDepth
+                ? flatChildren.map((reply) => {
+                    const isReplyingToReply = replyingToId === reply.id;
+                    return (
+                      <div key={reply.id}>
+                        <CommentItem
+                          comment={reply}
+                          currentUserId={currentUserId}
+                          onReply={(c) => {
+                            onSetReplyingId(c.id ?? null);
+                            onReplyContentChange("");
+                          }}
+                          mentionedUserName={
+                            reply.parentCommentId
+                              ? commentById.get(reply.parentCommentId)?.userName
+                              : undefined
+                          }
+                          parentCommentId={reply.parentCommentId}
+                          isHighlighted={highlightedCommentId === reply.id}
+                          onMentionClick={onMentionClick}
+                        />
+                        {isReplyingToReply && (
+                          <ReplyInput
+                            userName={reply.userName ?? ""}
+                            value={replyContent}
+                            onChange={onReplyContentChange}
+                            onSubmit={() => reply.id != null && onReplySubmit(reply.id)}
+                            onCancel={() => {
+                              onSetReplyingId(null);
+                              onReplyContentChange("");
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })
+                : directChildren.map((child) => (
+                    <CommentThread
+                      key={child.comment.id}
+                      node={child}
                       currentUserId={currentUserId}
-                      onReply={(c) => {
-                        onSetReplyingId(c.id ?? null);
-                        onReplyContentChange("");
-                      }}
-                      mentionedUserName={
-                        reply.parentCommentId
-                          ? commentById.get(reply.parentCommentId)?.userName
-                          : undefined
-                      }
-                      parentCommentId={reply.parentCommentId}
-                      isHighlighted={highlightedCommentId === reply.id}
+                      replyingToId={replyingToId}
+                      replyContent={replyContent}
+                      onSetReplyingId={onSetReplyingId}
+                      onReplyContentChange={onReplyContentChange}
+                      onReplySubmit={onReplySubmit}
+                      expandedIds={expandedIds}
+                      onToggleExpand={onToggleExpand}
+                      commentById={commentById}
+                      highlightedCommentId={highlightedCommentId}
                       onMentionClick={onMentionClick}
+                      depth={depth + 1}
                     />
-                    {isReplyingToThis && (
-                      <ReplyInput
-                        userName={reply.userName ?? ""}
-                        value={replyContent}
-                        onChange={onReplyContentChange}
-                        onSubmit={() => reply.id != null && onReplySubmit(reply.id)}
-                        onCancel={() => {
-                          onSetReplyingId(null);
-                          onReplyContentChange("");
-                        }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+                  ))}
               <Button
                 variant="ghost"
                 size="sm"

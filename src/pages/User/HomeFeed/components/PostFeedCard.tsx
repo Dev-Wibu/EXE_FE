@@ -37,6 +37,7 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
   const likeCount = (item.likeCount ?? 0) + localLikeAdjust;
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [localCommentCount, setLocalCommentCount] = useState(commentCount);
 
   const authorName = post?.author?.name ?? "Ẩn danh";
   const authorInitials = authorName
@@ -139,7 +140,7 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
         )}
 
         {/* Like/comment count bar (Facebook-style) */}
-        {(likeLabel || commentCount > 0) && (
+        {(likeLabel || localCommentCount > 0) && (
           <div className="flex items-center gap-1 px-4 pt-2 pb-1">
             {likeLabel && (
               <>
@@ -147,10 +148,13 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
                 <span className="text-muted-foreground text-xs">{likeLabel}</span>
               </>
             )}
-            {commentCount > 0 && (
-              <span className="text-muted-foreground ml-auto text-xs">
-                {commentCount} bình luận
-              </span>
+            {localCommentCount > 0 && (
+              <button
+                type="button"
+                className="text-muted-foreground ml-auto text-xs hover:underline"
+                onClick={() => setModalOpen(true)}>
+                {localCommentCount} bình luận
+              </button>
             )}
           </div>
         )}
@@ -181,7 +185,12 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
         </CardFooter>
       </Card>
 
-      <PostFeedModal item={item} open={modalOpen} onOpenChange={setModalOpen} />
+      <PostFeedModal
+        item={item}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onCommentCountChange={setLocalCommentCount}
+      />
     </>
   );
 }

@@ -190,7 +190,8 @@ export class PostManager implements BaseManager<Post> {
       if (data.title) formData.append("title", data.title);
       if (data.content) formData.append("content", data.content);
       if (data.summary) formData.append("summary", data.summary);
-      if (data.authorId) formData.append("authorId", String(data.authorId));
+      const authorIdNum = parseInt(String(data.authorId ?? ""), 10);
+      if (!isNaN(authorIdNum) && authorIdNum > 0) formData.append("authorId", String(authorIdNum));
       if (data.majorId) formData.append("majorId", String(data.majorId));
       if (data.coverImg) formData.append("coverImg", data.coverImg);
       if (data.status) formData.append("status", data.status);
@@ -665,7 +666,9 @@ export class PostManager implements BaseManager<Post> {
       if (data.title) formData.append("title", data.title);
       if (data.content) formData.append("content", data.content);
       if (data.summary) formData.append("summary", data.summary);
-      if (data.authorId) formData.append("authorId", String(data.authorId));
+      const updateAuthorIdNum = parseInt(String(data.authorId ?? ""), 10);
+      if (!isNaN(updateAuthorIdNum) && updateAuthorIdNum > 0)
+        formData.append("authorId", String(updateAuthorIdNum));
       if (data.majorId) formData.append("majorId", String(data.majorId));
       if (data.coverImg) formData.append("coverImg", data.coverImg);
       if (data.status) formData.append("status", data.status);

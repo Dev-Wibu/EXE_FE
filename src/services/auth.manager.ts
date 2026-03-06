@@ -102,12 +102,12 @@ export class AuthManager {
    */
   /**
    * Map of demo accounts to their real backend IDs.
-   * USER and MENTOR use real user id=2; ADMIN/STAFF stay as demo placeholders.
+   * USER and MENTOR use real user id=2; ADMIN uses real backend id=1.
    */
   private readonly DEMO_REAL_IDS: Record<string, number | null> = {
     USER: 2,
     MENTOR: 2,
-    ADMIN: null,
+    ADMIN: 1,
     STAFF: null,
   };
 
@@ -151,9 +151,9 @@ export class AuthManager {
         }
       }
 
-      // Fallback for ADMIN, STAFF, or if real fetch failed
+      // Fallback for STAFF or if real fetch failed
       const demoUser: User = {
-        id: `demo-${role}`,
+        id: role === "ADMIN" ? "1" : `demo-${role}`,
         email: credentials.email,
         fullName:
           role === "ADMIN"

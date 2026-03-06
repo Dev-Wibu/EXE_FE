@@ -52,7 +52,7 @@ function renderContent(
       const mentionEl = (
         <span
           key="mention"
-          className={`font-semibold text-[#007BFF]${clickable ? "cursor-pointer hover:underline" : ""}`}
+          className={`inline-flex items-center rounded-md bg-[#007BFF]/10 px-1.5 py-0.5 text-xs font-semibold text-[#007BFF]${clickable ? " cursor-pointer hover:bg-[#007BFF]/20" : ""}`}
           onClick={
             clickable
               ? (e) => {
@@ -72,7 +72,9 @@ function renderContent(
   const parts = text.split(/(@\S+)/g);
   return parts.map((part, i) =>
     /^@\S+$/.test(part) ? (
-      <span key={i} className="font-semibold text-[#007BFF]">
+      <span
+        key={i}
+        className="inline-flex items-center rounded-md bg-[#007BFF]/10 px-1.5 py-0.5 text-xs font-semibold text-[#007BFF]">
         {part}
       </span>
     ) : (

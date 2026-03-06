@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { queryClient } from "@/lib/queryClient";
 import { useNewFeed } from "@/services/post.manager";
+import { useAuthStore } from "@/stores/authStore";
 import type { components } from "../../../../schema-from-be";
 
 type PostResponse = components["schemas"]["PostResponse"];
@@ -14,13 +16,28 @@ export interface UseHomeFeedReturn {
   isLoading: boolean;
   isFetchingMore: boolean;
   loadMore: () => void;
+  refresh: () => void;
 }
 
 export function useHomeFeed(): UseHomeFeedReturn {
+  const { user } = useAuthStore();
   const [page, setPage] = useState(0);
   const [posts, setPosts] = useState<PostResponse[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const appendedPages = useRef<Set<number>>(new Set());
+  const prevUserId = useRef(user?.id);
+
+  // Reset feed when user changes (login/logout)
+  useEffect(() => {
+    if (prevUserId.current !== user?.id) {
+      prevUserId.current = user?.id;
+      appendedPages.current.clear();
+      setPosts([]);
+      setPage(0);
+      setHasMore(true);
+      queryClient.invalidateQueries({ queryKey: ["get", "/api/posts/feed"] });
+    }
+  }, [user?.id]);
 
   const { data, isLoading, isFetching } = useNewFeed({ page, size: PAGE_SIZE });
 
@@ -47,11 +64,20 @@ export function useHomeFeed(): UseHomeFeedReturn {
     }
   };
 
+  const refresh = useCallback(() => {
+    appendedPages.current.clear();
+    setPosts([]);
+    setPage(0);
+    setHasMore(true);
+    queryClient.invalidateQueries({ queryKey: ["get", "/api/posts/feed"] });
+  }, []);
+
   return {
     posts,
     hasMore,
     isLoading: isLoading && posts.length === 0,
     isFetchingMore: isFetching && posts.length > 0,
     loadMore,
+    refresh,
   };
 }
