@@ -3,15 +3,18 @@ import {
   BookOpen,
   Bot,
   Check,
+  CheckCircle2,
   ClipboardCopy,
   Crown,
   Diamond,
+  Loader2,
   QrCode,
   Sparkles,
   Star,
   Zap,
 } from "lucide-react";
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { formatCurrency } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
@@ -233,8 +236,11 @@ function PlanCard({
 
 export function MembershipTab() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [copied, setCopied] = useState<"account" | "content" | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const paymentRef = useRef<HTMLDivElement>(null);
 
   const handleSelectPlan = (planId: string) => {
@@ -251,6 +257,14 @@ export function MembershipTab() {
     });
   };
 
+  const handleConfirmPayment = () => {
+    setIsConfirming(true);
+    setTimeout(() => {
+      setIsConfirming(false);
+      setShowSuccess(true);
+    }, 5000);
+  };
+
   const userId = user?.id ?? "00000";
   const transferContent = selectedPlan
     ? buildTransferContent(selectedPlan, userId)
@@ -259,6 +273,39 @@ export function MembershipTab() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 flex w-full max-w-sm flex-col items-center gap-5 rounded-2xl bg-white p-8 text-center shadow-2xl dark:bg-slate-900">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+              <CheckCircle2 className="h-9 w-9 text-emerald-500" />
+            </div>
+            <div>
+              <h3 className="font-['Poppins'] text-xl font-bold text-zinc-800 dark:text-white">
+                Đã xác nhận thanh toán!
+              </h3>
+              <p className="mt-1 font-['Inter'] text-sm text-gray-500 dark:text-slate-400">
+                Hóa đơn của bạn đã gửi qua email, vui lòng kiểm tra.
+                <br />
+                Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.
+              </p>
+            </div>
+            {selectedPlanInfo && (
+              <div className={`w-full rounded-xl px-4 py-3 ${selectedPlanInfo.iconBgClass}`}>
+                <p
+                  className={`font-['Inter'] text-sm font-semibold ${selectedPlanInfo.colorClass}`}>
+                  {selectedPlanInfo.displayName} — {formatCurrency(selectedPlanInfo.price)}
+                </p>
+              </div>
+            )}
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="w-full rounded-xl bg-[#0047AB] px-6 py-3 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#003d99]">
+              OK — Về trang chủ
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0047AB] via-[#0066CC] to-[#007BFF] p-8 text-white">
         <div className="-8op -ririghg-8 absolute h-40 w-40 rounded-full bg-white/5" />
@@ -419,6 +466,31 @@ export function MembershipTab() {
                     Hệ thống đang hoạt động
                   </span>
                 </div>
+                <div className="flex items-end gap-2">
+                  <span className="flex-end font-['Inter'] text-2xl text-amber-500 dark:text-slate-300">
+                    Tổng tiền:{" "}
+                    {selectedPlanInfo
+                      ? formatCurrency(selectedPlanInfo.price)
+                      : "— Chọn gói bên trên —"}
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleConfirmPayment}
+                  disabled={!selectedPlan || isConfirming}
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0047AB] px-4 py-3 font-['Inter'] text-sm font-semibold text-white transition-all duration-150 hover:bg-[#003d99] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
+                  {isConfirming ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Hệ Thống đang kiểm tra giao dịch của bạn...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Tôi đã chuyển khoản
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
