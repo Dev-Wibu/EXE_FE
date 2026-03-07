@@ -57,7 +57,7 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
 
   return (
     <>
-      <Card className="overflow-hidden rounded-xl border-slate-200/70 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800">
+      <Card className="hover:shadhw-m oover:shadow-m bor0 py-der-slate-200/70 shadow- overflow-hidden rounded-xl py-0 dark:border-slate-800">
         {/* Author + major + date */}
         <CardHeader className="pt-4 pb-2">
           <div className="flex items-center gap-3">
@@ -141,7 +141,7 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
 
         {/* Like/comment count bar (Facebook-style) */}
         {(likeLabel || localCommentCount > 0) && (
-          <div className="flex items-center gap-1 px-4 pt-2 pb-1">
+          <div className="flex items-center gap-1 px-4 py-0">
             {likeLabel && (
               <>
                 <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
@@ -162,7 +162,7 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
         <Separator className="mx-4" />
 
         {/* Action row */}
-        <CardFooter className="flex items-center gap-1 pt-1 pb-2">
+        <CardFooter className="flex items-center pt-0 pb-2">
           {user?.id && postId > 0 ? (
             <LikeButton
               postId={postId}

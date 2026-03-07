@@ -408,11 +408,16 @@ function SessionDayGroup({ ps, dayNumber, dayStatus, isOpen, onToggle }: Session
           const backUrl = ps.interviewSessionId
             ? `/user/practice/session/${ps.interviewSessionId}`
             : `/user/practice/${ps.id}`;
-          // Add to local quiz history
-          setQuizHistory((prev) => [
-            ...prev,
-            { quizId: newQuizId, quizName: `AI Quiz #${newQuizId}`, submitted: false },
-          ]);
+          // Fetch full quiz data so history shows accurate info
+          const quizDetail = await quizSetManager.getById(newQuizId);
+          if (quizDetail.success && quizDetail.data) {
+            setQuizHistory((prev) => [...prev, quizDetail.data!]);
+          } else {
+            setQuizHistory((prev) => [
+              ...prev,
+              { quizId: newQuizId, quizName: `AI Quiz #${newQuizId}`, submitted: false },
+            ]);
+          }
           // Show confirmation dialog
           setPendingQuiz({ quizId: newQuizId, backUrl, items: (res.data as QuizResponse).items });
         } else {
@@ -576,6 +581,7 @@ interface DayGroupProps {
   dayStatus: DayStatus;
   isCurrentDay: boolean;
   practiceSetId: string;
+  interviewSessionId?: number;
   lastQuizId?: number;
   quizHistory: QuizSet[];
   isOpen: boolean;
@@ -589,6 +595,7 @@ function DayGroup({
   dayStatus,
   isCurrentDay,
   practiceSetId,
+  interviewSessionId,
   lastQuizId,
   quizHistory,
   isOpen,
@@ -607,10 +614,13 @@ function DayGroup({
         const newQuizId = (res.data as QuizResponse).quizId;
         if (newQuizId) {
           toast.success("Đã tạo bài kiểm tra AI!");
+          const quizBackUrl = interviewSessionId
+            ? `/user/practice/session/${interviewSessionId}`
+            : undefined;
           navigate(`/user/practice/${practiceSetId}/quiz/${newQuizId}`, {
             state: {
               initialItems: (res.data as QuizResponse).items,
-              backUrl: `/user/practice/${practiceSetId}`,
+              ...(quizBackUrl ? { backUrl: quizBackUrl } : {}),
             },
           });
         } else {
@@ -1166,6 +1176,7 @@ export function PracticeSetDetailPage() {
                   dayStatus={getDayStatus(dayIdx)}
                   isCurrentDay={dayIdx === completedDays}
                   practiceSetId={id!}
+                  interviewSessionId={practiceSet?.interviewSessionId}
                   lastQuizId={lastSubmittedQuiz?.quizId}
                   quizHistory={dayIdx === completedDays ? quizHistory : []}
                   isOpen={dayOpenStates[dayIdx] ?? true}

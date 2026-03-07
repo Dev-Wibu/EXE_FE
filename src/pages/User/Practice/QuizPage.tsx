@@ -31,7 +31,24 @@ export function QuizPage() {
   } | null;
   // Capture items passed via navigation state from createFullAi (read once on mount)
   const initialItemsRef = useRef(locationState?.initialItems);
-  const backUrl = locationState?.backUrl ?? `/user?tab=practice`;
+
+  // Persist backUrl in sessionStorage so it survives F5 refresh
+  const storageKey = `quiz_backUrl_${id}_${quizId}`;
+  const [backUrl, setBackUrl] = useState<string>(() => {
+    if (locationState?.backUrl) {
+      try {
+        sessionStorage.setItem(storageKey, locationState.backUrl);
+      } catch {
+        /* ignore */
+      }
+      return locationState.backUrl;
+    }
+    try {
+      return sessionStorage.getItem(storageKey) ?? `/user?tab=practice`;
+    } catch {
+      return `/user?tab=practice`;
+    }
+  });
 
   const loadData = useCallback(async () => {
     if (!quizId) return;
@@ -42,13 +59,37 @@ export function QuizPage() {
         // Items came from createFullAi response — only fetch quiz metadata
         setQuizItems(preloaded as unknown as QuizItem[]);
         const setRes = await quizSetManager.getById(Number(quizId));
-        if (setRes.success && setRes.data) setQuizSet(setRes.data);
+        if (setRes.success && setRes.data) {
+          setQuizSet(setRes.data);
+          // Update backUrl using interviewSessionId from quiz data
+          const sessionId = setRes.data.practiceSet?.interviewSessionId;
+          if (sessionId) {
+            const url = `/user/practice/session/${sessionId}`;
+            setBackUrl(url);
+            try {
+              sessionStorage.setItem(storageKey, url);
+            } catch {
+              /* ignore */
+            }
+          }
+        }
       } else {
         // Load full quiz; GET /api/quiz-sets/{quizId} returns QuizSet with embedded questions[]
         const setRes = await quizSetManager.getById(Number(quizId));
         if (setRes.success && setRes.data) {
           setQuizSet(setRes.data);
           setQuizItems(setRes.data.questions ?? []);
+          // Update backUrl using interviewSessionId from quiz data
+          const sessionId = setRes.data.practiceSet?.interviewSessionId;
+          if (sessionId) {
+            const url = `/user/practice/session/${sessionId}`;
+            setBackUrl(url);
+            try {
+              sessionStorage.setItem(storageKey, url);
+            } catch {
+              /* ignore */
+            }
+          }
         } else {
           toast.error("Không tìm thấy bài kiểm tra");
         }
@@ -58,7 +99,7 @@ export function QuizPage() {
     } finally {
       setLoading(false);
     }
-  }, [quizId]);
+  }, [quizId, storageKey]);
 
   useEffect(() => {
     loadData();

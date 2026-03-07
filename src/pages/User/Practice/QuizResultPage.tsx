@@ -10,10 +10,27 @@ import type { QuizItem, QuizSet } from "@/services/quiz-set.manager";
 import { toast } from "sonner";
 
 export function QuizResultPage() {
-  const { quizId } = useParams<{ id: string; quizId: string }>();
+  const { id, quizId } = useParams<{ id: string; quizId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const backUrl = (location.state as { backUrl?: string } | null)?.backUrl ?? `/user?tab=practice`;
+  // Persist backUrl in sessionStorage so it survives F5 refresh
+  const storageKey = `quiz_backUrl_${id}_${quizId}`;
+  const [backUrl, setBackUrl] = useState<string>(() => {
+    const stateUrl = (location.state as { backUrl?: string } | null)?.backUrl;
+    if (stateUrl) {
+      try {
+        sessionStorage.setItem(storageKey, stateUrl);
+      } catch {
+        /* ignore */
+      }
+      return stateUrl;
+    }
+    try {
+      return sessionStorage.getItem(storageKey) ?? `/user?tab=practice`;
+    } catch {
+      return `/user?tab=practice`;
+    }
+  });
   const [quizSet, setQuizSet] = useState<QuizSet | null>(null);
   const [quizItems, setQuizItems] = useState<QuizItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +44,17 @@ export function QuizResultPage() {
       if (quizResponse.success && quizResponse.data) {
         setQuizSet(quizResponse.data);
         setQuizItems(quizResponse.data.questions ?? []);
+        // Update backUrl using interviewSessionId from quiz data
+        const sessionId = quizResponse.data.practiceSet?.interviewSessionId;
+        if (sessionId) {
+          const url = `/user/practice/session/${sessionId}`;
+          setBackUrl(url);
+          try {
+            sessionStorage.setItem(storageKey, url);
+          } catch {
+            /* ignore */
+          }
+        }
       } else {
         toast.error("Không thể tải kết quả bài trắc nghiệm");
       }
@@ -35,7 +63,7 @@ export function QuizResultPage() {
     } finally {
       setLoading(false);
     }
-  }, [quizId]);
+  }, [quizId, storageKey]);
 
   useEffect(() => {
     loadData();
@@ -80,7 +108,7 @@ export function QuizResultPage() {
         <div className="mb-8 flex items-center justify-center">
           <Button variant="outline" className="gap-2" onClick={() => navigate(backUrl)}>
             <ArrowLeft className="h-4 w-4" />
-            Quay lại bộ luyện tập
+            Quay lại lộ trình luyện tập
           </Button>
         </div>
 
