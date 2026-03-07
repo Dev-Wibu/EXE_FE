@@ -153,6 +153,20 @@ export const API_ENDPOINTS = {
     CREATE_BY_AI: "/api/practice-sets/create-by-ai",
   },
 
+  // Membership Plans endpoints - Based on schema-from-be.d.ts
+  // GET /api/membership-plans - getAllPlans
+  // PUT /api/membership-plans - updatePlan (JSON body)
+  // POST /api/membership-plans - createPlan (JSON body)
+  // GET /api/membership-plans/{id} - getPlanById
+  // DELETE /api/membership-plans/{id} - deletePlan
+  MEMBERSHIP_PLANS: {
+    LIST: "/api/membership-plans",
+    DETAIL: "/api/membership-plans/:id",
+    CREATE: "/api/membership-plans",
+    UPDATE: "/api/membership-plans",
+    DELETE: "/api/membership-plans/:id",
+  },
+
   // Question Categories endpoints - Based on schema-from-be.d.ts
   QUESTION_CATEGORIES: {
     LIST: "/api/question-categories",
