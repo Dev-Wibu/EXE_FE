@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpen,
+  CreditCard,
   FileQuestion,
   FileText,
   FolderOpen,
@@ -24,6 +25,7 @@ import { useTabsState } from "@/hooks/useTabsState";
 import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
 import { DashboardOverviewPage } from "../DashboardOverview";
 import { FeedbackManagementPage } from "../FeedbackManagement";
+import { MembershipPlanManagementPage } from "../MembershipPlanManagement";
 import { MentorManagementPage } from "../MentorManagement";
 import { NotificationManagementPage } from "../NotificationManagement";
 import { PostManagementPage } from "../PostManagement";
@@ -52,7 +54,8 @@ type TabType =
   | "quizSets"
   | "posts"
   | "candidateProfiles"
-  | "community";
+  | "community"
+  | "membershipPlans";
 
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "dashboard", label: "Dashboard" },
@@ -70,6 +73,7 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "posts", label: "Quản lý bài viết" },
   { type: "candidateProfiles", label: "Hồ sơ ứng viên" },
   { type: "community", label: "Cộng đồng" },
+  { type: "membershipPlans", label: "Gói thành viên" },
 ];
 
 const isValidTabType = (value: string): value is TabType => {
@@ -92,6 +96,7 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   posts: Newspaper,
   candidateProfiles: FileText,
   community: Globe,
+  membershipPlans: CreditCard,
 };
 
 const TAB_COLORS: Record<TabType, string> = {
@@ -110,6 +115,7 @@ const TAB_COLORS: Record<TabType, string> = {
   posts: "text-purple-500",
   candidateProfiles: "text-teal-600",
   community: "text-orange-500",
+  membershipPlans: "text-rose-600",
 };
 
 const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
@@ -174,6 +180,12 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
         iconColor: "text-teal-600",
       },
       { type: "community", label: "Cộng đồng", icon: Globe, iconColor: "text-orange-500" },
+      {
+        type: "membershipPlans",
+        label: "Gói thành viên",
+        icon: CreditCard,
+        iconColor: "text-rose-600",
+      },
     ],
   },
 ];
@@ -227,6 +239,12 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
         color: "text-teal-600",
       },
       { type: "community", icon: Globe, label: "Cộng đồng", color: "text-orange-500" },
+      {
+        type: "membershipPlans",
+        icon: CreditCard,
+        label: "Gói thành viên",
+        color: "text-rose-600",
+      },
     ],
   },
 ];
@@ -322,6 +340,8 @@ export function AdminDashboardPage() {
         return <CommunityTabView />;
       case "candidateProfiles":
         return <CandidateProfileManagementPage />;
+      case "membershipPlans":
+        return <MembershipPlanManagementPage />;
       default:
         return <div>Loại tab không hợp lệ</div>;
     }
