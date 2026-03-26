@@ -140,118 +140,120 @@ export function CreatePostPage({ onSuccess, onCancel }: CreatePostPageProps = {}
         <CardHeader>
           <CardTitle>Tạo bài viết</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Tiêu đề *</Label>
-              <Input
-                id="title"
-                placeholder="Nhập tiêu đề bài viết"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="content">Nội dung</Label>
-              <Textarea
-                id="content"
-                placeholder="Nhập nội dung bài viết"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={6}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="summary">Tóm tắt</Label>
-              <Textarea
-                id="summary"
-                placeholder="Nhập tóm tắt bài viết"
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cover">Ảnh bìa</Label>
-              <Input id="cover" type="file" accept="image/*" onChange={handleFileChange} />
-              {coverPreview && (
-                <img
-                  src={coverPreview}
-                  alt="Xem trước ảnh bìa"
-                  className="mt-2 max-h-48 rounded-md object-cover"
+        <CardContent className="p-0">
+          <form onSubmit={handleSubmit} className="max-h-[calc(100vh-12rem)] overflow-y-auto">
+            <div className="space-y-4 px-6 pt-6 pb-24">
+              <div className="space-y-2">
+                <Label htmlFor="title">Tiêu đề *</Label>
+                <Input
+                  id="title"
+                  placeholder="Nhập tiêu đề bài viết"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
                 />
-              )}
-            </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Chuyên ngành</Label>
-              <Select
-                value={majorId?.toString()}
-                onValueChange={(v) => setMajorId(v ? Number(v) : undefined)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn chuyên ngành" />
-                </SelectTrigger>
-                <SelectContent>
-                  {majors.map((m) => (
-                    <SelectItem key={m.id} value={String(m.id)}>
-                      {m.majorName}
-                    </SelectItem>
+              <div className="space-y-2">
+                <Label htmlFor="content">Nội dung</Label>
+                <Textarea
+                  id="content"
+                  placeholder="Nhập nội dung bài viết"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="summary">Tóm tắt</Label>
+                <Textarea
+                  id="summary"
+                  placeholder="Nhập tóm tắt bài viết"
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cover">Ảnh bìa</Label>
+                <Input id="cover" type="file" accept="image/*" onChange={handleFileChange} />
+                {coverPreview && (
+                  <img
+                    src={coverPreview}
+                    alt="Xem trước ảnh bìa"
+                    className="mt-2 max-h-48 rounded-md object-cover"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Chuyên ngành</Label>
+                <Select
+                  value={majorId?.toString()}
+                  onValueChange={(v) => setMajorId(v ? Number(v) : undefined)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn chuyên ngành" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {majors.map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>
+                        {m.majorName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Thẻ</Label>
+                <div
+                  className="border-input bg-background flex min-h-10 cursor-text flex-wrap items-center gap-1.5 rounded-md border px-3 py-2 text-sm"
+                  onClick={() => tagInputRef.current?.focus()}>
+                  {tags.map((tag, i) => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1 pr-1">
+                      {tag}
+                      <button
+                        type="button"
+                        className="rounded-full p-0.5 hover:bg-black/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeTag(i);
+                        }}
+                        aria-label={`Xóa thẻ ${tag}`}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  <input
+                    ref={tagInputRef}
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    onBlur={addTag}
+                    placeholder={
+                      tags.length === 0 ? "Nhập thẻ, nhấn Enter hoặc dấu phẩy để thêm" : ""
+                    }
+                    className="placeholder:text-muted-foreground min-w-[160px] flex-1 bg-transparent outline-none"
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Thẻ</Label>
-              <div
-                className="border-input bg-background flex min-h-10 cursor-text flex-wrap items-center gap-1.5 rounded-md border px-3 py-2 text-sm"
-                onClick={() => tagInputRef.current?.focus()}>
-                {tags.map((tag, i) => (
-                  <Badge key={tag} variant="secondary" className="flex items-center gap-1 pr-1">
-                    {tag}
-                    <button
-                      type="button"
-                      className="rounded-full p-0.5 hover:bg-black/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTag(i);
-                      }}
-                      aria-label={`Xóa thẻ ${tag}`}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-                <input
-                  ref={tagInputRef}
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  onBlur={addTag}
-                  placeholder={
-                    tags.length === 0 ? "Nhập thẻ, nhấn Enter hoặc dấu phẩy để thêm" : ""
-                  }
-                  className="placeholder:text-muted-foreground min-w-[160px] flex-1 bg-transparent outline-none"
-                />
+              <div className="space-y-2">
+                <Label>Trạng thái</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as PostStatus)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DRAFT">Bản nháp</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Trạng thái</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as PostStatus)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">Bản nháp</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex gap-3 pt-2">
+            <div className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky bottom-0 z-10 flex gap-3 border-t px-6 py-4 backdrop-blur">
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Đang đăng..." : "Đăng bài"}
               </Button>

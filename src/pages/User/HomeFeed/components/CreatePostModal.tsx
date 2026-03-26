@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { queryClient } from "@/lib/queryClient";
 import { postManager } from "@/services/post.manager";
@@ -129,12 +128,12 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] w-full max-w-lg overflow-hidden p-0">
         <DialogHeader className="border-b px-6 pt-5 pb-4">
           <DialogTitle className="text-center text-lg">Tạo bài viết</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 px-6 pt-2 pb-6">
+        <div className="max-h-[calc(90vh-73px)] space-y-4 overflow-y-auto px-6 pt-2 pb-4">
           {/* Author info */}
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 shrink-0 ring-2 ring-slate-100 dark:ring-slate-800">
@@ -290,20 +289,19 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
             )}
           </div>
 
-          <Separator />
-
-          {/* Submit */}
-          <Button
-            className="w-full gap-2 bg-[#0047AB] hover:bg-[#003580]"
-            onClick={handleSubmit}
-            disabled={!title.trim() || !content.trim() || submitting}>
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            Đăng bài
-          </Button>
+          <div className="bg-background/95 supports-backdrop-filter:bg-background/80 sticky bottom-0 -mx-6 border-t px-6 pt-4 pb-2 backdrop-blur">
+            <Button
+              className="w-full gap-2 bg-[#0047AB] hover:bg-[#003580]"
+              onClick={handleSubmit}
+              disabled={!title.trim() || !content.trim() || submitting}>
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Đăng bài
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

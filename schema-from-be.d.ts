@@ -102,23 +102,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/mentors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllMentors"];
-        put: operations["updateMentor"];
-        /** dùng chung cho create và update mentor, nếu create thì ko có id còn update thì có id gửi kèm trong json data á */
-        post: operations["createMentor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/mentor-reviews": {
         parameters: {
             query?: never;
@@ -325,6 +308,40 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["subscribePlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/transfer-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dùng cho giao dịch khi mà mua gói từ ví */
+        post: operations["transferOut"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/transfer-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tạo giao dịch nạp tiền vào ví, trả về link thanh toán của PayOS để FE redirect người dùng sang trang thanh toán */
+        post: operations["transferIn"];
         delete?: never;
         options?: never;
         head?: never;
@@ -588,22 +605,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/payments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getPayments"];
-        put?: never;
-        post: operations["createPayment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/payments/webhook": {
         parameters: {
             query?: never;
@@ -629,7 +630,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createPaymentLink"];
+        post: operations["createPayment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -658,6 +659,23 @@ export interface paths {
          *     }
          */
         post: operations["createNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mentors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllMentors"];
+        put?: never;
+        /** dùng chung cho create và update mentor, nếu create thì ko có id còn update thì có id gửi kèm trong json data á */
+        post: operations["createMentor"];
         delete?: never;
         options?: never;
         head?: never;
@@ -792,6 +810,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/error": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["triggerError"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/interview/start/{sessionKey}": {
         parameters: {
             query?: never;
@@ -832,6 +866,55 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getUserById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/{transactionCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTransactionByTransactionCode"];
+        put?: never;
+        post?: never;
+        /** Nếu FE nhận đc rediect về trang cancelUrl thì gọi API này để xóa transaction đã tạo trước đó */
+        delete: operations["deleteTransaction"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTransactionsByUserId"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1188,6 +1271,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPayments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/{id}": {
         parameters: {
             query?: never;
@@ -1196,6 +1295,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getPayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cancelPayment"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1228,6 +1343,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["checkRead"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/{currentFullId}/{recipientFullId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getChatHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1564,6 +1695,8 @@ export interface components {
             cvUrl?: string;
             cv_public_id?: string;
             membershipPlan?: components["schemas"]["MemberShipPlan"];
+            /** Format: int64 */
+            walletBalance?: number;
         };
         PracticeSetItem: {
             /** Format: int32 */
@@ -1585,6 +1718,19 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        UpdateMentorReviewRequest: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            rating?: number;
+            situationNote?: string;
+            taskNote?: string;
+            actionNote?: string;
+            resultNote?: string;
+            strength?: string;
+            weakness?: string;
+            improve?: string;
+        };
         Mentor: {
             /** Format: int32 */
             id?: number;
@@ -1601,8 +1747,6 @@ export interface components {
             yearsOfExperience?: number;
             linkedInUrl?: string;
             currentCompany?: string;
-            /** Format: int32 */
-            rate?: number;
             identityImg?: string;
             public_id_identity?: string;
             degreeImg?: string;
@@ -1611,20 +1755,9 @@ export interface components {
             public_id_other?: string;
             /** Format: int32 */
             totalSession?: number;
+            /** Format: double */
+            averageRating?: number;
             active?: boolean;
-        };
-        UpdateMentorReviewRequest: {
-            /** Format: int32 */
-            id?: number;
-            /** Format: int32 */
-            rating?: number;
-            situationNote?: string;
-            taskNote?: string;
-            actionNote?: string;
-            resultNote?: string;
-            strength?: string;
-            weakness?: string;
-            improve?: string;
         };
         MentorReview: {
             /** Format: int32 */
@@ -1966,19 +2099,6 @@ export interface components {
             /** Format: int32 */
             parentCommentId?: number;
         };
-        Payment: {
-            /** Format: int32 */
-            id?: number;
-            /** Format: int64 */
-            amount?: number;
-            description?: string;
-            user?: components["schemas"]["User"];
-            /** @enum {string} */
-            status?: "PENDING" | "COMPLETED" | "FAILED";
-            /** Format: date-time */
-            createdAt?: string;
-            transactionCode?: string;
-        };
         Webhook: {
             code?: string;
             desc?: string;
@@ -2125,6 +2245,20 @@ export interface components {
             expiredAt?: string;
             active?: boolean;
         };
+        Transaction: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int64 */
+            amount?: number;
+            description?: string;
+            transactionCode?: string;
+            user?: components["schemas"]["User"];
+            /** Format: date-time */
+            createdAt?: string;
+            transactionType?: boolean;
+            /** Format: int64 */
+            currentBalance?: number;
+        };
         PracticeQuestionDto: {
             /** Format: int32 */
             questionId?: number;
@@ -2223,11 +2357,11 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            /** Format: int32 */
+            pageNumber?: number;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            /** Format: int32 */
-            pageNumber?: number;
             unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
@@ -2237,6 +2371,55 @@ export interface components {
             sorted?: boolean;
             unsorted?: boolean;
             empty?: boolean;
+        };
+        Payment: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int64 */
+            amount?: number;
+            description?: string;
+            user?: components["schemas"]["User"];
+            /** @enum {string} */
+            status?: "PENDING" | "COMPLETED" | "FAILED";
+            /** Format: date-time */
+            createdAt?: string;
+            transactionCode?: string;
+        };
+        ChatMessage: {
+            /** Format: int32 */
+            id?: number;
+            /** Format: int32 */
+            senderId?: number;
+            senderType?: string;
+            /** Format: int32 */
+            recipientId?: number;
+            recipientType?: string;
+            content?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        MentorResponse: {
+            /** Format: int32 */
+            id?: number;
+            name?: string;
+            email?: string;
+            bio?: string;
+            avatarUrl?: string;
+            expertise?: string;
+            /** Format: int32 */
+            yearsOfExperience?: number;
+            linkedInUrl?: string;
+            currentCompany?: string;
+            /** Format: int32 */
+            rate?: number;
+            identityImg?: string;
+            degreeImg?: string;
+            otherFile?: string;
+            /** Format: int32 */
+            totalSession?: number;
+            /** Format: double */
+            averageRating?: number;
+            active?: boolean;
         };
         InterviewBlueprintResponse: {
             strategy_analysis?: string;
@@ -2699,84 +2882,6 @@ export interface operations {
             };
         };
     };
-    getAllMentors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Mentor"][];
-                };
-            };
-        };
-    };
-    updateMentor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Mentor"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Mentor"];
-                };
-            };
-        };
-    };
-    createMentor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "multipart/form-data": {
-                    data: components["schemas"]["MentorInfo"];
-                    /** Format: binary */
-                    avatar?: string;
-                    /** Format: binary */
-                    identityFile?: string;
-                    /** Format: binary */
-                    degreeFile?: string;
-                    /** Format: binary */
-                    otherFile?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Mentor"];
-                };
-            };
-        };
-    };
     getAllMentorReviews: {
         parameters: {
             query?: never;
@@ -3003,14 +3108,16 @@ export interface operations {
     };
     updateMajor: {
         parameters: {
-            query: {
-                major: components["schemas"]["Major"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Major"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -3025,14 +3132,16 @@ export interface operations {
     };
     createMajor: {
         parameters: {
-            query: {
-                major: components["schemas"]["Major"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Major"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -3309,6 +3418,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["User"];
+                };
+            };
+        };
+    };
+    transferOut: {
+        parameters: {
+            query: {
+                amount: number;
+                userId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    transferIn: {
+        parameters: {
+            query: {
+                amount: number;
+                userId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };
@@ -3694,50 +3849,6 @@ export interface operations {
             };
         };
     };
-    getPayments: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Payment"][];
-                };
-            };
-        };
-    };
-    createPayment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Payment"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Payment"];
-                };
-            };
-        };
-    };
     handlePayOsWebhook: {
         parameters: {
             query?: never;
@@ -3760,10 +3871,11 @@ export interface operations {
             };
         };
     };
-    createPaymentLink: {
+    createPayment: {
         parameters: {
             query: {
-                paymentId: number;
+                amount: number;
+                userId: number;
             };
             header?: never;
             path?: never;
@@ -3802,6 +3914,60 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Notification"];
+                };
+            };
+        };
+    };
+    getAllMentors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MentorResponse"][];
+                };
+            };
+        };
+    };
+    createMentor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    data: components["schemas"]["MentorInfo"];
+                    /** Format: binary */
+                    avatar?: string;
+                    /** Format: binary */
+                    identityFile?: string;
+                    /** Format: binary */
+                    degreeFile?: string;
+                    /** Format: binary */
+                    otherFile?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Mentor"];
                 };
             };
         };
@@ -3981,6 +4147,26 @@ export interface operations {
             };
         };
     };
+    triggerError: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
     startInterview: {
         parameters: {
             query?: never;
@@ -4043,6 +4229,90 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["User"];
+                };
+            };
+        };
+    };
+    getAllTransactions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Transaction"][];
+                };
+            };
+        };
+    };
+    getTransactionByTransactionCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Transaction"];
+                };
+            };
+        };
+    };
+    deleteTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getTransactionsByUserId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Transaction"][];
                 };
             };
         };
@@ -4616,6 +4886,26 @@ export interface operations {
             };
         };
     };
+    getPayments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Payment"][];
+                };
+            };
+        };
+    };
     getPayment: {
         parameters: {
             query?: never;
@@ -4623,6 +4913,28 @@ export interface operations {
             path: {
                 id: number;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Payment"];
+                };
+            };
+        };
+    };
+    cancelPayment: {
+        parameters: {
+            query: {
+                transactionCode: string;
+            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -4682,6 +4994,29 @@ export interface operations {
             };
         };
     };
+    getChatHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                currentFullId: string;
+                recipientFullId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatMessage"][];
+                };
+            };
+        };
+    };
     getMentorById: {
         parameters: {
             query?: never;
@@ -4699,7 +5034,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["Mentor"];
+                    "*/*": components["schemas"]["MentorResponse"];
                 };
             };
         };
