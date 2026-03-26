@@ -105,12 +105,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
     }
   }
 
-  /**
-   * Create new question major
-   * POST /api/majors (query params: id, majorName, description)
-   * Backend uses query params for create/update operations per Swagger
-   * curl example: 'https://api.kdz.asia/api/majors?id=0&majorName=string&description=string'
-   */
   async create(data: Partial<Major>): Promise<ApiResponse<Major>> {
     if (this.mode === "mock") {
       const newId = Math.max(...mockMajors.map((m) => m.id || 0)) + 1;
@@ -147,12 +141,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
     }
   }
 
-  /**
-   * Update question major
-   * PUT /api/majors (query params: id, majorName, description)
-   * Backend uses query params for update operations per Swagger
-   * curl example: 'https://api.kdz.asia/api/majors?id=6&majorName=string&description=string'
-   */
   async update(id: string | number, data: Partial<Major>): Promise<ApiResponse<Major>> {
     if (this.mode === "mock") {
       const index = mockMajors.findIndex((m) => m.id === Number(id));

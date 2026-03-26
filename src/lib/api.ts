@@ -10,7 +10,7 @@ import createClient from "openapi-react-query";
 
 // Get the API base URL from environment or use default
 // Note: Do not include /api suffix here as it's already in the endpoint paths
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.kdz.asia";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // Create the fetch client with base configuration
 const fetchClient = createFetchClient<paths>({
