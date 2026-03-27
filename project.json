@@ -62,7 +62,7 @@
     "generate-schema": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec openapi-typescript https://api.kdz.asia/v3/api-docs -o ./schema-from-be.d.ts"
+        "command": "pnpm exec dotenv -e .env -- pnpm exec openapi-typescript %VITE_API_BASE_URL%/v3/api-docs -o ./schema-from-be.d.ts"
       }
     },
     "cypress:open": {
