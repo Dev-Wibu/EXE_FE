@@ -19,5 +19,7 @@ export type { FilterCriteria, FilterGroup, FilterOption, FilterProps } from "./F
 export { PaginationControl } from "./PaginationControl";
 export { ProtectedRoute } from "./ProtectedRoute";
 export { PublicOnlyRoute } from "./PublicOnlyRoute";
+export { ReloadButton } from "./ReloadButton";
+export type { ReloadButtonProps } from "./ReloadButton";
 export { SortButton } from "./SortButton";
 export type { SortDirection } from "./SortButton";
