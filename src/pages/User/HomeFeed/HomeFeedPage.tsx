@@ -1,6 +1,7 @@
 import { Loader2, PenSquare, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ReloadButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -130,6 +131,7 @@ export function HomeFeedPage() {
             <PenSquare className="h-4 w-4" />
             <span className="text-xs font-medium">Viết bài</span>
           </Button>
+          <ReloadButton onReload={refresh} isLoading={isLoading} tooltip="Tải lại bảng tin" />
         </div>
       </Card>
 

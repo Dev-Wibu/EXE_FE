@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -41,11 +42,24 @@ export function StudentsListPage() {
   const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data: allSessions = [], isLoading: sessionsLoading } = useSessions();
-  const { data: feedbacks = [], isLoading: feedbacksLoading } = useMentorFeedbacksByMentor(
-    user?.id || 0
-  );
-  const { data: reviews = [], isLoading: reviewsLoading } = useMentorReviewsByMentor(user?.id || 0);
+  const {
+    data: allSessions = [],
+    isLoading: sessionsLoading,
+    isRefetching: sessionsRefetching,
+    refetch: refetchSessions,
+  } = useSessions();
+  const {
+    data: feedbacks = [],
+    isLoading: feedbacksLoading,
+    isRefetching: feedbacksRefetching,
+    refetch: refetchFeedbacks,
+  } = useMentorFeedbacksByMentor(user?.id || 0);
+  const {
+    data: reviews = [],
+    isLoading: reviewsLoading,
+    isRefetching: reviewsRefetching,
+    refetch: refetchReviews,
+  } = useMentorReviewsByMentor(user?.id || 0);
 
   const isLoading = sessionsLoading || feedbacksLoading || reviewsLoading;
 
@@ -142,11 +156,20 @@ export function StudentsListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Học Viên</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Danh sách học viên đã có phiên phỏng vấn với bạn
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Học Viên</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Danh sách học viên đã có phiên phỏng vấn với bạn
+          </p>
+        </div>
+        <ReloadButton
+          onReload={async () => {
+            await Promise.all([refetchSessions(), refetchFeedbacks(), refetchReviews()]);
+          }}
+          isLoading={sessionsRefetching || feedbacksRefetching || reviewsRefetching}
+          tooltip="Tải lại danh sách học viên"
+        />
       </div>
 
       {/* Stats */}

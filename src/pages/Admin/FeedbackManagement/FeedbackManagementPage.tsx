@@ -7,7 +7,7 @@ import { Eye, MessageSquare, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { FeedbackStats } from "@/components/feedback";
-import { PaginationControl, SortButton } from "@/components/shared";
+import { PaginationControl, ReloadButton, SortButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ import { useSortable } from "@/hooks/useSortable";
 import { toast } from "sonner";
 
 export function FeedbackManagementPage() {
-  const { data: feedbacks = [], isLoading } = useMentorFeedbacks();
+  const { data: feedbacks = [], isLoading, isRefetching, refetch } = useMentorFeedbacks();
   const { mutate: deleteFeedback, isPending: isDeleting } = useDeleteMentorFeedback();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,7 +180,16 @@ export function FeedbackManagementPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Bộ lọc</CardTitle>
+            <ReloadButton
+              onReload={async () => {
+                await refetch();
+              }}
+              isLoading={isRefetching}
+              tooltip="Tải lại danh sách phản hồi"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">

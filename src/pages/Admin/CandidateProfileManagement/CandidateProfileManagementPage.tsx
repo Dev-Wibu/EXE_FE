@@ -6,6 +6,7 @@
 import { Eye, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ReloadButton } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,7 @@ import { useCandidateProfiles } from "@/services/candidate-profile.manager";
 import { CandidateProfileModal } from "../UserManagement/components/CandidateProfileModal";
 
 export function CandidateProfileManagementPage() {
-  const { data: profilesData, isLoading } = useCandidateProfiles();
+  const { data: profilesData, isLoading, isRefetching, refetch } = useCandidateProfiles();
   const profiles = (profilesData as unknown as CandidateProfile[]) ?? [];
 
   const [search, setSearch] = useState("");
@@ -64,13 +65,22 @@ export function CandidateProfileManagementPage() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        <Input
-          className="pl-10"
-          placeholder="Tìm kiếm theo tên, email, vai trò..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            className="pl-10"
+            placeholder="Tìm kiếm theo tên, email, vai trò..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <ReloadButton
+          onReload={async () => {
+            await refetch();
+          }}
+          isLoading={isRefetching}
+          tooltip="Tải lại danh sách hồ sơ"
         />
       </div>
 

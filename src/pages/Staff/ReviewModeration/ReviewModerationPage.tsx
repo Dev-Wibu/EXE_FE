@@ -19,6 +19,7 @@ import {
 import { useMemo, useState } from "react";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +60,7 @@ const LOW_RATING_THRESHOLD = 2;
 const HIGH_RATING_MIN = 4;
 
 export function ReviewModerationPage() {
-  const { data: reviews = [], isLoading } = useMentorReviews();
+  const { data: reviews = [], isLoading, isRefetching, refetch } = useMentorReviews();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("low"); // Default to low ratings
@@ -181,7 +182,16 @@ export function ReviewModerationPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Bộ lọc</CardTitle>
+            <ReloadButton
+              onReload={async () => {
+                await refetch();
+              }}
+              isLoading={isRefetching}
+              tooltip="Tải lại danh sách đánh giá"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">

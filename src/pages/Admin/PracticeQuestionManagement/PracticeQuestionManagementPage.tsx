@@ -1,7 +1,7 @@
 import { Plus, Search, Trash2, Upload } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PaginationControl } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -294,6 +294,11 @@ export function PracticeQuestionManagementPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadData}
+            isLoading={loading}
+            tooltip="Tải lại danh sách câu hỏi"
+          />
           <Button variant="outline" onClick={handleBulkImport} className="gap-2">
             <Upload className="h-4 w-4" />
             Nhập hàng loạt

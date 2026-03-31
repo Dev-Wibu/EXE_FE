@@ -6,6 +6,7 @@
 import { MessageSquare, TrendingUp, Users } from "lucide-react";
 
 import { FeedbackCard, FeedbackStats } from "@/components/feedback";
+import { ReloadButton } from "@/components/shared";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
@@ -14,7 +15,12 @@ import { useAuthStore } from "@/stores/authStore";
 
 export function GivenFeedbackListPage() {
   const user = useAuthStore((state) => state.user);
-  const { data: feedbacks = [], isLoading } = useMentorFeedbacksByMentor(user?.id || 0);
+  const {
+    data: feedbacks = [],
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useMentorFeedbacksByMentor(user?.id || 0);
 
   // Calculate stats
   const totalFeedbacks = feedbacks.length;
@@ -38,11 +44,20 @@ export function GivenFeedbackListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Phản Hồi Đã Gửi</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Các phản hồi bạn đã gửi cho học viên sau mỗi phiên phỏng vấn
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Phản Hồi Đã Gửi</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Các phản hồi bạn đã gửi cho học viên sau mỗi phiên phỏng vấn
+          </p>
+        </div>
+        <ReloadButton
+          onReload={async () => {
+            await refetch();
+          }}
+          isLoading={isRefetching}
+          tooltip="Tải lại phản hồi đã gửi"
+        />
       </div>
 
       {/* Stats */}

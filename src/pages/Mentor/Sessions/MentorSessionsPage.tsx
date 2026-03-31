@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -217,8 +218,18 @@ export function MentorSessionsPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(10);
-  const { data: allSessions = [], isLoading: sessionsLoading } = useSessions();
-  const { data: feedbacks = [], isLoading: feedbacksLoading } = useMentorFeedbacks();
+  const {
+    data: allSessions = [],
+    isLoading: sessionsLoading,
+    isRefetching: sessionsRefetching,
+    refetch: refetchSessions,
+  } = useSessions();
+  const {
+    data: feedbacks = [],
+    isLoading: feedbacksLoading,
+    isRefetching: feedbacksRefetching,
+    refetch: refetchFeedbacks,
+  } = useMentorFeedbacks();
   const updateStatusMutation = useUpdateSessionStatus();
 
   // Current time state for joinTime-based blocking (updates every 30s)
@@ -283,11 +294,20 @@ export function MentorSessionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Phiên Phỏng Vấn</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Quản lý các phiên phỏng vấn và tham gia video call với học viên
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Phiên Phỏng Vấn</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Quản lý các phiên phỏng vấn và tham gia video call với học viên
+          </p>
+        </div>
+        <ReloadButton
+          onReload={async () => {
+            await Promise.all([refetchSessions(), refetchFeedbacks()]);
+          }}
+          isLoading={sessionsRefetching || feedbacksRefetching}
+          tooltip="Tải lại danh sách phiên phỏng vấn"
+        />
       </div>
 
       {/* Stats */}

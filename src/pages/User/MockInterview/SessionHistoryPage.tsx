@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -152,8 +153,18 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
 export function SessionHistoryPage() {
   const navigate = useNavigate();
   const [pageSize, setPageSize] = useState(10);
-  const { data: sessions = [], isLoading: sessionsLoading } = useUserSessions();
-  const { data: reviews = [], isLoading: reviewsLoading } = useMentorReviews();
+  const {
+    data: sessions = [],
+    isLoading: sessionsLoading,
+    isRefetching: sessionsRefetching,
+    refetch: refetchSessions,
+  } = useUserSessions();
+  const {
+    data: reviews = [],
+    isLoading: reviewsLoading,
+    isRefetching: reviewsRefetching,
+    refetch: refetchReviews,
+  } = useMentorReviews();
 
   const isLoading = sessionsLoading || reviewsLoading;
 
@@ -203,12 +214,21 @@ export function SessionHistoryPage() {
             Xem lại các phiên phỏng vấn và viết đánh giá cho mentor
           </p>
         </div>
-        <Button
-          onClick={() => navigate("/user/mock-interview/schedule")}
-          className="gap-2 bg-[#0047AB] hover:bg-[#003d91]">
-          <Video className="h-4 w-4" />
-          Đặt lịch phỏng vấn mới
-        </Button>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={async () => {
+              await Promise.all([refetchSessions(), refetchReviews()]);
+            }}
+            isLoading={sessionsRefetching || reviewsRefetching}
+            tooltip="Tải lại lịch sử phiên"
+          />
+          <Button
+            onClick={() => navigate("/user/mock-interview/schedule")}
+            className="gap-2 bg-[#0047AB] hover:bg-[#003d91]">
+            <Video className="h-4 w-4" />
+            Đặt lịch phỏng vấn mới
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

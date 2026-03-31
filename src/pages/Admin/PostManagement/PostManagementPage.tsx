@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { formatDate } from "@/lib/formatting";
 
+import { ReloadButton } from "@/components/shared";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,6 +183,11 @@ export function PostManagementPage() {
             </SelectContent>
           </Select>
         </div>
+        <ReloadButton
+          onReload={loadPosts}
+          isLoading={loading}
+          tooltip="Tải lại danh sách bài viết"
+        />
       </div>
 
       {/* Table */}

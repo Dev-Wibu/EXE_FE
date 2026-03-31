@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { formatDate } from "@/lib/formatting";
 
+import { ReloadButton } from "@/components/shared";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -241,11 +242,17 @@ export function PostModerationPage() {
           </Select>
         </div>
 
-        {/* Pending count */}
-        <div className="flex items-center gap-2 rounded-lg bg-yellow-100 px-4 py-2 dark:bg-yellow-900/30">
-          <span className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
-            {statusCounts.DRAFT} bài viết chờ duyệt
-          </span>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadPosts}
+            isLoading={loading}
+            tooltip="Tải lại danh sách bài viết"
+          />
+          <div className="flex items-center gap-2 rounded-lg bg-yellow-100 px-4 py-2 dark:bg-yellow-900/30">
+            <span className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+              {statusCounts.DRAFT} bài viết chờ duyệt
+            </span>
+          </div>
         </div>
       </div>
 

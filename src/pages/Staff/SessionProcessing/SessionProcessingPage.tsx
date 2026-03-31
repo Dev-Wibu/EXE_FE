@@ -2,6 +2,7 @@ import { Calendar, Check, Clock, Eye, Search, Video, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { PaginationControl } from "@/components/shared";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,7 +53,7 @@ export function SessionProcessingPage() {
   } | null>(null);
 
   // Fetch all sessions
-  const { data: sessions = [], isLoading, isError, refetch } = useSessions();
+  const { data: sessions = [], isLoading, isError, isRefetching, refetch } = useSessions();
 
   // Mutation for approve/reject
   const updateStatusMutation = useUpdateSessionStatus();
@@ -175,6 +176,13 @@ export function SessionProcessingPage() {
               <SelectItem value="CANCELED">Đã hủy</SelectItem>
             </SelectContent>
           </Select>
+          <ReloadButton
+            onReload={async () => {
+              await refetch();
+            }}
+            isLoading={isRefetching}
+            tooltip="Tải lại danh sách phiên"
+          />
         </div>
 
         {/* Stats */}

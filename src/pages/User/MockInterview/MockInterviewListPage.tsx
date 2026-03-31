@@ -2,6 +2,7 @@ import { Calendar, Clock, LogIn, Search, User as UserIcon, Users, Video } from "
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { ReloadButton } from "@/components/shared";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { getMockInterviewStatusBadge } from "@/lib/status-utils";
 export function MockInterviewListPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: sessions = [], isLoading } = useUserSessions();
+  const { data: sessions = [], isLoading, isRefetching, refetch } = useUserSessions();
 
   // Current time state for joinTime-based blocking (updates every 30s)
   const [now, setNow] = useState(() => Date.now());
@@ -108,14 +109,23 @@ export function MockInterviewListPage() {
             Danh sách các phiên sắp diễn ra hoặc đang diễn ra
           </p>
         </div>
-        <div className="relative w-80">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <Input
-            type="text"
-            placeholder="Tìm kiếm theo tên, mentor..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+        <div className="flex items-center gap-2">
+          <div className="relative w-80">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm theo tên, mentor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <ReloadButton
+            onReload={async () => {
+              await refetch();
+            }}
+            isLoading={isRefetching}
+            tooltip="Tải lại danh sách phiên"
           />
         </div>
       </div>

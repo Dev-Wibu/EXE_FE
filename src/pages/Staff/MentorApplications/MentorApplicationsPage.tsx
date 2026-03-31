@@ -1,8 +1,9 @@
 import { CheckCircle, Loader2, Search, UserCheck, XCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -46,27 +47,27 @@ export function MentorApplicationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
 
+  const loadMentors = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await mentorManager.getAll();
+      if (result.success && result.data) {
+        // Handle both array and paginated response
+        const mentorsList = Array.isArray(result.data) ? result.data : result.data.data || [];
+        setMentors(mentorsList);
+      }
+    } catch (error) {
+      console.error("Failed to load mentors:", error);
+      toast.error("Không thể tải danh sách mentor");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Load mentors from API
   useEffect(() => {
-    const loadMentors = async () => {
-      setIsLoading(true);
-      try {
-        const result = await mentorManager.getAll();
-        if (result.success && result.data) {
-          // Handle both array and paginated response
-          const mentorsList = Array.isArray(result.data) ? result.data : result.data.data || [];
-          setMentors(mentorsList);
-        }
-      } catch (error) {
-        console.error("Failed to load mentors:", error);
-        toast.error("Không thể tải danh sách mentor");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadMentors();
-  }, []);
+  }, [loadMentors]);
 
   // Filter mentors based on search and status
   const filteredMentors = useMemo(() => {
@@ -203,10 +204,16 @@ export function MentorApplicationsPage() {
           </Select>
         </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 dark:bg-slate-800">
-          <UserCheck className="h-5 w-5 text-green-600" />
-          <span className="text-sm font-medium">{pendingCount} đơn chờ duyệt</span>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadMentors}
+            isLoading={isLoading}
+            tooltip="Tải lại danh sách đăng ký mentor"
+          />
+          <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 dark:bg-slate-800">
+            <UserCheck className="h-5 w-5 text-green-600" />
+            <span className="text-sm font-medium">{pendingCount} đơn chờ duyệt</span>
+          </div>
         </div>
       </div>
 

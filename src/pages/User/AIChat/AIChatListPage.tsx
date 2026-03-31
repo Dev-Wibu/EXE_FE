@@ -1,7 +1,8 @@
 import { MessageCircle, Plus, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { ReloadButton } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,24 +14,24 @@ export function AIChatListPage() {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadChatSessions = async () => {
-      setLoading(true);
-      try {
-        const response = await chatManager.getChatSessions();
-        if (response.success && response.data) {
-          const sessions = Array.isArray(response.data) ? response.data : [];
-          setChatSessions(sessions);
-        }
-      } catch (error) {
-        console.error("Error loading chat sessions:", error);
-      } finally {
-        setLoading(false);
+  const loadChatSessions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await chatManager.getChatSessions();
+      if (response.success && response.data) {
+        const sessions = Array.isArray(response.data) ? response.data : [];
+        setChatSessions(sessions);
       }
-    };
-
-    loadChatSessions();
+    } catch (error) {
+      console.error("Error loading chat sessions:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadChatSessions();
+  }, [loadChatSessions]);
 
   const handleNewChat = () => {
     // Navigate to a new chat conversation
@@ -72,10 +73,17 @@ export function AIChatListPage() {
               Xem lại các cuộc trò chuyện trước đây của bạn
             </p>
           </div>
-          <Button onClick={handleNewChat} size="lg" className="gap-2">
-            <Plus className="h-5 w-5" />
-            Bắt đầu cuộc trò chuyện mới
-          </Button>
+          <div className="flex items-center gap-2">
+            <ReloadButton
+              onReload={loadChatSessions}
+              isLoading={loading}
+              tooltip="Tải lại lịch sử trò chuyện"
+            />
+            <Button onClick={handleNewChat} size="lg" className="gap-2">
+              <Plus className="h-5 w-5" />
+              Bắt đầu cuộc trò chuyện mới
+            </Button>
+          </div>
         </div>
 
         {/* Chat History Cards */}

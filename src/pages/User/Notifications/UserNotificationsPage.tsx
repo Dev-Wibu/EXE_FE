@@ -6,13 +6,14 @@
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
 
 import { NotificationList } from "@/components/notification";
+import { ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMarkAsRead, useNotifications } from "@/hooks/useNotification";
 import { useNotificationStore } from "@/stores/notificationStore";
 
 export function UserNotificationsPage() {
-  const { data: notifications = [], isLoading } = useNotifications();
+  const { data: notifications = [], isLoading, isRefetching, refetch } = useNotifications();
   const { mutate: markAsRead } = useMarkAsRead();
   const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
 
@@ -43,12 +44,21 @@ export function UserNotificationsPage() {
             Quản lý tất cả thông báo của bạn
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Button variant="outline" onClick={handleMarkAllRead} className="gap-2">
-            <CheckCheck className="h-4 w-4" />
-            Đánh dấu tất cả đã đọc
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={async () => {
+              await refetch();
+            }}
+            isLoading={isRefetching}
+            tooltip="Tải lại thông báo"
+          />
+          {unreadCount > 0 && (
+            <Button variant="outline" onClick={handleMarkAllRead} className="gap-2">
+              <CheckCheck className="h-4 w-4" />
+              Đánh dấu tất cả đã đọc
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}

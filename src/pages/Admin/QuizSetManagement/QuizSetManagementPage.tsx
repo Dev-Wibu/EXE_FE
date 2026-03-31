@@ -1,7 +1,7 @@
 import { Eye, Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PaginationControl } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -147,7 +147,7 @@ export function QuizSetManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <div className="relative w-96">
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
@@ -158,6 +158,7 @@ export function QuizSetManagementPage() {
             className="pl-10"
           />
         </div>
+        <ReloadButton onReload={loadData} isLoading={loading} tooltip="Tải lại danh sách quiz" />
       </div>
 
       {/* Table */}

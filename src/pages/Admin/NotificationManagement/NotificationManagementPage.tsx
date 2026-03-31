@@ -4,9 +4,9 @@
  */
 
 import { Bell, Eye, Plus, Search, Send, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import { PaginationControl, SortButton } from "@/components/shared";
+import { PaginationControl, ReloadButton, SortButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,12 @@ export function NotificationManagementPage() {
   const queryClient = useQueryClient();
 
   // Fetch all notifications
-  const { data: allNotifications = [], isLoading: notificationsLoading } = useQuery({
+  const {
+    data: allNotifications = [],
+    isLoading: notificationsLoading,
+    isRefetching: notificationsRefetching,
+    refetch: refetchNotifications,
+  } = useQuery({
     queryKey: ["admin", "notifications", "all"],
     queryFn: async (): Promise<Notification[]> => {
       const response = await notificationManager.getAll();
@@ -69,7 +74,12 @@ export function NotificationManagementPage() {
   });
 
   // Fetch all users for sending notifications
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    isRefetching: usersRefetching,
+    refetch: refetchUsers,
+  } = useQuery({
     queryKey: ["admin", "users", "all"],
     queryFn: async () => {
       const response = await usersAdminManager.getAll();
@@ -101,6 +111,11 @@ export function NotificationManagementPage() {
   });
 
   const isLoading = notificationsLoading || usersLoading;
+  const isReloading = notificationsRefetching || usersRefetching;
+
+  const handleReload = useCallback(async () => {
+    await Promise.all([refetchNotifications(), refetchUsers()]);
+  }, [refetchNotifications, refetchUsers]);
 
   // Filter notifications
   const filteredNotifications = useMemo(() => {
@@ -207,10 +222,17 @@ export function NotificationManagementPage() {
             Xem tất cả thông báo và gửi thông báo hệ thống
           </p>
         </div>
-        <Button onClick={handleCreateOpen} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Gửi thông báo
-        </Button>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={handleReload}
+            isLoading={isReloading}
+            tooltip="Tải lại dữ liệu thông báo"
+          />
+          <Button onClick={handleCreateOpen} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Gửi thông báo
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

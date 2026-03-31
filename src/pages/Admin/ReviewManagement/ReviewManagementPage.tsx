@@ -7,7 +7,7 @@ import { Eye, Search, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ReviewStats } from "@/components/review";
-import { PaginationControl, SortButton } from "@/components/shared";
+import { PaginationControl, ReloadButton, SortButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ import { useSortable } from "@/hooks/useSortable";
 import { toast } from "sonner";
 
 export function ReviewManagementPage() {
-  const { data: reviews = [], isLoading } = useMentorReviews();
+  const { data: reviews = [], isLoading, isRefetching, refetch } = useMentorReviews();
   const { mutate: deleteReview, isPending: isDeleting } = useDeleteMentorReview();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,7 +175,16 @@ export function ReviewManagementPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Bộ lọc</CardTitle>
+            <ReloadButton
+              onReload={async () => {
+                await refetch();
+              }}
+              isLoading={isRefetching}
+              tooltip="Tải lại danh sách đánh giá"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">

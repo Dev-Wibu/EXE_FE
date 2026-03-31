@@ -1,8 +1,8 @@
 import { Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { PaginationControl } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,17 +26,24 @@ export function PostListPage() {
   const [tagFilter, setTagFilter] = useState("");
   const [majorFilter, setMajorFilter] = useState("all");
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      const result = await postManager.getPublished();
-      if (result.success && result.data) {
-        setPosts(extractDataArray<Post>(result));
-      }
-      setLoading(false);
-    };
-    fetchPosts();
+  const loadPosts = useCallback(async () => {
+    setLoading(true);
+    const result = await postManager.getPublished();
+    if (result.success && result.data) {
+      setPosts(extractDataArray<Post>(result));
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadPosts();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loadPosts]);
 
   const allMajors = [
     ...new Set(posts.map((p) => p.major?.name || p.major?.majorName).filter(Boolean)),
@@ -74,10 +81,17 @@ export function PostListPage() {
           <h1 className="text-2xl font-bold">Cộng đồng</h1>
           <p className="text-muted-foreground">Bài viết</p>
         </div>
-        <Button onClick={() => navigate("community/create")}>
-          <Plus className="mr-1 h-4 w-4" />
-          Tạo bài viết mới
-        </Button>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadPosts}
+            isLoading={loading}
+            tooltip="Tải lại danh sách bài viết"
+          />
+          <Button onClick={() => navigate("community/create")}>
+            <Plus className="mr-1 h-4 w-4" />
+            Tạo bài viết mới
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">

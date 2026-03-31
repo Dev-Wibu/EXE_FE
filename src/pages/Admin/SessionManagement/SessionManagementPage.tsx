@@ -1,7 +1,7 @@
 import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PaginationControl } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -274,11 +274,17 @@ export function SessionManagementPage() {
           </Select>
         </div>
 
-        {/* Create Button */}
-        <Button onClick={handleCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Tạo Buổi Học
-        </Button>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadSessions}
+            isLoading={loading}
+            tooltip="Tải lại danh sách phiên"
+          />
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Tạo Buổi Học
+          </Button>
+        </div>
       </div>
 
       {/* Table */}

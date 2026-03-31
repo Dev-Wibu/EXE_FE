@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+import { ReloadButton } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
@@ -299,6 +300,7 @@ export function PracticeSetsPage() {
               <SelectItem value="MIDDLE">Middle</SelectItem>
             </SelectContent>
           </Select>
+          <ReloadButton onReload={loadData} isLoading={loading} tooltip="Tải lại bộ luyện tập" />
         </div>
       </div>
 

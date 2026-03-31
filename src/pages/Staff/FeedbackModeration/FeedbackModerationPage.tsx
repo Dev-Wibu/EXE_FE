@@ -6,6 +6,7 @@
 import { AlertTriangle, Eye, Flag, MessageSquare, Search } from "lucide-react";
 import { useState } from "react";
 
+import { ReloadButton } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ const LOW_RATING_THRESHOLD = 2;
 const HIGH_RATING_MIN = 4;
 
 export function FeedbackModerationPage() {
-  const { data: feedbacks = [], isLoading } = useMentorFeedbacks();
+  const { data: feedbacks = [], isLoading, isRefetching, refetch } = useMentorFeedbacks();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("low"); // Default to low ratings
@@ -146,7 +147,16 @@ export function FeedbackModerationPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Bộ lọc</CardTitle>
+            <ReloadButton
+              onReload={async () => {
+                await refetch();
+              }}
+              isLoading={isRefetching}
+              tooltip="Tải lại danh sách phản hồi"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">

@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 
 import { FeedbackList, FeedbackStats } from "@/components/feedback";
 import { PaginationControl } from "@/components/shared/PaginationControl";
+import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMentorFeedbacksByUser } from "@/hooks/useMentorFeedback";
@@ -18,7 +19,12 @@ import { useAuthStore } from "@/stores/authStore";
 export function UserFeedbackListPage() {
   const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(10);
-  const { data: feedbacks = [], isLoading } = useMentorFeedbacksByUser(user?.id || 0);
+  const {
+    data: feedbacks = [],
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useMentorFeedbacksByUser(user?.id || 0);
 
   // Apply sorting
   const { sortedData, getSortProps } = useSortable(feedbacks);
@@ -37,13 +43,22 @@ export function UserFeedbackListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          Phản Hồi Từ Mentor
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Xem các phản hồi từ mentor sau mỗi phiên phỏng vấn
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            Phản Hồi Từ Mentor
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Xem các phản hồi từ mentor sau mỗi phiên phỏng vấn
+          </p>
+        </div>
+        <ReloadButton
+          onReload={async () => {
+            await refetch();
+          }}
+          isLoading={isRefetching}
+          tooltip="Tải lại danh sách phản hồi"
+        />
       </div>
 
       {/* Stats */}

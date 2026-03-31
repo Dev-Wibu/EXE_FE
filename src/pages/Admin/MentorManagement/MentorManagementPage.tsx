@@ -1,7 +1,7 @@
 import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PaginationControl } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -219,11 +219,17 @@ export function MentorManagementPage() {
           </Select>
         </div>
 
-        {/* Create Button */}
-        <Button onClick={handleCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Thêm Mentor
-        </Button>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadMentors}
+            isLoading={loading}
+            tooltip="Tải lại danh sách mentor"
+          />
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Thêm Mentor
+          </Button>
+        </div>
       </div>
 
       {/* Table */}

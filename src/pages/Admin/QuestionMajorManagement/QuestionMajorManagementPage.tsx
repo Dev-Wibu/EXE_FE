@@ -1,6 +1,7 @@
 import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractDataArray } from "@/lib/utils";
@@ -161,11 +162,17 @@ export function QuestionMajorManagementPage() {
           />
         </div>
 
-        {/* Create Button */}
-        <Button onClick={handleCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Thêm Chuyên Ngành
-        </Button>
+        <div className="flex items-center gap-2">
+          <ReloadButton
+            onReload={loadMajors}
+            isLoading={loading}
+            tooltip="Tải lại danh sách chuyên ngành"
+          />
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Thêm Chuyên Ngành
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
