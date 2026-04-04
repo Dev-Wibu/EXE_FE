@@ -9,6 +9,8 @@ import type {
   BaseManager,
   PaginatedResponse,
   PaginationParams,
+  SchemaCandidateProfile,
+  SchemaUserInfo,
   User,
 } from "@/interfaces";
 
@@ -18,6 +20,7 @@ import {
   buildEndpoint,
   createApiInstance,
 } from "@/constants/api.config";
+import { normalizeMajor } from "@/constants/majors";
 import * as usersMock from "@/mocks/users-admin.mock";
 
 // Re-export User type for convenience
@@ -39,13 +42,7 @@ export type { User } from "@/interfaces";
  *   "major": "Computer Science"
  * }
  */
-export interface UserInfo {
-  id?: number;
-  name?: string;
-  email?: string;
-  password?: string;
-  university?: string;
-  major?: string;
+export type UserInfo = Partial<SchemaUserInfo> & {
   /** Role field - not in official UserInfo schema but may be accepted by backend */
   role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
   /** isActive field - for soft delete/toggle operations */
@@ -54,7 +51,7 @@ export interface UserInfo {
   public_id?: string;
   /** Cloudinary public_id for CV - required for update operations to replace/delete old files */
   cv_public_id?: string;
-}
+};
 
 /**
  * Extended user data for creation with file uploads
@@ -155,7 +152,7 @@ export class UsersAdminManager implements BaseManager<User> {
         role: (_data as User).role || "USER",
         isActive: (_data as User).isActive !== false,
         university: _data.university,
-        major: _data.major,
+        major: normalizeMajor(_data.major),
       };
       usersMock.mockUsers.push(newUser);
       return {
@@ -192,7 +189,7 @@ export class UsersAdminManager implements BaseManager<User> {
         email: _data.email.trim(),
         password: _data.password,
         university: _data.university,
-        major: _data.major,
+        major: normalizeMajor(_data.major),
         // IMPORTANT: Include public_id fields for Cloudinary file management
         // Backend requires public_id to be present when files are uploaded.
         // For new users creating with files, send empty string "" as placeholder.
@@ -307,7 +304,7 @@ export class UsersAdminManager implements BaseManager<User> {
         email: _data.email?.trim(),
         password: _data.password,
         university: _data.university,
-        major: _data.major,
+        major: normalizeMajor(_data.major),
         // Include role if provided - backend may accept this even though not in UserInfo schema
         role: _data.role,
         // Include Cloudinary public_id for avatar - required for update/delete operations
@@ -492,9 +489,7 @@ export class UsersAdminManager implements BaseManager<User> {
   async uploadCv(
     userId: string | number,
     cvFile: File
-  ): Promise<
-    ApiResponse<import("../../schema-from-be").components["schemas"]["CandidateProfile"]>
-  > {
+  ): Promise<ApiResponse<SchemaCandidateProfile>> {
     if (this.mode === "mock") {
       // In mock mode, simulate CV upload
       return {

@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCurrency, formatDate } from "@/lib/formatting";
+import { formatDate } from "@/lib/formatting";
 
 import type { MentorProfileData } from "./types";
 
@@ -349,32 +349,18 @@ export function MentorProfileSection({
             </div>
           </div>
 
-          {/* Rate - Editable */}
+          {/* Average Rating - Read-only from backend */}
           <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
               <Star className="h-5 w-5 text-green-500" />
             </div>
             <div className="flex-1">
               <Label className="text-sm text-gray-500 dark:text-slate-400">
-                Giá mỗi phiên (VND)
+                Đánh giá trung bình
               </Label>
-              {isEditing ? (
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.rate ?? ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    onInputChange("rate", value === "" ? 0 : parseInt(value));
-                  }}
-                  className="mt-1"
-                  placeholder="500000"
-                />
-              ) : (
-                <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
-                  {formatCurrency(mentorProfile.rate || 0)}
-                </p>
-              )}
+              <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
+                {mentorProfile.averageRating ? mentorProfile.averageRating.toFixed(1) : "0.0"}/5
+              </p>
             </div>
           </div>
         </div>

@@ -3,6 +3,18 @@
  * These types are used across the application for consistency
  */
 
+import type { components } from "../../schema-from-be";
+
+export type SchemaUser = components["schemas"]["User"];
+export type SchemaMentor = components["schemas"]["Mentor"];
+export type SchemaMentorResponse = components["schemas"]["MentorResponse"];
+export type SchemaUserInfo = components["schemas"]["UserInfo"];
+export type SchemaMentorInfo = components["schemas"]["MentorInfo"];
+export type SchemaMembershipPlan = components["schemas"]["MemberShipPlan"];
+export type SchemaCandidateProfile = components["schemas"]["CandidateProfile"];
+export type UserSubscriptionResponse = components["schemas"]["UserSubscriptionResponse"];
+export type TransactionEntity = components["schemas"]["Transaction"];
+
 /**
  * User role enum
  */
@@ -12,46 +24,17 @@ export type UserRole = "MENTOR" | "ADMIN" | "STAFF" | "USER";
  * User type based on backend schema
  * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
  */
-export interface User {
-  id?: number;
-  name?: string;
-  email?: string;
-  password?: string;
+export interface User extends Omit<SchemaUser, "role"> {
   role?: UserRole;
-  isActive?: boolean;
-  avatarUrl?: string;
-  public_id?: string;
-  university?: string;
-  major?: string;
-  cvUrl?: string;
-  cv_public_id?: string;
 }
 
 /**
  * Mentor type based on backend schema
  */
-export interface Mentor {
-  id?: number;
-  name?: string;
-  email?: string;
-  password?: string;
+export interface Mentor extends Omit<SchemaMentor, "role">, Partial<SchemaMentorResponse> {
   role?: UserRole;
-  bio?: string;
-  avatarUrl?: string;
-  public_id?: string;
-  expertise?: string;
-  yearsOfExperience?: number;
-  linkedInUrl?: string;
-  currentCompany?: string;
+  /** @deprecated Use averageRating from schema response */
   rate?: number;
-  identityImg?: string;
-  public_id_identity?: string;
-  degreeImg?: string;
-  public_id_degree?: string;
-  otherFile?: string;
-  public_id_other?: string;
-  totalSession?: number;
-  active?: boolean;
 }
 
 /**
@@ -60,13 +43,11 @@ export interface Mentor {
  * Updated: Removed role as UserInfo schema doesn't include it (2026-01-23)
  * UserInfo only contains: id, name, email, password, university, major
  */
-export interface UserFormData {
+export interface UserFormData extends Omit<SchemaUserInfo, "id" | "name" | "email"> {
   name: string;
   email: string;
-  password?: string;
-  university?: string;
-  major?: string;
   isActive?: boolean;
+  role?: UserRole;
   /** Cloudinary public_id for avatar - required for update operations */
   public_id?: string;
   /** Cloudinary public_id for CV - required for update operations */
@@ -77,15 +58,9 @@ export interface UserFormData {
  * Mentor form data for create/update operations
  * Updated to match MentorInfo schema (doesn't include rate)
  */
-export interface MentorFormData {
+export interface MentorFormData extends Omit<SchemaMentorInfo, "id" | "name" | "email"> {
   name: string;
   email: string;
-  password?: string;
-  bio?: string;
-  expertise?: string;
-  yearsOfExperience?: number;
-  linkedInUrl?: string;
-  currentCompany?: string;
   active?: boolean;
 }
 

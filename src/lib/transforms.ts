@@ -4,6 +4,7 @@
  * Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
  */
 
+import { normalizeMajor } from "@/constants/majors";
 import type { Mentor, Session, User, UserRole } from "@/interfaces/schema.types";
 
 // ==================== User Transforms ====================
@@ -25,7 +26,7 @@ export const transformUserCreateRequest = (formData: UserCreateFormData) => ({
   email: formData.email?.trim(),
   password: formData.password?.trim(),
   university: formData.university?.trim(),
-  major: formData.major?.trim(),
+  major: normalizeMajor(formData.major),
 });
 
 /**
@@ -42,7 +43,7 @@ export const transformUserUpdateRequest = (
   email: formData.email?.trim() || existingUser?.email,
   role: formData.role || existingUser?.role,
   university: formData.university?.trim() || existingUser?.university,
-  major: formData.major?.trim() || existingUser?.major,
+  major: normalizeMajor(formData.major) || existingUser?.major,
 });
 
 // ==================== Mentor Transforms ====================

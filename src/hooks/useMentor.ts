@@ -26,8 +26,8 @@ export const useMentors = () => {
         if (Array.isArray(response.data)) {
           return response.data;
         }
-        if ("items" in response.data && Array.isArray(response.data.items)) {
-          return response.data.items;
+        if ("data" in response.data && Array.isArray(response.data.data)) {
+          return response.data.data;
         }
       }
       return [];

@@ -315,7 +315,7 @@ export function MockInterviewSchedulePage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        {renderStars(mentor.rate)}
+                        {renderStars(mentor.averageRating ?? mentor.rate)}
                         {mentor.expertise && (
                           <div className="flex flex-wrap gap-1">
                             {mentor.expertise.split(",").map((skill) => (
@@ -540,7 +540,7 @@ export function MockInterviewSchedulePage() {
                       <p className="text-sm text-slate-500">
                         {selectedMentor.currentCompany || "Chuyên gia phỏng vấn"}
                       </p>
-                      {renderStars(selectedMentor.rate)}
+                      {renderStars(selectedMentor.averageRating ?? selectedMentor.rate)}
                     </div>
                   </div>
                 )}

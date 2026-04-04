@@ -44,7 +44,7 @@ export function MentorAccountPage() {
           yearsOfExperience: mentorData.yearsOfExperience || 0,
           linkedInUrl: mentorData.linkedInUrl || "",
           currentCompany: mentorData.currentCompany || "",
-          rate: mentorData.rate || 0,
+          averageRating: mentorData.averageRating ?? mentorData.rate ?? 0,
           identityImg: mentorData.identityImg || null,
           public_id_identity: mentorData.public_id_identity || null,
           degreeImg: mentorData.degreeImg || null,
@@ -67,7 +67,7 @@ export function MentorAccountPage() {
           yearsOfExperience: 0,
           linkedInUrl: "",
           currentCompany: "",
-          rate: 0,
+          averageRating: 0,
           totalSession: 0,
           active: true,
           createdAt: new Date().toISOString(),
@@ -88,7 +88,7 @@ export function MentorAccountPage() {
           yearsOfExperience: 0,
           linkedInUrl: "",
           currentCompany: "",
-          rate: 0,
+          averageRating: 0,
           totalSession: 0,
           active: true,
           createdAt: new Date().toISOString(),
@@ -125,7 +125,7 @@ export function MentorAccountPage() {
       yearsOfExperience: mentorProfile.yearsOfExperience,
       linkedInUrl: mentorProfile.linkedInUrl,
       currentCompany: mentorProfile.currentCompany,
-      rate: mentorProfile.rate,
+      averageRating: mentorProfile.averageRating,
     });
     setIsEditing(true);
   };
@@ -169,7 +169,6 @@ export function MentorAccountPage() {
         yearsOfExperience: formData.yearsOfExperience,
         linkedInUrl: formData.linkedInUrl,
         currentCompany: formData.currentCompany,
-        rate: formData.rate,
         ...(mentorProfile.public_id ? { public_id: mentorProfile.public_id } : {}),
       });
 

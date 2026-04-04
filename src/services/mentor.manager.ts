@@ -10,6 +10,8 @@ import type {
   Mentor,
   PaginatedResponse,
   PaginationParams,
+  SchemaMentorInfo,
+  SchemaMentorResponse,
 } from "@/interfaces";
 
 import {
@@ -23,21 +25,7 @@ import * as mentorMock from "@/mocks/mentors.mock";
 // Re-export Mentor type for convenience
 export type { Mentor } from "@/interfaces";
 
-/**
- * MentorInfo type for create operations (matches backend schema)
- * From schema-from-be.d.ts components["schemas"]["MentorInfo"]
- */
-export interface MentorInfo {
-  id?: number;
-  name?: string;
-  email?: string;
-  password?: string;
-  bio?: string;
-  expertise?: string;
-  yearsOfExperience?: number;
-  linkedInUrl?: string;
-  currentCompany?: string;
-}
+export type MentorInfo = SchemaMentorInfo;
 
 /**
  * Extended mentor data for creation with file uploads
@@ -79,6 +67,7 @@ export class MentorManager implements BaseManager<Mentor> {
       expertise: mockMentor.skills.join(", "),
       currentCompany: mockMentor.company,
       totalSession: mockMentor.totalSessions,
+      averageRating: mockMentor.rating,
       active: true,
       avatarUrl: mockMentor.avatar || undefined,
     };
@@ -111,10 +100,12 @@ export class MentorManager implements BaseManager<Mentor> {
     }
 
     try {
-      const response = await this.api.get(API_ENDPOINTS.MENTOR.LIST, { params: _params });
+      const response = await this.api.get<
+        SchemaMentorResponse[] | PaginatedResponse<SchemaMentorResponse>
+      >(API_ENDPOINTS.MENTOR.LIST, { params: _params });
       return {
         success: true,
-        data: response.data,
+        data: response.data as PaginatedResponse<Mentor> | Mentor[],
       };
     } catch (error) {
       return {
@@ -146,10 +137,10 @@ export class MentorManager implements BaseManager<Mentor> {
 
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, { id });
-      const response = await this.api.get(endpoint);
+      const response = await this.api.get<SchemaMentorResponse>(endpoint);
       return {
         success: true,
-        data: response.data,
+        data: response.data as Mentor,
       };
     } catch (error) {
       return {
@@ -180,7 +171,7 @@ export class MentorManager implements BaseManager<Mentor> {
         yearsOfExperience: _data.yearsOfExperience,
         linkedInUrl: _data.linkedInUrl,
         currentCompany: _data.currentCompany,
-        rate: (_data as Mentor).rate,
+        averageRating: (_data as Mentor).averageRating,
         totalSession: 0,
         active: (_data as Mentor).active !== false,
       };

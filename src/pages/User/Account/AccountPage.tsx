@@ -2,6 +2,7 @@ import { Crown, FileText, User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
+import { normalizeMajor } from "@/constants/majors";
 import { mockUserSettings, mockWallet, type UserSettings, type Wallet } from "@/mocks/user.mock";
 import { usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
@@ -199,7 +200,7 @@ export function AccountPage() {
         {
           name: formData.name,
           university: formData.university,
-          major: formData.major,
+          major: normalizeMajor(formData.major),
           // Include Cloudinary public_id for proper file management (only when present)
           ...(userProfile.public_id ? { public_id: userProfile.public_id } : {}),
           ...(userProfile.cv_public_id ? { cv_public_id: userProfile.cv_public_id } : {}),

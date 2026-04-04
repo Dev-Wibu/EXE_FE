@@ -9,6 +9,8 @@ export interface MajorOption {
   description?: string;
 }
 
+export type MajorValue = "CNTT" | "Marketing";
+
 /**
  * Available major options for the application
  * Only Computer Science and Marketing as per requirements
@@ -53,4 +55,14 @@ export const getMajorDescription = (value: string): string => {
  */
 export const isValidMajor = (value: string): boolean => {
   return MAJOR_OPTIONS.some((option) => option.value === value);
+};
+
+/**
+ * Normalize dynamic major input to backend-supported enum values.
+ */
+export const normalizeMajor = (value?: string | null): MajorValue | undefined => {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  return isValidMajor(trimmed) ? (trimmed as MajorValue) : undefined;
 };
