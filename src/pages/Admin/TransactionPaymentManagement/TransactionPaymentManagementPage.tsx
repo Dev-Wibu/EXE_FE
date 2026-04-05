@@ -2,10 +2,15 @@ import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { PaymentEntity, TransactionEntity } from "@/interfaces";
+import { buildSupportPayload, formatSupportPayload } from "@/lib";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
-import { paymentManager, transactionManager } from "@/services";
+import { paymentManager } from "@/services/payment.manager";
+import { transactionManager } from "@/services/transaction.manager";
+import { toast } from "sonner";
 
 type ActiveView = "transactions" | "payments";
+type TransactionTypeFilter = "all" | "in" | "out";
+type PaymentStatusFilter = "all" | "PENDING" | "COMPLETED" | "FAILED";
 
 const transactionTypeLabel = (value?: boolean) => {
   return value ? "Transfer In" : "Transfer Out";
@@ -17,6 +22,40 @@ export function TransactionPaymentManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [payments, setPayments] = useState<PaymentEntity[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState<TransactionTypeFilter>("all");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatusFilter>("all");
+  const [isCopyingSupportPayload, setIsCopyingSupportPayload] = useState(false);
+
+  const handleCopySupportPayload = useCallback(async () => {
+    if (isCopyingSupportPayload) {
+      return;
+    }
+
+    const targetOrderCode = searchKeyword.trim();
+    if (!targetOrderCode) {
+      toast.info("Nhap orderCode vao o tim kiem de tao payload ho tro.");
+      return;
+    }
+
+    setIsCopyingSupportPayload(true);
+    try {
+      const payload = buildSupportPayload({
+        orderCode: targetOrderCode,
+        extra: {
+          scope: "admin-transaction-payment-management",
+          activeView,
+        },
+      });
+
+      await navigator.clipboard.writeText(formatSupportPayload(payload));
+      toast.success("Da sao chep payload ho tro theo orderCode.");
+    } catch {
+      toast.error("Khong the sao chep payload ho tro.");
+    } finally {
+      setIsCopyingSupportPayload(false);
+    }
+  }, [activeView, isCopyingSupportPayload, searchKeyword]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -29,9 +68,7 @@ export function TransactionPaymentManagementPage() {
 
     if (!txResult.success || !paymentResult.success) {
       setError(
-        txResult.error ||
-          paymentResult.error ||
-          "Khong the tai du lieu skeleton transaction/payment."
+        txResult.error || paymentResult.error || "Khong the tai du lieu transaction/payment."
       );
       setTransactions(txResult.data || []);
       setPayments(paymentResult.data || []);
@@ -57,14 +94,49 @@ export function TransactionPaymentManagementPage() {
   const transactionCount = transactions.length;
   const paymentCount = payments.length;
 
+  const normalizedSearch = searchKeyword.trim().toLowerCase();
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => {
+      const textMatch =
+        normalizedSearch.length === 0 ||
+        (tx.transactionCode || "").toLowerCase().includes(normalizedSearch) ||
+        (tx.description || "").toLowerCase().includes(normalizedSearch);
+
+      const typeMatch =
+        transactionTypeFilter === "all" ||
+        (transactionTypeFilter === "in" && tx.transactionType === true) ||
+        (transactionTypeFilter === "out" && tx.transactionType === false);
+
+      return textMatch && typeMatch;
+    });
+  }, [normalizedSearch, transactionTypeFilter, transactions]);
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter((payment) => {
+      const textMatch =
+        normalizedSearch.length === 0 ||
+        (payment.transactionCode || "").toLowerCase().includes(normalizedSearch) ||
+        (payment.description || "").toLowerCase().includes(normalizedSearch);
+
+      const statusMatch =
+        paymentStatusFilter === "all" || payment.status?.toUpperCase() === paymentStatusFilter;
+
+      return textMatch && statusMatch;
+    });
+  }, [normalizedSearch, paymentStatusFilter, payments]);
+
+  const visibleTransactionCount = filteredTransactions.length;
+  const visiblePaymentCount = filteredPayments.length;
+
   const totalTransactionAmount = useMemo(
-    () => transactions.reduce((acc, item) => acc + (item.amount || 0), 0),
-    [transactions]
+    () => filteredTransactions.reduce((acc, item) => acc + (item.amount || 0), 0),
+    [filteredTransactions]
   );
 
   const totalPaymentAmount = useMemo(
-    () => payments.reduce((acc, item) => acc + (item.amount || 0), 0),
-    [payments]
+    () => filteredPayments.reduce((acc, item) => acc + (item.amount || 0), 0),
+    [filteredPayments]
   );
 
   return (
@@ -72,10 +144,10 @@ export function TransactionPaymentManagementPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
-            Transaction va Payment (Skeleton)
+            Transaction va Payment Management
           </h1>
           <p className="mt-2 font-['Inter'] text-sm text-slate-600 dark:text-slate-400">
-            Khung quan tri read-only cho ADMIN. Pha nay dung mock/stub data, chua ket noi API that.
+            Khung quan tri cho ADMIN/STAFF. Du lieu tai truc tiep tu API cho transaction/payment.
           </p>
         </div>
 
@@ -93,7 +165,10 @@ export function TransactionPaymentManagementPage() {
             Tong giao dich
           </p>
           <p className="mt-1 font-['Poppins'] text-2xl font-bold text-slate-800 dark:text-white">
-            {transactionCount}
+            {visibleTransactionCount}
+          </p>
+          <p className="font-['Inter'] text-xs text-slate-500 dark:text-slate-400">
+            / {transactionCount} ban ghi
           </p>
         </div>
 
@@ -102,7 +177,10 @@ export function TransactionPaymentManagementPage() {
             Tong thanh toan
           </p>
           <p className="mt-1 font-['Poppins'] text-2xl font-bold text-slate-800 dark:text-white">
-            {paymentCount}
+            {visiblePaymentCount}
+          </p>
+          <p className="font-['Inter'] text-xs text-slate-500 dark:text-slate-400">
+            / {paymentCount} ban ghi
           </p>
         </div>
 
@@ -147,6 +225,45 @@ export function TransactionPaymentManagementPage() {
         </button>
       </div>
 
+      <div className="mb-4 flex flex-wrap gap-3">
+        <input
+          value={searchKeyword}
+          onChange={(event) => setSearchKeyword(event.target.value)}
+          placeholder="Tim theo transaction code hoac description"
+          className="min-w-[280px] rounded-lg border border-slate-300 px-3 py-2 font-['Inter'] text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+        />
+
+        {activeView === "transactions" ? (
+          <select
+            value={transactionTypeFilter}
+            onChange={(event) =>
+              setTransactionTypeFilter(event.target.value as TransactionTypeFilter)
+            }
+            className="rounded-lg border border-slate-300 px-3 py-2 font-['Inter'] text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <option value="all">Tat ca type</option>
+            <option value="in">Transfer In</option>
+            <option value="out">Transfer Out</option>
+          </select>
+        ) : (
+          <select
+            value={paymentStatusFilter}
+            onChange={(event) => setPaymentStatusFilter(event.target.value as PaymentStatusFilter)}
+            className="rounded-lg border border-slate-300 px-3 py-2 font-['Inter'] text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <option value="all">Tat ca status</option>
+            <option value="PENDING">PENDING</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="FAILED">FAILED</option>
+          </select>
+        )}
+
+        <button
+          onClick={() => void handleCopySupportPayload()}
+          disabled={isCopyingSupportPayload}
+          className="rounded-lg border border-blue-300 px-3 py-2 font-['Inter'] text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20">
+          {isCopyingSupportPayload ? "Dang sao chep..." : "Sao chep payload ho tro"}
+        </button>
+      </div>
+
       {error && (
         <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4 font-['Inter'] text-sm text-amber-700 dark:border-amber-800/40 dark:bg-amber-900/10 dark:text-amber-300">
           {error}
@@ -177,7 +294,7 @@ export function TransactionPaymentManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-950">
-                {transactions.map((tx) => (
+                {filteredTransactions.map((tx) => (
                   <tr key={`${tx.transactionCode}-${tx.id}`}>
                     <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
                       {tx.transactionCode || "-"}
@@ -222,7 +339,7 @@ export function TransactionPaymentManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 bg-white dark:divide-slate-800 dark:bg-slate-950">
-                {payments.map((payment) => (
+                {filteredPayments.map((payment) => (
                   <tr key={`${payment.transactionCode}-${payment.id}`}>
                     <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
                       {payment.transactionCode || "-"}
@@ -246,15 +363,15 @@ export function TransactionPaymentManagementPage() {
           </div>
         )}
 
-        {!loading && activeView === "transactions" && transactions.length === 0 && (
+        {!loading && activeView === "transactions" && filteredTransactions.length === 0 && (
           <div className="px-4 py-8 text-center font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
-            Chua co transaction skeleton.
+            Khong co transaction nao phu hop bo loc hien tai.
           </div>
         )}
 
-        {!loading && activeView === "payments" && payments.length === 0 && (
+        {!loading && activeView === "payments" && filteredPayments.length === 0 && (
           <div className="px-4 py-8 text-center font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
-            Chua co payment skeleton.
+            Khong co payment nao phu hop bo loc hien tai.
           </div>
         )}
       </div>

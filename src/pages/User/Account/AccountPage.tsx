@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { normalizeMajor } from "@/constants/majors";
-import { mockUserSettings, mockWallet, type UserSettings, type Wallet } from "@/mocks/user.mock";
+import type { UserSettings, Wallet } from "@/mocks/user.mock";
 import { usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
@@ -12,11 +12,27 @@ import { MembershipTab, ProfileTab, SettingsTab, WalletTab } from "./AccountTabs
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
 
+const DEFAULT_WALLET: Wallet = {
+  balance: 0,
+  currency: "VND",
+  transactions: [],
+};
+
+const DEFAULT_SETTINGS: UserSettings = {
+  language: "vi",
+  notifications: {
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    marketingEmails: false,
+  },
+};
+
 export function AccountPage() {
   const { user: authUser, setUser } = useAuthStore();
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
-  const [wallet, setWallet] = useState<Wallet>(mockWallet);
-  const [settings] = useState<UserSettings>(mockUserSettings);
+  const [wallet, setWallet] = useState<Wallet>(DEFAULT_WALLET);
+  const [settings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "profile" | "wallet" | "settings" | "candidateProfile" | "membership"

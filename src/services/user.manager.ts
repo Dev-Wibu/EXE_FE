@@ -158,14 +158,6 @@ export class UserManager {
    * Get user wallet
    */
   async getWallet(): Promise<ApiResponse<Wallet>> {
-    if (this.mode === "mock") {
-      const wallet = await userMock.fetchWallet();
-      return {
-        success: true,
-        data: wallet,
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.USER.WALLET);
       return {
@@ -184,14 +176,6 @@ export class UserManager {
    * Deposit to wallet
    */
   async depositToWallet(amount: number): Promise<ApiResponse<Transaction>> {
-    if (this.mode === "mock") {
-      const result = await userMock.depositToWallet(amount);
-      return {
-        success: result.success,
-        data: result.transaction,
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.USER.DEPOSIT, { amount });
       return {
@@ -214,18 +198,6 @@ export class UserManager {
     userId: number | string,
     planId: number | string
   ): Promise<ApiResponse<User>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: {
-          id: Number(userId),
-          membershipPlan: {
-            id: Number(planId),
-          },
-        } as User,
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.USER.SUBSCRIBE, null, {
         params: {
@@ -253,27 +225,6 @@ export class UserManager {
   async getActiveSubscription(
     userId: number | string
   ): Promise<ApiResponse<UserSubscriptionResponse>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: {
-          planName: "FREE",
-          price: 0,
-          durationDays: 30,
-          maxAiInterview: 1,
-          maxPracticeSets: 2,
-          maxQuizSets: 2,
-          aiInterviewUsed: 0,
-          practiceSetUsed: 0,
-          quizSetUsed: 0,
-          aiInterviewRemaining: 1,
-          practiceSetRemaining: 2,
-          quizSetRemaining: 2,
-          active: true,
-        },
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.USER.ACTIVE_SUBSCRIPTION, {
         userId: Number(userId),

@@ -3,55 +3,274 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { UserSubscriptionResponse } from "@/interfaces";
-import type { PaymentOrderResolution } from "@/services";
-import { paymentManager, userManager } from "@/services";
+import {
+  addPaymentSupportLog,
+  buildSupportPayload,
+  formatSupportPayload,
+  getLatestRecoveryForUser,
+  getRecoveryByOrderCode,
+  type PaymentRecoveryContext,
+  upsertPaymentRecoveryContext,
+} from "@/lib";
+import { userManager } from "@/services";
+import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
-type ResolveState = "resolving" | "ready" | "resolve-failed" | "subscribing" | "subscribed";
+type ResolveState = "checking" | "ready" | "unmapped" | "subscribing" | "subscribed";
+const ACTIVATED_ORDERS_STORAGE_KEY = "inblue.payment.activated-orders";
 
 const isPaidStatus = (status: string): boolean => {
   const normalized = status.trim().toUpperCase();
   return normalized === "PAID" || normalized === "SUCCESS" || normalized === "COMPLETED";
 };
 
+const getActivatedOrderCodes = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(ACTIVATED_ORDERS_STORAGE_KEY);
+    if (!raw) {
+      return new Set();
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) {
+      return new Set();
+    }
+
+    return new Set(
+      parsed
+        .map((item) => (typeof item === "string" ? item.trim() : ""))
+        .filter((item) => item.length > 0)
+    );
+  } catch {
+    return new Set();
+  }
+};
+
+const markOrderAsActivated = (orderCode: string): void => {
+  const normalized = orderCode.trim();
+  if (!normalized) {
+    return;
+  }
+
+  const next = getActivatedOrderCodes();
+  next.add(normalized);
+  localStorage.setItem(ACTIVATED_ORDERS_STORAGE_KEY, JSON.stringify([...next]));
+};
+
 export function PaymentSuccessPage() {
+  const { user } = useAuthStore();
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const orderCode = query.get("orderCode")?.trim() || "";
   const status = query.get("status")?.trim() || "PAID";
   const source = query.get("source")?.trim() || "callback";
   const paid = isPaidStatus(status);
+  const currentUserId = Number(user?.id || 0);
 
-  const [resolveState, setResolveState] = useState<ResolveState>("resolving");
+  const [resolveState, setResolveState] = useState<ResolveState>("checking");
   const [resolveError, setResolveError] = useState<string>("");
   const [subscribeError, setSubscribeError] = useState<string>("");
-  const [resolution, setResolution] = useState<PaymentOrderResolution | null>(null);
+  const [recoveryContext, setRecoveryContext] = useState<PaymentRecoveryContext | null>(null);
+  const [supportCode, setSupportCode] = useState<string>("");
   const [subscription, setSubscription] = useState<UserSubscriptionResponse | null>(null);
+  const [isKnownActivatedOrder, setIsKnownActivatedOrder] = useState(false);
+  const [isCopyingPayload, setIsCopyingPayload] = useState(false);
+
+  const handleCopySupportPayload = useCallback(async () => {
+    if (isCopyingPayload) {
+      return;
+    }
+
+    setIsCopyingPayload(true);
+    try {
+      const payload = buildSupportPayload({
+        orderCode,
+        supportCode: supportCode || undefined,
+        context: recoveryContext,
+        extra: {
+          callbackStatus: status,
+          paid,
+          source,
+          pathname: window.location.pathname,
+        },
+      });
+
+      await navigator.clipboard.writeText(formatSupportPayload(payload));
+      toast.success("Da sao chep payload ho tro.");
+    } catch {
+      toast.error("Khong the sao chep payload ho tro.");
+    } finally {
+      setIsCopyingPayload(false);
+    }
+  }, [isCopyingPayload, orderCode, paid, recoveryContext, source, status, supportCode]);
 
   const handleResolveOrder = useCallback(async () => {
     setSubscribeError("");
     setSubscription(null);
+    setResolveError("");
+    setRecoveryContext(null);
 
     if (!orderCode) {
-      setResolveState("resolve-failed");
-      setResolveError("Callback thieu orderCode, khong the map sang userId/planId.");
-      setResolution(null);
+      const log = addPaymentSupportLog({
+        status: "UNMAPPED_ORDER",
+        message: "Callback success thieu orderCode.",
+        payload: {
+          source,
+          status,
+          paid,
+        },
+      });
+      setSupportCode(log.supportCode);
+      setResolveState("unmapped");
+      setResolveError(
+        "Callback thieu orderCode. He thong chan subscribe va yeu cau thanh toan lai."
+      );
       return;
     }
 
-    setResolveState("resolving");
-    setResolveError("");
-    setResolution(null);
+    setResolveState("checking");
 
-    const result = await paymentManager.resolveOrder(orderCode);
-    if (!result.success || !result.data) {
-      setResolveState("resolve-failed");
-      setResolveError(result.error || "Khong the resolve orderCode tu backend.");
+    if (!currentUserId) {
+      const log = addPaymentSupportLog({
+        orderCode,
+        status: "UNMAPPED_ORDER",
+        message: "Khong tim thay user session khi vao callback success.",
+        payload: {
+          source,
+          status,
+          paid,
+        },
+      });
+      setSupportCode(log.supportCode);
+      setResolveState("unmapped");
+      setResolveError("Khong tim thay phien dang nhap. Vui long dang nhap lai de kich hoat goi.");
       return;
     }
 
-    setResolution(result.data);
+    let nextContext = getRecoveryByOrderCode(orderCode, currentUserId);
+    if (!nextContext) {
+      const fallback = getLatestRecoveryForUser(currentUserId);
+      if (fallback && !fallback.orderCode) {
+        nextContext = upsertPaymentRecoveryContext({
+          supportCode: fallback.supportCode,
+          orderCode,
+          userId: fallback.userId,
+          planId: fallback.planId,
+          planName: fallback.planName,
+          amount: fallback.amount,
+          checkoutUrl: fallback.checkoutUrl,
+          status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
+          note: paid
+            ? "Auto-map orderCode tu callback vao giao dich gan nhat cua user."
+            : "Callback tra ve status khong hop le.",
+        });
+
+        addPaymentSupportLog({
+          supportCode: nextContext.supportCode,
+          orderCode,
+          userId: nextContext.userId,
+          planId: nextContext.planId,
+          planName: nextContext.planName,
+          amount: nextContext.amount,
+          status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
+          message: paid
+            ? "Map orderCode vao giao dich cho user thanh cong."
+            : "Callback co orderCode nhung status khong hop le.",
+          payload: {
+            source,
+            status,
+            paid,
+          },
+        });
+      }
+    }
+
+    if (!nextContext) {
+      const log = addPaymentSupportLog({
+        orderCode,
+        userId: currentUserId,
+        status: "UNMAPPED_ORDER",
+        message: "Khong tim thay recovery context cho orderCode.",
+        payload: {
+          source,
+          status,
+          paid,
+        },
+      });
+      setSupportCode(log.supportCode);
+      setResolveState("unmapped");
+      setResolveError(
+        "Khong map duoc orderCode voi du lieu thanh toan da tao. He thong chan subscribe va yeu cau thanh toan lai."
+      );
+      return;
+    }
+
+    if (nextContext.userId !== currentUserId) {
+      addPaymentSupportLog({
+        supportCode: nextContext.supportCode,
+        orderCode,
+        userId: currentUserId,
+        status: "UNMAPPED_ORDER",
+        message: "OrderCode map sang user khac voi phien hien tai.",
+        payload: {
+          expectedUserId: nextContext.userId,
+          actualUserId: currentUserId,
+          source,
+          status,
+        },
+      });
+      setResolveState("unmapped");
+      setSupportCode(nextContext.supportCode);
+      setResolveError(
+        `OrderCode dang map toi userId ${nextContext.userId}, khong khop tai khoan hien tai (${currentUserId}).`
+      );
+      return;
+    }
+
+    const updatedContext = upsertPaymentRecoveryContext({
+      supportCode: nextContext.supportCode,
+      orderCode,
+      userId: nextContext.userId,
+      planId: nextContext.planId,
+      planName: nextContext.planName,
+      amount: nextContext.amount,
+      checkoutUrl: nextContext.checkoutUrl,
+      status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
+      note: paid
+        ? "Callback success hop le, cho user xac nhan subscribe thu cong."
+        : "Callback tra ve status khong hop le.",
+    });
+
+    addPaymentSupportLog({
+      supportCode: updatedContext.supportCode,
+      orderCode,
+      userId: updatedContext.userId,
+      planId: updatedContext.planId,
+      planName: updatedContext.planName,
+      amount: updatedContext.amount,
+      status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
+      message: paid
+        ? "Da xac nhan callback thanh cong, cho nguoi dung bam subscribe."
+        : "Callback co orderCode nhung status thanh toan khong hop le.",
+      payload: {
+        source,
+        status,
+        paid,
+      },
+    });
+
+    setRecoveryContext(updatedContext);
+    setSupportCode(updatedContext.supportCode);
+    setIsKnownActivatedOrder(getActivatedOrderCodes().has(orderCode));
+    if (!paid) {
+      setResolveState("unmapped");
+      setResolveError(
+        "Status callback chua xac nhan thanh toan thanh cong. He thong khong cho phep subscribe."
+      );
+      return;
+    }
+
     setResolveState("ready");
-  }, [orderCode]);
+  }, [currentUserId, orderCode, paid, source, status]);
 
   useEffect(() => {
     const timerId = window.setTimeout(() => {
@@ -64,7 +283,21 @@ export function PaymentSuccessPage() {
   }, [handleResolveOrder]);
 
   const handleConfirmSubscribe = async () => {
-    if (!resolution) {
+    if (!recoveryContext) {
+      return;
+    }
+
+    if (resolveState === "subscribing" || !orderCode) {
+      return;
+    }
+
+    if (!currentUserId) {
+      setSubscribeError("Ban can dang nhap lai truoc khi kich hoat goi.");
+      return;
+    }
+
+    if (recoveryContext.userId !== currentUserId) {
+      setSubscribeError("OrderCode khong thuoc tai khoan hien tai. Vui long kiem tra lai.");
       return;
     }
 
@@ -73,18 +306,58 @@ export function PaymentSuccessPage() {
       return;
     }
 
+    if (resolveState === "subscribed" || isKnownActivatedOrder) {
+      const accepted = window.confirm(
+        "Order nay da tung kich hoat goi truoc do. Ban co chac muon thu kich hoat lai khong?"
+      );
+      if (!accepted) {
+        return;
+      }
+    }
+
     setResolveState("subscribing");
     setSubscribeError("");
 
-    const subscribeResult = await userManager.subscribePlan(resolution.userId, resolution.planId);
+    const subscribeResult = await userManager.subscribePlan(
+      recoveryContext.userId,
+      recoveryContext.planId
+    );
     if (!subscribeResult.success) {
+      const updatedContext = upsertPaymentRecoveryContext({
+        supportCode: recoveryContext.supportCode,
+        orderCode,
+        userId: recoveryContext.userId,
+        planId: recoveryContext.planId,
+        planName: recoveryContext.planName,
+        amount: recoveryContext.amount,
+        checkoutUrl: recoveryContext.checkoutUrl,
+        status: "SUBSCRIBE_FAILED",
+        note: subscribeResult.error || "Subscribe that bai.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: updatedContext.supportCode,
+        orderCode,
+        userId: updatedContext.userId,
+        planId: updatedContext.planId,
+        planName: updatedContext.planName,
+        amount: updatedContext.amount,
+        status: "SUBSCRIBE_FAILED",
+        message: "Nguoi dung bam subscribe nhung backend tra ve loi.",
+        payload: {
+          error: subscribeResult.error || null,
+        },
+      });
+
+      setRecoveryContext(updatedContext);
+      setSupportCode(updatedContext.supportCode);
       setResolveState("ready");
       setSubscribeError(subscribeResult.error || "Kich hoat goi that bai. Vui long thu lai.");
       toast.error(subscribeResult.error || "Kich hoat goi that bai.");
       return;
     }
 
-    const subscriptionResult = await userManager.getActiveSubscription(resolution.userId);
+    const subscriptionResult = await userManager.getActiveSubscription(recoveryContext.userId);
     if (subscriptionResult.success && subscriptionResult.data) {
       setSubscription(subscriptionResult.data);
     } else {
@@ -94,11 +367,41 @@ export function PaymentSuccessPage() {
       );
     }
 
+    const updatedContext = upsertPaymentRecoveryContext({
+      supportCode: recoveryContext.supportCode,
+      orderCode,
+      userId: recoveryContext.userId,
+      planId: recoveryContext.planId,
+      planName: recoveryContext.planName,
+      amount: recoveryContext.amount,
+      checkoutUrl: recoveryContext.checkoutUrl,
+      status: "SUBSCRIBE_SUCCESS",
+      note: "Subscribe thanh cong tu callback success page.",
+    });
+
+    addPaymentSupportLog({
+      supportCode: updatedContext.supportCode,
+      orderCode,
+      userId: updatedContext.userId,
+      planId: updatedContext.planId,
+      planName: updatedContext.planName,
+      amount: updatedContext.amount,
+      status: "SUBSCRIBE_SUCCESS",
+      message: "Nguoi dung da kich hoat goi thanh cong.",
+      payload: {
+        subscriptionSnapshot: subscriptionResult.data || null,
+      },
+    });
+
+    setRecoveryContext(updatedContext);
+    setSupportCode(updatedContext.supportCode);
+    markOrderAsActivated(orderCode);
+    setIsKnownActivatedOrder(true);
     setResolveState("subscribed");
     toast.success("Da kich hoat goi thanh cong.");
   };
 
-  const canConfirm = resolveState === "ready" && !!resolution;
+  const canConfirm = resolveState === "ready" && !!recoveryContext;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-emerald-50 to-blue-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">
@@ -127,6 +430,9 @@ export function PaymentSuccessPage() {
           <p className="font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
             Source: <span className="font-semibold">{source}</span>
           </p>
+          <p className="font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
+            SupportCode: <span className="font-semibold">{supportCode || "Chua tao"}</span>
+          </p>
         </div>
 
         {!paid && (
@@ -136,42 +442,38 @@ export function PaymentSuccessPage() {
           </div>
         )}
 
-        {resolveState === "resolving" && (
+        {resolveState === "checking" && (
           <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 font-['Inter'] text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Dang resolve orderCode tu backend...
+            Dang doi chieu orderCode voi recovery state local...
           </div>
         )}
 
-        {resolveState === "resolve-failed" && (
+        {resolveState === "unmapped" && (
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/40 dark:bg-rose-950/20">
             <div className="mb-2 flex items-center gap-2 font-['Inter'] text-sm font-semibold text-rose-700 dark:text-rose-300">
               <ShieldAlert className="h-4 w-4" />
-              Resolve orderCode that bai
+              Khong map duoc orderCode de subscribe an toan
             </div>
             <p className="font-['Inter'] text-sm text-rose-700/90 dark:text-rose-300/90">
-              {resolveError || "Khong the map orderCode sang userId/planId."}
+              {resolveError || "Khong the map orderCode sang userId/planId trong bo nho recovery."}
             </p>
-            <button
-              onClick={() => void handleResolveOrder()}
-              className="mt-3 rounded-lg bg-rose-600 px-4 py-2 font-['Inter'] text-sm font-semibold text-white hover:bg-rose-700">
-              Thu resolve lai
-            </button>
           </div>
         )}
 
-        {resolution && (
+        {recoveryContext && (
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800/40 dark:bg-blue-900/10">
             <p className="mb-2 font-['Inter'] text-sm font-semibold text-blue-700 dark:text-blue-300">
-              Mapping tu backend
+              Recovery context
             </p>
             <div className="grid gap-1 font-['Inter'] text-xs text-blue-700/90 dark:text-blue-300/90">
-              <p>UserId: {resolution.userId}</p>
-              <p>PlanId: {resolution.planId}</p>
-              <p>PlanName: {resolution.planName || "-"}</p>
-              <p>TransactionCode: {resolution.transactionCode}</p>
-              <p>Amount: {resolution.amount ?? "-"}</p>
-              <p>Status: {resolution.status || "-"}</p>
+              <p>UserId: {recoveryContext.userId}</p>
+              <p>PlanId: {recoveryContext.planId}</p>
+              <p>PlanName: {recoveryContext.planName || "-"}</p>
+              <p>OrderCode: {recoveryContext.orderCode || "-"}</p>
+              <p>Amount: {recoveryContext.amount ?? "-"}</p>
+              <p>Status: {recoveryContext.status}</p>
+              <p>Cap nhat luc: {new Date(recoveryContext.updatedAt).toLocaleString("vi-VN")}</p>
             </div>
           </div>
         )}
@@ -180,6 +482,14 @@ export function PaymentSuccessPage() {
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/40 dark:bg-amber-900/10">
             <p className="font-['Inter'] text-sm text-amber-700 dark:text-amber-300">
               {subscribeError}
+            </p>
+          </div>
+        )}
+
+        {isKnownActivatedOrder && (
+          <div className="rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/40 dark:bg-violet-900/10">
+            <p className="font-['Inter'] text-sm text-violet-700 dark:text-violet-300">
+              OrderCode nay da tung kich hoat goi. Neu can retry, he thong se yeu cau ban xac nhan.
             </p>
           </div>
         )}
@@ -199,6 +509,17 @@ export function PaymentSuccessPage() {
             className="rounded-xl border border-slate-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
             Mo callback huy
           </Link>
+          <button
+            onClick={() => void handleResolveOrder()}
+            className="rounded-xl border border-slate-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+            Tai lai recovery
+          </button>
+          <button
+            onClick={() => void handleCopySupportPayload()}
+            disabled={isCopyingPayload}
+            className="rounded-xl border border-blue-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20">
+            {isCopyingPayload ? "Dang sao chep..." : "Sao chep payload ho tro"}
+          </button>
           {canConfirm && (
             <button
               onClick={handleConfirmSubscribe}

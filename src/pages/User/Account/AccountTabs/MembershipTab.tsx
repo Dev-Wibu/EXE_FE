@@ -13,11 +13,23 @@ import {
   Star,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { UserSubscriptionResponse } from "@/interfaces";
+import {
+  addPaymentSupportLog,
+  buildSupportPayload,
+  extractOrderCodeFromUrl,
+  formatSupportPayload,
+  getLatestRecoveryForUser,
+  getSupportLogsBySupportCode,
+  type PaymentRecoveryContext,
+  type PaymentSupportLog,
+  upsertPaymentRecoveryContext,
+} from "@/lib";
 import { formatCurrency } from "@/lib/formatting";
-import { memberShipPlanManager, paymentManager, userManager } from "@/services";
+import { memberShipPlanManager, userManager } from "@/services";
+import { paymentManager } from "@/services/payment.manager";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
@@ -246,7 +258,24 @@ export function MembershipTab() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [copied, setCopied] = useState<"account" | "content" | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [latestRecovery, setLatestRecovery] = useState<PaymentRecoveryContext | null>(null);
+  const [supportLogs, setSupportLogs] = useState<PaymentSupportLog[]>([]);
+  const [isCopyingSupportPayload, setIsCopyingSupportPayload] = useState(false);
   const paymentRef = useRef<HTMLDivElement>(null);
+
+  const refreshRecoveryState = useCallback(() => {
+    if (!user?.id) {
+      setLatestRecovery(null);
+      setSupportLogs([]);
+      return;
+    }
+
+    const nextRecovery = getLatestRecoveryForUser(Number(user.id));
+    setLatestRecovery(nextRecovery);
+    setSupportLogs(
+      nextRecovery?.supportCode ? getSupportLogsBySupportCode(nextRecovery.supportCode) : []
+    );
+  }, [user?.id]);
 
   useEffect(() => {
     if (user?.id == null) {
@@ -291,6 +320,10 @@ export function MembershipTab() {
     void loadSubscriptionData();
   }, [user?.id]);
 
+  useEffect(() => {
+    refreshRecoveryState();
+  }, [refreshRecoveryState]);
+
   const handleSelectPlan = (planId: string) => {
     setSelectedPlan(planId);
     setTimeout(() => {
@@ -303,6 +336,32 @@ export function MembershipTab() {
       setCopied(field);
       setTimeout(() => setCopied(null), 2000);
     });
+  };
+
+  const handleCopySupportPayload = async () => {
+    if (isCopyingSupportPayload || !latestRecovery) {
+      return;
+    }
+
+    setIsCopyingSupportPayload(true);
+    try {
+      const payload = buildSupportPayload({
+        orderCode: latestRecovery.orderCode,
+        supportCode: latestRecovery.supportCode,
+        context: latestRecovery,
+        extra: {
+          scope: "membership-tab",
+          logCount: supportLogs.length,
+        },
+      });
+
+      await navigator.clipboard.writeText(formatSupportPayload(payload));
+      toast.success("Đã sao chép payload hỗ trợ.");
+    } catch {
+      toast.error("Không thể sao chép payload hỗ trợ.");
+    } finally {
+      setIsCopyingSupportPayload(false);
+    }
   };
 
   const handleConfirmPayment = async () => {
@@ -326,21 +385,112 @@ export function MembershipTab() {
 
     setIsConfirming(true);
 
-    const paymentResult = await paymentManager.create(paymentAmount, Number(user.id), {
-      planId: Number(selectedPlanId),
-      planName: selectedPlan,
-    });
-    if (!paymentResult.success || !paymentResult.data) {
+    try {
+      const paymentResult = await paymentManager.create(paymentAmount, Number(user.id), {
+        planId: Number(selectedPlanId),
+        planName: selectedPlan,
+      });
+      if (!paymentResult.success || !paymentResult.data) {
+        addPaymentSupportLog({
+          userId: Number(user.id),
+          planId: Number(selectedPlanId),
+          planName: selectedPlan,
+          amount: paymentAmount,
+          status: "CREATE_FAILED",
+          message: "Tao link thanh toan that bai tai MembershipTab.",
+          payload: {
+            error: paymentResult.error || null,
+          },
+        });
+        toast.error(paymentResult.error || "Không thể tạo link thanh toán.");
+        return;
+      }
+
+      const redirectUrl = new URL(paymentResult.data, window.location.origin).toString();
+      const orderCode = extractOrderCodeFromUrl(redirectUrl) || undefined;
+
+      const createdRecovery = upsertPaymentRecoveryContext({
+        orderCode,
+        userId: Number(user.id),
+        planId: Number(selectedPlanId),
+        planName: selectedPlan,
+        amount: paymentAmount,
+        checkoutUrl: redirectUrl,
+        status: "CREATED",
+        note: "Da tao checkoutUrl tu payment API.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: createdRecovery.supportCode,
+        orderCode,
+        userId: createdRecovery.userId,
+        planId: createdRecovery.planId,
+        planName: createdRecovery.planName,
+        amount: createdRecovery.amount,
+        status: "CREATED",
+        message: "Da tao checkoutUrl thanh cong.",
+        payload: {
+          checkoutUrl: redirectUrl,
+        },
+      });
+
+      const redirectedRecovery = upsertPaymentRecoveryContext({
+        supportCode: createdRecovery.supportCode,
+        orderCode,
+        userId: createdRecovery.userId,
+        planId: createdRecovery.planId,
+        planName: createdRecovery.planName,
+        amount: createdRecovery.amount,
+        checkoutUrl: redirectUrl,
+        status: "REDIRECTED",
+        note: "Da redirect sang trang thanh toan.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: redirectedRecovery.supportCode,
+        orderCode,
+        userId: redirectedRecovery.userId,
+        planId: redirectedRecovery.planId,
+        planName: redirectedRecovery.planName,
+        amount: redirectedRecovery.amount,
+        status: "REDIRECTED",
+        message: "Frontend chuan bi redirect den checkoutUrl.",
+      });
+
+      if (!orderCode) {
+        addPaymentSupportLog({
+          supportCode: redirectedRecovery.supportCode,
+          userId: redirectedRecovery.userId,
+          planId: redirectedRecovery.planId,
+          planName: redirectedRecovery.planName,
+          amount: redirectedRecovery.amount,
+          status: "UNMAPPED_ORDER",
+          message: "Khong trich xuat duoc orderCode tu checkoutUrl, se can callback map fallback.",
+          payload: {
+            checkoutUrl: redirectUrl,
+          },
+        });
+      }
+
+      setLatestRecovery(redirectedRecovery);
+      setSupportLogs(getSupportLogsBySupportCode(redirectedRecovery.supportCode));
+
+      toast.success("Đã tạo link thanh toán. Đang chuyển hướng...");
+      window.location.assign(redirectUrl);
+    } catch {
+      addPaymentSupportLog({
+        userId: Number(user.id),
+        planId: Number(selectedPlanId),
+        planName: selectedPlan,
+        amount: paymentAmount,
+        status: "CREATE_FAILED",
+        message: "Exception khi tao link thanh toan o MembershipTab.",
+      });
+      toast.error("Không thể tạo link thanh toán.");
+    } finally {
       setIsConfirming(false);
-      toast.error(paymentResult.error || "Không thể tạo link thanh toán.");
-      return;
+      refreshRecoveryState();
     }
-
-    const redirectUrl = new URL(paymentResult.data, window.location.origin).toString();
-    toast.success("Đã tạo link thanh toán. Đang chuyển hướng...");
-    window.location.assign(redirectUrl);
-
-    setIsConfirming(false);
   };
 
   const userId = user?.id ?? "00000";
@@ -406,6 +556,47 @@ export function MembershipTab() {
           </div>
         </div>
       ) : null}
+
+      {latestRecovery && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800/30 dark:bg-blue-900/10">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="font-['Inter'] text-sm font-semibold text-blue-700 dark:text-blue-300">
+              Trang thai giao dich gan nhat
+            </p>
+            <button
+              onClick={handleCopySupportPayload}
+              disabled={isCopyingSupportPayload}
+              className="rounded-lg border border-blue-300 px-3 py-1.5 font-['Inter'] text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20">
+              {isCopyingSupportPayload ? "Dang sao chep..." : "Sao chep payload ho tro"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 font-['Inter'] text-xs text-blue-700/90 md:grid-cols-2 dark:text-blue-300/90">
+            <p>SupportCode: {latestRecovery.supportCode}</p>
+            <p>OrderCode: {latestRecovery.orderCode || "Chua map"}</p>
+            <p>
+              Goi: {latestRecovery.planName || "-"} (planId: {latestRecovery.planId})
+            </p>
+            <p>Status: {latestRecovery.status}</p>
+            <p>So tien: {formatCurrency(latestRecovery.amount)}</p>
+            <p>Cap nhat: {new Date(latestRecovery.updatedAt).toLocaleString("vi-VN")}</p>
+          </div>
+
+          {(latestRecovery.status === "UNMAPPED_ORDER" ||
+            latestRecovery.status === "SUBSCRIBE_FAILED") && (
+            <p className="mt-3 font-['Inter'] text-xs text-rose-600 dark:text-rose-300">
+              Giao dich hien tai chua hoan tat. He thong se chan kich hoat va khuyen nghi thanh toan
+              lai.
+            </p>
+          )}
+
+          {supportLogs.length > 0 && (
+            <p className="mt-2 font-['Inter'] text-xs text-blue-600/90 dark:text-blue-300/80">
+              Da ghi nhan {supportLogs.length} log ho tro trong 24h gan nhat.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Plan Cards Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

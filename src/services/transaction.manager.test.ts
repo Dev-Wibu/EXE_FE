@@ -1,31 +1,87 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mockApi } = vi.hoisted(() => ({
+  mockApi: {
+    get: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+vi.mock("@/constants/api.config", async () => {
+  const actual =
+    await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
+
+  return {
+    ...actual,
+    createApiInstance: () => mockApi,
+  };
+});
 
 import { TransactionManager } from "@/services/transaction.manager";
 
-describe("TransactionManager skeleton", () => {
-  it("creates transfer-in callback url and can delete transaction by code", async () => {
-    const manager = new TransactionManager("mock");
-
-    const transferResult = await manager.transferIn(150000, 202);
-    expect(transferResult.success).toBe(true);
-    expect(transferResult.data).toContain("/payment/success");
-
-    const url = new URL(transferResult.data || "", "https://inblue.local");
-    const transactionCode = url.searchParams.get("orderCode") || "";
-
-    const listResult = await manager.getAll();
-    expect(listResult.success).toBe(true);
-    expect(listResult.data?.some((tx) => tx.transactionCode === transactionCode)).toBe(true);
-
-    const deleteResult = await manager.delete(transactionCode);
-    expect(deleteResult.success).toBe(true);
+describe("TransactionManager API mode", () => {
+  beforeEach(() => {
+    mockApi.get.mockReset();
+    mockApi.post.mockReset();
+    mockApi.delete.mockReset();
   });
 
-  it("returns insufficient-balance error when transfer-out amount is too high", async () => {
-    const manager = new TransactionManager("mock");
-    const result = await manager.transferOut(999999999, 303);
+  it("returns list of transactions from API", async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: [{ id: 1, transactionCode: "TX-1", amount: 10000 }],
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.getAll();
+
+    expect(result.success).toBe(true);
+    expect(result.data).toHaveLength(1);
+  });
+
+  it("creates transfer-in and returns redirect url", async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: {
+        redirectUrl: "https://payos.vn/checkout?orderCode=TX-11",
+      },
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.transferIn(150000, 202);
+
+    expect(result.success).toBe(true);
+    expect(result.data).toContain("orderCode=TX-11");
+  });
+
+  it("returns error when transfer-in amount is invalid", async () => {
+    const manager = new TransactionManager();
+    const result = await manager.transferIn(0, 303);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    expect(result.error).toContain("So tien");
+  });
+
+  it("returns error when transfer-out response has no redirect url", async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: {
+        ok: true,
+      },
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.transferOut(25000, 404);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("hop le");
+  });
+
+  it("deletes transaction by transaction code", async () => {
+    mockApi.delete.mockResolvedValueOnce({ data: null });
+
+    const manager = new TransactionManager();
+    const result = await manager.delete("TX-DELETE-1");
+
+    expect(result.success).toBe(true);
+    expect(mockApi.delete).toHaveBeenCalledTimes(1);
   });
 });

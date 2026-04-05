@@ -13,11 +13,6 @@ export const MANAGER_MODE: ManagerMode = envMode === "api" || envMode === "mock"
 // API Base URL from environment or default (use localhost for development)
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-// Optional backend endpoint that resolves callback orderCode to business context.
-// Example: /api/payments/resolve-order or /api/payments/resolve/:orderCode
-export const PAYMENT_ORDER_RESOLVE_ENDPOINT =
-  import.meta.env.VITE_PAYMENT_ORDER_RESOLVE_ENDPOINT || "";
-
 // API Configuration
 export const apiConfig: ApiConfig = {
   baseURL: API_BASE_URL,
@@ -68,7 +63,6 @@ export const API_ENDPOINTS = {
     PAY: "/api/payments/pay",
     CANCEL: "/api/payments/cancel",
     WEBHOOK: "/api/payments/webhook",
-    RESOLVE_ORDER: PAYMENT_ORDER_RESOLVE_ENDPOINT,
   },
 
   // Users management endpoints (for admin) - Based on schema-from-be.d.ts
