@@ -135,8 +135,6 @@ const BANK_INFO = {
   bank: "BIDV",
 };
 
-const SKELETON_PAYMENT_CONTEXT_KEY = "inblue.payment-context";
-
 function buildTransferContent(planId: string, userId: string | number): string {
   return `INBLUE${planId}${userId}`;
 }
@@ -322,32 +320,24 @@ export function MembershipTab() {
     const paymentAmount = selectedPlanInfo?.price ?? 0;
 
     if (paymentAmount <= 0) {
-      toast.info("Gói FREE không cần thanh toán. Vui lòng chọn gói trả phí để test skeleton.");
+      toast.info("Gói FREE không cần thanh toán. Vui lòng chọn gói trả phí.");
       return;
     }
 
-    sessionStorage.setItem(
-      SKELETON_PAYMENT_CONTEXT_KEY,
-      JSON.stringify({
-        userId: Number(user.id),
-        planId: Number(selectedPlanId),
-        planName: selectedPlan,
-        amount: paymentAmount,
-        createdAt: new Date().toISOString(),
-      })
-    );
-
     setIsConfirming(true);
 
-    const paymentResult = await paymentManager.create(paymentAmount, Number(user.id));
+    const paymentResult = await paymentManager.create(paymentAmount, Number(user.id), {
+      planId: Number(selectedPlanId),
+      planName: selectedPlan,
+    });
     if (!paymentResult.success || !paymentResult.data) {
       setIsConfirming(false);
-      toast.error(paymentResult.error || "Không thể tạo link thanh toán skeleton.");
+      toast.error(paymentResult.error || "Không thể tạo link thanh toán.");
       return;
     }
 
     const redirectUrl = new URL(paymentResult.data, window.location.origin).toString();
-    toast.success("Đã tạo link thanh toán skeleton. Đang chuyển hướng...");
+    toast.success("Đã tạo link thanh toán. Đang chuyển hướng...");
     window.location.assign(redirectUrl);
 
     setIsConfirming(false);
@@ -571,12 +561,12 @@ export function MembershipTab() {
                   {isConfirming ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Dang tao link thanh toan skeleton...
+                      Dang tao link thanh toan...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      Tao link thanh toan (Skeleton)
+                      Thanh toan voi PayOS
                     </>
                   )}
                 </button>
@@ -630,7 +620,7 @@ export function MembershipTab() {
                   Mua gói thành viên
                 </p>
                 <p className="font-['Inter'] text-xs text-amber-600 dark:text-amber-500">
-                  Skeleton flow: Nhan nut tao link de redirect callback mo phong success/cancel.
+                  Flow thanh toan: Tao link PayOS, thanh toan, quay lai trang xac nhan nang cap.
                 </p>
               </div>
             </div>
