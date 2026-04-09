@@ -18,6 +18,58 @@ import { formatToVietnamISOString } from "@/lib/utils";
 // Re-export Session type for convenience
 export type { Session } from "@/interfaces";
 
+const toFiniteInteger = (value: unknown): number | undefined => {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  return Math.round(parsed);
+};
+
+const toPositiveInteger = (value: unknown): number | undefined => {
+  const normalized = toFiniteInteger(value);
+  if (!normalized || normalized <= 0) {
+    return undefined;
+  }
+
+  return normalized;
+};
+
+const toBooleanOrDefault = (value: unknown, fallback: boolean): boolean => {
+  return typeof value === "boolean" ? value : fallback;
+};
+
+const toRecordingMode = (value: unknown): string => {
+  return value === "local" || value === "cloud" ? value : "cloud";
+};
+
+const normalizeDailyCoCreationRequest = (
+  request?: SessionCreationRequest["dailyCoCreationRequest"]
+): NonNullable<SessionCreationRequest["dailyCoCreationRequest"]> => {
+  const properties = request?.properties;
+
+  return {
+    name: typeof request?.name === "string" ? request.name : "",
+    privacy:
+      typeof request?.privacy === "string" && request.privacy.trim().length > 0
+        ? request.privacy
+        : "public",
+    properties: {
+      max_participants: toPositiveInteger(properties?.max_participants) ?? 2,
+      start_video_off: toBooleanOrDefault(properties?.start_video_off, true),
+      start_audio_off: toBooleanOrDefault(properties?.start_audio_off, true),
+      enable_screenshare: toBooleanOrDefault(properties?.enable_screenshare, true),
+      exp: toFiniteInteger(properties?.exp) ?? 0,
+      enable_recording: toRecordingMode(properties?.enable_recording),
+    },
+  };
+};
+
 /**
  * Session creation request (matches backend schema)
  */
@@ -133,11 +185,16 @@ export class SessionManager implements BaseManager<Session> {
       };
 
       if (isSessionCreationRequest(_data)) {
+        const duration = toPositiveInteger(_data.duration);
+        const totalPrice = toPositiveInteger(_data.totalPrice);
+
         requestData = {
-          ..._data,
+          userId: toPositiveInteger(_data.userId),
+          mentorId: toPositiveInteger(_data.mentorId),
           joinTime: _data.joinTime || formatToVietnamISOString(new Date()),
-          duration: _data.duration,
-          totalPrice: _data.totalPrice,
+          dailyCoCreationRequest: normalizeDailyCoCreationRequest(_data.dailyCoCreationRequest),
+          ...(duration ? { duration } : {}),
+          ...(totalPrice ? { totalPrice } : {}),
         };
       } else {
         // Convert from Session partial to SessionCreationRequest
@@ -152,37 +209,57 @@ export class SessionManager implements BaseManager<Session> {
           totalPrice?: number;
         };
 
-        if (!sessionData.userId) {
+        const userId = toPositiveInteger(sessionData.userId);
+        const mentorId = toPositiveInteger(sessionData.userId2);
+
+        if (!userId) {
           return {
             success: false,
-            error: "User ID is required to create a session",
+            error: "ID nguoi dung khong hop le.",
           };
         }
-        if (!sessionData.userId2) {
+        if (!mentorId) {
           return {
             success: false,
-            error: "Mentor ID is required to create a session",
+            error: "ID mentor khong hop le.",
           };
         }
 
+        const duration = toPositiveInteger(sessionData.duration);
+        const totalPrice = toPositiveInteger(sessionData.totalPrice);
+
         requestData = {
-          userId: sessionData.userId,
-          mentorId: sessionData.userId2,
+          userId,
+          mentorId,
           joinTime: sessionData.joinTime || formatToVietnamISOString(new Date()),
-          duration: sessionData.duration,
-          totalPrice: sessionData.totalPrice,
-          dailyCoCreationRequest: {
+          ...(duration ? { duration } : {}),
+          ...(totalPrice ? { totalPrice } : {}),
+          dailyCoCreationRequest: normalizeDailyCoCreationRequest({
             name: "",
             privacy: "public",
             properties: {
-              max_participants: sessionData.max_participants ?? 2,
-              start_video_off: sessionData.start_video_off ?? true,
-              start_audio_off: sessionData.start_audio_off ?? true,
-              enable_screenshare: sessionData.enable_screenshare ?? true,
+              max_participants: sessionData.max_participants,
+              start_video_off: sessionData.start_video_off,
+              start_audio_off: sessionData.start_audio_off,
+              enable_screenshare: sessionData.enable_screenshare,
               exp: 0,
-              enable_recording: sessionData.enable_recording ?? "cloud",
+              enable_recording: sessionData.enable_recording,
             },
-          },
+          }),
+        };
+      }
+
+      if (!requestData.userId) {
+        return {
+          success: false,
+          error: "ID nguoi dung khong hop le.",
+        };
+      }
+
+      if (!requestData.mentorId) {
+        return {
+          success: false,
+          error: "ID mentor khong hop le.",
         };
       }
 

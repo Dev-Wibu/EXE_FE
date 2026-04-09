@@ -158,7 +158,7 @@ export function MockInterviewSchedulePage() {
   };
 
   const canProceedStep1 = selectedMentorId !== null;
-  const canProceedStep2 = isDateTimeValid() && durationMinutes > 0 && totalPrice > 0;
+  const canProceedStep2 = isDateTimeValid() && durationMinutes > 0;
 
   // Render stars
   const renderStars = (rating?: number) => {
@@ -180,15 +180,30 @@ export function MockInterviewSchedulePage() {
   // Handle session creation
   const handleCreateSession = async () => {
     if (!selectedMentorId || !user?.id) return;
+
+    const normalizedUserId = Math.round(Number(user.id));
+    const normalizedMentorId = Math.round(Number(selectedMentorId));
+    const normalizedDuration = Math.max(1, Math.round(durationMinutes));
+    const normalizedTotalPrice = Math.max(1, Math.round(totalPrice));
+
+    if (
+      !Number.isFinite(normalizedUserId) ||
+      !Number.isFinite(normalizedMentorId) ||
+      !Number.isFinite(normalizedDuration) ||
+      !Number.isFinite(normalizedTotalPrice)
+    ) {
+      return;
+    }
+
     setIsCreating(true);
     try {
       const joinTime = calculateJoinTime();
       await createSession.mutateAsync({
-        userId: user.id,
-        mentorId: selectedMentorId,
+        userId: normalizedUserId,
+        mentorId: normalizedMentorId,
         joinTime,
-        duration: durationMinutes,
-        totalPrice,
+        duration: normalizedDuration,
+        totalPrice: normalizedTotalPrice,
         dailyCoCreationRequest: {
           name: "",
           privacy: "public",
@@ -306,7 +321,7 @@ export function MockInterviewSchedulePage() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-blue-500">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-blue-500">
                             {mentor.avatarUrl ? (
                               <img
                                 src={mentor.avatarUrl}
@@ -504,7 +519,8 @@ export function MockInterviewSchedulePage() {
               </div>
 
               {/* Duration and Total Price */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div
+                className={cn("grid gap-4", totalPrice > 0 ? "sm:grid-cols-2" : "sm:grid-cols-1")}>
                 <div className="space-y-2">
                   <Label htmlFor="durationMinutes">Thời lượng (phút)</Label>
                   <Input
@@ -519,22 +535,13 @@ export function MockInterviewSchedulePage() {
                     }}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="totalPrice">Tổng giá dự kiến</Label>
-                  <Input
-                    id="totalPrice"
-                    value={totalPrice > 0 ? formatCurrency(totalPrice) : "-"}
-                    readOnly
-                    disabled
-                  />
-                </div>
+                {totalPrice > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="totalPrice">Tổng giá dự kiến</Label>
+                    <Input id="totalPrice" value={formatCurrency(totalPrice)} readOnly disabled />
+                  </div>
+                )}
               </div>
-
-              {mentorPricePerMinute <= 0 && (
-                <p className="text-sm text-red-500">
-                  ⚠ Mentor chua co don gia moi phut. Vui long chon mentor khac hoac lien he admin.
-                </p>
-              )}
             </CardContent>
           </Card>
 
@@ -577,7 +584,7 @@ export function MockInterviewSchedulePage() {
                 </h3>
                 {selectedMentor && (
                   <div className="flex items-center gap-4 rounded-lg border p-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-blue-500">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-indigo-400 to-blue-500">
                       {selectedMentor.avatarUrl ? (
                         <img
                           src={selectedMentor.avatarUrl}
@@ -621,15 +628,17 @@ export function MockInterviewSchedulePage() {
                       <p className="text-sm font-medium">{durationMinutes} phút</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 rounded-lg border p-3 sm:col-span-2">
-                    <Video className="h-4 w-4 text-slate-400" />
-                    <div>
-                      <p className="text-xs text-slate-500">Tổng giá dự kiến</p>
-                      <p className="text-sm font-medium text-emerald-700">
-                        {totalPrice > 0 ? formatCurrency(totalPrice) : "-"}
-                      </p>
+                  {totalPrice > 0 && (
+                    <div className="flex items-center gap-2 rounded-lg border p-3 sm:col-span-2">
+                      <Video className="h-4 w-4 text-slate-400" />
+                      <div>
+                        <p className="text-xs text-slate-500">Tổng giá dự kiến</p>
+                        <p className="text-sm font-medium text-emerald-700">
+                          {formatCurrency(totalPrice)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
