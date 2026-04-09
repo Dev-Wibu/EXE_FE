@@ -47,6 +47,15 @@ export const API_ENDPOINTS = {
     ACTIVE_SUBSCRIPTION: "/api/users/:userId/subscription",
   },
 
+  // Dashboard endpoints (admin overview)
+  DASHBOARD: {
+    TOTAL_USER: "/api/dashboard/total-user",
+    TOTAL_MENTOR: "/api/dashboard/total-mentor",
+    TOTAL_SESSION: "/api/dashboard/total-session",
+    TOTAL_TRANSACTION: "/api/dashboard/total-transaction",
+    TOTAL_INCOME: "/api/dashboard/total-income",
+  },
+
   // Transaction endpoints - schema-first mapping (skeleton phase: constants only)
   TRANSACTIONS: {
     LIST: "/api/transactions",

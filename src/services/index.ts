@@ -16,6 +16,7 @@
 export * from "./auth.manager";
 export * from "./candidate-profile.manager";
 export * from "./chat.manager";
+export * from "./dashboard-admin.manager";
 export * from "./membership-plan.manager";
 export * from "./mentor-feedback.manager";
 export * from "./mentor-review.manager";
@@ -33,4 +34,3 @@ export * from "./session.manager";
 export * from "./transaction.manager";
 export * from "./user.manager";
 export * from "./users-admin.manager";
-export * from "./dashboard-admin.manager";

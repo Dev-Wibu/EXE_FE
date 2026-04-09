@@ -3,15 +3,10 @@
  * Handles dashboard-specific API operations for administrators
  */
 
-import type { ApiResponse, TransactionEntity } from "@/interfaces";
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, createApiInstance } from "@/constants/api.config";
+import type { ApiResponse, PaymentEntity, TransactionEntity } from "@/interfaces";
 
 export class DashboardAdminManager {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -53,7 +48,7 @@ export class DashboardAdminManager {
   /**
    * Get total income transactions
    */
-  async getTotalIncome(): Promise<ApiResponse<TransactionEntity[]>> {
+  async getTotalIncome(): Promise<ApiResponse<PaymentEntity[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.DASHBOARD.TOTAL_INCOME);
       return {
@@ -71,7 +66,7 @@ export class DashboardAdminManager {
   /**
    * Get total sessions transactions
    */
-  async getTotalSessions(): Promise<ApiResponse<TransactionEntity[]>> {
+  async getTotalSessions(): Promise<ApiResponse<number>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.DASHBOARD.TOTAL_SESSION);
       return {

@@ -1,48 +1,90 @@
-/**
- * Admin Dashboard Overview Page
- * Updated: Separated Charts for Direct Income and Wallet Deposits
- * Removed Pie chart as requested
- */
-
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { vi } from "date-fns/locale";
-import {
-  Activity,
-  ArrowUpRight,
-  CreditCard,
-  DollarSign,
-  TrendingUp,
-  UserCheck,
-  Users,
-  Wallet,
-} from "lucide-react";
+import { Activity, CreditCard, DollarSign, UserCheck, Users, Wallet } from "lucide-react";
 import { useMemo } from "react";
 import {
   Area,
   AreaChart,
-  ResponsiveContainer,
+  CartesianGrid,
   Tooltip as RechartsTooltip,
+  ResponsiveContainer,
   XAxis,
   YAxis,
-  CartesianGrid,
 } from "recharts";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { PaymentEntity, TransactionEntity } from "@/interfaces";
+import { formatCurrency } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { dashboardAdminManager } from "@/services";
 
-// Helper to check for successful transaction states
-const isSuccessTransaction = (status?: string) => {
+type TrendPoint = {
+  date: string;
+  amount: number;
+};
+
+type RecentRecord =
+  | (PaymentEntity & { source: "INCOME" })
+  | (TransactionEntity & { source: "WALLET" });
+
+const TREND_DAYS = 15;
+
+const isSuccessPayment = (status?: PaymentEntity["status"]) => {
   if (!status) return true;
-  const s = status.toUpperCase();
-  return s === "SUCCESS" || s === "COMPLETED" || s === "PAID" || s === "DONE";
+  const normalized = status.toUpperCase();
+  return normalized === "COMPLETED" || normalized === "SUCCESS" || normalized === "PAID";
+};
+
+const toMillis = (value?: string) => {
+  if (!value) return 0;
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+};
+
+const buildTrendData = (records: Array<{ createdAt?: string; amount?: number }>) => {
+  const points: Record<string, TrendPoint> = {};
+
+  for (let index = TREND_DAYS - 1; index >= 0; index -= 1) {
+    const dateKey = format(subDays(new Date(), index), "dd/MM");
+    points[dateKey] = { date: dateKey, amount: 0 };
+  }
+
+  records.forEach((record) => {
+    if (!record.createdAt) return;
+    const timestamp = toMillis(record.createdAt);
+    if (!timestamp) return;
+
+    const dateKey = format(new Date(timestamp), "dd/MM");
+    if (points[dateKey]) {
+      points[dateKey].amount += record.amount || 0;
+    }
+  });
+
+  return Object.values(points);
+};
+
+const getPaymentStatusLabel = (status?: PaymentEntity["status"]) => {
+  switch (status) {
+    case "COMPLETED":
+      return "Thành công";
+    case "PENDING":
+      return "Đang xử lý";
+    case "FAILED":
+      return "Thất bại";
+    default:
+      return "Hoàn tất";
+  }
+};
+
+const formatTransactionTime = (value?: string) => {
+  const timestamp = toMillis(value);
+  if (!timestamp) return "Không có thời gian";
+  return format(new Date(timestamp), "HH:mm, dd/MM", { locale: vi });
 };
 
 export function DashboardOverviewPage() {
-  // Fetch real data from Dashboard API
   const { data: userCount, isLoading: loadingUsers } = useQuery({
     queryKey: ["admin", "total-users"],
     queryFn: () => dashboardAdminManager.getTotalUsers(),
@@ -63,106 +105,85 @@ export function DashboardOverviewPage() {
     queryFn: () => dashboardAdminManager.getTotalTransactions(),
   });
 
-  // Calculate stats
+  const incomeRecords = incomeResponse?.data || [];
+  const walletRecords = transactionResponse?.data || [];
+
   const stats = useMemo(() => {
-    const directRevenue = (incomeResponse?.data || [])
-      .filter((t) => isSuccessTransaction(t.status))
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+    const directRevenue = incomeRecords
+      .filter((payment) => isSuccessPayment(payment.status))
+      .reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
-    const walletDeposits = (transactionResponse?.data || [])
-      .filter((t) => isSuccessTransaction(t.status))
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+    const walletDeposits = walletRecords.reduce((sum, record) => sum + (record.amount || 0), 0);
 
-    return { directRevenue, walletDeposits };
-  }, [incomeResponse, transactionResponse]);
+    return {
+      directRevenue,
+      walletDeposits,
+    };
+  }, [incomeRecords, walletRecords]);
 
-  // Income Trend Data
   const incomeTrendData = useMemo(() => {
-    const incomeData = (incomeResponse?.data || []).filter((t) => isSuccessTransaction(t.status));
-    const datesMap: Record<string, { date: string, amount: number }> = {};
-    for (let i = 14; i >= 0; i--) {
-      const dateStr = format(subDays(new Date(), i), "dd/MM");
-      datesMap[dateStr] = { date: dateStr, amount: 0 };
-    }
-    incomeData.forEach(t => {
-      const date = format(new Date(t.createdAt || ""), "dd/MM");
-      if (datesMap[date]) datesMap[date].amount += (t.amount || 0);
-    });
-    return Object.values(datesMap);
-  }, [incomeResponse]);
+    const successfulIncome = incomeRecords.filter((payment) => isSuccessPayment(payment.status));
+    return buildTrendData(successfulIncome);
+  }, [incomeRecords]);
 
-  // Wallet Trend Data
-  const walletTrendData = useMemo(() => {
-    const walletData = (transactionResponse?.data || []).filter((t) => isSuccessTransaction(t.status));
-    const datesMap: Record<string, { date: string, amount: number }> = {};
-    for (let i = 14; i >= 0; i--) {
-      const dateStr = format(subDays(new Date(), i), "dd/MM");
-      datesMap[dateStr] = { date: dateStr, amount: 0 };
-    }
-    walletData.forEach(t => {
-      const date = format(new Date(t.createdAt || ""), "dd/MM");
-      if (datesMap[date]) datesMap[date].amount += (t.amount || 0);
-    });
-    return Object.values(datesMap);
-  }, [transactionResponse]);
+  const walletTrendData = useMemo(() => buildTrendData(walletRecords), [walletRecords]);
 
-  // Formatting currency
-  const formatVND = (value: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(value);
-  };
-
-  const OVERVIEW_STATS = [
+  const overviewStats = [
     {
       title: "Tổng người dùng",
-      value: loadingUsers ? "..." : userCount?.data?.toLocaleString() || "0",
+      value: loadingUsers ? "..." : (userCount?.data || 0).toLocaleString("vi-VN"),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
     },
     {
       title: "Mentor",
-      value: loadingMentors ? "..." : mentorCount?.data?.toLocaleString() || "0",
+      value: loadingMentors ? "..." : (mentorCount?.data || 0).toLocaleString("vi-VN"),
       icon: UserCheck,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
     },
     {
       title: "Doanh thu trực tiếp",
-      value: loadingIncome ? "..." : formatVND(stats.directRevenue),
+      value: loadingIncome ? "..." : formatCurrency(stats.directRevenue),
       icon: DollarSign,
       color: "text-violet-600",
       bgColor: "bg-violet-50 dark:bg-violet-900/20",
     },
     {
       title: "Tổng nạp ví",
-      value: loadingTransactions ? "..." : formatVND(stats.walletDeposits),
+      value: loadingTransactions ? "..." : formatCurrency(stats.walletDeposits),
       icon: Wallet,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      color: "text-sky-600",
+      bgColor: "bg-sky-50 dark:bg-sky-900/20",
     },
   ];
 
   const recentTransactions = useMemo(() => {
-    const income = (incomeResponse?.data || []).map(t => ({ ...t, source: "INCOME" as const }));
-    const wallet = (transactionResponse?.data || []).map(t => ({ ...t, source: "WALLET" as const }));
+    const income: RecentRecord[] = incomeRecords.map((record) => ({
+      ...record,
+      source: "INCOME",
+    }));
+
+    const wallet: RecentRecord[] = walletRecords.map((record) => ({
+      ...record,
+      source: "WALLET",
+    }));
+
     return [...income, ...wallet]
-      .sort((a, b) => new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime())
+      .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
       .slice(0, 8);
-  }, [incomeResponse, transactionResponse]);
+  }, [incomeRecords, walletRecords]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 dark:bg-slate-950">
-      {/* Header */}
       <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Dashboard Overview
+            Tổng quan hệ thống
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Theo dõi xu hướng doanh thu và nạp ví thời gian thực.
+            Theo dõi doanh thu và giao dịch gần nhất theo thời gian thực.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm dark:bg-slate-900">
@@ -170,41 +191,49 @@ export function DashboardOverviewPage() {
             <Activity className="text-primary h-4 w-4" />
           </div>
           <span className="text-sm font-medium dark:text-slate-300">
-            Hệ thống: <span className="text-emerald-500 font-bold">Hoạt động tốt</span>
+            Hệ thống: <span className="font-bold text-emerald-500">Hoạt động ổn định</span>
           </span>
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {OVERVIEW_STATS.map((stat) => (
-          <Card key={stat.title} className="border-0 shadow-sm dark:bg-slate-900 overflow-hidden relative">
+        {overviewStats.map((stat) => (
+          <Card
+            key={stat.title}
+            className="relative overflow-hidden border-0 shadow-sm dark:bg-slate-900">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{stat.title}</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    {stat.title}
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                    {stat.value}
+                  </p>
                 </div>
                 <div className={cn("rounded-xl p-3", stat.bgColor)}>
                   <stat.icon className={cn("h-6 w-6", stat.color)} />
                 </div>
               </div>
             </CardContent>
-            <div className={cn("absolute -bottom-6 -right-6 h-20 w-20 rounded-full opacity-5 blur-xl", stat.bgColor)} />
+            <div
+              className={cn(
+                "absolute -right-6 -bottom-6 h-20 w-20 rounded-full opacity-5 blur-xl",
+                stat.bgColor
+              )}
+            />
           </Card>
         ))}
       </div>
 
-      {/* Separated Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Income Chart */}
         <Card className="border-0 shadow-sm dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-violet-600">
-               <TrendingUp className="h-5 w-5" />
-               Xu hướng Doanh thu trực tiếp
+              <DollarSign className="h-5 w-5" />
+              Xu hướng doanh thu trực tiếp
             </CardTitle>
-            <CardDescription>Biến động doanh thu 15 ngày qua</CardDescription>
+            <CardDescription>Biến động doanh thu trong {TREND_DAYS} ngày gần nhất</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
@@ -217,34 +246,54 @@ export function DashboardOverviewPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748b" }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748b" }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                  <RechartsTooltip content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "#64748b" }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "#64748b" }}
+                    tickFormatter={(value: number) => `${(value / 1_000_000).toFixed(1)}M`}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+
+                      const item = payload[0] as { value?: number; payload?: TrendPoint };
                       return (
-                        <div className="rounded-lg border bg-white p-2 shadow-lg dark:bg-slate-900 dark:border-slate-800">
-                          <p className="text-xs font-bold">{payload[0].payload.date}</p>
-                          <p className="text-sm font-black text-violet-600">{formatVND(payload[0].value as number)}</p>
+                        <div className="rounded-lg border bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                          <p className="text-xs font-bold">{item.payload?.date}</p>
+                          <p className="text-sm font-black text-violet-600">
+                            {formatCurrency(item.value || 0)}
+                          </p>
                         </div>
                       );
-                    }
-                    return null;
-                  }} />
-                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorIncome)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Wallet Chart */}
         <Card className="border-0 shadow-sm dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-blue-500">
-               <Wallet className="h-5 w-5" />
-               Xu hướng Nạp tiền vào ví
+            <CardTitle className="flex items-center gap-2 text-lg text-sky-600">
+              <Wallet className="h-5 w-5" />
+              Xu hướng nạp tiền vào ví
             </CardTitle>
-            <CardDescription>Biến động nạp tiền 15 ngày qua</CardDescription>
+            <CardDescription>Biến động nạp ví trong {TREND_DAYS} ngày gần nhất</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
@@ -252,25 +301,46 @@ export function DashboardOverviewPage() {
                 <AreaChart data={walletTrendData}>
                   <defs>
                     <linearGradient id="colorWallet" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#0284c7" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#0284c7" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748b" }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#64748b" }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                  <RechartsTooltip content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "#64748b" }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "#64748b" }}
+                    tickFormatter={(value: number) => `${(value / 1_000_000).toFixed(1)}M`}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+
+                      const item = payload[0] as { value?: number; payload?: TrendPoint };
                       return (
-                        <div className="rounded-lg border bg-white p-2 shadow-lg dark:bg-slate-900 dark:border-slate-800">
-                          <p className="text-xs font-bold">{payload[0].payload.date}</p>
-                          <p className="text-sm font-black text-blue-600">{formatVND(payload[0].value as number)}</p>
+                        <div className="rounded-lg border bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                          <p className="text-xs font-bold">{item.payload?.date}</p>
+                          <p className="text-sm font-black text-sky-600">
+                            {formatCurrency(item.value || 0)}
+                          </p>
                         </div>
                       );
-                    }
-                    return null;
-                  }} />
-                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorWallet)" />
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#0284c7"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorWallet)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -278,37 +348,76 @@ export function DashboardOverviewPage() {
         </Card>
       </div>
 
-      {/* Transactions */}
       <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
         <CardHeader>
           <CardTitle className="text-lg">Giao dịch gần đây</CardTitle>
-          <CardDescription>Nhật ký thu chi mới nhất</CardDescription>
+          <CardDescription>8 giao dịch mới nhất từ nguồn thanh toán và ví</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             {!loadingIncome && !loadingTransactions && recentTransactions.length === 0 ? (
-               <div className="col-span-2 text-center py-10 text-slate-400">Không có dữ liệu giao dịch.</div>
+              <div className="col-span-2 py-10 text-center text-slate-400">
+                Không có dữ liệu giao dịch.
+              </div>
             ) : (
-              recentTransactions.map((tx) => (
-                <div key={`${tx.id}-${tx.source}`} className="flex items-center justify-between rounded-xl border border-slate-100 p-4 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("h-10 w-10 flex items-center justify-center rounded-lg", tx.source === "INCOME" ? "bg-violet-100 text-violet-600" : "bg-blue-100 text-blue-600")}>
-                       {tx.source === "INCOME" ? <CreditCard className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[150px]">{tx.description || tx.transactionCode}</p>
-                        <Badge className={cn("text-[8px] h-3.5", tx.source === "INCOME" ? "bg-violet-500" : "bg-blue-500")}>{tx.source === "INCOME" ? "THU NHẬP" : "NẠP VÍ"}</Badge>
+              recentTransactions.map((record, index) => {
+                const statusLabel =
+                  record.source === "INCOME" ? getPaymentStatusLabel(record.status) : "Hoàn tất";
+
+                const successState =
+                  record.source === "INCOME" ? isSuccessPayment(record.status) : true;
+
+                return (
+                  <div
+                    key={`${record.source}-${record.id || record.transactionCode || index}`}
+                    className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-lg",
+                          record.source === "INCOME"
+                            ? "bg-violet-100 text-violet-600"
+                            : "bg-sky-100 text-sky-600"
+                        )}>
+                        {record.source === "INCOME" ? (
+                          <CreditCard className="h-5 w-5" />
+                        ) : (
+                          <Wallet className="h-5 w-5" />
+                        )}
                       </div>
-                      <p className="text-xs text-slate-500">{format(new Date(tx.createdAt || ""), "HH:mm, dd/MM", { locale: vi })}</p>
+
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="max-w-[150px] truncate text-sm font-bold text-slate-900 dark:text-white">
+                            {record.description || record.transactionCode || "Không có mô tả"}
+                          </p>
+                          <Badge
+                            className={cn(
+                              "h-3.5 text-[8px]",
+                              record.source === "INCOME" ? "bg-violet-500" : "bg-sky-500"
+                            )}>
+                            {record.source === "INCOME" ? "THU NHẬP" : "NẠP VÍ"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {formatTransactionTime(record.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p
+                        className={cn(
+                          "text-sm font-black",
+                          successState ? "text-emerald-600" : "text-amber-600"
+                        )}>
+                        {formatCurrency(record.amount || 0)}
+                      </p>
+                      <p className="text-[10px] font-semibold text-slate-400">{statusLabel}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={cn("text-sm font-black", isSuccessTransaction(tx.status) ? "text-emerald-600" : "text-amber-600")}>{formatVND(tx.amount || 0)}</p>
-                    <p className="text-[9px] font-bold text-slate-400">{tx.status}</p>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>
