@@ -53,7 +53,7 @@ const mockPlans: MemberShipPlan[] = [
   {
     id: 2,
     name: "NEW",
-    price: 49000,
+    price: 4000,
     max_ai_interview: 5,
     max_practice_sets: 10,
     max_quiz_sets: 10,
