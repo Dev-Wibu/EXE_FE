@@ -56,6 +56,43 @@ describe("PaymentManager API mode", () => {
     expect(result.success).toBe(true);
     expect(result.data).toContain("orderCode=ORDER-123");
     expect(mockApi.post).toHaveBeenCalledTimes(1);
+    expect(mockApi.post).toHaveBeenCalledWith(
+      "/api/payments/pay",
+      null,
+      expect.objectContaining({
+        params: expect.objectContaining({
+          amount: 120000,
+          userId: 101,
+          paymentPurpose: "BUY_MEMBERSHIP",
+        }),
+      })
+    );
+  });
+
+  it("passes explicit payment purpose when provided", async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: {
+        checkoutUrl: "https://payos.vn/checkout?orderCode=ORDER-999",
+      },
+    });
+
+    const manager = new PaymentManager();
+    const result = await manager.create(88000, 77, {
+      paymentPurpose: "MENTOR_INTERVIEW",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockApi.post).toHaveBeenCalledWith(
+      "/api/payments/pay",
+      null,
+      expect.objectContaining({
+        params: expect.objectContaining({
+          amount: 88000,
+          userId: 77,
+          paymentPurpose: "MENTOR_INTERVIEW",
+        }),
+      })
+    );
   });
 
   it("returns error when create amount is invalid", async () => {

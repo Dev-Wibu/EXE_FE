@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDateTime } from "@/lib/formatting";
+import { formatCurrency, formatDateTime } from "@/lib/formatting";
 import { getSessionStatusBadge } from "@/lib/status-utils";
 
 import type { Session } from "../types";
@@ -31,14 +31,18 @@ interface SessionTableProps {
   getSortProps?: (key: keyof Session) => SortProps;
 }
 
-const formatDuration = (seconds?: number) => {
+const formatDuration = (seconds?: number, minutes?: number) => {
+  if (typeof minutes === "number" && minutes > 0) {
+    return `${minutes}p`;
+  }
+
   if (!seconds) return "-";
   const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
+  const minutesFromSeconds = Math.floor((seconds % 3600) / 60);
   if (hours > 0) {
-    return `${hours}g ${minutes}p`;
+    return `${hours}g ${minutesFromSeconds}p`;
   }
-  return `${minutes}p`;
+  return `${minutesFromSeconds}p`;
 };
 
 export function SessionTable({
@@ -76,6 +80,8 @@ export function SessionTable({
           </TableHead>
           <TableHead>Giờ họp</TableHead>
           <TableHead className="w-24">Thời lượng</TableHead>
+          <TableHead className="w-36">Tổng giá</TableHead>
+          <TableHead className="w-40">Mã giao dịch</TableHead>
           <TableHead className="w-28">
             {getSortProps ? (
               <SortButton {...getSortProps("status")}>Trạng thái</SortButton>
@@ -105,7 +111,11 @@ export function SessionTable({
             <TableCell className="text-muted-foreground">
               {formatDateTime(session.joinTime)}
             </TableCell>
-            <TableCell>{formatDuration(session.durationSeconds1)}</TableCell>
+            <TableCell>{formatDuration(session.durationSeconds1, session.duration)}</TableCell>
+            <TableCell>
+              {session.totalPrice != null ? formatCurrency(session.totalPrice) : "-"}
+            </TableCell>
+            <TableCell className="font-mono text-xs">{session.transactionCode || "-"}</TableCell>
             <TableCell>
               {(() => {
                 const statusConfig = getSessionStatusBadge(session.status);

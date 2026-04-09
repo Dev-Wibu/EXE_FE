@@ -35,6 +35,7 @@ interface SessionFormDialogProps {
 const SESSION_STATUSES: SessionStatus[] = [
   "DRAFT",
   "SCHEDULED",
+  "PAID",
   "REJECTED",
   "ONGOING",
   "COMPLETED",
@@ -97,6 +98,47 @@ export function SessionFormDialog({
                     : undefined,
                 })
               }
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="duration">Thời lượng dự kiến (phút)</Label>
+            <Input
+              id="duration"
+              type="number"
+              min={0}
+              value={formData.duration ?? ""}
+              onChange={(e) =>
+                onFormChange({
+                  ...formData,
+                  duration: e.target.value === "" ? undefined : Number(e.target.value),
+                })
+              }
+              placeholder="Nhập thời lượng"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="totalPrice">Tổng giá (VND)</Label>
+            <Input
+              id="totalPrice"
+              type="number"
+              min={0}
+              value={formData.totalPrice ?? ""}
+              onChange={(e) =>
+                onFormChange({
+                  ...formData,
+                  totalPrice: e.target.value === "" ? undefined : Number(e.target.value),
+                })
+              }
+              placeholder="Nhập tổng giá"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="transactionCode">Mã giao dịch</Label>
+            <Input
+              id="transactionCode"
+              value={formData.transactionCode || ""}
+              onChange={(e) => onFormChange({ ...formData, transactionCode: e.target.value })}
+              placeholder="Nhập mã giao dịch"
             />
           </div>
           <div className="flex items-center justify-between">

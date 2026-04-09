@@ -336,8 +336,23 @@ export function MentorFormDialog({
               />
             </div>
           </div>
-          {/* Note: Rate field removed as MentorInfo schema doesn't include it */}
-          {/* MentorInfo only contains: id, name, email, password, bio, expertise, yearsOfExperience, linkedInUrl, currentCompany */}
+          <div className="space-y-1.5">
+            <Label htmlFor="pricePerMinute">Đơn giá mỗi phút (VNĐ)</Label>
+            <Input
+              id="pricePerMinute"
+              type="number"
+              min={0}
+              value={formData.pricePerMinute ?? ""}
+              onChange={(e) =>
+                onFormChange({
+                  ...formData,
+                  pricePerMinute: e.target.value === "" ? undefined : Number(e.target.value),
+                })
+              }
+              placeholder="Ví dụ: 5000"
+            />
+          </div>
+          {/* MentorInfo: id, name, email, password, bio, expertise, yearsOfExperience, linkedInUrl, currentCompany, pricePerMinute */}
           <div className="space-y-1.5">
             <Label htmlFor="linkedInUrl">Đường dẫn LinkedIn</Label>
             <Input

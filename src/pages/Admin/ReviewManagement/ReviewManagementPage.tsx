@@ -1,6 +1,6 @@
 /**
  * Admin Review Management Page
- * Allows admin to view and moderate all mentor reviews
+ * Allows admin to view and moderate all mentor reviews for candidates
  */
 
 import { Eye, Search, Star, Trash2 } from "lucide-react";
@@ -132,7 +132,7 @@ export function ReviewManagementPage() {
             Quản Lý Đánh Giá
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Xem và kiểm duyệt các đánh giá từ học viên
+            Xem và kiểm duyệt các đánh giá từ mentor dành cho ứng viên
           </p>
         </div>
       </div>
@@ -191,7 +191,7 @@ export function ReviewManagementPage() {
             <div className="relative min-w-[200px] flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Tìm theo tên mentor, học viên, phiên..."
+                placeholder="Tìm theo tên mentor, ứng viên, phiên..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -240,8 +240,8 @@ export function ReviewManagementPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Mentor</TableHead>
-                    <TableHead>Học viên</TableHead>
+                    <TableHead>Mentor gửi</TableHead>
+                    <TableHead>Ứng viên được đánh giá</TableHead>
                     <TableHead>Phiên</TableHead>
                     <TableHead>
                       <SortButton {...getSortProps("rating" as keyof MentorReview)}>
@@ -315,7 +315,7 @@ export function ReviewManagementPage() {
           <DialogHeader>
             <DialogTitle>Chi Tiết Đánh Giá #{selectedReview?.id}</DialogTitle>
             <DialogDescription>
-              Đánh giá từ {selectedReview?.user?.name} cho {selectedReview?.mentor?.name}
+              Đánh giá từ {selectedReview?.mentor?.name} cho {selectedReview?.user?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedReview && (

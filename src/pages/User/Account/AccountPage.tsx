@@ -3,12 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { normalizeMajor } from "@/constants/majors";
-import type { UserSettings, Wallet } from "@/mocks/user.mock";
+import type { Wallet } from "@/mocks/user.mock";
 import { usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
-import { MembershipTab, ProfileTab, SettingsTab, WalletTab } from "./AccountTabs";
+import { MembershipTab, ProfileTab, WalletTab } from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
 
@@ -18,24 +18,13 @@ const DEFAULT_WALLET: Wallet = {
   transactions: [],
 };
 
-const DEFAULT_SETTINGS: UserSettings = {
-  language: "vi",
-  notifications: {
-    emailNotifications: true,
-    smsNotifications: false,
-    pushNotifications: true,
-    marketingEmails: false,
-  },
-};
-
 export function AccountPage() {
   const { user: authUser, setUser } = useAuthStore();
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [wallet, setWallet] = useState<Wallet>(DEFAULT_WALLET);
-  const [settings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "profile" | "wallet" | "settings" | "candidateProfile" | "membership"
+    "profile" | "wallet" | "candidateProfile" | "membership"
   >("profile");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -283,8 +272,6 @@ export function AccountPage() {
         ) : null;
       case "wallet":
         return <WalletTab wallet={wallet} />;
-      case "settings":
-        return <SettingsTab settings={settings} />;
       case "candidateProfile":
         return <CandidateProfileTab />;
       case "membership":
@@ -319,7 +306,7 @@ export function AccountPage() {
             Tài khoản của bạn
           </h1>
           <p className="font-['Open_Sans'] text-base font-normal text-gray-700 dark:text-slate-300">
-            Quản lý thông tin cá nhân, ví tiền và cài đặt
+            Quản lý thông tin cá nhân, ví tiền, hồ sơ ứng viên và gói thành viên
           </p>
         </div>
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50">
@@ -346,15 +333,6 @@ export function AccountPage() {
               : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}>
           Ví tiền
-        </button>
-        <button
-          onClick={() => setActiveTab("settings")}
-          className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
-            activeTab === "settings"
-              ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
-              : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
-          }`}>
-          Cài đặt
         </button>
         <button
           onClick={() => setActiveTab("candidateProfile")}

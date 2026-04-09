@@ -1,6 +1,6 @@
 /**
  * Mentor Given Feedback List Page
- * Displays all feedbacks that mentor has given to students
+ * Displays all feedbacks that mentor has received from students
  */
 
 import { MessageSquare, TrendingUp, Users } from "lucide-react";
@@ -46,9 +46,11 @@ export function GivenFeedbackListPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Phản Hồi Đã Gửi</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            Phản Hồi Nhận Được
+          </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Các phản hồi bạn đã gửi cho học viên sau mỗi phiên phỏng vấn
+            Các phản hồi học viên gửi cho bạn sau mỗi phiên phỏng vấn
           </p>
         </div>
         <ReloadButton
@@ -109,7 +111,7 @@ export function GivenFeedbackListPage() {
             <MessageSquare className="h-5 w-5 text-emerald-600" />
             <CardTitle>Danh Sách Phản Hồi</CardTitle>
           </div>
-          <CardDescription>Các phản hồi bạn đã gửi cho học viên</CardDescription>
+          <CardDescription>Các phản hồi học viên gửi cho bạn</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -118,7 +120,7 @@ export function GivenFeedbackListPage() {
             <EmptyState
               icon={MessageSquare}
               title="Chưa có phản hồi"
-              description="Bạn chưa gửi phản hồi nào cho học viên. Hãy viết phản hồi sau mỗi phiên phỏng vấn!"
+              description="Bạn chưa nhận được phản hồi nào từ học viên."
             />
           ) : (
             <div className="space-y-4">

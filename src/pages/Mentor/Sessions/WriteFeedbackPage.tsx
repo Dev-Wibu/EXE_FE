@@ -1,20 +1,20 @@
 /**
  * Write Feedback Page (Mentor)
- * Form for mentors to write feedback for students after sessions
+ * Form for mentors to write reviews for students after sessions
  */
 
-import { ArrowLeft, MessageSquare, User } from "lucide-react";
+import { ArrowLeft, Star, User } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { MentorFeedbackForm } from "@/components/feedback";
+import { MentorReviewForm } from "@/components/review";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useCreateMentorFeedback,
-  useMentorFeedbackBySession,
-  useUpdateMentorFeedback,
-} from "@/hooks/useMentorFeedback";
+  useCreateMentorReview,
+  useMentorReviewBySession,
+  useUpdateMentorReview,
+} from "@/hooks/useMentorReview";
 import { useSessionById } from "@/hooks/useSession";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -24,30 +24,42 @@ export function WriteFeedbackPage() {
   const user = useAuthStore((state) => state.user);
 
   const { data: session, isLoading: sessionLoading } = useSessionById(Number(sessionId));
-  const { data: existingFeedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
+  const { data: existingReview, isLoading: reviewLoading } = useMentorReviewBySession(
     Number(sessionId)
   );
-  const { mutate: createFeedback, isPending: isCreating } = useCreateMentorFeedback();
-  const { mutate: updateFeedback, isPending: isUpdating } = useUpdateMentorFeedback();
+  const { mutate: createReview, isPending: isCreating } = useCreateMentorReview();
+  const { mutate: updateReview, isPending: isUpdating } = useUpdateMentorReview();
 
-  const isLoading = sessionLoading || feedbackLoading;
+  const isLoading = sessionLoading || reviewLoading;
   const isSubmitting = isCreating || isUpdating;
-  const isEdit = !!existingFeedback;
+  const isEdit = !!existingReview;
 
   const handleSubmit = (data: {
     rating: number;
-    comment: string;
+    situationNote?: string;
+    taskNote?: string;
+    actionNote?: string;
+    resultNote?: string;
+    strength?: string;
+    weakness?: string;
+    improve?: string;
     sessionId: number;
     mentorId: number;
     userId: number;
   }) => {
-    if (isEdit && existingFeedback?.id) {
-      updateFeedback(
+    if (isEdit && existingReview?.id) {
+      updateReview(
         {
-          id: existingFeedback.id,
+          id: existingReview.id,
           data: {
             rating: data.rating,
-            comment: data.comment,
+            situationNote: data.situationNote,
+            taskNote: data.taskNote,
+            actionNote: data.actionNote,
+            resultNote: data.resultNote,
+            strength: data.strength,
+            weakness: data.weakness,
+            improve: data.improve,
           },
         },
         {
@@ -57,13 +69,19 @@ export function WriteFeedbackPage() {
         }
       );
     } else {
-      createFeedback(
+      createReview(
         {
           sessionId: data.sessionId,
           mentorId: data.mentorId,
           userId: data.userId,
           rating: data.rating,
-          comment: data.comment,
+          situationNote: data.situationNote,
+          taskNote: data.taskNote,
+          actionNote: data.actionNote,
+          resultNote: data.resultNote,
+          strength: data.strength,
+          weakness: data.weakness,
+          improve: data.improve,
         },
         {
           onSuccess: () => {
@@ -92,7 +110,7 @@ export function WriteFeedbackPage() {
         </Button>
         <Card className="border-emerald-100 dark:border-slate-800">
           <CardContent className="py-12 text-center">
-            <MessageSquare className="mx-auto h-12 w-12 text-slate-400" />
+            <Star className="mx-auto h-12 w-12 text-slate-400" />
             <h3 className="mt-4 font-semibold">Không tìm thấy phiên phỏng vấn</h3>
             <p className="mt-1 text-sm text-slate-500">
               Phiên phỏng vấn này không tồn tại hoặc đã bị xóa
@@ -112,10 +130,10 @@ export function WriteFeedbackPage() {
         </Button>
         <Card className="border-emerald-100 dark:border-slate-800">
           <CardContent className="py-12 text-center">
-            <MessageSquare className="mx-auto h-12 w-12 text-slate-400" />
-            <h3 className="mt-4 font-semibold">Chưa thể viết phản hồi</h3>
+            <Star className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 font-semibold">Chưa thể viết đánh giá</h3>
             <p className="mt-1 text-sm text-slate-500">
-              Bạn chỉ có thể viết phản hồi sau khi phiên phỏng vấn hoàn thành
+              Bạn chỉ có thể viết đánh giá sau khi phiên phỏng vấn hoàn thành
             </p>
           </CardContent>
         </Card>
@@ -171,21 +189,21 @@ export function WriteFeedbackPage() {
       <Card className="border-emerald-100 dark:border-slate-800">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-emerald-600" />
-            <CardTitle>{isEdit ? "Chỉnh Sửa Phản Hồi" : "Viết Phản Hồi"}</CardTitle>
+            <Star className="h-5 w-5 text-[#FFD700]" />
+            <CardTitle>{isEdit ? "Chỉnh Sửa Đánh Giá" : "Viết Đánh Giá"}</CardTitle>
           </div>
           <CardDescription>
             {isEdit
-              ? "Cập nhật phản hồi của bạn về buổi phỏng vấn"
-              : "Chia sẻ nhận xét và đánh giá về học viên trong buổi phỏng vấn"}
+              ? "Cập nhật đánh giá của bạn về học viên"
+              : "Đánh giá học viên sau buổi phỏng vấn theo mẫu STAR"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MentorFeedbackForm
+          <MentorReviewForm
             sessionId={Number(sessionId)}
             mentorId={user?.id || 0}
             userId={session.userId || 0}
-            existingFeedback={existingFeedback}
+            existingReview={existingReview}
             onSubmit={handleSubmit}
             onCancel={() => navigate("/mentor?tab=sessions")}
             isLoading={isSubmitting}

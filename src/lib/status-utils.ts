@@ -24,6 +24,12 @@ export function getSessionStatusBadge(status?: string): StatusBadgeConfig {
         variant: "default",
         className: "bg-yellow-500 text-white hover:bg-yellow-500",
       };
+    case "PAID":
+      return {
+        label: "Đã thanh toán",
+        variant: "default",
+        className: "bg-emerald-600 text-white hover:bg-emerald-600",
+      };
     case "ONGOING":
       return {
         label: "Đang diễn ra",

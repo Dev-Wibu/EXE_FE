@@ -1,6 +1,6 @@
 /**
  * Admin Feedback Management Page
- * Allows admin to view and moderate all mentor feedbacks
+ * Allows admin to view and moderate all candidate feedbacks for mentors
  */
 
 import { Eye, MessageSquare, Search, Trash2 } from "lucide-react";
@@ -137,7 +137,7 @@ export function FeedbackManagementPage() {
             Quản Lý Phản Hồi
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Xem và kiểm duyệt các phản hồi từ mentor
+            Xem và kiểm duyệt các phản hồi từ ứng viên dành cho mentor
           </p>
         </div>
       </div>
@@ -196,7 +196,7 @@ export function FeedbackManagementPage() {
             <div className="relative min-w-[200px] flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Tìm theo tên mentor, học viên, nội dung..."
+                placeholder="Tìm theo tên ứng viên, mentor, nội dung..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -245,8 +245,8 @@ export function FeedbackManagementPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Mentor</TableHead>
-                    <TableHead>Học viên</TableHead>
+                    <TableHead>Mentor nhận</TableHead>
+                    <TableHead>Ứng viên gửi</TableHead>
                     <TableHead>Phiên</TableHead>
                     <TableHead>
                       <SortButton {...getSortProps("rating" as keyof MentorFeedback)}>
@@ -326,7 +326,7 @@ export function FeedbackManagementPage() {
           <DialogHeader>
             <DialogTitle>Chi Tiết Phản Hồi #{selectedFeedback?.id}</DialogTitle>
             <DialogDescription>
-              Phản hồi từ {selectedFeedback?.mentor?.name} cho {selectedFeedback?.user?.name}
+              Phản hồi từ {selectedFeedback?.user?.name} cho {selectedFeedback?.mentor?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedFeedback && (

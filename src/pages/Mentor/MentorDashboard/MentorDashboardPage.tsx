@@ -30,8 +30,8 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "overview", label: "Tổng quan" },
   { type: "sessions", label: "Phiên phỏng vấn" },
   { type: "students", label: "Học viên" },
-  { type: "reviews", label: "Đánh giá" },
-  { type: "feedback", label: "Phản hồi đã gửi" },
+  { type: "reviews", label: "Đánh giá đã gửi" },
+  { type: "feedback", label: "Phản hồi nhận được" },
   { type: "notifications", label: "Thông báo" },
   { type: "account", label: "Tài khoản" },
 ];
@@ -47,8 +47,13 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       { type: "overview", icon: LayoutDashboard, label: "Tổng quan", color: "text-emerald-600" },
       { type: "sessions", icon: Calendar, label: "Phiên phỏng vấn", color: "text-blue-600" },
       { type: "students", icon: Users, label: "Học viên", color: "text-purple-600" },
-      { type: "reviews", icon: Star, label: "Đánh giá", color: "text-yellow-600" },
-      { type: "feedback", icon: MessageSquare, label: "Phản hồi đã gửi", color: "text-cyan-600" },
+      { type: "reviews", icon: Star, label: "Đánh giá đã gửi", color: "text-yellow-600" },
+      {
+        type: "feedback",
+        icon: MessageSquare,
+        label: "Phản hồi nhận được",
+        color: "text-cyan-600",
+      },
     ],
   },
   {

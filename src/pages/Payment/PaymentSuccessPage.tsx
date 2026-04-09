@@ -6,8 +6,10 @@ import type { UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
   buildSupportPayload,
+  clearPendingSessionPaymentContext,
   formatSupportPayload,
   getLatestRecoveryForUser,
+  getPendingSessionPaymentContext,
   getRecoveryByOrderCode,
   type PaymentRecoveryContext,
   upsertPaymentRecoveryContext,
@@ -65,6 +67,17 @@ export function PaymentSuccessPage() {
   const source = query.get("source")?.trim() || "callback";
   const paid = isPaidStatus(status);
   const currentUserId = Number(user?.id || 0);
+  const pendingSessionPayment = useMemo(
+    () => getPendingSessionPaymentContext(currentUserId || undefined),
+    [currentUserId]
+  );
+  const pendingSessionOrderCode = pendingSessionPayment?.orderCode?.trim() || "";
+  const shouldRedirectToPendingSession = Boolean(
+    pendingSessionPayment?.sessionId &&
+    orderCode &&
+    pendingSessionOrderCode &&
+    pendingSessionOrderCode === orderCode
+  );
 
   const [resolveState, setResolveState] = useState<ResolveState>("checking");
   const [resolveError, setResolveError] = useState<string>("");
@@ -73,7 +86,26 @@ export function PaymentSuccessPage() {
   const [supportCode, setSupportCode] = useState<string>("");
   const [subscription, setSubscription] = useState<UserSubscriptionResponse | null>(null);
   const [isKnownActivatedOrder, setIsKnownActivatedOrder] = useState(false);
+  const [autoSubscribeOrderCode, setAutoSubscribeOrderCode] = useState<string>("");
   const [isCopyingPayload, setIsCopyingPayload] = useState(false);
+
+  const loadActiveSubscription = useCallback(
+    async (userId: number): Promise<UserSubscriptionResponse | null> => {
+      const subscriptionResult = await userManager.getActiveSubscription(userId);
+      if (subscriptionResult.success && subscriptionResult.data) {
+        setSubscription(subscriptionResult.data);
+        setSubscribeError("");
+        return subscriptionResult.data;
+      }
+
+      setSubscribeError(
+        subscriptionResult.error ||
+          "Da kich hoat goi, nhung khong tai duoc thong tin subscription moi."
+      );
+      return null;
+    },
+    []
+  );
 
   const handleCopySupportPayload = useCallback(async () => {
     if (isCopyingPayload) {
@@ -102,6 +134,45 @@ export function PaymentSuccessPage() {
       setIsCopyingPayload(false);
     }
   }, [isCopyingPayload, orderCode, paid, recoveryContext, source, status, supportCode]);
+
+  useEffect(() => {
+    if (!pendingSessionPayment?.sessionId || !orderCode || !pendingSessionOrderCode) {
+      return;
+    }
+
+    if (pendingSessionOrderCode === orderCode) {
+      return;
+    }
+
+    addPaymentSupportLog({
+      orderCode,
+      userId: currentUserId || undefined,
+      status: "UNMAPPED_ORDER",
+      message: "Bo qua pending session payment do orderCode khong khop callback.",
+      payload: {
+        pendingSessionOrderCode,
+        callbackOrderCode: orderCode,
+      },
+    });
+    clearPendingSessionPaymentContext();
+  }, [currentUserId, orderCode, pendingSessionOrderCode, pendingSessionPayment]);
+
+  useEffect(() => {
+    if (!shouldRedirectToPendingSession || !pendingSessionPayment?.sessionId) {
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set("payment", paid ? "success" : "failed");
+    if (orderCode) {
+      params.set("orderCode", orderCode);
+    }
+
+    clearPendingSessionPaymentContext();
+    window.location.replace(
+      `/user/mock-interview/history/${pendingSessionPayment.sessionId}?${params.toString()}`
+    );
+  }, [orderCode, paid, pendingSessionPayment, shouldRedirectToPendingSession]);
 
   const handleResolveOrder = useCallback(async () => {
     setSubscribeError("");
@@ -236,7 +307,7 @@ export function PaymentSuccessPage() {
       checkoutUrl: nextContext.checkoutUrl,
       status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
       note: paid
-        ? "Callback success hop le, cho user xac nhan subscribe thu cong."
+        ? "Callback success hop le, san sang tu dong kich hoat goi."
         : "Callback tra ve status khong hop le.",
     });
 
@@ -249,7 +320,7 @@ export function PaymentSuccessPage() {
       amount: updatedContext.amount,
       status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
       message: paid
-        ? "Da xac nhan callback thanh cong, cho nguoi dung bam subscribe."
+        ? "Da xac nhan callback thanh cong, he thong se tu dong kich hoat goi."
         : "Callback co orderCode nhung status thanh toan khong hop le.",
       payload: {
         source,
@@ -273,6 +344,10 @@ export function PaymentSuccessPage() {
   }, [currentUserId, orderCode, paid, source, status]);
 
   useEffect(() => {
+    if (shouldRedirectToPendingSession) {
+      return;
+    }
+
     const timerId = window.setTimeout(() => {
       void handleResolveOrder();
     }, 0);
@@ -280,9 +355,9 @@ export function PaymentSuccessPage() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [handleResolveOrder]);
+  }, [handleResolveOrder, shouldRedirectToPendingSession]);
 
-  const handleConfirmSubscribe = async () => {
+  const handleConfirmSubscribe = useCallback(async () => {
     if (!recoveryContext) {
       return;
     }
@@ -307,12 +382,11 @@ export function PaymentSuccessPage() {
     }
 
     if (resolveState === "subscribed" || isKnownActivatedOrder) {
-      const accepted = window.confirm(
-        "Order nay da tung kich hoat goi truoc do. Ban co chac muon thu kich hoat lai khong?"
-      );
-      if (!accepted) {
-        return;
-      }
+      setResolveState("subscribed");
+      setSubscribeError("");
+      toast.info("Order nay da duoc kich hoat truoc do.");
+      await loadActiveSubscription(recoveryContext.userId);
+      return;
     }
 
     setResolveState("subscribing");
@@ -343,7 +417,7 @@ export function PaymentSuccessPage() {
         planName: updatedContext.planName,
         amount: updatedContext.amount,
         status: "SUBSCRIBE_FAILED",
-        message: "Nguoi dung bam subscribe nhung backend tra ve loi.",
+        message: "He thong kich hoat goi tu dong that bai do backend tra ve loi.",
         payload: {
           error: subscribeResult.error || null,
         },
@@ -357,15 +431,7 @@ export function PaymentSuccessPage() {
       return;
     }
 
-    const subscriptionResult = await userManager.getActiveSubscription(recoveryContext.userId);
-    if (subscriptionResult.success && subscriptionResult.data) {
-      setSubscription(subscriptionResult.data);
-    } else {
-      setSubscribeError(
-        subscriptionResult.error ||
-          "Da kich hoat goi, nhung khong tai duoc thong tin subscription moi."
-      );
-    }
+    const latestSubscription = await loadActiveSubscription(recoveryContext.userId);
 
     const updatedContext = upsertPaymentRecoveryContext({
       supportCode: recoveryContext.supportCode,
@@ -387,9 +453,9 @@ export function PaymentSuccessPage() {
       planName: updatedContext.planName,
       amount: updatedContext.amount,
       status: "SUBSCRIBE_SUCCESS",
-      message: "Nguoi dung da kich hoat goi thanh cong.",
+      message: "He thong da kich hoat goi thanh cong sau callback.",
       payload: {
-        subscriptionSnapshot: subscriptionResult.data || null,
+        subscriptionSnapshot: latestSubscription,
       },
     });
 
@@ -399,9 +465,63 @@ export function PaymentSuccessPage() {
     setIsKnownActivatedOrder(true);
     setResolveState("subscribed");
     toast.success("Da kich hoat goi thanh cong.");
-  };
+  }, [
+    currentUserId,
+    isKnownActivatedOrder,
+    loadActiveSubscription,
+    orderCode,
+    paid,
+    recoveryContext,
+    resolveState,
+  ]);
 
-  const canConfirm = resolveState === "ready" && !!recoveryContext;
+  useEffect(() => {
+    if (shouldRedirectToPendingSession || resolveState !== "ready" || !recoveryContext || !paid) {
+      return;
+    }
+
+    const resolvedOrderCode = (recoveryContext.orderCode || orderCode).trim();
+    if (!resolvedOrderCode || autoSubscribeOrderCode === resolvedOrderCode) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setAutoSubscribeOrderCode(resolvedOrderCode);
+      void handleConfirmSubscribe();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [
+    autoSubscribeOrderCode,
+    handleConfirmSubscribe,
+    orderCode,
+    paid,
+    shouldRedirectToPendingSession,
+    recoveryContext,
+    resolveState,
+  ]);
+
+  const resolvedOrderCode = (recoveryContext?.orderCode || orderCode).trim();
+  const canRetrySubscribe =
+    resolveState === "ready" &&
+    !!recoveryContext &&
+    resolvedOrderCode.length > 0 &&
+    autoSubscribeOrderCode === resolvedOrderCode;
+
+  if (shouldRedirectToPendingSession) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-emerald-50 to-blue-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">
+        <div className="mx-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900">
+          <Loader2 className="h-5 w-5 animate-spin text-emerald-600 dark:text-emerald-300" />
+          <p className="font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
+            Đang chuyển hướng về trang chi tiết phiên phỏng vấn...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-emerald-50 to-blue-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">
@@ -415,7 +535,7 @@ export function PaymentSuccessPage() {
               Thanh toan thanh cong
             </h1>
             <p className="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
-              Xac nhan goi thanh vien thu cong sau khi callback payment tra ve.
+              He thong dang doi chieu callback va tu dong kich hoat goi thanh vien.
             </p>
           </div>
         </div>
@@ -489,7 +609,8 @@ export function PaymentSuccessPage() {
         {isKnownActivatedOrder && (
           <div className="rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/40 dark:bg-violet-900/10">
             <p className="font-['Inter'] text-sm text-violet-700 dark:text-violet-300">
-              OrderCode nay da tung kich hoat goi. Neu can retry, he thong se yeu cau ban xac nhan.
+              OrderCode nay da tung kich hoat goi. He thong se bo qua kich hoat lai de tranh trung
+              lap.
             </p>
           </div>
         )}
@@ -520,11 +641,11 @@ export function PaymentSuccessPage() {
             className="rounded-xl border border-blue-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20">
             {isCopyingPayload ? "Dang sao chep..." : "Sao chep payload ho tro"}
           </button>
-          {canConfirm && (
+          {canRetrySubscribe && (
             <button
               onClick={handleConfirmSubscribe}
               className="rounded-xl bg-emerald-600 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white hover:bg-emerald-700">
-              Xac nhan kich hoat goi
+              Thu kich hoat lai
             </button>
           )}
           {resolveState === "subscribing" && (
@@ -533,13 +654,6 @@ export function PaymentSuccessPage() {
               className="flex items-center gap-2 rounded-xl bg-emerald-500/80 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white">
               <Loader2 className="h-4 w-4 animate-spin" />
               Dang kich hoat goi...
-            </button>
-          )}
-          {resolveState === "subscribed" && (
-            <button
-              onClick={handleConfirmSubscribe}
-              className="rounded-xl border border-emerald-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/20">
-              Kich hoat lai (neu can)
             </button>
           )}
         </div>

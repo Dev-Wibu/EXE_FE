@@ -1,6 +1,6 @@
 /**
  * Mentor Reviews Page
- * Displays reviews received from students
+ * Displays reviews written by mentor for students
  */
 
 import { Star } from "lucide-react";
@@ -45,11 +45,9 @@ export function MentorReviewsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            Đánh Giá Nhận Được
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Đánh Giá Đã Gửi</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Xem các đánh giá từ học viên sau mỗi phiên phỏng vấn
+            Xem các đánh giá bạn đã gửi cho học viên sau mỗi phiên phỏng vấn
           </p>
         </div>
         <ReloadButton
@@ -104,7 +102,7 @@ export function MentorReviewsPage() {
             <Star className="h-5 w-5 text-[#FFD700]" />
             <CardTitle>Danh Sách Đánh Giá</CardTitle>
           </div>
-          <CardDescription>Các đánh giá bạn nhận được từ học viên</CardDescription>
+          <CardDescription>Các đánh giá bạn đã gửi cho học viên</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Sort Controls */}
@@ -124,7 +122,7 @@ export function MentorReviewsPage() {
             showUser
             showMentor={false}
             emptyTitle="Chưa có đánh giá"
-            emptyDescription="Bạn chưa nhận được đánh giá nào từ học viên."
+            emptyDescription="Bạn chưa gửi đánh giá nào cho học viên."
           />
 
           {/* Pagination */}

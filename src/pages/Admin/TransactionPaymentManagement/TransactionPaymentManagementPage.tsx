@@ -1,7 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { PaymentEntity, TransactionEntity } from "@/interfaces";
+import type { PaymentEntity, PaymentPurpose, TransactionEntity } from "@/interfaces";
 import { buildSupportPayload, formatSupportPayload } from "@/lib";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
 import { paymentManager } from "@/services/payment.manager";
@@ -11,9 +11,25 @@ import { toast } from "sonner";
 type ActiveView = "transactions" | "payments";
 type TransactionTypeFilter = "all" | "in" | "out";
 type PaymentStatusFilter = "all" | "PENDING" | "COMPLETED" | "FAILED";
+type PaymentPurposeFilter = "all" | PaymentPurpose;
 
 const transactionTypeLabel = (value?: boolean) => {
   return value ? "Transfer In" : "Transfer Out";
+};
+
+const paymentPurposeLabel = (value?: PaymentPurpose) => {
+  switch (value) {
+    case "BUY_MEMBERSHIP":
+      return "Mua gói";
+    case "TOP_UP_WALLET":
+      return "Nạp ví";
+    case "WITHDRAW_FROM_WALLET":
+      return "Rút ví";
+    case "MENTOR_INTERVIEW":
+      return "Phỏng vấn mentor";
+    default:
+      return "-";
+  }
 };
 
 export function TransactionPaymentManagementPage() {
@@ -25,6 +41,7 @@ export function TransactionPaymentManagementPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<TransactionTypeFilter>("all");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatusFilter>("all");
+  const [paymentPurposeFilter, setPaymentPurposeFilter] = useState<PaymentPurposeFilter>("all");
   const [isCopyingSupportPayload, setIsCopyingSupportPayload] = useState(false);
 
   const handleCopySupportPayload = useCallback(async () => {
@@ -108,9 +125,12 @@ export function TransactionPaymentManagementPage() {
         (transactionTypeFilter === "in" && tx.transactionType === true) ||
         (transactionTypeFilter === "out" && tx.transactionType === false);
 
-      return textMatch && typeMatch;
+      const purposeMatch =
+        paymentPurposeFilter === "all" || tx.paymentPurpose === paymentPurposeFilter;
+
+      return textMatch && typeMatch && purposeMatch;
     });
-  }, [normalizedSearch, transactionTypeFilter, transactions]);
+  }, [normalizedSearch, paymentPurposeFilter, transactionTypeFilter, transactions]);
 
   const filteredPayments = useMemo(() => {
     return payments.filter((payment) => {
@@ -122,9 +142,12 @@ export function TransactionPaymentManagementPage() {
       const statusMatch =
         paymentStatusFilter === "all" || payment.status?.toUpperCase() === paymentStatusFilter;
 
-      return textMatch && statusMatch;
+      const purposeMatch =
+        paymentPurposeFilter === "all" || payment.paymentPurpose === paymentPurposeFilter;
+
+      return textMatch && statusMatch && purposeMatch;
     });
-  }, [normalizedSearch, paymentStatusFilter, payments]);
+  }, [normalizedSearch, paymentPurposeFilter, paymentStatusFilter, payments]);
 
   const visibleTransactionCount = filteredTransactions.length;
   const visiblePaymentCount = filteredPayments.length;
@@ -256,6 +279,17 @@ export function TransactionPaymentManagementPage() {
           </select>
         )}
 
+        <select
+          value={paymentPurposeFilter}
+          onChange={(event) => setPaymentPurposeFilter(event.target.value as PaymentPurposeFilter)}
+          className="rounded-lg border border-slate-300 px-3 py-2 font-['Inter'] text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          <option value="all">Tất cả mục đích</option>
+          <option value="BUY_MEMBERSHIP">BUY_MEMBERSHIP</option>
+          <option value="TOP_UP_WALLET">TOP_UP_WALLET</option>
+          <option value="WITHDRAW_FROM_WALLET">WITHDRAW_FROM_WALLET</option>
+          <option value="MENTOR_INTERVIEW">MENTOR_INTERVIEW</option>
+        </select>
+
         <button
           onClick={() => void handleCopySupportPayload()}
           disabled={isCopyingSupportPayload}
@@ -289,6 +323,9 @@ export function TransactionPaymentManagementPage() {
                     Type
                   </th>
                   <th className="px-4 py-3 text-left font-['Inter'] text-xs font-semibold text-slate-600 uppercase dark:text-slate-300">
+                    Purpose
+                  </th>
+                  <th className="px-4 py-3 text-left font-['Inter'] text-xs font-semibold text-slate-600 uppercase dark:text-slate-300">
                     CreatedAt
                   </th>
                 </tr>
@@ -307,6 +344,9 @@ export function TransactionPaymentManagementPage() {
                     </td>
                     <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
                       {transactionTypeLabel(tx.transactionType)}
+                    </td>
+                    <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
+                      {paymentPurposeLabel(tx.paymentPurpose)}
                     </td>
                     <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
                       {formatDateTime(tx.createdAt)}
@@ -334,6 +374,9 @@ export function TransactionPaymentManagementPage() {
                     Status
                   </th>
                   <th className="px-4 py-3 text-left font-['Inter'] text-xs font-semibold text-slate-600 uppercase dark:text-slate-300">
+                    Purpose
+                  </th>
+                  <th className="px-4 py-3 text-left font-['Inter'] text-xs font-semibold text-slate-600 uppercase dark:text-slate-300">
                     CreatedAt
                   </th>
                 </tr>
@@ -352,6 +395,9 @@ export function TransactionPaymentManagementPage() {
                     </td>
                     <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
                       {payment.status || "-"}
+                    </td>
+                    <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
+                      {paymentPurposeLabel(payment.paymentPurpose)}
                     </td>
                     <td className="px-4 py-3 font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
                       {formatDateTime(payment.createdAt)}

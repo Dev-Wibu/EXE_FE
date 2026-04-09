@@ -991,6 +991,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/make-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["makePayment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/quiz-sets/{quizId}": {
         parameters: {
             query?: never;
@@ -1591,6 +1607,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/login-with-google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["googleLogin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/posts/likes/{postId}/{userId}": {
         parameters: {
             query?: never;
@@ -1642,7 +1674,12 @@ export interface components {
             joinTime?: string;
             recordUrl?: string;
             /** @enum {string} */
-            status?: "DRAFT" | "SCHEDULED" | "REJECTED" | "ONGOING" | "COMPLETED" | "CANCELED";
+            status?: "DRAFT" | "SCHEDULED" | "PAID" | "REJECTED" | "ONGOING" | "COMPLETED" | "CANCELED";
+            /** Format: int32 */
+            duration?: number;
+            /** Format: int32 */
+            totalPrice?: number;
+            transactionCode?: string;
         };
         QuestionLesson: {
             /** Format: int32 */
@@ -1773,6 +1810,8 @@ export interface components {
             totalSession?: number;
             /** Format: double */
             averageRating?: number;
+            /** Format: int32 */
+            pricePerMinute?: number;
             active?: boolean;
         };
         MentorReview: {
@@ -1964,6 +2003,10 @@ export interface components {
             mentorId?: number;
             /** Format: date-time */
             joinTime?: string;
+            /** Format: int32 */
+            duration?: number;
+            /** Format: int32 */
+            totalPrice?: number;
         };
         RoomConfig: {
             nbf?: string;
@@ -2164,6 +2207,8 @@ export interface components {
             yearsOfExperience?: number;
             linkedInUrl?: string;
             currentCompany?: string;
+            /** Format: int32 */
+            pricePerMinute?: number;
         };
         CreateMentorReviewRequest: {
             /** Format: int32 */
@@ -2278,6 +2323,8 @@ export interface components {
             transactionType?: boolean;
             /** Format: int64 */
             currentBalance?: number;
+            /** @enum {string} */
+            paymentPurpose?: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
         };
         PracticeQuestionDto: {
             /** Format: int32 */
@@ -2404,6 +2451,8 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             transactionCode?: string;
+            /** @enum {string} */
+            paymentPurpose?: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
         };
         ChatMessage: {
             /** Format: int32 */
@@ -2528,6 +2577,274 @@ export interface components {
             /** @enum {string} */
             currentQuestionType?: "BLUEPRINT" | "FOLLOW_UP";
             chatHistory?: components["schemas"]["InterviewExchange"][];
+        };
+        ApplicationContext: {
+            applicationName?: string;
+            /** Format: int64 */
+            startupDate?: number;
+            autowireCapableBeanFactory?: components["schemas"]["AutowireCapableBeanFactory"];
+            parent?: unknown;
+            id?: string;
+            displayName?: string;
+            environment?: components["schemas"]["Environment"];
+            /** Format: int32 */
+            beanDefinitionCount?: number;
+            beanDefinitionNames?: string[];
+            parentBeanFactory?: components["schemas"]["BeanFactory"];
+            classLoader?: {
+                name?: string;
+                registeredAsParallelCapable?: boolean;
+                parent?: {
+                    name?: string;
+                    registeredAsParallelCapable?: boolean;
+                    unnamedModule?: {
+                        name?: string;
+                        descriptor?: {
+                            open?: boolean;
+                            automatic?: boolean;
+                        };
+                        named?: boolean;
+                        annotations?: unknown[];
+                        declaredAnnotations?: unknown[];
+                        packages?: string[];
+                        nativeAccessEnabled?: boolean;
+                        layer?: unknown;
+                    };
+                    definedPackages?: {
+                        name?: string;
+                        annotations?: unknown[];
+                        declaredAnnotations?: unknown[];
+                        sealed?: boolean;
+                        specificationTitle?: string;
+                        specificationVersion?: string;
+                        specificationVendor?: string;
+                        implementationTitle?: string;
+                        implementationVersion?: string;
+                        implementationVendor?: string;
+                    }[];
+                    defaultAssertionStatus?: boolean;
+                };
+                unnamedModule?: {
+                    name?: string;
+                    descriptor?: {
+                        open?: boolean;
+                        automatic?: boolean;
+                    };
+                    named?: boolean;
+                    annotations?: unknown[];
+                    declaredAnnotations?: unknown[];
+                    packages?: string[];
+                    nativeAccessEnabled?: boolean;
+                    layer?: unknown;
+                };
+                definedPackages?: {
+                    name?: string;
+                    annotations?: unknown[];
+                    declaredAnnotations?: unknown[];
+                    sealed?: boolean;
+                    specificationTitle?: string;
+                    specificationVersion?: string;
+                    specificationVendor?: string;
+                    implementationTitle?: string;
+                    implementationVersion?: string;
+                    implementationVendor?: string;
+                }[];
+                defaultAssertionStatus?: boolean;
+            };
+        };
+        AutowireCapableBeanFactory: unknown;
+        BeanFactory: unknown;
+        DefaultHttpStatusCode: components["schemas"]["HttpStatusCode"];
+        Environment: {
+            activeProfiles?: string[];
+            defaultProfiles?: string[];
+        };
+        FilterRegistration: {
+            servletNameMappings?: string[];
+            urlPatternMappings?: string[];
+            initParameters?: {
+                [key: string]: string;
+            };
+            name?: string;
+            className?: string;
+        };
+        /** @enum {unknown} */
+        HttpStatus: "100 CONTINUE" | "101 SWITCHING_PROTOCOLS" | "102 PROCESSING" | "103 EARLY_HINTS" | "200 OK" | "201 CREATED" | "202 ACCEPTED" | "203 NON_AUTHORITATIVE_INFORMATION" | "204 NO_CONTENT" | "205 RESET_CONTENT" | "206 PARTIAL_CONTENT" | "207 MULTI_STATUS" | "208 ALREADY_REPORTED" | "226 IM_USED" | "300 MULTIPLE_CHOICES" | "301 MOVED_PERMANENTLY" | "302 FOUND" | "303 SEE_OTHER" | "304 NOT_MODIFIED" | "307 TEMPORARY_REDIRECT" | "308 PERMANENT_REDIRECT" | "400 BAD_REQUEST" | "401 UNAUTHORIZED" | "402 PAYMENT_REQUIRED" | "403 FORBIDDEN" | "404 NOT_FOUND" | "405 METHOD_NOT_ALLOWED" | "406 NOT_ACCEPTABLE" | "407 PROXY_AUTHENTICATION_REQUIRED" | "408 REQUEST_TIMEOUT" | "409 CONFLICT" | "410 GONE" | "411 LENGTH_REQUIRED" | "412 PRECONDITION_FAILED" | "413 CONTENT_TOO_LARGE" | "413 PAYLOAD_TOO_LARGE" | "414 URI_TOO_LONG" | "415 UNSUPPORTED_MEDIA_TYPE" | "416 REQUESTED_RANGE_NOT_SATISFIABLE" | "417 EXPECTATION_FAILED" | "418 I_AM_A_TEAPOT" | "421 MISDIRECTED_REQUEST" | "422 UNPROCESSABLE_CONTENT" | "422 UNPROCESSABLE_ENTITY" | "423 LOCKED" | "424 FAILED_DEPENDENCY" | "425 TOO_EARLY" | "426 UPGRADE_REQUIRED" | "428 PRECONDITION_REQUIRED" | "429 TOO_MANY_REQUESTS" | "431 REQUEST_HEADER_FIELDS_TOO_LARGE" | "451 UNAVAILABLE_FOR_LEGAL_REASONS" | "500 INTERNAL_SERVER_ERROR" | "501 NOT_IMPLEMENTED" | "502 BAD_GATEWAY" | "503 SERVICE_UNAVAILABLE" | "504 GATEWAY_TIMEOUT" | "505 HTTP_VERSION_NOT_SUPPORTED" | "506 VARIANT_ALSO_NEGOTIATES" | "507 INSUFFICIENT_STORAGE" | "508 LOOP_DETECTED" | "509 BANDWIDTH_LIMIT_EXCEEDED" | "510 NOT_EXTENDED" | "511 NETWORK_AUTHENTICATION_REQUIRED";
+        HttpStatusCode: {
+            is4xxClientError?: boolean;
+            is5xxServerError?: boolean;
+            is1xxInformational?: boolean;
+            is2xxSuccessful?: boolean;
+            is3xxRedirection?: boolean;
+            error?: boolean;
+        };
+        JspConfigDescriptor: {
+            taglibs?: components["schemas"]["TaglibDescriptor"][];
+            jspPropertyGroups?: components["schemas"]["JspPropertyGroupDescriptor"][];
+        };
+        JspPropertyGroupDescriptor: {
+            errorOnELNotFound?: string;
+            pageEncoding?: string;
+            scriptingInvalid?: string;
+            includePreludes?: string[];
+            includeCodas?: string[];
+            errorOnUndeclaredNamespace?: string;
+            deferredSyntaxAllowedAsLiteral?: string;
+            trimDirectiveWhitespaces?: string;
+            elIgnored?: string;
+            isXml?: string;
+            urlPatterns?: string[];
+            defaultContentType?: string;
+            buffer?: string;
+        };
+        RedirectView: {
+            applicationContext?: components["schemas"]["ApplicationContext"];
+            servletContext?: components["schemas"]["ServletContext"];
+            contentType?: string;
+            requestContextAttribute?: string;
+            staticAttributes?: {
+                [key: string]: unknown;
+            };
+            exposePathVariables?: boolean;
+            exposeContextBeansAsAttributes?: boolean;
+            exposedContextBeanNames?: string[];
+            beanName?: string;
+            url?: string;
+            contextRelative?: boolean;
+            http10Compatible?: boolean;
+            exposeModelAttributes?: boolean;
+            encodingScheme?: string;
+            statusCode?: components["schemas"]["DefaultHttpStatusCode"] | components["schemas"]["HttpStatus"];
+            expandUriTemplateVariables?: boolean;
+            propagateQueryParams?: boolean;
+            hosts?: string[];
+            propagateQueryProperties?: boolean;
+            redirectView?: boolean;
+            attributesCSV?: string;
+            attributesMap?: {
+                [key: string]: unknown;
+            };
+            attributes?: {
+                [key: string]: string;
+            };
+        };
+        ServletContext: {
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            /** Format: int32 */
+            sessionTimeout?: number;
+            requestCharacterEncoding?: string;
+            responseCharacterEncoding?: string;
+            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            serverInfo?: string;
+            /** Format: int32 */
+            effectiveMajorVersion?: number;
+            /** Format: int32 */
+            effectiveMinorVersion?: number;
+            servletContextName?: string;
+            servletRegistrations?: {
+                [key: string]: components["schemas"]["ServletRegistration"];
+            };
+            filterRegistrations?: {
+                [key: string]: components["schemas"]["FilterRegistration"];
+            };
+            jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            initParameterNames?: unknown;
+            virtualServerName?: string;
+            contextPath?: string;
+            attributeNames?: unknown;
+            classLoader?: {
+                name?: string;
+                registeredAsParallelCapable?: boolean;
+                parent?: {
+                    name?: string;
+                    registeredAsParallelCapable?: boolean;
+                    unnamedModule?: {
+                        name?: string;
+                        descriptor?: {
+                            open?: boolean;
+                            automatic?: boolean;
+                        };
+                        named?: boolean;
+                        annotations?: unknown[];
+                        declaredAnnotations?: unknown[];
+                        packages?: string[];
+                        nativeAccessEnabled?: boolean;
+                        layer?: unknown;
+                    };
+                    definedPackages?: {
+                        name?: string;
+                        annotations?: unknown[];
+                        declaredAnnotations?: unknown[];
+                        sealed?: boolean;
+                        specificationTitle?: string;
+                        specificationVersion?: string;
+                        specificationVendor?: string;
+                        implementationTitle?: string;
+                        implementationVersion?: string;
+                        implementationVendor?: string;
+                    }[];
+                    defaultAssertionStatus?: boolean;
+                };
+                unnamedModule?: {
+                    name?: string;
+                    descriptor?: {
+                        open?: boolean;
+                        automatic?: boolean;
+                    };
+                    named?: boolean;
+                    annotations?: unknown[];
+                    declaredAnnotations?: unknown[];
+                    packages?: string[];
+                    nativeAccessEnabled?: boolean;
+                    layer?: unknown;
+                };
+                definedPackages?: {
+                    name?: string;
+                    annotations?: unknown[];
+                    declaredAnnotations?: unknown[];
+                    sealed?: boolean;
+                    specificationTitle?: string;
+                    specificationVersion?: string;
+                    specificationVendor?: string;
+                    implementationTitle?: string;
+                    implementationVersion?: string;
+                    implementationVendor?: string;
+                }[];
+                defaultAssertionStatus?: boolean;
+            };
+            /** Format: int32 */
+            majorVersion?: number;
+            /** Format: int32 */
+            minorVersion?: number;
+        };
+        ServletRegistration: {
+            runAsRole?: string;
+            mappings?: string[];
+            initParameters?: {
+                [key: string]: string;
+            };
+            name?: string;
+            className?: string;
+        };
+        SessionCookieConfig: {
+            /** Format: int32 */
+            maxAge?: number;
+            domain?: string;
+            httpOnly?: boolean;
+            secure?: boolean;
+            path?: string;
+            name?: string;
+            attributes?: {
+                [key: string]: string;
+            };
+            /** @deprecated */
+            comment?: string;
+        };
+        TaglibDescriptor: {
+            taglibLocation?: string;
+            taglibURI?: string;
         };
     };
     responses: never;
@@ -3393,6 +3710,7 @@ export interface operations {
             query: {
                 amount: number;
                 userId: number;
+                paymentPurpose: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
             };
             header?: never;
             path?: never;
@@ -3896,6 +4214,7 @@ export interface operations {
             query: {
                 amount: number;
                 userId: number;
+                paymentPurpose: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
             };
             header?: never;
             path?: never;
@@ -4423,6 +4742,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    makePayment: {
+        parameters: {
+            query: {
+                sessionId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
             };
         };
     };
@@ -5383,6 +5724,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CandidateProfile"];
+                };
+            };
+        };
+    };
+    googleLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RedirectView"];
                 };
             };
         };

@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { formatCurrency } from "@/lib/formatting";
 import { cn, formatToVietnamISOString } from "@/lib/utils";
 
 import { useMentors } from "@/hooks/useMentor";
@@ -87,6 +88,7 @@ export function MockInterviewSchedulePage() {
   const [selectedMinute, setSelectedMinute] = useState(() =>
     String(new Date().getMinutes()).padStart(2, "0")
   );
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [recordingMode, setRecordingMode] = useState<string>("cloud");
 
   // helper to quickly fill current time (+small offset to satisfy validation)
@@ -115,6 +117,14 @@ export function MockInterviewSchedulePage() {
 
   // Selected mentor data
   const selectedMentor = mentors.find((m) => m.id === selectedMentorId);
+  const mentorPricePerMinute = selectedMentor?.pricePerMinute ?? 0;
+  const totalPrice = useMemo(() => {
+    if (durationMinutes <= 0 || mentorPricePerMinute <= 0) {
+      return 0;
+    }
+
+    return durationMinutes * mentorPricePerMinute;
+  }, [durationMinutes, mentorPricePerMinute]);
 
   // Calculate joinTime in Vietnam timezone (+07:00)
   const calculateJoinTime = (): string | undefined => {
@@ -148,7 +158,7 @@ export function MockInterviewSchedulePage() {
   };
 
   const canProceedStep1 = selectedMentorId !== null;
-  const canProceedStep2 = isDateTimeValid();
+  const canProceedStep2 = isDateTimeValid() && durationMinutes > 0 && totalPrice > 0;
 
   // Render stars
   const renderStars = (rating?: number) => {
@@ -177,6 +187,8 @@ export function MockInterviewSchedulePage() {
         userId: user.id,
         mentorId: selectedMentorId,
         joinTime,
+        duration: durationMinutes,
+        totalPrice,
         dailyCoCreationRequest: {
           name: "",
           privacy: "public",
@@ -195,6 +207,8 @@ export function MockInterviewSchedulePage() {
         state: {
           mentorName: selectedMentor?.name || "Mentor",
           joinTime: formatSelectedDateTime(),
+          duration: durationMinutes,
+          totalPrice,
         },
       });
     } catch {
@@ -332,6 +346,12 @@ export function MockInterviewSchedulePage() {
                           {mentor.yearsOfExperience != null && (
                             <span>{mentor.yearsOfExperience} năm KN</span>
                           )}
+                          {typeof mentor.pricePerMinute === "number" &&
+                            mentor.pricePerMinute > 0 && (
+                              <span className="font-medium text-emerald-700">
+                                {formatCurrency(mentor.pricePerMinute)} / phút
+                              </span>
+                            )}
                         </div>
                         {mentor.bio && (
                           <p className="line-clamp-2 text-xs text-slate-500">{mentor.bio}</p>
@@ -482,6 +502,39 @@ export function MockInterviewSchedulePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Duration and Total Price */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="durationMinutes">Thời lượng (phút)</Label>
+                  <Input
+                    id="durationMinutes"
+                    type="number"
+                    min={15}
+                    step={15}
+                    value={durationMinutes}
+                    onChange={(event) => {
+                      const next = Number(event.target.value);
+                      setDurationMinutes(Number.isFinite(next) ? Math.max(0, next) : 0);
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="totalPrice">Tổng giá dự kiến</Label>
+                  <Input
+                    id="totalPrice"
+                    value={totalPrice > 0 ? formatCurrency(totalPrice) : "-"}
+                    readOnly
+                    disabled
+                  />
+                </div>
+              </div>
+
+              {mentorPricePerMinute <= 0 && (
+                <p className="text-sm text-red-500">
+                  ⚠ Mentor chua co don gia moi phut. Vui long chon mentor khac hoac lien he admin.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -559,6 +612,22 @@ export function MockInterviewSchedulePage() {
                     <div>
                       <p className="text-xs text-slate-500">Bắt đầu lúc</p>
                       <p className="text-sm font-medium">{formatSelectedDateTime()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border p-3">
+                    <Clock className="h-4 w-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-500">Thời lượng</p>
+                      <p className="text-sm font-medium">{durationMinutes} phút</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg border p-3 sm:col-span-2">
+                    <Video className="h-4 w-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-500">Tổng giá dự kiến</p>
+                      <p className="text-sm font-medium text-emerald-700">
+                        {totalPrice > 0 ? formatCurrency(totalPrice) : "-"}
+                      </p>
                     </div>
                   </div>
                 </div>

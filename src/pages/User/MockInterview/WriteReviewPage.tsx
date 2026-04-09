@@ -1,20 +1,20 @@
 /**
  * Write Review Page
- * Form for users to write reviews for mentors after sessions
+ * Form for users to write feedbacks for mentors after sessions
  */
 
 import { ArrowLeft, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { MentorReviewForm } from "@/components/review";
+import { MentorFeedbackForm } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useCreateMentorReview,
-  useMentorReviewBySession,
-  useUpdateMentorReview,
-} from "@/hooks/useMentorReview";
+  useCreateMentorFeedback,
+  useMentorFeedbackBySession,
+  useUpdateMentorFeedback,
+} from "@/hooks/useMentorFeedback";
 import { useSessionById } from "@/hooks/useSession";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -24,42 +24,30 @@ export function WriteReviewPage() {
   const user = useAuthStore((state) => state.user);
 
   const { data: session, isLoading: sessionLoading } = useSessionById(Number(sessionId));
-  const { data: existingReview, isLoading: reviewLoading } = useMentorReviewBySession(
+  const { data: existingFeedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
     Number(sessionId)
   );
-  const { mutate: createReview, isPending: isCreating } = useCreateMentorReview();
-  const { mutate: updateReview, isPending: isUpdating } = useUpdateMentorReview();
+  const { mutate: createFeedback, isPending: isCreating } = useCreateMentorFeedback();
+  const { mutate: updateFeedback, isPending: isUpdating } = useUpdateMentorFeedback();
 
-  const isLoading = sessionLoading || reviewLoading;
+  const isLoading = sessionLoading || feedbackLoading;
   const isSubmitting = isCreating || isUpdating;
-  const isEdit = !!existingReview;
+  const isEdit = !!existingFeedback;
 
   const handleSubmit = (data: {
     rating: number;
-    situationNote?: string;
-    taskNote?: string;
-    actionNote?: string;
-    resultNote?: string;
-    strength?: string;
-    weakness?: string;
-    improve?: string;
+    comment: string;
     sessionId: number;
     mentorId: number;
     userId: number;
   }) => {
-    if (isEdit && existingReview?.id) {
-      updateReview(
+    if (isEdit && existingFeedback?.id) {
+      updateFeedback(
         {
-          id: existingReview.id,
+          id: existingFeedback.id,
           data: {
             rating: data.rating,
-            situationNote: data.situationNote,
-            taskNote: data.taskNote,
-            actionNote: data.actionNote,
-            resultNote: data.resultNote,
-            strength: data.strength,
-            weakness: data.weakness,
-            improve: data.improve,
+            comment: data.comment,
           },
         },
         {
@@ -69,19 +57,13 @@ export function WriteReviewPage() {
         }
       );
     } else {
-      createReview(
+      createFeedback(
         {
           sessionId: data.sessionId,
           mentorId: data.mentorId,
           userId: data.userId,
           rating: data.rating,
-          situationNote: data.situationNote,
-          taskNote: data.taskNote,
-          actionNote: data.actionNote,
-          resultNote: data.resultNote,
-          strength: data.strength,
-          weakness: data.weakness,
-          improve: data.improve,
+          comment: data.comment,
         },
         {
           onSuccess: () => {
@@ -131,9 +113,9 @@ export function WriteReviewPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Star className="mx-auto h-12 w-12 text-slate-400" />
-            <h3 className="mt-4 font-semibold">Chưa thể viết đánh giá</h3>
+            <h3 className="mt-4 font-semibold">Chua the viet phan hoi</h3>
             <p className="mt-1 text-sm text-slate-500">
-              Bạn chỉ có thể viết đánh giá sau khi phiên phỏng vấn hoàn thành
+              Ban chi co the viet phan hoi sau khi phien phong van hoan thanh
             </p>
           </CardContent>
         </Card>
@@ -154,20 +136,20 @@ export function WriteReviewPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-[#FFD700]" />
-            <CardTitle>{isEdit ? "Chỉnh Sửa Đánh Giá" : "Viết Đánh Giá"}</CardTitle>
+            <CardTitle>{isEdit ? "Chỉnh Sửa Phản Hồi" : "Viết Phản Hồi"}</CardTitle>
           </div>
           <CardDescription>
             {isEdit
-              ? "Cập nhật đánh giá của bạn về buổi phỏng vấn"
-              : "Chia sẻ trải nghiệm của bạn về buổi phỏng vấn với mentor"}
+              ? "Cap nhat phan hoi cua ban cho mentor"
+              : "Chia se phan hoi cua ban ve buoi phong van voi mentor"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MentorReviewForm
+          <MentorFeedbackForm
             sessionId={Number(sessionId)}
             mentorId={session.userId2 || 0}
             userId={user?.id || 0}
-            existingReview={existingReview}
+            existingFeedback={existingFeedback}
             onSubmit={handleSubmit}
             onCancel={() => navigate(`/user/mock-interview/history/${sessionId}`)}
             isLoading={isSubmitting}

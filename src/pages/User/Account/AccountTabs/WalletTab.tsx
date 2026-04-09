@@ -25,9 +25,11 @@ export function WalletTab({ wallet }: WalletTabProps) {
           <p className="font-['Inter'] text-sm font-normal opacity-80">Số dư hiện tại</p>
           <p className="font-['Poppins'] text-4xl font-bold">{formatCurrency(wallet.balance)}</p>
         </div>
-        <button className="flex items-center gap-2 rounded-lg bg-white/20 px-6 py-3 font-['Inter'] text-base font-medium backdrop-blur-sm hover:bg-white/30">
+        <button
+          disabled
+          className="flex cursor-not-allowed items-center gap-2 rounded-lg bg-white/20 px-6 py-3 font-['Inter'] text-base font-medium opacity-70 backdrop-blur-sm">
           <Plus className="h-5 w-5" />
-          Nạp tiền
+          Nạp tiền (sắp mở)
         </button>
       </div>
 

@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { formatDateTime } from "@/lib/formatting";
+import { formatCurrency, formatDateTime } from "@/lib/formatting";
 import { getSessionStatusBadge } from "@/lib/status-utils";
 
 import type { Session } from "../types";
@@ -20,15 +20,19 @@ interface ViewSessionDialogProps {
   session: Session | null;
 }
 
-const formatDuration = (seconds?: number) => {
+const formatDuration = (seconds?: number, minutes?: number) => {
+  if (typeof minutes === "number" && minutes > 0) {
+    return `${minutes}p`;
+  }
+
   if (!seconds) return "-";
   const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
+  const minutesFromSeconds = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
   if (hours > 0) {
-    return `${hours}g ${minutes}p ${secs}s`;
+    return `${hours}g ${minutesFromSeconds}p ${secs}s`;
   }
-  return `${minutes}p ${secs}s`;
+  return `${minutesFromSeconds}p ${secs}s`;
 };
 
 export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSessionDialogProps) {
@@ -89,7 +93,9 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
               </div>
               <div className="col-span-2">
                 <p className="text-sm font-medium text-gray-500">Thời lượng</p>
-                <p className="text-sm">{formatDuration(session.durationSeconds1)}</p>
+                <p className="text-sm">
+                  {formatDuration(session.durationSeconds1, session.duration)}
+                </p>
               </div>
             </div>
           </div>
@@ -119,6 +125,28 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
               <div className="col-span-2">
                 <p className="text-sm font-medium text-gray-500">Thời lượng</p>
                 <p className="text-sm">{formatDuration(session.durationSeconds2)}</p>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <h4 className="mb-2 text-sm font-semibold">Thông Tin Thanh Toán</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Thời lượng dự kiến</p>
+                <p className="text-sm">{session.duration ? `${session.duration} phút` : "-"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Tổng giá</p>
+                <p className="text-sm">
+                  {session.totalPrice != null ? formatCurrency(session.totalPrice) : "-"}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-sm font-medium text-gray-500">Mã giao dịch</p>
+                <p className="font-mono text-sm">{session.transactionCode || "-"}</p>
               </div>
             </div>
           </div>

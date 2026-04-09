@@ -238,3 +238,29 @@ export const useUpdateSessionStatus = () => {
     },
   });
 };
+
+/**
+ * Hook to create payment checkout URL for a session
+ * Uses GET /api/sessions/make-payment?sessionId=X
+ */
+export const useMakeSessionPayment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: number) => {
+      const response = await sessionManager.makePayment(sessionId);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || "Không thể tạo link thanh toán cho phiên phỏng vấn");
+      }
+      return response.data;
+    },
+    onSuccess: (_checkoutUrl, sessionId) => {
+      queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEYS.byId(sessionId) });
+      toast.success("Đã tạo link thanh toán cho phiên phỏng vấn");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+};

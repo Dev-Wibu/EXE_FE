@@ -1,5 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { DemoLoginButton } from "@/components/DemoLoginButton";
@@ -15,6 +15,17 @@ type LoginNavigationState = {
   prefillEmail?: string;
 };
 
+type LoginAuthPayload = {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    role?: string;
+    avatar?: string | null;
+  };
+  token?: string;
+};
+
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +39,60 @@ export function LoginPage() {
   const [infoMessage, setInfoMessage] = useState(() => navigationState?.message || "");
   const [error, setError] = useState("");
 
+  const applyAuthState = useCallback(
+    (payload: LoginAuthPayload) => {
+      const parsedUserId = Number(payload.user.id);
+      const userId = Number.isFinite(parsedUserId) ? parsedUserId : undefined;
+
+      setUser({
+        id: userId,
+        name: payload.user.fullName,
+        email: payload.user.email,
+        role: payload.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR" | "STAFF",
+        avatarUrl: payload.user.avatar || undefined,
+      });
+      setToken(payload.token ?? null);
+      setIsLoggedIn(true);
+
+      if (userId && !isNaN(userId)) {
+        localStorage.setItem("current-user-id", String(userId));
+      }
+
+      navigate(getDashboardPath(payload.user.role), { replace: true });
+    },
+    [navigate, setIsLoggedIn, setToken, setUser]
+  );
+
+  useEffect(() => {
+    const callbackUrl = window.location.href;
+    if (!authManager.hasGoogleCallbackPayload(callbackUrl)) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setInfoMessage("");
+      setError("");
+
+      const callbackError = authManager.getGoogleCallbackError(callbackUrl);
+      if (callbackError) {
+        setError(callbackError);
+        return;
+      }
+
+      const callbackResult = authManager.consumeGoogleCallbackFromUrl(callbackUrl);
+      if (!callbackResult.success || !callbackResult.data?.user || !callbackResult.data.token) {
+        setError(callbackResult.error || "Đăng nhập Google thất bại.");
+        return;
+      }
+
+      applyAuthState(callbackResult.data);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [applyAuthState, location.hash, location.search]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -37,26 +102,7 @@ export function LoginPage() {
     const result = await authManager.login({ email, password });
 
     if (result.success && result.data?.user) {
-      const parsedUserId = Number(result.data.user.id);
-      const userId = Number.isFinite(parsedUserId) ? parsedUserId : undefined;
-
-      // Store auth state
-      setUser({
-        id: userId,
-        name: result.data.user.fullName,
-        email: result.data.user.email,
-        role: result.data.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR" | "STAFF",
-        avatarUrl: result.data.user.avatar || undefined,
-      });
-      setToken(result.data.token ?? null);
-      setIsLoggedIn(true);
-
-      // Store current user ID in localStorage for BE queries
-      if (userId && !isNaN(userId)) {
-        localStorage.setItem("current-user-id", String(userId));
-      }
-
-      navigate(getDashboardPath(result.data.user.role));
+      applyAuthState(result.data);
     } else {
       setError(result.error || "Đăng nhập thất bại");
     }
@@ -65,7 +111,9 @@ export function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    setError("Đăng nhập Google đang được phát triển. Vui lòng đăng nhập bằng email.");
+    setError("");
+    setInfoMessage("");
+    window.location.assign(authManager.getGoogleLoginUrl());
   };
 
   // Handler for demo account selection - auto-fills credentials

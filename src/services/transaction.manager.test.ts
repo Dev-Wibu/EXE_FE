@@ -73,6 +73,41 @@ describe("TransactionManager API mode", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain("hop le");
+    expect(mockApi.post).toHaveBeenCalledWith(
+      "/api/transactions/transfer-out",
+      null,
+      expect.objectContaining({
+        params: expect.objectContaining({
+          amount: 25000,
+          userId: 404,
+          paymentPurpose: "WITHDRAW_FROM_WALLET",
+        }),
+      })
+    );
+  });
+
+  it("passes explicit transfer-out payment purpose when provided", async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: {
+        redirectUrl: "https://payos.vn/checkout?orderCode=TX-44",
+      },
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.transferOut(44000, 55, "BUY_MEMBERSHIP");
+
+    expect(result.success).toBe(true);
+    expect(mockApi.post).toHaveBeenCalledWith(
+      "/api/transactions/transfer-out",
+      null,
+      expect.objectContaining({
+        params: expect.objectContaining({
+          amount: 44000,
+          userId: 55,
+          paymentPurpose: "BUY_MEMBERSHIP",
+        }),
+      })
+    );
   });
 
   it("deletes transaction by transaction code", async () => {

@@ -107,6 +107,7 @@ export function MentorManagementPage() {
       yearsOfExperience: mentor.yearsOfExperience,
       linkedInUrl: mentor.linkedInUrl,
       currentCompany: mentor.currentCompany,
+      pricePerMinute: mentor.pricePerMinute,
       active: mentor.active ?? true, // Ensure boolean value, default to true if null/undefined
     });
     setIsEditDialogOpen(true);

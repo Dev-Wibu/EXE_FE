@@ -27,6 +27,7 @@ export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
     LOGIN: "/api/auth/login",
+    LOGIN_WITH_GOOGLE: "/api/auth/login-with-google",
     SIGNUP: "/auth/signup",
     LOGOUT: "/auth/logout",
     REFRESH: "/auth/refresh",
@@ -148,6 +149,7 @@ export const API_ENDPOINTS = {
   // PUT /api/sessions - updateSession (JSON body)
   // POST /api/sessions/create-session - createSession (JSON body with SessionCreationRequest)
   // POST /api/sessions/join-session - saveJoinRecord
+  // GET /api/sessions/make-payment - makePayment (query param: sessionId)
   // GET /api/sessions/{id} - getSession
   // GET /api/sessions/{userId}/by-user - getSessionsByUserId
   SESSIONS: {
@@ -158,6 +160,7 @@ export const API_ENDPOINTS = {
     UPDATE_STATUS: "/api/sessions/update-status",
     BY_USER: "/api/sessions/:userId/by-user",
     JOIN: "/api/sessions/join-session",
+    MAKE_PAYMENT: "/api/sessions/make-payment",
   },
 
   // Practice Sets endpoints - Based on schema-from-be.d.ts

@@ -78,6 +78,11 @@ function DashboardSubRedirect({ prefix }: { prefix: string }) {
   return <Navigate to={`${prefix}${suffix}${search}`} replace />;
 }
 
+function QueryHashRedirect({ to }: { to: string }) {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to}${search}${hash}`} replace />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -89,6 +94,10 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
             <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+            <Route path="/success" element={<PaymentSuccessPage />} />
+            <Route path="/cancel" element={<PaymentCancelPage />} />
+            <Route path="/auth/callback" element={<QueryHashRedirect to="/login" />} />
+            <Route path="/oauth2/callback" element={<QueryHashRedirect to="/login" />} />
 
             {/* Questions pages (public) */}
             <Route path="/questions/bank" element={<QuestionBankPage />} />
@@ -129,7 +138,7 @@ function App() {
                 <Route path="mock-interview/booking-success" element={<BookingSuccessPage />} />
                 <Route path="mock-interview/room/:sessionId" element={<SessionRoomPage />} />
                 <Route
-                  path="mock-interview/history/:sessionId/review"
+                  path="mock-interview/history/:sessionId/feedback"
                   element={<WriteReviewPage />}
                 />
                 <Route path="mock-interview/history/:sessionId" element={<SessionDetailPage />} />
@@ -218,7 +227,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={["MENTOR"]} />}>
               <Route path="/mentor" element={<MentorDashboardPage />}>
                 <Route path="sessions/room/:sessionId" element={<MentorSessionRoomPage />} />
-                <Route path="sessions/:sessionId/feedback" element={<WriteFeedbackPage />} />
+                <Route path="sessions/:sessionId/review" element={<WriteFeedbackPage />} />
                 <Route path="reviews/:id" element={<ReviewDetailPage />} />
                 <Route path="students/:userId" element={<StudentDetailPage />} />
                 <Route path="community/create" element={<CreatePostPage />} />

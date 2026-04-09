@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatCurrency } from "@/lib/formatting";
 
 import type { Mentor } from "../types";
 
@@ -54,6 +55,7 @@ export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorT
             )}
           </TableHead>
           <TableHead>Công ty</TableHead>
+          <TableHead className="w-36">Giá / phút</TableHead>
           <TableHead className="w-20">
             {getSortProps ? (
               <SortButton {...getSortProps("totalSession")}>Số buổi</SortButton>
@@ -76,6 +78,11 @@ export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorT
               <Badge variant="outline">{mentor.yearsOfExperience || 0} năm</Badge>
             </TableCell>
             <TableCell>{mentor.currentCompany || "-"}</TableCell>
+            <TableCell>
+              {typeof mentor.pricePerMinute === "number" && mentor.pricePerMinute > 0
+                ? `${formatCurrency(mentor.pricePerMinute)} / phút`
+                : "-"}
+            </TableCell>
             <TableCell>
               <Badge variant="secondary">{mentor.totalSession || 0}</Badge>
             </TableCell>

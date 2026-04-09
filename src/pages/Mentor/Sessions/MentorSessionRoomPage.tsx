@@ -208,10 +208,8 @@ export function MentorSessionRoomPage() {
                 {session.status === "CANCELED" && "Đã hủy"}
               </span>
               {session.status === "COMPLETED" && (
-                <Button
-                  size="sm"
-                  onClick={() => navigate(`/mentor/sessions/${sessionId}/feedback`)}>
-                  Viết nhận xét
+                <Button size="sm" onClick={() => navigate(`/mentor/sessions/${sessionId}/review`)}>
+                  Viết đánh giá
                 </Button>
               )}
             </div>

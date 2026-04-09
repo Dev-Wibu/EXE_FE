@@ -15,11 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
-import { useMentorReviews } from "@/hooks/useMentorReview";
+import { useMentorFeedbacksByUser } from "@/hooks/useMentorFeedback";
 import { usePagination } from "@/hooks/usePagination";
-import { useUserSessions } from "@/hooks/useSession";
+import { useMakeSessionPayment, useUserSessions } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
+import { formatCurrency } from "@/lib/formatting";
+import { savePendingSessionPaymentContext } from "@/lib/session-payment-context";
+import { useAuthStore } from "@/stores/authStore";
 
 // Status badge mapping
 const statusMap: Record<
@@ -28,6 +31,7 @@ const statusMap: Record<
 > = {
   DRAFT: { label: "Chờ duyệt", variant: "secondary", color: "bg-amber-100 text-amber-700" },
   SCHEDULED: { label: "Sắp diễn ra", variant: "secondary", color: "bg-blue-100 text-blue-700" },
+  PAID: { label: "Đã thanh toán", variant: "secondary", color: "bg-emerald-100 text-emerald-700" },
   ONGOING: { label: "Đang diễn ra", variant: "default", color: "bg-green-100 text-green-700" },
   COMPLETED: { label: "Hoàn thành", variant: "outline", color: "bg-slate-100 text-slate-600" },
   REJECTED: { label: "Bị từ chối", variant: "destructive", color: "bg-red-100 text-red-600" },
@@ -36,15 +40,26 @@ const statusMap: Record<
 
 interface SessionCardProps {
   session: Session;
-  hasReview: boolean;
+  hasFeedback: boolean;
+  isPaying: boolean;
   onViewDetails: () => void;
-  onWriteReview: () => void;
+  onWriteFeedback: () => void;
+  onPaySession: () => void;
 }
 
-function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: SessionCardProps) {
+function SessionCard({
+  session,
+  hasFeedback,
+  isPaying,
+  onViewDetails,
+  onWriteFeedback,
+  onPaySession,
+}: SessionCardProps) {
   const navigate = useNavigate();
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
   const isCompleted = session.status === "COMPLETED";
+  const isScheduled = session.status === "SCHEDULED";
+  const isPaid = session.status === "PAID";
   const isDraft = session.status === "DRAFT";
   const isRejected = session.status === "REJECTED";
 
@@ -116,22 +131,41 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
               Phiên #{session.id}
             </span>
           )}
+          {typeof session.totalPrice === "number" && session.totalPrice > 0 && (
+            <span className="font-medium text-emerald-700">
+              {formatCurrency(session.totalPrice)}
+            </span>
+          )}
         </div>
 
         <div className="flex gap-2">
+          {isScheduled && (
+            <Button
+              size="sm"
+              onClick={onPaySession}
+              disabled={isPaying}
+              className="gap-1 bg-emerald-600 hover:bg-emerald-700">
+              {isPaying ? "Đang tạo link..." : "Thanh toán"}
+            </Button>
+          )}
+          {isPaid && (
+            <Button variant="secondary" size="sm" disabled className="gap-1">
+              Đã thanh toán
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onViewDetails}>
             Xem chi tiết
           </Button>
-          {isCompleted && !hasReview && (
-            <Button size="sm" onClick={onWriteReview} className="gap-1">
+          {isCompleted && !hasFeedback && (
+            <Button size="sm" onClick={onWriteFeedback} className="gap-1">
               <Star className="h-4 w-4" />
-              Viết đánh giá
+              Viết phản hồi
             </Button>
           )}
-          {isCompleted && hasReview && (
+          {isCompleted && hasFeedback && (
             <Button variant="secondary" size="sm" disabled className="gap-1">
               <Star className="h-4 w-4 text-[#FFD700]" />
-              Đã đánh giá
+              Đã gửi phản hồi
             </Button>
           )}
           {isRejected && (
@@ -152,25 +186,28 @@ function SessionCard({ session, hasReview, onViewDetails, onWriteReview }: Sessi
 
 export function SessionHistoryPage() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(10);
+  const [payingSessionId, setPayingSessionId] = useState<number | null>(null);
   const {
     data: sessions = [],
     isLoading: sessionsLoading,
     isRefetching: sessionsRefetching,
     refetch: refetchSessions,
   } = useUserSessions();
+  const { mutateAsync: makeSessionPayment } = useMakeSessionPayment();
   const {
-    data: reviews = [],
-    isLoading: reviewsLoading,
-    isRefetching: reviewsRefetching,
-    refetch: refetchReviews,
-  } = useMentorReviews();
+    data: feedbacks = [],
+    isLoading: feedbacksLoading,
+    isRefetching: feedbacksRefetching,
+    refetch: refetchFeedbacks,
+  } = useMentorFeedbacksByUser(user?.id || 0);
 
-  const isLoading = sessionsLoading || reviewsLoading;
+  const isLoading = sessionsLoading || feedbacksLoading;
 
-  // Get reviewed session IDs
-  const reviewedSessionIds = new Set(
-    reviews.map((r: { session?: { id?: number } }) => r.session?.id).filter(Boolean)
+  // Get session IDs where user already submitted mentor feedback
+  const feedbackSessionIds = new Set(
+    feedbacks.map((f: { session?: { id?: number } }) => f.session?.id).filter(Boolean)
   );
 
   // Apply sorting
@@ -191,14 +228,35 @@ export function SessionHistoryPage() {
     navigate(`/user/mock-interview/history/${session.id}`);
   };
 
-  const handleWriteReview = (session: Session) => {
-    navigate(`/user/mock-interview/history/${session.id}/review`);
+  const handleWriteFeedback = (session: Session) => {
+    navigate(`/user/mock-interview/history/${session.id}/feedback`);
+  };
+
+  const handlePaySession = async (session: Session) => {
+    if (!session.id || !user?.id) {
+      return;
+    }
+
+    setPayingSessionId(session.id);
+    try {
+      const checkoutUrl = await makeSessionPayment(session.id);
+      savePendingSessionPaymentContext({
+        sessionId: session.id,
+        userId: Number(user.id),
+        checkoutUrl,
+      });
+      window.location.assign(checkoutUrl);
+    } catch {
+      // Error toast is handled inside useMakeSessionPayment hook.
+    } finally {
+      setPayingSessionId(null);
+    }
   };
 
   // Stats — DRAFT is counted separately
   const draftCount = sessions.filter((s) => s.status === "DRAFT").length;
   const scheduledCount = sessions.filter(
-    (s) => s.status === "SCHEDULED" || s.status === "ONGOING"
+    (s) => s.status === "SCHEDULED" || s.status === "PAID" || s.status === "ONGOING"
   ).length;
   const completedCount = sessions.filter((s) => s.status === "COMPLETED").length;
 
@@ -211,15 +269,15 @@ export function SessionHistoryPage() {
             Lịch Sử Phỏng Vấn
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Xem lại các phiên phỏng vấn và viết đánh giá cho mentor
+            Xem lại các phiên phỏng vấn và gửi phản hồi cho mentor
           </p>
         </div>
         <div className="flex items-center gap-2">
           <ReloadButton
             onReload={async () => {
-              await Promise.all([refetchSessions(), refetchReviews()]);
+              await Promise.all([refetchSessions(), refetchFeedbacks()]);
             }}
-            isLoading={sessionsRefetching || reviewsRefetching}
+            isLoading={sessionsRefetching || feedbacksRefetching}
             tooltip="Tải lại lịch sử phiên"
           />
           <Button
@@ -264,7 +322,7 @@ export function SessionHistoryPage() {
             <CardDescription>Chờ đánh giá</CardDescription>
             <CardTitle className="text-2xl text-amber-600">
               {
-                sessions.filter((s) => s.status === "COMPLETED" && !reviewedSessionIds.has(s.id))
+                sessions.filter((s) => s.status === "COMPLETED" && !feedbackSessionIds.has(s.id))
                   .length
               }
             </CardTitle>
@@ -304,9 +362,11 @@ export function SessionHistoryPage() {
               <SessionCard
                 key={session.id}
                 session={session}
-                hasReview={reviewedSessionIds.has(session.id)}
+                hasFeedback={feedbackSessionIds.has(session.id)}
+                isPaying={payingSessionId === session.id}
                 onViewDetails={() => handleViewDetails(session)}
-                onWriteReview={() => handleWriteReview(session)}
+                onWriteFeedback={() => handleWriteFeedback(session)}
+                onPaySession={() => void handlePaySession(session)}
               />
             ))}
           </div>

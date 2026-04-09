@@ -171,6 +171,7 @@ export class MentorManager implements BaseManager<Mentor> {
         yearsOfExperience: _data.yearsOfExperience,
         linkedInUrl: _data.linkedInUrl,
         currentCompany: _data.currentCompany,
+        pricePerMinute: (_data as Mentor).pricePerMinute,
         averageRating: (_data as Mentor).averageRating,
         totalSession: 0,
         active: (_data as Mentor).active !== false,
@@ -215,6 +216,7 @@ export class MentorManager implements BaseManager<Mentor> {
         yearsOfExperience: _data.yearsOfExperience,
         linkedInUrl: _data.linkedInUrl,
         currentCompany: _data.currentCompany,
+        pricePerMinute: _data.pricePerMinute,
       };
 
       // Add active field to the payload to ensure new mentors are active
@@ -332,6 +334,7 @@ export class MentorManager implements BaseManager<Mentor> {
         yearsOfExperience: _data.yearsOfExperience,
         linkedInUrl: _data.linkedInUrl,
         currentCompany: _data.currentCompany,
+        pricePerMinute: _data.pricePerMinute,
       };
 
       // Add password only if provided (for password updates)

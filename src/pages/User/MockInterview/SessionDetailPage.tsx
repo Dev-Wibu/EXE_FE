@@ -3,8 +3,18 @@
  * Shows session details with review and feedback
  */
 
-import { ArrowLeft, Calendar, Clock, MessageSquare, Star, User, Video } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  CreditCard,
+  MessageSquare,
+  Star,
+  User,
+  Video,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { FeedbackCard } from "@/components/feedback";
 import { ReviewCard } from "@/components/review";
@@ -14,7 +24,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMentorFeedbackBySession } from "@/hooks/useMentorFeedback";
 import { useMentorReviewBySession } from "@/hooks/useMentorReview";
-import { useSessionById } from "@/hooks/useSession";
+import { useMakeSessionPayment, useSessionById } from "@/hooks/useSession";
+import { formatCurrency } from "@/lib/formatting";
+import { savePendingSessionPaymentContext } from "@/lib/session-payment-context";
+import { useAuthStore } from "@/stores/authStore";
+import { toast } from "sonner";
 
 // Status badge mapping
 const statusMap: Record<
@@ -23,6 +37,7 @@ const statusMap: Record<
 > = {
   DRAFT: { label: "Chờ duyệt", variant: "secondary" },
   SCHEDULED: { label: "Đã lên lịch", variant: "secondary" },
+  PAID: { label: "Đã thanh toán", variant: "default" },
   ACTIVE: { label: "Đang diễn ra", variant: "default" },
   ONGOING: { label: "Đang diễn ra", variant: "default" },
   COMPLETED: { label: "Hoàn thành", variant: "outline" },
@@ -33,15 +48,110 @@ const statusMap: Record<
 export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const user = useAuthStore((state) => state.user);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [isPollingPayment, setIsPollingPayment] = useState(false);
+  const pollingAttemptsRef = useRef(0);
 
-  const { data: session, isLoading: sessionLoading } = useSessionById(Number(sessionId));
-  const { data: review, isLoading: reviewLoading } = useMentorReviewBySession(Number(sessionId));
-  const { data: feedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
+  const paymentQuery = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const paymentState = paymentQuery.get("payment")?.trim();
+
+  const {
+    data: session,
+    isLoading: sessionLoading,
+    refetch: refetchSession,
+  } = useSessionById(Number(sessionId));
+  const { mutateAsync: makeSessionPayment } = useMakeSessionPayment();
+  const { data: myFeedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
+    Number(sessionId)
+  );
+  const { data: mentorReview, isLoading: reviewLoading } = useMentorReviewBySession(
     Number(sessionId)
   );
 
   const isLoading = sessionLoading;
   const isCompleted = session?.status === "COMPLETED";
+
+  const handlePaySession = async () => {
+    if (!session?.id || !user?.id) {
+      return;
+    }
+
+    setIsCreatingPayment(true);
+    try {
+      const checkoutUrl = await makeSessionPayment(session.id);
+      savePendingSessionPaymentContext({
+        sessionId: session.id,
+        userId: Number(user.id),
+        checkoutUrl,
+      });
+      window.location.assign(checkoutUrl);
+    } catch {
+      // Error toast is handled inside useMakeSessionPayment hook.
+    } finally {
+      setIsCreatingPayment(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!session?.id || !paymentState) {
+      return;
+    }
+
+    if (paymentState === "cancelled") {
+      toast.info("Bạn đã hủy thanh toán cho phiên phỏng vấn này.");
+      navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+      return;
+    }
+
+    if (paymentState !== "success") {
+      navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+      return;
+    }
+
+    if (session.status === "PAID") {
+      toast.success("Phiên phỏng vấn đã được xác nhận thanh toán.");
+      navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+      return;
+    }
+
+    let cancelled = false;
+    pollingAttemptsRef.current = 0;
+    setIsPollingPayment(true);
+
+    const pollStatus = async () => {
+      pollingAttemptsRef.current += 1;
+      const result = await refetchSession();
+      if (cancelled) {
+        return;
+      }
+
+      if (result.data?.status === "PAID") {
+        setIsPollingPayment(false);
+        toast.success("Phiên phỏng vấn đã được xác nhận thanh toán.");
+        navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+        return;
+      }
+
+      if (pollingAttemptsRef.current >= 12) {
+        setIsPollingPayment(false);
+        toast.info("Hệ thống đang cập nhật thanh toán. Vui lòng tải lại sau ít phút.");
+        navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+      }
+    };
+
+    void pollStatus();
+    const intervalId = window.setInterval(() => {
+      void pollStatus();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      setIsPollingPayment(false);
+      window.clearInterval(intervalId);
+    };
+  }, [navigate, paymentState, refetchSession, session?.id, session?.status]);
 
   if (isLoading) {
     return (
@@ -118,9 +228,33 @@ export function SessionDetailPage() {
               <span className="text-slate-600 dark:text-slate-400">Trạng thái:</span>
               <span className="font-medium">{session.status}</span>
             </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4 text-slate-400" />
+              <span className="text-slate-600 dark:text-slate-400">Thời lượng dự kiến:</span>
+              <span className="font-medium">
+                {typeof session.duration === "number" && session.duration > 0
+                  ? `${session.duration} phút`
+                  : "-"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CreditCard className="h-4 w-4 text-slate-400" />
+              <span className="text-slate-600 dark:text-slate-400">Tổng giá:</span>
+              <span className="font-medium">
+                {typeof session.totalPrice === "number" && session.totalPrice > 0
+                  ? formatCurrency(session.totalPrice)
+                  : "-"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CreditCard className="h-4 w-4 text-slate-400" />
+              <span className="text-slate-600 dark:text-slate-400">Mã giao dịch:</span>
+              <span className="font-medium">{session.transactionCode || "-"}</span>
+            </div>
             {session.roomUrl &&
               (session.status === "DRAFT" ||
                 session.status === "SCHEDULED" ||
+                session.status === "PAID" ||
                 session.status === "ONGOING") && (
                 <div className="flex items-center gap-2 text-sm">
                   <Video className="h-4 w-4 text-slate-400" />
@@ -135,77 +269,104 @@ export function SessionDetailPage() {
           </div>
 
           {/* Action Buttons */}
-          {isCompleted && !review && (
+          {isCompleted && !myFeedback && (
             <div className="border-t pt-4">
               <Button
-                onClick={() => navigate(`/user/mock-interview/history/${session.id}/review`)}
+                onClick={() => navigate(`/user/mock-interview/history/${session.id}/feedback`)}
                 className="gap-2">
                 <Star className="h-4 w-4" />
-                Viết đánh giá cho Mentor
+                Viết phản hồi cho Mentor
               </Button>
+            </div>
+          )}
+          {session.status === "SCHEDULED" && (
+            <div className="border-t pt-4">
+              <Button
+                onClick={() => void handlePaySession()}
+                disabled={isCreatingPayment}
+                className="gap-2">
+                <CreditCard className="h-4 w-4" />
+                {isCreatingPayment ? "Đang tạo link thanh toán..." : "Thanh toán phiên phỏng vấn"}
+              </Button>
+              <p className="mt-2 text-xs text-slate-500">
+                Sau khi thanh toán xong, hệ thống sẽ cập nhật trạng thái sang PAID.
+              </p>
+            </div>
+          )}
+          {session.status === "PAID" && (
+            <div className="border-t pt-4">
+              <Button variant="secondary" disabled className="gap-2">
+                <CreditCard className="h-4 w-4" />
+                Phiên đã thanh toán
+              </Button>
+            </div>
+          )}
+          {isPollingPayment && (
+            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+              Hệ thống đang đối soát thanh toán. Trạng thái sẽ được cập nhật tự động.
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Review Section */}
+      {/* User Feedback Section */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-[#FFD700]" />
-            <CardTitle className="text-lg">Đánh Giá Của Bạn</CardTitle>
+            <MessageSquare className="h-5 w-5 text-emerald-600" />
+            <CardTitle className="text-lg">Phản Hồi Của Bạn</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          {reviewLoading ? (
+          {feedbackLoading ? (
             <Skeleton className="h-32" />
-          ) : review ? (
-            <ReviewCard review={review} showMentor />
+          ) : myFeedback ? (
+            <FeedbackCard feedback={myFeedback} showMentor showSession={false} />
           ) : isCompleted ? (
             <div className="py-8 text-center">
-              <Star className="mx-auto h-10 w-10 text-slate-300" />
-              <p className="mt-2 text-slate-500">Bạn chưa viết đánh giá cho phiên này</p>
+              <MessageSquare className="mx-auto h-10 w-10 text-slate-300" />
+              <p className="mt-2 text-slate-500">Bạn chưa gửi phản hồi cho phiên này</p>
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={() => navigate(`/user/mock-interview/history/${session.id}/review`)}>
-                Viết đánh giá
+                onClick={() => navigate(`/user/mock-interview/history/${session.id}/feedback`)}>
+                Viết phản hồi
               </Button>
             </div>
           ) : (
             <div className="py-8 text-center">
-              <Star className="mx-auto h-10 w-10 text-slate-300" />
+              <MessageSquare className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-2 text-slate-500">
-                Đánh giá chỉ có thể viết sau khi phiên phỏng vấn hoàn thành
+                Phản hồi chỉ có thể gửi sau khi phiên phỏng vấn hoàn thành
               </p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Feedback Section */}
+      {/* Mentor Review Section */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-emerald-600" />
-            <CardTitle className="text-lg">Phản Hồi Từ Mentor</CardTitle>
+            <Star className="h-5 w-5 text-[#FFD700]" />
+            <CardTitle className="text-lg">Đánh Giá Từ Mentor</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          {feedbackLoading ? (
+          {reviewLoading ? (
             <Skeleton className="h-32" />
-          ) : feedback ? (
-            <FeedbackCard feedback={feedback} showMentor showSession={false} />
+          ) : mentorReview ? (
+            <ReviewCard review={mentorReview} showMentor />
           ) : isCompleted ? (
             <div className="py-8 text-center">
-              <MessageSquare className="mx-auto h-10 w-10 text-slate-300" />
-              <p className="mt-2 text-slate-500">Mentor chưa gửi phản hồi cho phiên này</p>
+              <Star className="mx-auto h-10 w-10 text-slate-300" />
+              <p className="mt-2 text-slate-500">Mentor chưa gửi đánh giá cho phiên này</p>
             </div>
           ) : (
             <div className="py-8 text-center">
-              <MessageSquare className="mx-auto h-10 w-10 text-slate-300" />
+              <Star className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-2 text-slate-500">
-                Phản hồi sẽ được gửi sau khi phiên phỏng vấn hoàn thành
+                Đánh giá sẽ có sau khi phiên phỏng vấn hoàn thành
               </p>
             </div>
           )}

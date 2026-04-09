@@ -1,4 +1,4 @@
-import type { ApiResponse, TransactionEntity } from "@/interfaces";
+import type { ApiResponse, PaymentPurpose, TransactionEntity } from "@/interfaces";
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
@@ -21,6 +21,8 @@ const asNonEmptyString = (value: unknown): string | undefined => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 };
+
+const DEFAULT_TRANSFER_OUT_PURPOSE: PaymentPurpose = "WITHDRAW_FROM_WALLET";
 
 export class TransactionManager {
   private api = createApiInstance();
@@ -140,7 +142,11 @@ export class TransactionManager {
     }
   }
 
-  async transferOut(amount: number, userId: number): Promise<ApiResponse<string>> {
+  async transferOut(
+    amount: number,
+    userId: number,
+    paymentPurpose: PaymentPurpose = DEFAULT_TRANSFER_OUT_PURPOSE
+  ): Promise<ApiResponse<string>> {
     const normalizedAmount = normalizeAmount(amount);
     if (normalizedAmount <= 0) {
       return {
@@ -154,6 +160,7 @@ export class TransactionManager {
         params: {
           amount: normalizedAmount,
           userId: Number(userId),
+          paymentPurpose,
         },
       });
 

@@ -88,7 +88,7 @@ export function FeedbackModerationPage() {
           Kiểm Duyệt Phản Hồi
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
-          Xem xét và kiểm duyệt các phản hồi từ mentor, đặc biệt là phản hồi thấp
+          Xem xét và kiểm duyệt các phản hồi từ ứng viên cho mentor, đặc biệt là phản hồi thấp
         </p>
       </div>
 
@@ -163,7 +163,7 @@ export function FeedbackModerationPage() {
             <div className="relative min-w-[200px] flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Tìm theo tên, nội dung phản hồi..."
+                placeholder="Tìm theo tên ứng viên, mentor, nội dung phản hồi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -208,8 +208,8 @@ export function FeedbackModerationPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Mentor</TableHead>
-                  <TableHead>Học viên</TableHead>
+                  <TableHead>Mentor nhận</TableHead>
+                  <TableHead>Ứng viên gửi</TableHead>
                   <TableHead>Đánh giá</TableHead>
                   <TableHead>Nhận xét</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
@@ -272,7 +272,7 @@ export function FeedbackModerationPage() {
               Chi Tiết Phản Hồi #{selectedFeedback?.id}
             </DialogTitle>
             <DialogDescription>
-              Từ {selectedFeedback?.mentor?.name} cho {selectedFeedback?.user?.name}
+              Từ {selectedFeedback?.user?.name} cho {selectedFeedback?.mentor?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedFeedback && (
@@ -297,7 +297,7 @@ export function FeedbackModerationPage() {
               {/* Comment */}
               <div>
                 <h4 className="mb-2 font-medium text-slate-700 dark:text-slate-300">
-                  Nhận xét của Mentor
+                  Nhận xét của Ứng viên
                 </h4>
                 <div
                   className={`rounded-lg p-4 ${

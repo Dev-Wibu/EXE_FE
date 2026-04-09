@@ -65,8 +65,8 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "users", label: "User Management" },
   { type: "mentors", label: "Mentor Management" },
   { type: "sessions", label: "Session Management" },
-  { type: "reviews", label: "Review Management" },
-  { type: "feedback", label: "Feedback Management" },
+  { type: "reviews", label: "Mentor Review Management" },
+  { type: "feedback", label: "Candidate Feedback Management" },
   { type: "notifications", label: "Notification Management" },
   { type: "questionCategories", label: "Question Categories" },
   { type: "questionMajors", label: "Question Majors" },
@@ -144,10 +144,15 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
   },
   {
     items: [
-      { type: "reviews", label: "Review Management", icon: Star, iconColor: "text-yellow-600" },
+      {
+        type: "reviews",
+        label: "Mentor Review Management",
+        icon: Star,
+        iconColor: "text-yellow-600",
+      },
       {
         type: "feedback",
-        label: "Feedback Management",
+        label: "Candidate Feedback Management",
         icon: MessageSquare,
         iconColor: "text-cyan-600",
       },
@@ -213,10 +218,15 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
     ],
   },
   {
-    label: "Reviews & Feedback",
+    label: "Đánh giá & phản hồi",
     items: [
-      { type: "reviews", icon: Star, label: "Reviews", color: "text-yellow-600" },
-      { type: "feedback", icon: MessageSquare, label: "Feedback", color: "text-cyan-600" },
+      { type: "reviews", icon: Star, label: "Đánh giá mentor", color: "text-yellow-600" },
+      {
+        type: "feedback",
+        icon: MessageSquare,
+        label: "Phản hồi ứng viên",
+        color: "text-cyan-600",
+      },
       { type: "notifications", icon: Bell, label: "Notifications", color: "text-red-600" },
     ],
   },
@@ -269,7 +279,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
 
 const ADMIN_SIDEBAR_LOGO = (
   <>
-    <div className="bg-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+    <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
       <LayoutDashboard className="h-6 w-6 text-white" />
     </div>
     <div>
@@ -280,7 +290,7 @@ const ADMIN_SIDEBAR_LOGO = (
 );
 
 const ADMIN_SIDEBAR_LOGO_COLLAPSED = (
-  <div className="bg-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+  <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
     <LayoutDashboard className="h-6 w-6 text-white" />
   </div>
 );

@@ -49,9 +49,9 @@ const getTabTitle = (type: TabType): string => {
     case "contentModeration":
       return "Kiểm Duyệt";
     case "reviewModeration":
-      return "Kiểm Duyệt Đánh Giá";
+      return "Kiểm Duyệt Đánh Giá Mentor";
     case "feedbackModeration":
-      return "Kiểm Duyệt Phản Hồi";
+      return "Kiểm Duyệt Phản Hồi Ứng Viên";
     case "postModeration":
       return "Kiểm Duyệt Bài Viết";
     default:
@@ -72,13 +72,13 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
     items: [
       {
         type: "reviewModeration",
-        label: "Kiểm Duyệt Đánh Giá",
+        label: "Kiểm Duyệt Đánh Giá Mentor",
         icon: Star,
         iconColor: "text-yellow-600",
       },
       {
         type: "feedbackModeration",
-        label: "Kiểm Duyệt Phản Hồi",
+        label: "Kiểm Duyệt Phản Hồi Ứng Viên",
         icon: MessageSquare,
         iconColor: "text-cyan-600",
       },
@@ -132,16 +132,16 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       {
         type: "reviewModeration",
         icon: Star,
-        label: "Đánh Giá",
+        label: "Đánh Giá Mentor",
         color: "text-yellow-600",
-        description: "Kiểm duyệt đánh giá",
+        description: "Kiểm duyệt đánh giá mentor cho ứng viên",
       },
       {
         type: "feedbackModeration",
         icon: MessageSquare,
-        label: "Phản Hồi",
+        label: "Phản Hồi Ứng Viên",
         color: "text-cyan-600",
-        description: "Kiểm duyệt phản hồi",
+        description: "Kiểm duyệt phản hồi ứng viên cho mentor",
       },
       {
         type: "postModeration",
@@ -156,7 +156,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
 
 const STAFF_SIDEBAR_LOGO = (
   <>
-    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-600">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-600">
       <LayoutDashboard className="h-6 w-6 text-white" />
     </div>
     <div>
@@ -167,7 +167,7 @@ const STAFF_SIDEBAR_LOGO = (
 );
 
 const STAFF_SIDEBAR_LOGO_COLLAPSED = (
-  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-green-600">
+  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-600">
     <LayoutDashboard className="h-6 w-6 text-white" />
   </div>
 );

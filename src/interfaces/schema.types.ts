@@ -15,6 +15,7 @@ export type SchemaCandidateProfile = components["schemas"]["CandidateProfile"];
 export type UserSubscriptionResponse = components["schemas"]["UserSubscriptionResponse"];
 export type TransactionEntity = components["schemas"]["Transaction"];
 export type PaymentEntity = components["schemas"]["Payment"];
+export type PaymentPurpose = NonNullable<components["schemas"]["Payment"]["paymentPurpose"]>;
 
 /**
  * User role enum
@@ -71,6 +72,7 @@ export interface MentorFormData extends Omit<SchemaMentorInfo, "id" | "name" | "
 export type SessionStatus =
   | "DRAFT"
   | "SCHEDULED"
+  | "PAID"
   | "REJECTED"
   | "ONGOING"
   | "COMPLETED"
@@ -97,6 +99,9 @@ export interface Session {
   joinTime?: string;
   recordUrl?: string;
   status?: SessionStatus;
+  duration?: number;
+  totalPrice?: number;
+  transactionCode?: string;
 }
 
 /**
@@ -117,6 +122,12 @@ export interface SessionFormData {
   enable_screenshare?: boolean;
   /** Meeting start time (ISO date-time string) set by user */
   joinTime?: string;
+  /** Planned interview duration in minutes */
+  duration?: number;
+  /** Planned total price based on duration and mentor rate */
+  totalPrice?: number;
+  /** Linked payment transaction code for paid sessions */
+  transactionCode?: string;
   /** Recording mode: "cloud" or "local" (default: "cloud") */
   enable_recording?: string;
 }

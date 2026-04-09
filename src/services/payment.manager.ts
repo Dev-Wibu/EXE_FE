@@ -1,4 +1,4 @@
-import type { ApiResponse, PaymentEntity } from "@/interfaces";
+import type { ApiResponse, PaymentEntity, PaymentPurpose } from "@/interfaces";
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
@@ -25,7 +25,10 @@ const asNonEmptyString = (value: unknown): string | undefined => {
 export interface PaymentCreateOptions {
   planId?: number;
   planName?: string;
+  paymentPurpose?: PaymentPurpose;
 }
+
+const DEFAULT_PAYMENT_PURPOSE: PaymentPurpose = "BUY_MEMBERSHIP";
 
 export class PaymentManager {
   private api = createApiInstance();
@@ -119,7 +122,7 @@ export class PaymentManager {
     userId: number,
     options?: PaymentCreateOptions
   ): Promise<ApiResponse<string>> {
-    void options;
+    const paymentPurpose = options?.paymentPurpose || DEFAULT_PAYMENT_PURPOSE;
 
     const normalizedAmount = normalizeAmount(amount);
     if (normalizedAmount <= 0) {
@@ -134,6 +137,7 @@ export class PaymentManager {
         params: {
           amount: normalizedAmount,
           userId: Number(userId),
+          paymentPurpose,
         },
       });
 

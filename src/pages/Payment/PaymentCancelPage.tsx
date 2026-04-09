@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 import {
   addPaymentSupportLog,
   buildSupportPayload,
+  clearPendingSessionPaymentContext,
   formatSupportPayload,
+  getPendingSessionPaymentContext,
   getRecoveryByOrderCode,
   type PaymentRecoveryContext,
   upsertPaymentRecoveryContext,
@@ -20,6 +22,14 @@ export function PaymentCancelPage() {
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const orderCode = query.get("orderCode")?.trim() || "";
   const status = query.get("status")?.trim() || "CANCELLED";
+  const pendingSessionPayment = useMemo(() => getPendingSessionPaymentContext(), []);
+  const pendingSessionOrderCode = pendingSessionPayment?.orderCode?.trim() || "";
+  const shouldRedirectToPendingSession = Boolean(
+    pendingSessionPayment?.sessionId &&
+    orderCode &&
+    pendingSessionOrderCode &&
+    pendingSessionOrderCode === orderCode
+  );
   const [processing, setProcessing] = useState(false);
   const [chainResult, setChainResult] = useState<CancelChainResult>("idle");
   const [resultMessage, setResultMessage] = useState("Chua bat dau xu ly cancel chain.");
@@ -227,6 +237,48 @@ export function PaymentCancelPage() {
   }, [chainResult, isCopyingPayload, orderCode, processing, recoveryContext, status, supportCode]);
 
   useEffect(() => {
+    if (!pendingSessionPayment?.sessionId || !orderCode || !pendingSessionOrderCode) {
+      return;
+    }
+
+    if (pendingSessionOrderCode === orderCode) {
+      return;
+    }
+
+    addPaymentSupportLog({
+      orderCode,
+      status: "UNMAPPED_ORDER",
+      message: "Bo qua pending session payment o callback cancel do orderCode khong khop.",
+      payload: {
+        pendingSessionOrderCode,
+        callbackOrderCode: orderCode,
+      },
+    });
+    clearPendingSessionPaymentContext();
+  }, [orderCode, pendingSessionOrderCode, pendingSessionPayment]);
+
+  useEffect(() => {
+    if (!shouldRedirectToPendingSession || !pendingSessionPayment?.sessionId) {
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set("payment", "cancelled");
+    if (orderCode) {
+      params.set("orderCode", orderCode);
+    }
+
+    clearPendingSessionPaymentContext();
+    window.location.replace(
+      `/user/mock-interview/history/${pendingSessionPayment.sessionId}?${params.toString()}`
+    );
+  }, [orderCode, pendingSessionPayment, shouldRedirectToPendingSession]);
+
+  useEffect(() => {
+    if (shouldRedirectToPendingSession) {
+      return;
+    }
+
     const timerId = window.setTimeout(() => {
       void runCancelChain();
     }, 0);
@@ -234,7 +286,20 @@ export function PaymentCancelPage() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [runCancelChain]);
+  }, [runCancelChain, shouldRedirectToPendingSession]);
+
+  if (shouldRedirectToPendingSession) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-amber-50 to-rose-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">
+        <div className="mx-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-amber-200 bg-white p-6 shadow-sm dark:border-amber-900/40 dark:bg-slate-900">
+          <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+          <p className="font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
+            Đang quay lại trang chi tiết phiên phỏng vấn...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const canRetry =
     !processing && (chainResult === "cancel-failed" || chainResult === "delete-failed");

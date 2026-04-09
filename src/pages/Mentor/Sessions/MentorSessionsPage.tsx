@@ -1,6 +1,6 @@
 /**
  * Mentor Sessions Page
- * Displays mentor's interview sessions with option to join video call or write feedback
+ * Displays mentor's interview sessions with option to join video call or write reviews
  */
 
 import { Calendar, Check, Clock, LogIn, MessageSquare, User, Video, X } from "lucide-react";
@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMentorFeedbacks } from "@/hooks/useMentorFeedback";
+import { useMentorReviews } from "@/hooks/useMentorReview";
 import { usePagination } from "@/hooks/usePagination";
 import { useSessions, useUpdateSessionStatus } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
@@ -30,6 +30,7 @@ const statusMap: Record<
 > = {
   DRAFT: { label: "Chờ duyệt", variant: "secondary", color: "bg-amber-100 text-amber-700" },
   SCHEDULED: { label: "Sắp diễn ra", variant: "secondary", color: "bg-blue-100 text-blue-700" },
+  PAID: { label: "Đã thanh toán", variant: "secondary", color: "bg-emerald-100 text-emerald-700" },
   ONGOING: { label: "Đang diễn ra", variant: "default", color: "bg-green-100 text-green-700" },
   COMPLETED: { label: "Hoàn thành", variant: "outline", color: "bg-slate-100 text-slate-600" },
   REJECTED: { label: "Bị từ chối", variant: "destructive", color: "bg-red-100 text-red-600" },
@@ -38,10 +39,10 @@ const statusMap: Record<
 
 interface SessionCardProps {
   session: Session;
-  hasFeedback: boolean;
+  hasReview: boolean;
   now: number;
   onJoinSession: () => void;
-  onWriteFeedback: () => void;
+  onWriteReview: () => void;
   onAcceptSession: () => void;
   onRejectSession: () => void;
   isUpdatingStatus: boolean;
@@ -49,10 +50,10 @@ interface SessionCardProps {
 
 function SessionCard({
   session,
-  hasFeedback,
+  hasReview,
   now,
   onJoinSession,
-  onWriteFeedback,
+  onWriteReview,
   onAcceptSession,
   onRejectSession,
   isUpdatingStatus,
@@ -190,19 +191,19 @@ function SessionCard({
         </div>
 
         <div className="flex gap-2">
-          {isCompleted && !hasFeedback && (
+          {isCompleted && !hasReview && (
             <Button
               size="sm"
-              onClick={onWriteFeedback}
+              onClick={onWriteReview}
               className="gap-1 bg-emerald-600 hover:bg-emerald-700">
               <MessageSquare className="h-4 w-4" />
-              Viết phản hồi
+              Viết đánh giá
             </Button>
           )}
-          {isCompleted && hasFeedback && (
+          {isCompleted && hasReview && (
             <Button variant="secondary" size="sm" disabled className="gap-1">
               <MessageSquare className="h-4 w-4 text-emerald-600" />
-              Đã gửi phản hồi
+              Đã gửi đánh giá
             </Button>
           )}
           {!isCompleted && !canJoin && (
@@ -225,11 +226,11 @@ export function MentorSessionsPage() {
     refetch: refetchSessions,
   } = useSessions();
   const {
-    data: feedbacks = [],
-    isLoading: feedbacksLoading,
-    isRefetching: feedbacksRefetching,
-    refetch: refetchFeedbacks,
-  } = useMentorFeedbacks();
+    data: reviews = [],
+    isLoading: reviewsLoading,
+    isRefetching: reviewsRefetching,
+    refetch: refetchReviews,
+  } = useMentorReviews();
   const updateStatusMutation = useUpdateSessionStatus();
 
   // Current time state for joinTime-based blocking (updates every 30s)
@@ -239,14 +240,14 @@ export function MentorSessionsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const isLoading = sessionsLoading || feedbacksLoading;
+  const isLoading = sessionsLoading || reviewsLoading;
 
   // Filter sessions where current user is the mentor (userId2)
   const mentorSessions = allSessions.filter((session: Session) => session.userId2 === user?.id);
 
-  // Get session IDs that already have feedback
-  const feedbackSessionIds = new Set(
-    feedbacks.map((f: { session?: { id?: number } }) => f.session?.id).filter(Boolean)
+  // Get session IDs that already have mentor reviews
+  const reviewSessionIds = new Set(
+    reviews.map((r: { session?: { id?: number } }) => r.session?.id).filter(Boolean)
   );
 
   // Apply sorting
@@ -269,8 +270,8 @@ export function MentorSessionsPage() {
     }
   };
 
-  const handleWriteFeedback = (session: Session) => {
-    navigate(`/mentor/sessions/${session.id}/feedback`);
+  const handleWriteReview = (session: Session) => {
+    navigate(`/mentor/sessions/${session.id}/review`);
   };
 
   const handleAcceptSession = (session: Session) => {
@@ -298,14 +299,14 @@ export function MentorSessionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Phiên Phỏng Vấn</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Quản lý các phiên phỏng vấn và tham gia video call với học viên
+            Quản lý các phiên phỏng vấn và gửi đánh giá cho học viên
           </p>
         </div>
         <ReloadButton
           onReload={async () => {
-            await Promise.all([refetchSessions(), refetchFeedbacks()]);
+            await Promise.all([refetchSessions(), refetchReviews()]);
           }}
-          isLoading={sessionsRefetching || feedbacksRefetching}
+          isLoading={sessionsRefetching || reviewsRefetching}
           tooltip="Tải lại danh sách phiên phỏng vấn"
         />
       </div>
@@ -342,11 +343,11 @@ export function MentorSessionsPage() {
         </Card>
         <Card className="border-emerald-100 dark:border-slate-800">
           <CardHeader className="pb-2">
-            <CardDescription>Chờ phản hồi</CardDescription>
+            <CardDescription>Chờ đánh giá</CardDescription>
             <CardTitle className="text-2xl text-amber-600">
               {
                 mentorSessions.filter(
-                  (s: Session) => s.status === "COMPLETED" && !feedbackSessionIds.has(s.id)
+                  (s: Session) => s.status === "COMPLETED" && !reviewSessionIds.has(s.id)
                 ).length
               }
             </CardTitle>
@@ -381,10 +382,10 @@ export function MentorSessionsPage() {
               <SessionCard
                 key={session.id}
                 session={session}
-                hasFeedback={feedbackSessionIds.has(session.id)}
+                hasReview={reviewSessionIds.has(session.id)}
                 now={now}
                 onJoinSession={() => handleJoinSession(session)}
-                onWriteFeedback={() => handleWriteFeedback(session)}
+                onWriteReview={() => handleWriteReview(session)}
                 onAcceptSession={() => handleAcceptSession(session)}
                 onRejectSession={() => handleRejectSession(session)}
                 isUpdatingStatus={updateStatusMutation.isPending}

@@ -51,7 +51,7 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "overview", label: "Tổng quan" },
   { type: "mockInterview", label: "Phỏng vấn với Mentor" },
   { type: "interviewHistory", label: "Lịch sử phỏng vấn" },
-  { type: "feedback", label: "Phản hồi từ Mentor" },
+  { type: "feedback", label: "Đánh giá từ Mentor" },
   { type: "aiInterview", label: "Phỏng vấn với AI" },
   { type: "aiChat", label: "AI Chat" },
   { type: "questions", label: "Bộ câu hỏi" },
@@ -89,7 +89,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       {
         type: "feedback",
         icon: MessageSquare,
-        label: "Phản hồi từ Mentor",
+        label: "Đánh giá từ Mentor",
         color: "text-cyan-600",
       },
     ],

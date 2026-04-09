@@ -7,7 +7,12 @@ import type { ApiResponse } from "@/interfaces";
 import type { User as AuthUser, MentorRegistration } from "@/mocks/auth.mock";
 import type { components } from "../../schema-from-be";
 
-import { API_ENDPOINTS, MANAGER_MODE, createApiInstance } from "@/constants/api.config";
+import {
+  API_BASE_URL,
+  API_ENDPOINTS,
+  MANAGER_MODE,
+  createApiInstance,
+} from "@/constants/api.config";
 import { isValidMajor } from "@/constants/majors";
 import { fetchClient } from "@/lib/api";
 import * as authMock from "@/mocks/auth.mock";
@@ -52,6 +57,25 @@ const normalizeId = (value: unknown, fallback: string): string => {
 
   return fallback;
 };
+
+const OAUTH_TOKEN_PARAM_KEYS = [
+  "token",
+  "accessToken",
+  "access_token",
+  "jwt",
+  "idToken",
+  "id_token",
+] as const;
+
+const OAUTH_SIGNAL_PARAM_KEYS = [
+  ...OAUTH_TOKEN_PARAM_KEYS,
+  "error",
+  "error_description",
+  "code",
+  "state",
+] as const;
+
+const OAUTH_ERROR_PARAM_KEYS = ["error_description", "error"] as const;
 
 export interface LoginCredentials {
   email: string;
@@ -300,6 +324,33 @@ export class AuthManager {
     }
   }
 
+  private parseOAuthCallbackUrl(rawUrl: string): { query: URLSearchParams; hash: URLSearchParams } {
+    const fallbackOrigin = typeof window !== "undefined" ? window.location.origin : API_BASE_URL;
+    const parsedUrl = new URL(rawUrl, fallbackOrigin);
+    const hashValue = parsedUrl.hash.startsWith("#") ? parsedUrl.hash.slice(1) : parsedUrl.hash;
+
+    return {
+      query: parsedUrl.searchParams,
+      hash: new URLSearchParams(hashValue),
+    };
+  }
+
+  private getFirstParamValue(
+    sources: URLSearchParams[],
+    keys: readonly string[]
+  ): string | undefined {
+    for (const source of sources) {
+      for (const key of keys) {
+        const value = asNonEmptyString(source.get(key));
+        if (value) {
+          return value;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
   private extractErrorMessage(error: unknown): string | undefined {
     if (typeof error === "string") {
       return error;
@@ -388,6 +439,100 @@ export class AuthManager {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Đăng nhập thất bại",
+      };
+    }
+  }
+
+  /**
+   * Build absolute Google login URL for browser redirect.
+   */
+  getGoogleLoginUrl(): string {
+    const endpoint = API_ENDPOINTS.AUTH.LOGIN_WITH_GOOGLE;
+    if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+      return endpoint;
+    }
+
+    return new URL(endpoint, API_BASE_URL).toString();
+  }
+
+  /**
+   * Check whether current URL contains OAuth callback params.
+   */
+  hasGoogleCallbackPayload(rawUrl: string): boolean {
+    try {
+      const { query, hash } = this.parseOAuthCallbackUrl(rawUrl);
+      const sources = [query, hash];
+
+      return sources.some((source) => OAUTH_SIGNAL_PARAM_KEYS.some((key) => source.has(key)));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Read callback error from OAuth redirect URL.
+   */
+  getGoogleCallbackError(rawUrl: string): string | undefined {
+    try {
+      const { query, hash } = this.parseOAuthCallbackUrl(rawUrl);
+      return this.getFirstParamValue([query, hash], OAUTH_ERROR_PARAM_KEYS);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Consume OAuth callback URL and extract user + JWT token.
+   */
+  consumeGoogleCallbackFromUrl(rawUrl: string): ApiResponse<LoginPayload> {
+    try {
+      const { query, hash } = this.parseOAuthCallbackUrl(rawUrl);
+      const sources = [query, hash];
+
+      const normalizedToken = this.normalizeToken(
+        this.getFirstParamValue(sources, OAUTH_TOKEN_PARAM_KEYS)
+      );
+
+      if (!normalizedToken) {
+        return {
+          success: false,
+          error: "Khong tim thay token dang nhap Google trong URL callback.",
+        };
+      }
+
+      const emailFallback =
+        this.getFirstParamValue(sources, ["email", "userEmail"]) || "google-user@inblue.local";
+
+      const userCandidate = {
+        id: this.getFirstParamValue(sources, ["userId", "id", "uid", "sub"]),
+        email: this.getFirstParamValue(sources, ["email", "userEmail"]),
+        fullName: this.getFirstParamValue(sources, ["fullName", "name", "username"]),
+        role: this.getFirstParamValue(sources, ["role"]),
+        avatarUrl: this.getFirstParamValue(sources, ["avatarUrl", "avatar"]),
+      };
+
+      const userFromToken = this.buildUserFromToken(normalizedToken, emailFallback);
+      const userFromParams = this.mapUserFromUnknown(userCandidate, emailFallback, "USER");
+
+      const user = userFromToken ||
+        userFromParams || {
+          id: emailFallback,
+          email: emailFallback,
+          fullName: getEmailPrefix(emailFallback),
+          role: "USER" as const,
+        };
+
+      return {
+        success: true,
+        data: {
+          user,
+          token: normalizedToken,
+        },
+      };
+    } catch {
+      return {
+        success: false,
+        error: "Khong the xu ly callback dang nhap Google.",
       };
     }
   }

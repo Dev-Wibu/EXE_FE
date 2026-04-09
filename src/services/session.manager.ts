@@ -38,6 +38,10 @@ export interface SessionCreationRequest {
   mentorId?: number;
   /** Meeting start time (ISO date-time string) */
   joinTime?: string;
+  /** Planned interview duration in minutes */
+  duration?: number;
+  /** Planned total price for interview */
+  totalPrice?: number;
 }
 
 /**
@@ -132,6 +136,8 @@ export class SessionManager implements BaseManager<Session> {
         requestData = {
           ..._data,
           joinTime: _data.joinTime || formatToVietnamISOString(new Date()),
+          duration: _data.duration,
+          totalPrice: _data.totalPrice,
         };
       } else {
         // Convert from Session partial to SessionCreationRequest
@@ -142,6 +148,8 @@ export class SessionManager implements BaseManager<Session> {
           enable_screenshare?: boolean;
           joinTime?: string;
           enable_recording?: string;
+          duration?: number;
+          totalPrice?: number;
         };
 
         if (!sessionData.userId) {
@@ -161,6 +169,8 @@ export class SessionManager implements BaseManager<Session> {
           userId: sessionData.userId,
           mentorId: sessionData.userId2,
           joinTime: sessionData.joinTime || formatToVietnamISOString(new Date()),
+          duration: sessionData.duration,
+          totalPrice: sessionData.totalPrice,
           dailyCoCreationRequest: {
             name: "",
             privacy: "public",
@@ -261,6 +271,27 @@ export class SessionManager implements BaseManager<Session> {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to update session status",
+      };
+    }
+  }
+
+  /**
+   * Create mentor interview payment checkout URL
+   * GET /api/sessions/make-payment?sessionId=X
+   */
+  async makePayment(sessionId: number): Promise<ApiResponse<string>> {
+    try {
+      const response = await this.api.get(API_ENDPOINTS.SESSIONS.MAKE_PAYMENT, {
+        params: { sessionId },
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to create session payment",
       };
     }
   }

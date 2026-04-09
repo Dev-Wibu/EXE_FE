@@ -179,7 +179,7 @@ export function StudentDetailPage() {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1">
               <MessageSquare className="h-4 w-4" />
-              Phản hồi
+              Phản hồi nhận được
             </CardDescription>
             <CardTitle className="text-2xl text-blue-600">{totalFeedbacks}</CardTitle>
           </CardHeader>
@@ -188,7 +188,7 @@ export function StudentDetailPage() {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1">
               <Star className="h-4 w-4" />
-              Đánh giá
+              Đánh giá đã gửi
             </CardDescription>
             <CardTitle className="text-2xl text-[#FFD700]">{totalReviews}</CardTitle>
           </CardHeader>
@@ -199,8 +199,8 @@ export function StudentDetailPage() {
       <Tabs defaultValue="sessions">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="sessions">Phiên ({totalSessions})</TabsTrigger>
-          <TabsTrigger value="feedbacks">Phản hồi ({totalFeedbacks})</TabsTrigger>
-          <TabsTrigger value="reviews">Đánh giá ({totalReviews})</TabsTrigger>
+          <TabsTrigger value="feedbacks">Phản hồi nhận ({totalFeedbacks})</TabsTrigger>
+          <TabsTrigger value="reviews">Đánh giá gửi ({totalReviews})</TabsTrigger>
           <TabsTrigger value="profile">
             <FileText className="mr-1 h-4 w-4" />
             Hồ sơ
@@ -259,15 +259,15 @@ export function StudentDetailPage() {
         <TabsContent value="feedbacks" className="mt-4">
           <Card className="border-emerald-100 dark:border-slate-800">
             <CardHeader>
-              <CardTitle>Phản Hồi Đã Gửi</CardTitle>
-              <CardDescription>Các phản hồi bạn đã gửi cho học viên này</CardDescription>
+              <CardTitle>Phản Hồi Từ Học Viên</CardTitle>
+              <CardDescription>Các phản hồi học viên này gửi cho bạn</CardDescription>
             </CardHeader>
             <CardContent>
               {studentFeedbacks.length === 0 ? (
                 <EmptyState
                   icon={MessageSquare}
                   title="Chưa có phản hồi"
-                  description="Bạn chưa gửi phản hồi nào cho học viên này."
+                  description="Học viên này chưa gửi phản hồi nào cho bạn."
                 />
               ) : (
                 <div className="space-y-4">
@@ -276,7 +276,7 @@ export function StudentDetailPage() {
                       key={feedback.id}
                       feedback={feedback}
                       showMentor={false}
-                      showUser={false}
+                      showUser
                       showSession
                     />
                   ))}
@@ -290,25 +290,20 @@ export function StudentDetailPage() {
         <TabsContent value="reviews" className="mt-4">
           <Card className="border-emerald-100 dark:border-slate-800">
             <CardHeader>
-              <CardTitle>Đánh Giá Nhận Được</CardTitle>
-              <CardDescription>Các đánh giá từ học viên này về bạn</CardDescription>
+              <CardTitle>Đánh Giá Đã Gửi</CardTitle>
+              <CardDescription>Các đánh giá bạn đã gửi cho học viên này</CardDescription>
             </CardHeader>
             <CardContent>
               {studentReviews.length === 0 ? (
                 <EmptyState
                   icon={Star}
                   title="Chưa có đánh giá"
-                  description="Học viên này chưa gửi đánh giá nào cho bạn."
+                  description="Bạn chưa gửi đánh giá nào cho học viên này."
                 />
               ) : (
                 <div className="space-y-4">
                   {studentReviews.map((review: { id?: number }) => (
-                    <ReviewCard
-                      key={review.id}
-                      review={review}
-                      showMentor={false}
-                      showUser={false}
-                    />
+                    <ReviewCard key={review.id} review={review} showMentor={false} showUser />
                   ))}
                 </div>
               )}

@@ -70,7 +70,8 @@ export function SessionManagementPage() {
           session.id?.toString().includes(lowerQuery) ||
           session.userId?.toString().includes(lowerQuery) ||
           session.userId2?.toString().includes(lowerQuery) ||
-          session.roomUrl?.toLowerCase().includes(lowerQuery);
+          session.roomUrl?.toLowerCase().includes(lowerQuery) ||
+          session.transactionCode?.toLowerCase().includes(lowerQuery);
         if (!matchesSearch) return false;
       }
 
@@ -99,7 +100,14 @@ export function SessionManagementPage() {
   }, [sortedData, pagination.startIndex, pagination.endIndex]);
 
   const handleCreate = () => {
-    setFormData({ status: "SCHEDULED", start_video_off: true, start_audio_off: true });
+    setFormData({
+      status: "SCHEDULED",
+      start_video_off: true,
+      start_audio_off: true,
+      duration: undefined,
+      totalPrice: undefined,
+      transactionCode: "",
+    });
     setIsCreateDialogOpen(true);
   };
 
@@ -115,6 +123,9 @@ export function SessionManagementPage() {
       userId2: session.userId2,
       status: session.status,
       joinTime: session.joinTime,
+      duration: session.duration,
+      totalPrice: session.totalPrice,
+      transactionCode: session.transactionCode,
       start_video_off: true,
       start_audio_off: true,
     });
@@ -185,6 +196,9 @@ export function SessionManagementPage() {
         userId2: formData.userId2,
         status: formData.status,
         joinTime: formData.joinTime,
+        duration: formData.duration,
+        totalPrice: formData.totalPrice,
+        transactionCode: formData.transactionCode,
       };
       const response = await sessionManager.update(selectedSession.id, mergedData);
       if (response.success) {
@@ -266,6 +280,7 @@ export function SessionManagementPage() {
               <SelectItem value="all">Tất cả trạng thái</SelectItem>
               <SelectItem value="DRAFT">Chờ duyệt</SelectItem>
               <SelectItem value="SCHEDULED">Đã lên lịch</SelectItem>
+              <SelectItem value="PAID">Đã thanh toán</SelectItem>
               <SelectItem value="REJECTED">Bị từ chối</SelectItem>
               <SelectItem value="ONGOING">Đang diễn ra</SelectItem>
               <SelectItem value="COMPLETED">Đã hoàn thành</SelectItem>

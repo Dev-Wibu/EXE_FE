@@ -1,6 +1,6 @@
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +16,22 @@ import {
 } from "@/components/ui/select";
 import { MAJOR_OPTIONS } from "@/constants/majors";
 import { authManager } from "@/services/auth.manager";
-import { useAuthStore } from "@/stores/authStore";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
+
+type SignupAuthPayload = {
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    role?: string;
+    avatar?: string | null;
+  };
+  token?: string;
+};
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role"); // Get role from URL param
   const { setUser, setToken, setIsLoggedIn } = useAuthStore();
@@ -36,6 +48,59 @@ export function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const applyAuthState = useCallback(
+    (payload: SignupAuthPayload) => {
+      const parsedUserId = Number(payload.user.id);
+      const userId = Number.isFinite(parsedUserId) ? parsedUserId : undefined;
+
+      setUser({
+        id: userId,
+        name: payload.user.fullName,
+        email: payload.user.email,
+        role: payload.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR" | "STAFF",
+        avatarUrl: payload.user.avatar || undefined,
+      });
+      setToken(payload.token ?? null);
+      setIsLoggedIn(true);
+
+      if (userId && !isNaN(userId)) {
+        localStorage.setItem("current-user-id", String(userId));
+      }
+
+      navigate(getDashboardPath(payload.user.role), { replace: true });
+    },
+    [navigate, setIsLoggedIn, setToken, setUser]
+  );
+
+  useEffect(() => {
+    const callbackUrl = window.location.href;
+    if (!authManager.hasGoogleCallbackPayload(callbackUrl)) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setError("");
+
+      const callbackError = authManager.getGoogleCallbackError(callbackUrl);
+      if (callbackError) {
+        setError(callbackError);
+        return;
+      }
+
+      const callbackResult = authManager.consumeGoogleCallbackFromUrl(callbackUrl);
+      if (!callbackResult.success || !callbackResult.data?.user || !callbackResult.data.token) {
+        setError(callbackResult.error || "Đăng nhập Google thất bại.");
+        return;
+      }
+
+      applyAuthState(callbackResult.data);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [applyAuthState, location.hash, location.search]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -113,7 +178,8 @@ export function SignupPage() {
   };
 
   const handleGoogleSignup = () => {
-    setError("Đăng ký Google đang được phát triển. Vui lòng đăng ký bằng email.");
+    setError("");
+    window.location.assign(authManager.getGoogleLoginUrl());
   };
 
   return (

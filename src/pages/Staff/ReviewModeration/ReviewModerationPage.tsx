@@ -123,7 +123,7 @@ export function ReviewModerationPage() {
           Kiểm Duyệt Đánh Giá
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
-          Xem xét và kiểm duyệt các đánh giá, đặc biệt là đánh giá thấp
+          Xem xét và kiểm duyệt các đánh giá từ mentor cho ứng viên, đặc biệt là đánh giá thấp
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export function ReviewModerationPage() {
             <div className="relative min-w-[200px] flex-1">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Tìm theo tên, nội dung đánh giá..."
+                placeholder="Tìm theo tên mentor, ứng viên, nội dung đánh giá..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -246,8 +246,8 @@ export function ReviewModerationPage() {
                     <TableHead>
                       <SortButton {...getSortProps("id")}>ID</SortButton>
                     </TableHead>
-                    <TableHead>Mentor</TableHead>
-                    <TableHead>Học viên</TableHead>
+                    <TableHead>Mentor gửi</TableHead>
+                    <TableHead>Ứng viên được đánh giá</TableHead>
                     <TableHead>
                       <SortButton {...getSortProps("rating")}>Đánh giá</SortButton>
                     </TableHead>
@@ -322,7 +322,7 @@ export function ReviewModerationPage() {
               Chi Tiết Đánh Giá #{selectedReview?.id}
             </DialogTitle>
             <DialogDescription>
-              Từ {selectedReview?.user?.name} cho {selectedReview?.mentor?.name}
+              Từ {selectedReview?.mentor?.name} cho {selectedReview?.user?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedReview && (
