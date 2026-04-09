@@ -79,7 +79,7 @@ const MEMBERSHIP_PLANS: MembershipPlan[] = [
   {
     id: "NEW",
     displayName: "INBLUE NEW",
-    price: 49000,
+    price: 4000,
     durationDays: 30,
     colorClass: "text-cyan-500 dark:text-cyan-400",
     bgClass: "bg-white dark:bg-slate-900",
