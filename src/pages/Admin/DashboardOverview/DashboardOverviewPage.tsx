@@ -155,7 +155,7 @@ export function DashboardOverviewPage() {
       MENTOR_INTERVIEW: "Phỏng vấn Mentor",
       AI_INTERVIEW: "Phỏng vấn AI",
       PRACTICE: "Luyện tập",
-      QUIZ: "Trắc nghiệm",
+      QUIZ: "Làm kiểm tra",
     };
 
     const colorMap: Record<string, string> = {
