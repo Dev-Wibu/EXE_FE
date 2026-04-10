@@ -54,6 +54,7 @@ export const API_ENDPOINTS = {
     TOTAL_SESSION: "/api/dashboard/total-session",
     TOTAL_TRANSACTION: "/api/dashboard/total-transaction",
     TOTAL_INCOME: "/api/dashboard/total-income",
+    FEATURE_USAGE_LOGS: "/api/feature-usage-logs",
   },
 
   // Transaction endpoints - schema-first mapping (skeleton phase: constants only)

@@ -6,7 +6,10 @@ import { useMemo } from "react";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   XAxis,
@@ -104,6 +107,11 @@ export function DashboardOverviewPage() {
     queryKey: ["admin", "total-transactions"],
     queryFn: () => dashboardAdminManager.getTotalTransactions(),
   });
+  
+  const { data: usageResponse, isLoading: loadingUsage } = useQuery({
+    queryKey: ["admin", "feature-usage-logs"],
+    queryFn: () => dashboardAdminManager.getFeatureUsageLogs(),
+  });
 
   const incomeRecords = incomeResponse?.data || [];
   const walletRecords = transactionResponse?.data || [];
@@ -127,6 +135,42 @@ export function DashboardOverviewPage() {
   }, [incomeRecords]);
 
   const walletTrendData = useMemo(() => buildTrendData(walletRecords), [walletRecords]);
+
+  const usageChartData = useMemo(() => {
+    const logs = usageResponse?.data || [];
+    const counts: Record<string, number> = {
+      MENTOR_INTERVIEW: 0,
+      AI_INTERVIEW: 0,
+      PRACTICE: 0,
+      QUIZ: 0,
+    };
+
+    logs.forEach((log) => {
+      if (counts[log.featureName] !== undefined) {
+        counts[log.featureName] += 1;
+      }
+    });
+
+    const labelMap: Record<string, string> = {
+      MENTOR_INTERVIEW: "Phỏng vấn Mentor",
+      AI_INTERVIEW: "Phỏng vấn AI",
+      PRACTICE: "Luyện tập",
+      QUIZ: "Trắc nghiệm",
+    };
+
+    const colorMap: Record<string, string> = {
+      MENTOR_INTERVIEW: "#8b5cf6", // violet-500
+      AI_INTERVIEW: "#0ea5e9", // sky-500
+      PRACTICE: "#10b981", // emerald-500
+      QUIZ: "#f59e0b", // amber-500
+    };
+
+    return Object.entries(counts).map(([key, value]) => ({
+      name: labelMap[key] || key,
+      value,
+      color: colorMap[key] || "#94a3b8",
+    }));
+  }, [usageResponse]);
 
   const overviewStats = [
     {
@@ -347,6 +391,69 @@ export function DashboardOverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-emerald-600">
+            <Activity className="h-5 w-5" />
+            Mức độ sử dụng các tính năng
+          </CardTitle>
+          <CardDescription>Thống kê số lượt sử dụng các tính năng chính trên hệ thống</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={usageChartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                barSize={60}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#64748b" }}
+                  interval={0}
+                  angle={-25}
+                  textAnchor="end"
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 12, fill: "#64748b" }}
+                  allowDecimals={false}
+                />
+                <RechartsTooltip
+                  cursor={{ fill: "transparent" }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+
+                    const item = payload[0] as {
+                      value?: number;
+                      payload?: (typeof usageChartData)[0];
+                    };
+                    return (
+                      <div className="rounded-lg border bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
+                        <p className="text-xs font-bold text-slate-500">{item.payload?.name}</p>
+                        <p
+                          className="text-lg font-black"
+                          style={{ color: item.payload?.color }}>
+                          {item.value?.toLocaleString("vi-VN")} lượt
+                        </p>
+                      </div>
+                    );
+                  }}
+                />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  {usageChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
         <CardHeader>

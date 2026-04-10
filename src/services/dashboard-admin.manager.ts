@@ -4,7 +4,7 @@
  */
 
 import { API_ENDPOINTS, createApiInstance } from "@/constants/api.config";
-import type { ApiResponse, PaymentEntity, TransactionEntity } from "@/interfaces";
+import type { ApiResponse, FeatureUsageLog, PaymentEntity, TransactionEntity } from "@/interfaces";
 
 export class DashboardAdminManager {
   private api = createApiInstance();
@@ -95,6 +95,24 @@ export class DashboardAdminManager {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Không thể lấy nhật ký giao dịch",
+      };
+    }
+  }
+
+  /**
+   * Get feature usage logs
+   */
+  async getFeatureUsageLogs(): Promise<ApiResponse<FeatureUsageLog[]>> {
+    try {
+      const response = await this.api.get(API_ENDPOINTS.DASHBOARD.FEATURE_USAGE_LOGS);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Không thể lấy nhật ký sử dụng tính năng",
       };
     }
   }

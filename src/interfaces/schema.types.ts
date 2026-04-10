@@ -304,3 +304,18 @@ export interface CandidateProfile {
   createdAt?: string;
   updatedAt?: string;
 }
+
+/**
+ * Feature names for usage logs
+ */
+export type FeatureName = "MENTOR_INTERVIEW" | "AI_INTERVIEW" | "PRACTICE" | "QUIZ";
+
+/**
+ * Feature usage log entry based on API response
+ */
+export interface FeatureUsageLog {
+  id: number;
+  userId: number;
+  featureName: FeatureName;
+  useAt: string;
+}
