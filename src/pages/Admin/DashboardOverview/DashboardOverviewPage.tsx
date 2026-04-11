@@ -1,8 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { format, subDays } from "date-fns";
+import { addDays, endOfDay, format, startOfDay, subDays } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Activity, CreditCard, DollarSign, UserCheck, Users, Wallet } from "lucide-react";
-import { useMemo } from "react";
+import {
+  Activity,
+  Calendar as CalendarIcon,
+  CreditCard,
+  DollarSign,
+  UserCheck,
+  Users,
+  Wallet,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -17,22 +25,34 @@ import {
 } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { PaymentEntity, TransactionEntity } from "@/interfaces";
 import { formatCurrency } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { dashboardAdminManager } from "@/services";
 
 type TrendPoint = {
+  key: string;
   date: string;
   amount: number;
 };
+
+type RangeMode = "7" | "14" | "30" | "custom";
 
 type RecentRecord =
   | (PaymentEntity & { source: "INCOME" })
   | (TransactionEntity & { source: "WALLET" });
 
-const TREND_DAYS = 15;
+const DEFAULT_RANGE_DAYS = 30;
+
+const RANGE_OPTIONS: Array<{ label: string; value: Exclude<RangeMode, "custom"> }> = [
+  { label: "7 ngày", value: "7" },
+  { label: "14 ngày", value: "14" },
+  { label: "30 ngày", value: "30" },
+];
 
 const isSuccessPayment = (status?: PaymentEntity["status"]) => {
   if (!status) return true;
@@ -42,16 +62,35 @@ const isSuccessPayment = (status?: PaymentEntity["status"]) => {
 
 const toMillis = (value?: string) => {
   if (!value) return 0;
-  const timestamp = new Date(value).getTime();
+  const normalizedValue =
+    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
+  const timestamp = new Date(normalizedValue).getTime();
   return Number.isNaN(timestamp) ? 0 : timestamp;
 };
 
-const buildTrendData = (records: Array<{ createdAt?: string; amount?: number }>) => {
-  const points: Record<string, TrendPoint> = {};
+const isWithinDateRange = (value: string | undefined, from: Date, to: Date) => {
+  const timestamp = toMillis(value);
+  if (!timestamp) return false;
+  return timestamp >= from.getTime() && timestamp <= to.getTime();
+};
 
-  for (let index = TREND_DAYS - 1; index >= 0; index -= 1) {
-    const dateKey = format(subDays(new Date(), index), "dd/MM");
-    points[dateKey] = { date: dateKey, amount: 0 };
+const buildTrendData = (
+  records: Array<{ createdAt?: string; amount?: number }>,
+  from: Date,
+  to: Date
+) => {
+  const pointMap: Record<string, TrendPoint> = {};
+  const points: TrendPoint[] = [];
+
+  for (let cursor = new Date(from); cursor <= to; cursor = addDays(cursor, 1)) {
+    const dateKey = format(cursor, "yyyy-MM-dd");
+    const point = {
+      key: dateKey,
+      date: format(cursor, "dd/MM"),
+      amount: 0,
+    };
+    pointMap[dateKey] = point;
+    points.push(point);
   }
 
   records.forEach((record) => {
@@ -59,13 +98,13 @@ const buildTrendData = (records: Array<{ createdAt?: string; amount?: number }>)
     const timestamp = toMillis(record.createdAt);
     if (!timestamp) return;
 
-    const dateKey = format(new Date(timestamp), "dd/MM");
-    if (points[dateKey]) {
-      points[dateKey].amount += record.amount || 0;
+    const dateKey = format(new Date(timestamp), "yyyy-MM-dd");
+    if (pointMap[dateKey]) {
+      pointMap[dateKey].amount += record.amount || 0;
     }
   });
 
-  return Object.values(points);
+  return points;
 };
 
 const getPaymentStatusLabel = (status?: PaymentEntity["status"]) => {
@@ -113,31 +152,110 @@ export function DashboardOverviewPage() {
     queryFn: () => dashboardAdminManager.getFeatureUsageLogs(),
   });
 
-  const incomeRecords = incomeResponse?.data || [];
-  const walletRecords = transactionResponse?.data || [];
+  const [rangeMode, setRangeMode] = useState<RangeMode>("30");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
+  const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
+
+  const handleCustomFromChange = (date: Date | undefined) => {
+    setCustomFrom(date);
+    if (date && customTo && date > customTo) {
+      setCustomTo(undefined);
+    }
+  };
+
+  const handleCustomToChange = (date: Date | undefined) => {
+    setCustomTo(date);
+    if (date && customFrom && date < customFrom) {
+      setCustomFrom(undefined);
+    }
+  };
+
+  const effectiveRange = useMemo(() => {
+    if (rangeMode === "custom" && customFrom && customTo && customFrom <= customTo) {
+      return {
+        from: startOfDay(customFrom),
+        to: endOfDay(customTo),
+      };
+    }
+
+    const days = rangeMode === "custom" ? DEFAULT_RANGE_DAYS : Number(rangeMode);
+    return {
+      from: startOfDay(subDays(new Date(), days - 1)),
+      to: endOfDay(new Date()),
+    };
+  }, [customFrom, customTo, rangeMode]);
+
+  const rangeLabel = useMemo(() => {
+    if (rangeMode === "custom" && customFrom && customTo && customFrom <= customTo) {
+      return `${format(customFrom, "dd/MM/yyyy")} - ${format(customTo, "dd/MM/yyyy")}`;
+    }
+
+    const days = rangeMode === "custom" ? DEFAULT_RANGE_DAYS : Number(rangeMode);
+    return `${days} ngày gần nhất`;
+  }, [customFrom, customTo, rangeMode]);
+
+  const rangeDays = useMemo(() => {
+    const diff = effectiveRange.to.getTime() - effectiveRange.from.getTime();
+    return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
+  }, [effectiveRange]);
+
+  const incomeRecords = useMemo(() => incomeResponse?.data ?? [], [incomeResponse?.data]);
+  const walletRecords = useMemo(() => transactionResponse?.data ?? [], [transactionResponse?.data]);
+  const usageLogs = useMemo(() => usageResponse?.data ?? [], [usageResponse?.data]);
+
+  const filteredIncomeRecords = useMemo(
+    () =>
+      incomeRecords.filter((record) =>
+        isWithinDateRange(record.createdAt, effectiveRange.from, effectiveRange.to)
+      ),
+    [effectiveRange, incomeRecords]
+  );
+
+  const filteredWalletRecords = useMemo(
+    () =>
+      walletRecords.filter((record) =>
+        isWithinDateRange(record.createdAt, effectiveRange.from, effectiveRange.to)
+      ),
+    [effectiveRange, walletRecords]
+  );
+
+  const filteredUsageLogs = useMemo(
+    () =>
+      usageLogs.filter((log) =>
+        isWithinDateRange(log.useAt, effectiveRange.from, effectiveRange.to)
+      ),
+    [effectiveRange, usageLogs]
+  );
 
   const stats = useMemo(() => {
-    const directRevenue = incomeRecords
+    const directRevenue = filteredIncomeRecords
       .filter((payment) => isSuccessPayment(payment.status))
       .reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
-    const walletDeposits = walletRecords.reduce((sum, record) => sum + (record.amount || 0), 0);
+    const walletDeposits = filteredWalletRecords.reduce(
+      (sum, record) => sum + (record.amount || 0),
+      0
+    );
 
     return {
       directRevenue,
       walletDeposits,
     };
-  }, [incomeRecords, walletRecords]);
+  }, [filteredIncomeRecords, filteredWalletRecords]);
 
   const incomeTrendData = useMemo(() => {
-    const successfulIncome = incomeRecords.filter((payment) => isSuccessPayment(payment.status));
-    return buildTrendData(successfulIncome);
-  }, [incomeRecords]);
+    const successfulIncome = filteredIncomeRecords.filter((payment) =>
+      isSuccessPayment(payment.status)
+    );
+    return buildTrendData(successfulIncome, effectiveRange.from, effectiveRange.to);
+  }, [effectiveRange, filteredIncomeRecords]);
 
-  const walletTrendData = useMemo(() => buildTrendData(walletRecords), [walletRecords]);
+  const walletTrendData = useMemo(
+    () => buildTrendData(filteredWalletRecords, effectiveRange.from, effectiveRange.to),
+    [effectiveRange, filteredWalletRecords]
+  );
 
   const usageChartData = useMemo(() => {
-    const logs = usageResponse?.data || [];
     const counts: Record<string, number> = {
       MENTOR_INTERVIEW: 0,
       AI_INTERVIEW: 0,
@@ -145,7 +263,7 @@ export function DashboardOverviewPage() {
       QUIZ: 0,
     };
 
-    logs.forEach((log) => {
+    filteredUsageLogs.forEach((log) => {
       if (counts[log.featureName] !== undefined) {
         counts[log.featureName] += 1;
       }
@@ -170,7 +288,7 @@ export function DashboardOverviewPage() {
       value,
       color: colorMap[key] || "#94a3b8",
     }));
-  }, [usageResponse]);
+  }, [filteredUsageLogs]);
 
   const overviewStats = [
     {
@@ -204,12 +322,12 @@ export function DashboardOverviewPage() {
   ];
 
   const recentTransactions = useMemo(() => {
-    const income: RecentRecord[] = incomeRecords.map((record) => ({
+    const income: RecentRecord[] = filteredIncomeRecords.map((record) => ({
       ...record,
       source: "INCOME",
     }));
 
-    const wallet: RecentRecord[] = walletRecords.map((record) => ({
+    const wallet: RecentRecord[] = filteredWalletRecords.map((record) => ({
       ...record,
       source: "WALLET",
     }));
@@ -217,7 +335,7 @@ export function DashboardOverviewPage() {
     return [...income, ...wallet]
       .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
       .slice(0, 8);
-  }, [incomeRecords, walletRecords]);
+  }, [filteredIncomeRecords, filteredWalletRecords]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 dark:bg-slate-950">
@@ -239,6 +357,97 @@ export function DashboardOverviewPage() {
           </span>
         </div>
       </div>
+
+      <Card className="mb-8 border-0 shadow-sm dark:bg-slate-900">
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                Khoảng thời gian phân tích
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Dữ liệu biểu đồ và giao dịch gần đây đang áp dụng: {rangeLabel}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {RANGE_OPTIONS.map((option) => (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant={rangeMode === option.value ? "default" : "outline"}
+                  onClick={() => setRangeMode(option.value)}>
+                  {option.label}
+                </Button>
+              ))}
+
+              <Button
+                size="sm"
+                variant={rangeMode === "custom" ? "default" : "outline"}
+                onClick={() => setRangeMode("custom")}>
+                Tùy chỉnh
+              </Button>
+            </div>
+          </div>
+
+          {rangeMode === "custom" && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "justify-start",
+                      !customFrom && "text-slate-400 dark:text-slate-500"
+                    )}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customFrom ? format(customFrom, "dd/MM/yyyy") : "Từ ngày"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customFrom}
+                    onSelect={handleCustomFromChange}
+                    locale={vi}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "justify-start",
+                      !customTo && "text-slate-400 dark:text-slate-500"
+                    )}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {customTo ? format(customTo, "dd/MM/yyyy") : "Đến ngày"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customTo}
+                    onSelect={handleCustomToChange}
+                    locale={vi}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          {rangeMode === "custom" && (!customFrom || !customTo || customFrom > customTo) && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Vui lòng chọn đủ từ ngày và đến ngày hợp lệ. Trong lúc này hệ thống dùng mặc định 30
+              ngày gần nhất.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {overviewStats.map((stat) => (
@@ -277,7 +486,9 @@ export function DashboardOverviewPage() {
               <DollarSign className="h-5 w-5" />
               Xu hướng doanh thu trực tiếp
             </CardTitle>
-            <CardDescription>Biến động doanh thu trong {TREND_DAYS} ngày gần nhất</CardDescription>
+            <CardDescription>
+              Biến động doanh thu trong {rangeDays} ngày theo bộ lọc
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
@@ -337,7 +548,7 @@ export function DashboardOverviewPage() {
               <Wallet className="h-5 w-5" />
               Xu hướng nạp tiền vào ví
             </CardTitle>
-            <CardDescription>Biến động nạp ví trong {TREND_DAYS} ngày gần nhất</CardDescription>
+            <CardDescription>Biến động nạp ví trong {rangeDays} ngày theo bộ lọc</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
@@ -399,7 +610,7 @@ export function DashboardOverviewPage() {
             Mức độ sử dụng các tính năng
           </CardTitle>
           <CardDescription>
-            Thống kê số lượt sử dụng các tính năng chính trên hệ thống
+            Thống kê số lượt sử dụng các tính năng chính trong {rangeDays} ngày theo bộ lọc
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -458,7 +669,7 @@ export function DashboardOverviewPage() {
       <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
         <CardHeader>
           <CardTitle className="text-lg">Giao dịch gần đây</CardTitle>
-          <CardDescription>8 giao dịch mới nhất từ nguồn thanh toán và ví</CardDescription>
+          <CardDescription>8 giao dịch mới nhất trong khoảng {rangeLabel}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
