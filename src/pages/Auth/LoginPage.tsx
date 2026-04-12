@@ -1,6 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { DemoLoginButton } from "@/components/DemoLoginButton";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,9 @@ export function LoginPage() {
     if (result.success && result.data?.user) {
       applyAuthState(result.data);
     } else {
-      setError(result.error || "Đăng nhập thất bại");
+      const errorMessage = result.error || "Đăng nhập thất bại";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
 
     setIsLoading(false);

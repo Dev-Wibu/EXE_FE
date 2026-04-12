@@ -360,14 +360,106 @@ export class AuthManager {
       return undefined;
     }
 
+    const dataMessage =
+      asNonEmptyString(error.data) ||
+      (isRecord(error.data)
+        ? asNonEmptyString(error.data.message) ||
+          asNonEmptyString(error.data.error) ||
+          asNonEmptyString(error.data.detail)
+        : undefined);
+
+    const responseMessage = isRecord(error.response)
+      ? asNonEmptyString(error.response.data) ||
+        (isRecord(error.response.data)
+          ? asNonEmptyString(error.response.data.message) ||
+            asNonEmptyString(error.response.data.error) ||
+            asNonEmptyString(error.response.data.detail)
+          : undefined)
+      : undefined;
+
     return (
       asNonEmptyString(error.message) ||
       asNonEmptyString(error.error) ||
       asNonEmptyString(error.detail) ||
-      (isRecord(error.data)
-        ? asNonEmptyString(error.data.message) || asNonEmptyString(error.data.error)
-        : undefined)
+      dataMessage ||
+      responseMessage
     );
+  }
+
+  private extractHttpStatus(error: unknown): number | undefined {
+    const toStatus = (value: unknown): number | undefined => {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return Math.trunc(value);
+      }
+
+      if (typeof value === "string") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) {
+          return Math.trunc(parsed);
+        }
+      }
+
+      return undefined;
+    };
+
+    if (!isRecord(error)) {
+      return undefined;
+    }
+
+    const topLevelStatus = toStatus(error.status) ?? toStatus(error.statusCode);
+    if (topLevelStatus) {
+      return topLevelStatus;
+    }
+
+    if (isRecord(error.response)) {
+      const responseStatus = toStatus(error.response.status) ?? toStatus(error.response.statusCode);
+      if (responseStatus) {
+        return responseStatus;
+      }
+    }
+
+    if (isRecord(error.data)) {
+      const dataStatus = toStatus(error.data.status) ?? toStatus(error.data.statusCode);
+      if (dataStatus) {
+        return dataStatus;
+      }
+    }
+
+    return undefined;
+  }
+
+  private mapLoginErrorMessage(httpStatus?: number, rawMessage?: string): string {
+    const normalizedMessage = rawMessage?.toLowerCase() || "";
+
+    if (
+      httpStatus === 401 ||
+      normalizedMessage.includes("bad credentials") ||
+      normalizedMessage.includes("invalid password")
+    ) {
+      return "Sai mật khẩu";
+    }
+
+    if (
+      httpStatus === 404 ||
+      normalizedMessage.includes("user not found") ||
+      normalizedMessage.includes("not found with email")
+    ) {
+      return "Sai email";
+    }
+
+    if (
+      httpStatus === 403 ||
+      normalizedMessage.includes("locked") ||
+      normalizedMessage.includes("disabled")
+    ) {
+      return "Tài khoản đã bị khóa";
+    }
+
+    if (httpStatus === 429) {
+      return "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau";
+    }
+
+    return rawMessage || "Đăng nhập thất bại";
   }
 
   /**
@@ -399,9 +491,11 @@ export class AuthManager {
       });
 
       if (error) {
+        const httpStatus = this.extractHttpStatus(error);
+        const rawErrorMessage = this.extractErrorMessage(error);
         return {
           success: false,
-          error: this.extractErrorMessage(error) || "Đăng nhập thất bại",
+          error: this.mapLoginErrorMessage(httpStatus, rawErrorMessage),
         };
       }
 
