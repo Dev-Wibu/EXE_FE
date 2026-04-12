@@ -16,6 +16,15 @@ import {
 import * as chatMock from "@/mocks/chat.mock";
 
 type BackendChatMessage = components["schemas"]["ChatMessage"];
+type BackendMentor = components["schemas"]["MentorResponse"];
+type BackendUser = components["schemas"]["User"];
+
+export type ChatHistoryMessage = BackendChatMessage & {
+  sender?: "ai" | "user" | "me";
+  sender_id?: number;
+  sender_type?: string;
+  time?: string;
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null;
@@ -194,12 +203,17 @@ export class ChatManager {
   async getChatHistoryByParticipants(
     currentFullId: string,
     recipientFullId: string
-  ): Promise<ApiResponse<ChatMessage[]>> {
+  ): Promise<ApiResponse<ChatHistoryMessage[]>> {
     if (this.mode === "mock") {
       const messages = await chatMock.fetchChatMessages(0);
       return {
         success: true,
-        data: messages,
+        data: messages.map((message) => ({
+          id: message.id,
+          content: message.content,
+          sender: message.sender,
+          time: message.time,
+        })),
       };
     }
 
@@ -253,7 +267,7 @@ export class ChatManager {
    * Get all mentors
    * GET /api/mentors
    */
-  async getAllMentors(): Promise<ApiResponse<any[]>> {
+  async getAllMentors(): Promise<ApiResponse<BackendMentor[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.MENTOR.LIST);
       return {
@@ -272,7 +286,7 @@ export class ChatManager {
    * Get mentor details
    * GET /api/mentors/{id}
    */
-  async getMentorDetail(id: number): Promise<ApiResponse<any>> {
+  async getMentorDetail(id: number): Promise<ApiResponse<BackendMentor>> {
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, { id });
       const response = await this.api.get(endpoint);
@@ -292,7 +306,7 @@ export class ChatManager {
    * Get user details
    * GET /api/users/find-by-id/{userId}
    */
-  async getUserDetail(userId: number): Promise<ApiResponse<any>> {
+  async getUserDetail(userId: number): Promise<ApiResponse<BackendUser>> {
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.USER.FIND_BY_ID, { userId });
       const response = await this.api.get(endpoint);

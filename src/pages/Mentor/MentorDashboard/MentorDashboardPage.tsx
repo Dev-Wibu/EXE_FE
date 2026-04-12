@@ -1,7 +1,6 @@
 import { Bell, Calendar, LayoutDashboard, MessageSquare, Star, User, Users } from "lucide-react";
 import { useCallback } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 import icon2 from "@/assets/icon2.svg";
 
@@ -11,8 +10,8 @@ import { DashboardSidebar } from "@/components/shared";
 import { useTabsState } from "@/hooks/useTabsState";
 
 import { MentorAccountPage } from "../Account";
-import { MessengerPage } from "../Messenger";
 import { GivenFeedbackListPage } from "../Feedback";
+import { MessengerPage } from "../Messenger";
 import { MentorNotificationsPage } from "../Notifications";
 import { MentorOverviewPage } from "../Overview";
 import { MentorReviewsPage } from "../Reviews";

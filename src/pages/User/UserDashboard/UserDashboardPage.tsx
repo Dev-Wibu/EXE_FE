@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import {
   Bell,
   Bot,
@@ -13,7 +14,6 @@ import {
 } from "lucide-react";
 import { useCallback } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 import icon2 from "@/assets/icon2.svg";
 
@@ -23,17 +23,17 @@ import { DashboardSidebar } from "@/components/shared";
 import { useTabsState } from "@/hooks/useTabsState";
 
 import { AccountPage } from "../Account";
-import { MessengerPage } from "../Messenger";
 import { AIChatListPage } from "../AIChat";
 import { AIInterviewListPage } from "../AIInterview";
 import { UserFeedbackListPage } from "../Feedback";
 import { HomeFeedPage } from "../HomeFeed";
+import { MentorListPage } from "../MentorList/MentorListPage";
+import { MessengerPage } from "../Messenger";
 import { MockInterviewListPage, SessionHistoryPage } from "../MockInterview";
 import { UserNotificationsPage } from "../Notifications";
 import { OverviewPage } from "../Overview";
 import { PracticeQuestionsPage, PracticeSetsPage } from "../Practice";
 import { QuestionListPage } from "../Question";
-import { MentorListPage } from "../MentorList/MentorListPage";
 
 type TabType =
   | "homeFeed"
@@ -288,10 +288,11 @@ export function UserDashboardPage() {
         <div className="flex h-12 items-center justify-end px-4">
           <NotificationBell notificationsPath="/user?tab=notifications" />
         </div>
-        <div className={cn(
-          "flex-1 overflow-hidden",
-          typedActiveTab === "messenger" ? "p-0" : "p-6 overflow-auto"
-        )}>
+        <div
+          className={cn(
+            "flex-1 overflow-hidden",
+            typedActiveTab === "messenger" ? "p-0" : "overflow-auto p-6"
+          )}>
           {outlet ?? renderContent()}
         </div>
       </div>

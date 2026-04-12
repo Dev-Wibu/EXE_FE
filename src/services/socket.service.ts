@@ -1,12 +1,13 @@
-import { Client, Message } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { API_BASE_URL } from "@/constants/api.config";
 import { useAuthStore } from "@/stores/authStore";
+import { Client, type Message } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 export interface ChatMessageDto {
   id?: string | number;
   senderId: string;
   recipientId: string;
+  recipientType?: string;
   content: string;
   timestamp?: string;
   senderType?: string; // Opt-in if BE sends it back separately
@@ -15,14 +16,11 @@ export interface ChatMessageDto {
 class SocketService {
   private stompClient: Client | null = null;
   private onMessageReceived: ((msg: ChatMessageDto) => void) | null = null;
-  private isConnected = false;
   private currentUserId: string | null = null;
 
   private initClient(userId: string) {
     const token = useAuthStore.getState().token;
-    const socketUrl = token 
-      ? `${API_BASE_URL}/ws-chat?token=${token}`
-      : `${API_BASE_URL}/ws-chat`;
+    const socketUrl = token ? `${API_BASE_URL}/ws-chat?token=${token}` : `${API_BASE_URL}/ws-chat`;
 
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS(socketUrl),
@@ -35,15 +33,11 @@ class SocketService {
 
     this.stompClient.onConnect = (frame) => {
       console.log("Connected to STOMP: " + frame);
-      this.isConnected = true;
-      
-      const subUserId = this.currentUserId || userId;
-      const topics = [
-        `/user/${subUserId}/queue/messages`,
-        `/user/${subUserId}/topic/messages`
-      ];
 
-      topics.forEach(topic => {
+      const subUserId = this.currentUserId || userId;
+      const topics = [`/user/${subUserId}/queue/messages`, `/user/${subUserId}/topic/messages`];
+
+      topics.forEach((topic) => {
         this.stompClient?.subscribe(topic, (message: Message) => {
           if (message.body && this.onMessageReceived) {
             try {
@@ -56,8 +50,13 @@ class SocketService {
       });
     };
 
-    this.stompClient.onStompError = () => { this.isConnected = false; };
-    this.stompClient.onWebSocketClose = () => { this.isConnected = false; };
+    this.stompClient.onStompError = (frame) => {
+      console.error("STOMP broker error", frame.headers["message"], frame.body);
+    };
+
+    this.stompClient.onWebSocketClose = (event) => {
+      console.warn("WebSocket closed", event.code);
+    };
   }
 
   connect(userId: string, onMessageCallback: (msg: ChatMessageDto) => void) {
@@ -90,7 +89,7 @@ class SocketService {
 
     const senderId = useAuthStore.getState().user?.id;
     const senderRole = useAuthStore.getState().user?.role?.toUpperCase();
-    
+
     if (!senderId || !senderRole) return;
 
     // Backend expects a single string like "USER_1" for both IDs
@@ -111,7 +110,6 @@ class SocketService {
   disconnect() {
     if (this.stompClient) {
       this.stompClient.deactivate();
-      this.isConnected = false;
       console.log("Disconnected from STOMP");
     }
   }
