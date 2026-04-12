@@ -2,7 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthLayout } from "@/components/layouts";
-import { ProtectedRoute, PublicOnlyRoute } from "@/components/shared";
+import { ProtectedRoute, PublicOnlyRoute, SessionExpiryGuard } from "@/components/shared";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/contexts/QueryProvider";
 import { AdminDashboardPage } from "@/pages/Admin";
@@ -90,6 +90,7 @@ function App() {
       <QueryProvider>
         <Toaster />
         <BrowserRouter>
+          <SessionExpiryGuard />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />

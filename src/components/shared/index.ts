@@ -21,5 +21,6 @@ export { ProtectedRoute } from "./ProtectedRoute";
 export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { ReloadButton } from "./ReloadButton";
 export type { ReloadButtonProps } from "./ReloadButton";
+export { SessionExpiryGuard } from "./SessionExpiryGuard";
 export { SortButton } from "./SortButton";
 export type { SortDirection } from "./SortButton";
