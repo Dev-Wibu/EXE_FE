@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Calendar, LayoutDashboard, MessageSquare, Star, User, Users } from "lucide-react";
 import { useCallback } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
@@ -198,7 +199,13 @@ export function MentorDashboardPage() {
         <div className="flex h-12 items-center justify-end px-4">
           <NotificationBell notificationsPath="/mentor?tab=notifications" />
         </div>
-        <div className="flex-1 overflow-auto p-6">{outlet ?? renderContent()}</div>
+        <div
+          className={cn(
+            "flex-1 overflow-hidden",
+            typedActiveTab === "messenger" ? "p-0" : "overflow-auto p-6"
+          )}>
+          {outlet ?? renderContent()}
+        </div>
       </div>
     </div>
   );
