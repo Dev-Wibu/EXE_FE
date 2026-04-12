@@ -26,31 +26,32 @@ interface DemoAccount {
   description: string;
 }
 
+const isApiMode = import.meta.env.VITE_MANAGER_MODE === "api";
+
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     role: "USER",
-    email: "user@example.com",
-    password: "user123",
-    description: "Tài khoản người dùng thông thường để trải nghiệm các tính năng cơ bản",
+    email: "binhan@gmail.com",
+    password: "123",
+    description: "Tài khoản người dùng để trải nghiệm các tính năng học viên",
   },
   {
     role: "ADMIN",
-    email: "admin@example.com",
-    password: "admin123",
+    email: "thuson@gmail.com",
+    password: "12345",
     description: "Tài khoản quản trị viên để quản lý hệ thống",
   },
   {
     role: "MENTOR",
-    email: "mentor@example.com",
-    password: "mentor123",
+    email: "b@fpt.com",
+    password: "12345",
     description: "Tài khoản mentor để quản lý phiên phỏng vấn và hỗ trợ học viên",
   },
   {
     role: "STAFF",
     email: "staff@example.com",
     password: "staff123",
-    description:
-      "Tài khoản nhân viên để xử lý công việc vận hành (duyệt mentor, hỗ trợ người dùng)",
+    description: "Tài khoản nhân viên chỉ dùng cho mock mode",
   },
 ];
 
@@ -61,6 +62,9 @@ interface DemoLoginButtonProps {
 export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const visibleAccounts = isApiMode
+    ? DEMO_ACCOUNTS.filter((account) => account.role !== "STAFF")
+    : DEMO_ACCOUNTS;
 
   const handleCopy = async (text: string, fieldId: string) => {
     try {
@@ -141,13 +145,18 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
                 <strong>Lưu ý:</strong> Đây là tài khoản ảo dùng để thử nghiệm chức năng. Click vào
                 tài khoản để tự động điền thông tin đăng nhập.
               </p>
+              {isApiMode && (
+                <p className="mt-1 text-xs text-amber-700">
+                  Chế độ API đang bật nên tài khoản STAFF được ẩn để tránh đăng nhập thất bại.
+                </p>
+              )}
             </div>
 
             {/* Account Cards */}
             <div className="space-y-4">
-              {DEMO_ACCOUNTS.map((account, index) => (
+              {visibleAccounts.map((account, index) => (
                 <div
-                  key={index}
+                  key={`${account.role}-${account.email}`}
                   className="cursor-pointer rounded-xl border border-gray-200 p-4 transition-all hover:border-indigo-300 hover:bg-indigo-50"
                   onClick={() => handleSelectAccount(account)}>
                   {/* Role Badge */}

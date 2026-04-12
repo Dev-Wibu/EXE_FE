@@ -20,16 +20,16 @@ export interface MentorRegistration {
 
 export const mockUser: User = {
   id: "1",
-  email: "user@example.com",
-  fullName: "Nguyễn Văn A",
+  email: "binhan@gmail.com",
+  fullName: "Bình Hân",
   role: "USER",
   avatar: null,
 };
 
 export const mockAdmin: User = {
   id: "2",
-  email: "admin@example.com",
-  fullName: "Admin",
+  email: "thuson@gmail.com",
+  fullName: "Thư Sơn",
   role: "ADMIN",
   avatar: null,
 };
@@ -44,8 +44,8 @@ export const mockStaff: User = {
 
 export const mockMentor: User = {
   id: "3",
-  email: "mentor@example.com",
-  fullName: "Mentor Demo",
+  email: "b@fpt.com",
+  fullName: "Mentor B",
   role: "MENTOR",
   avatar: null,
 };
@@ -66,23 +66,23 @@ export const mockLogin = async (
   await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
 
   // Demo user account
-  if (email === "user@example.com" && password === "user123") {
+  if (email === "binhan@gmail.com" && password === "123") {
     return { success: true, user: mockUser };
   }
 
   // Demo admin account
-  if (email === "admin@example.com" && password === "admin123") {
+  if (email === "thuson@gmail.com" && password === "12345") {
     return { success: true, user: mockAdmin };
+  }
+
+  // Demo mentor account
+  if (email === "b@fpt.com" && password === "12345") {
+    return { success: true, user: mockMentor };
   }
 
   // Demo staff account
   if (email === "staff@example.com" && password === "staff123") {
     return { success: true, user: mockStaff };
-  }
-
-  // Demo mentor account
-  if (email === "mentor@example.com" && password === "mentor123") {
-    return { success: true, user: mockMentor };
   }
 
   return { success: false, error: "Email hoặc mật khẩu không đúng" };
