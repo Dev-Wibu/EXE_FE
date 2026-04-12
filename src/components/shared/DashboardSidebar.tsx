@@ -243,7 +243,7 @@ export function DashboardSidebar({
         {!isCollapsed && showFlyout === item.type && item.children && (
           <div
             className={cn(
-              "absolute top-0 left-full z-50 w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "absolute top-0 left-full z-[70] w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
               theme.flyoutBorder
             )}>
             {item.children.map((child) => {
@@ -438,7 +438,7 @@ export function DashboardSidebar({
 
         <aside
           className={cn(
-            "relative hidden flex-col transition-all duration-300 md:flex dark:border-slate-800 dark:bg-slate-900",
+            "relative z-30 hidden flex-col overflow-visible transition-all duration-300 md:flex dark:border-slate-800 dark:bg-slate-900",
             isCollapsed ? "w-20" : theme.expandedWidth,
             theme.wrapper
           )}>

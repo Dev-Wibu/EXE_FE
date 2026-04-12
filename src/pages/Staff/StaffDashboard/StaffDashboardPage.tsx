@@ -245,7 +245,7 @@ export function StaffDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="isolate flex h-screen bg-gray-50 dark:bg-slate-950">
       <DashboardSidebar
         menuGroups={SIDEBAR_MENU_GROUPS}
         activeTab={activeTab?.type || "mentorApplications"}
@@ -287,7 +287,7 @@ export function StaffDashboardPage() {
         }}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
         <DashboardChromeTabs
           tabs={tabs}
           activeTabId={activeTabId}

@@ -152,7 +152,7 @@ export function MentorDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-slate-950">
+    <div className="isolate flex h-screen bg-white dark:bg-slate-950">
       <DashboardSidebar
         menuGroups={SIDEBAR_MENU_GROUPS}
         activeTab={typedActiveTab}
@@ -194,7 +194,7 @@ export function MentorDashboardPage() {
         }}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
         <div className="flex h-12 items-center justify-end px-4">
           <NotificationBell notificationsPath="/mentor?tab=notifications" />
         </div>
