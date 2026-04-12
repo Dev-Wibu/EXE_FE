@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 import icon2 from "@/assets/icon2.svg";
 
@@ -22,6 +23,7 @@ import { DashboardSidebar } from "@/components/shared";
 import { useTabsState } from "@/hooks/useTabsState";
 
 import { AccountPage } from "../Account";
+import { MessengerPage } from "../Messenger";
 import { AIChatListPage } from "../AIChat";
 import { AIInterviewListPage } from "../AIInterview";
 import { UserFeedbackListPage } from "../Feedback";
@@ -44,6 +46,7 @@ type TabType =
   | "practice"
   | "practiceQuestions"
   | "notifications"
+  | "messenger"
   | "account";
 
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
@@ -58,6 +61,7 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "practice", label: "Bộ luyện tập" },
   { type: "practiceQuestions", label: "Câu hỏi luyện tập" },
   { type: "notifications", label: "Thông báo" },
+  { type: "messenger", label: "Tin nhắn" },
   { type: "account", label: "Tài khoản" },
 ];
 
@@ -125,6 +129,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
     label: "Cá nhân",
     items: [
+      { type: "messenger", icon: MessageSquare, label: "Tin nhắn", color: "text-blue-500" },
       { type: "notifications", icon: Bell, label: "Thông báo", color: "text-red-600" },
       { type: "account", icon: User, label: "Tài khoản", color: "text-gray-600" },
     ],
@@ -153,6 +158,7 @@ const ROUTE_TO_TAB: Record<string, TabType> = {
   feedback: "feedback",
   community: "homeFeed",
   questions: "questions",
+  messenger: "messenger",
 };
 
 function getTabFromRoute(pathname: string): TabType {
@@ -215,6 +221,8 @@ export function UserDashboardPage() {
         return <PracticeQuestionsPage />;
       case "notifications":
         return <UserNotificationsPage />;
+      case "messenger":
+        return <MessengerPage />;
       case "account":
         return <AccountPage />;
       default:
@@ -274,7 +282,12 @@ export function UserDashboardPage() {
         <div className="flex h-12 items-center justify-end px-4">
           <NotificationBell notificationsPath="/user?tab=notifications" />
         </div>
-        <div className="flex-1 overflow-auto p-6">{outlet ?? renderContent()}</div>
+        <div className={cn(
+          "flex-1 overflow-hidden",
+          typedActiveTab === "messenger" ? "p-0" : "p-6 overflow-auto"
+        )}>
+          {outlet ?? renderContent()}
+        </div>
       </div>
     </div>
   );

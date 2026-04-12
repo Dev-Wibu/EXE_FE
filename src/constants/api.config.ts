@@ -45,6 +45,7 @@ export const API_ENDPOINTS = {
     DEPOSIT: "/api/users/wallet/deposit",
     SUBSCRIBE: "/api/users/subscribe",
     ACTIVE_SUBSCRIPTION: "/api/users/:userId/subscription",
+    FIND_BY_ID: "/api/users/find-by-id/:userId",
   },
 
   // Dashboard endpoints (admin overview)
@@ -132,6 +133,12 @@ export const API_ENDPOINTS = {
     AI_RESPONSE: "/api/chat/sessions/:id/messages/ai-response",
     CREATE_SESSION: "/api/chat/sessions",
     HISTORY_BY_PARTICIPANTS: "/api/messages/:currentFullId/:recipientFullId",
+  },
+
+  // Messages endpoints
+  MESSAGES: {
+    CONTACTS: "/api/messages/contacts",
+    HISTORY: "/api/messages/:currentFullId/:recipientFullId",
   },
 
   // Question endpoints - Based on schema-from-be.d.ts
