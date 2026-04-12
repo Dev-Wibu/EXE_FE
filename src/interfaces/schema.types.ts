@@ -6,6 +6,7 @@
 import type { components } from "../../schema-from-be";
 
 export type SchemaUser = components["schemas"]["User"];
+export type SchemaUserResponse = components["schemas"]["UserResponse"];
 export type SchemaMentor = components["schemas"]["Mentor"];
 export type SchemaMentorResponse = components["schemas"]["MentorResponse"];
 export type SchemaUserInfo = components["schemas"]["UserInfo"];

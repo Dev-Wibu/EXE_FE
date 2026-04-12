@@ -17,7 +17,7 @@ import * as chatMock from "@/mocks/chat.mock";
 
 type BackendChatMessage = components["schemas"]["ChatMessage"];
 type BackendMentor = components["schemas"]["MentorResponse"];
-type BackendUser = components["schemas"]["User"];
+type BackendUserResponse = components["schemas"]["UserResponse"];
 
 export type ChatHistoryMessage = BackendChatMessage & {
   sender?: "ai" | "user" | "me";
@@ -306,7 +306,7 @@ export class ChatManager {
    * Get user details
    * GET /api/users/find-by-id/{userId}
    */
-  async getUserDetail(userId: number): Promise<ApiResponse<BackendUser>> {
+  async getUserDetail(userId: number): Promise<ApiResponse<BackendUserResponse>> {
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.USER.FIND_BY_ID, { userId });
       const response = await this.api.get(endpoint);
