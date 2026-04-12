@@ -152,5 +152,41 @@ describe("AuthManager", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe("Invalid credentials");
     });
+
+    it("should map 401 bad credentials to wrong-password message", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: undefined,
+        error: {
+          status: 401,
+          data: "Bad credentials",
+        },
+      });
+
+      const result = await authManager.login({
+        email: "binhan@gmail.com",
+        password: "wrong123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Sai mật khẩu");
+    });
+
+    it("should map 404 user-not-found to wrong-email message", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: undefined,
+        error: {
+          status: 404,
+          data: "User not found with email: notfound@example.com",
+        },
+      });
+
+      const result = await authManager.login({
+        email: "notfound@example.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Sai email");
+    });
   });
 });
