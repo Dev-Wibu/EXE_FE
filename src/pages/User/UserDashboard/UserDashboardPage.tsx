@@ -8,7 +8,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Newspaper,
-  User,
+  User as UserIcon,
   Users,
 } from "lucide-react";
 import { useCallback } from "react";
@@ -33,10 +33,12 @@ import { UserNotificationsPage } from "../Notifications";
 import { OverviewPage } from "../Overview";
 import { PracticeQuestionsPage, PracticeSetsPage } from "../Practice";
 import { QuestionListPage } from "../Question";
+import { MentorListPage } from "../MentorList/MentorListPage";
 
 type TabType =
   | "homeFeed"
   | "overview"
+  | "mentors"
   | "mockInterview"
   | "interviewHistory"
   | "feedback"
@@ -52,6 +54,7 @@ type TabType =
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "homeFeed", label: "Trang chủ" },
   { type: "overview", label: "Tổng quan" },
+  { type: "mentors", label: "Danh sách Mentor" },
   { type: "mockInterview", label: "Phỏng vấn với Mentor" },
   { type: "interviewHistory", label: "Lịch sử phỏng vấn" },
   { type: "feedback", label: "Đánh giá từ Mentor" },
@@ -78,6 +81,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
     label: "Phỏng vấn",
     items: [
       { type: "overview", icon: LayoutDashboard, label: "Tổng quan", color: "text-blue-600" },
+      { type: "mentors", icon: UserIcon, label: "Danh sách Mentor", color: "text-indigo-600" },
       {
         type: "mockInterview",
         icon: Users,
@@ -131,7 +135,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
     items: [
       { type: "messenger", icon: MessageSquare, label: "Tin nhắn", color: "text-blue-500" },
       { type: "notifications", icon: Bell, label: "Thông báo", color: "text-red-600" },
-      { type: "account", icon: User, label: "Tài khoản", color: "text-gray-600" },
+      { type: "account", icon: UserIcon, label: "Tài khoản", color: "text-gray-600" },
     ],
   },
 ];
@@ -203,6 +207,8 @@ export function UserDashboardPage() {
         return <HomeFeedPage />;
       case "overview":
         return <OverviewPage />;
+      case "mentors":
+        return <MentorListPage />;
       case "mockInterview":
         return <MockInterviewListPage />;
       case "interviewHistory":

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { MessageSquare, Search, Send, User as UserIcon, X, Plus, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { chatManager } from "@/services/chat.manager";
@@ -48,6 +49,24 @@ export function MessengerPage() {
   
   const selectedContactRef = useRef<Contact | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  // Handle auto-open from navigation state
+  useEffect(() => {
+    if (location.state?.openMentorId) {
+      const { openMentorId, mentorData } = location.state;
+      
+      // If mentorData is provided, select it immediately
+      if (mentorData) {
+        setSelectedContact({
+          id: mentorData.id,
+          name: mentorData.name,
+          avatarUrl: mentorData.avatarUrl,
+          role: "MENTOR"
+        });
+      }
+    }
+  }, [location.state]);
 
   // Sync ref with state
   useEffect(() => {
