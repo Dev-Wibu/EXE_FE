@@ -794,6 +794,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users/find-by-id/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUserResponseById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/transactions": {
         parameters: {
             query?: never;
@@ -1391,6 +1407,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getChatHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getContacts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2420,6 +2452,22 @@ export interface components {
             expiredAt?: string;
             active?: boolean;
         };
+        UserResponse: {
+            /** Format: int32 */
+            id?: number;
+            name?: string;
+            email?: string;
+            /** @enum {string} */
+            role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
+            isActive?: boolean;
+            avatarUrl?: string;
+            public_id?: string;
+            university?: string;
+            /** @enum {string} */
+            major?: "CNTT" | "Marketing";
+            cvUrl?: string;
+            cv_public_id?: string;
+        };
         Transaction: {
             /** Format: int32 */
             id?: number;
@@ -2534,19 +2582,19 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            unpaged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
         };
         SortObject: {
-            sorted?: boolean;
             unsorted?: boolean;
+            sorted?: boolean;
             empty?: boolean;
         };
         Payment: {
@@ -2699,9 +2747,9 @@ export interface components {
             useAt?: string;
         };
         ApplicationContext: {
+            applicationName?: string;
             /** Format: int64 */
             startupDate?: number;
-            applicationName?: string;
             autowireCapableBeanFactory?: components["schemas"]["AutowireCapableBeanFactory"];
             parent?: unknown;
             id?: string;
@@ -2804,17 +2852,17 @@ export interface components {
         };
         JspPropertyGroupDescriptor: {
             errorOnELNotFound?: string;
-            pageEncoding?: string;
-            scriptingInvalid?: string;
-            includePreludes?: string[];
+            trimDirectiveWhitespaces?: string;
             includeCodas?: string[];
             elIgnored?: string;
             isXml?: string;
-            trimDirectiveWhitespaces?: string;
-            defaultContentType?: string;
-            urlPatterns?: string[];
             deferredSyntaxAllowedAsLiteral?: string;
             errorOnUndeclaredNamespace?: string;
+            includePreludes?: string[];
+            pageEncoding?: string;
+            defaultContentType?: string;
+            urlPatterns?: string[];
+            scriptingInvalid?: string;
             buffer?: string;
         };
         RedirectView: {
@@ -2838,25 +2886,30 @@ export interface components {
             expandUriTemplateVariables?: boolean;
             propagateQueryParams?: boolean;
             hosts?: string[];
-            redirectView?: boolean;
             propagateQueryProperties?: boolean;
+            redirectView?: boolean;
+            attributesCSV?: string;
             attributesMap?: {
                 [key: string]: unknown;
             };
             attributes?: {
                 [key: string]: string;
             };
-            attributesCSV?: string;
         };
         ServletContext: {
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             /** Format: int32 */
             sessionTimeout?: number;
             initParameterNames?: unknown;
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            virtualServerName?: string;
+            contextPath?: string;
+            attributeNames?: unknown;
+            serverInfo?: string;
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
             effectiveMajorVersion?: number;
-            serverInfo?: string;
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
@@ -2869,11 +2922,6 @@ export interface components {
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
             defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            virtualServerName?: string;
-            contextPath?: string;
-            attributeNames?: unknown;
             classLoader?: {
                 name?: string;
                 registeredAsParallelCapable?: boolean;
@@ -2949,12 +2997,12 @@ export interface components {
             className?: string;
         };
         SessionCookieConfig: {
+            secure?: boolean;
             /** Format: int32 */
             maxAge?: number;
-            path?: string;
-            secure?: boolean;
             domain?: string;
             httpOnly?: boolean;
+            path?: string;
             name?: string;
             attributes?: {
                 [key: string]: string;
@@ -2963,8 +3011,8 @@ export interface components {
             comment?: string;
         };
         TaglibDescriptor: {
-            taglibLocation?: string;
             taglibURI?: string;
+            taglibLocation?: string;
         };
     };
     responses: never;
@@ -4595,6 +4643,28 @@ export interface operations {
             };
         };
     };
+    getUserResponseById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
     getAllTransactions: {
         parameters: {
             query?: never;
@@ -5517,6 +5587,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ChatMessage"][];
+                };
+            };
+        };
+    };
+    getContacts: {
+        parameters: {
+            query: {
+                myId: number;
+                role: "MENTOR" | "ADMIN" | "STAFF" | "USER";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": number[];
                 };
             };
         };
