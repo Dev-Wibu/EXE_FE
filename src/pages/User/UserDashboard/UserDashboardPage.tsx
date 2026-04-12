@@ -153,6 +153,7 @@ const DEFAULT_TAB: TabType = "homeFeed";
 
 /** Map sub-route path segments to their parent tab so the sidebar highlights correctly */
 const ROUTE_TO_TAB: Record<string, TabType> = {
+  mentors: "mentors",
   "ai-interview": "aiInterview",
   "mock-interview": "mockInterview",
   "ai-chat": "aiChat",
@@ -235,7 +236,7 @@ export function UserDashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-slate-950">
+    <div className="isolate flex h-screen bg-white dark:bg-slate-950">
       <DashboardSidebar
         menuGroups={SIDEBAR_MENU_GROUPS}
         activeTab={typedActiveTab}
@@ -244,7 +245,7 @@ export function UserDashboardPage() {
         logo={USER_SIDEBAR_LOGO}
         collapsedLogo={USER_SIDEBAR_LOGO_COLLAPSED}
         theme={{
-          wrapper: "sticky top-0 h-screen flex-shrink-0 border-r border-slate-100 bg-slate-50",
+          wrapper: "sticky top-0 z-30 h-screen flex-shrink-0 border-r border-slate-100 bg-slate-50",
           expandedWidth: "w-72",
           toggleBtn:
             "absolute top-20 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
@@ -282,7 +283,7 @@ export function UserDashboardPage() {
         }}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
         <div className="flex h-12 items-center justify-end px-4">
           <NotificationBell notificationsPath="/user?tab=notifications" />
         </div>

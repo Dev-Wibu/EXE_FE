@@ -18,8 +18,8 @@ import {
   Users,
   Video,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -68,17 +68,45 @@ const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => ({
 // Minimum time offset in milliseconds (1 minute)
 const MIN_FUTURE_OFFSET_MS = 60 * 1000;
 
+type MockInterviewScheduleLocationState = {
+  preselectedMentorId?: number;
+};
+
 export function MockInterviewSchedulePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const { data: mentors = [], isLoading } = useMentors();
   const createSession = useCreateSession();
+
+  const preselectedMentorId = useMemo(() => {
+    const state = location.state as MockInterviewScheduleLocationState | null;
+    const rawIdFromState = state?.preselectedMentorId;
+    const rawIdFromQuery = Number(new URLSearchParams(location.search).get("mentorId"));
+
+    const rawId =
+      typeof rawIdFromState === "number" && Number.isFinite(rawIdFromState)
+        ? rawIdFromState
+        : rawIdFromQuery;
+
+    if (typeof rawId !== "number") {
+      return null;
+    }
+
+    return Number.isFinite(rawId) && rawId > 0 ? rawId : null;
+  }, [location.search, location.state]);
 
   // Step state
   const [currentStep, setCurrentStep] = useState(1);
 
   // Step 1: Mentor selection
-  const [selectedMentorId, setSelectedMentorId] = useState<number | null>(null);
+  const [selectedMentorId, setSelectedMentorId] = useState<number | null>(preselectedMentorId);
+
+  useEffect(() => {
+    if (preselectedMentorId !== null) {
+      setSelectedMentorId(preselectedMentorId);
+    }
+  }, [preselectedMentorId]);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Step 2: Date/Time selection - preset current time

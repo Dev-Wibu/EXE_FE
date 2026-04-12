@@ -53,3 +53,6 @@ export {
 
 // Community exports
 export { CreatePostPage, EditPostPage, PostDetailPage, PostListPage } from "./Community";
+
+// Mentor detail exports
+export { MentorDetailPage } from "./MentorDetail";

@@ -57,6 +57,7 @@ import {
   CreatePostPage,
   EditPostPage,
   FeedbackDetailPage,
+  MentorDetailPage,
   MockInterviewSchedulePage,
   MockInterviewSelectMentorPage,
   PostDetailPage,
@@ -149,6 +150,7 @@ function App() {
                 <Route path="practice/session/:sessionId" element={<PracticeSetDetailPage />} />
                 <Route path="practice/:id" element={<PracticeSetDetailPage />} />
                 <Route path="feedback/:id" element={<FeedbackDetailPage />} />
+                <Route path="mentors/:mentorId" element={<MentorDetailPage />} />
                 <Route path="community/create" element={<CreatePostPage />} />
                 <Route path="community/:postId/edit" element={<EditPostPage />} />
                 <Route path="community/:postId" element={<PostDetailPage />} />
