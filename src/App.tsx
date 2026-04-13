@@ -32,6 +32,7 @@ import {
 } from "@/pages/Homepage";
 import {
   MentorDashboardPage,
+  MentorSessionDetailPage,
   MentorSessionRoomPage,
   ReviewDetailPage,
   StudentDetailPage,
@@ -229,6 +230,7 @@ function App() {
             {/* Mentor Dashboard — ChromeTabs shell at /mentor, sub-pages nested inside */}
             <Route element={<ProtectedRoute allowedRoles={["MENTOR"]} />}>
               <Route path="/mentor" element={<MentorDashboardPage />}>
+                <Route path="sessions/:sessionId" element={<MentorSessionDetailPage />} />
                 <Route path="sessions/room/:sessionId" element={<MentorSessionRoomPage />} />
                 <Route path="sessions/:sessionId/review" element={<WriteFeedbackPage />} />
                 <Route path="reviews/:id" element={<ReviewDetailPage />} />

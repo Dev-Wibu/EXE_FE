@@ -42,6 +42,7 @@ interface SessionCardProps {
   hasReview: boolean;
   reviewId?: number;
   now: number;
+  onViewDetails: () => void;
   onJoinSession: () => void;
   onWriteReview: () => void;
   onViewReview: () => void;
@@ -56,6 +57,7 @@ function SessionCard({
   hasReview,
   reviewId,
   now,
+  onViewDetails,
   onJoinSession,
   onWriteReview,
   onViewReview,
@@ -197,6 +199,9 @@ function SessionCard({
         </div>
 
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onViewDetails} className="gap-1">
+            Xem chi tiết
+          </Button>
           {isCompleted && !hasReview && (
             <Button
               size="sm"
@@ -303,6 +308,12 @@ export function MentorSessionsPage() {
 
   const handleWriteReview = (session: Session) => {
     navigate(`/mentor/sessions/${session.id}/review`);
+  };
+
+  const handleViewDetails = (session: Session) => {
+    if (typeof session.id === "number") {
+      navigate(`/mentor/sessions/${session.id}`);
+    }
   };
 
   const handleViewReview = (reviewId: number) => {
@@ -430,6 +441,7 @@ export function MentorSessionsPage() {
                   typeof session.id === "number" ? reviewBySessionId.get(session.id) : undefined
                 }
                 now={now}
+                onViewDetails={() => handleViewDetails(session)}
                 onJoinSession={() => handleJoinSession(session)}
                 onWriteReview={() => handleWriteReview(session)}
                 onViewReview={() => {
