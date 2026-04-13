@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Briefcase,
   CheckCircle2,
+  Copy,
   Linkedin,
   Mail,
   MessageSquare,
@@ -14,6 +15,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface MentorGridCardProps {
   mentor: SchemaMentorResponse;
@@ -23,6 +25,19 @@ interface MentorGridCardProps {
 
 export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGridCardProps) {
   const averageRating = typeof mentor.averageRating === "number" ? mentor.averageRating : 0;
+
+  const handleCopyEmail = async () => {
+    if (!mentor.email) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(mentor.email);
+      toast.success("Đã sao chép email mentor");
+    } catch {
+      toast.error("Không thể sao chép email. Vui lòng thử lại");
+    }
+  };
 
   return (
     <Card className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_10px_35px_-22px_rgba(15,23,42,0.55)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_45px_-24px_rgba(30,64,175,0.35)] dark:border-slate-800 dark:bg-slate-900/85">
@@ -56,6 +71,14 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {mentor.expertise || "Mentor chuyên nghiệp"}
               </p>
+              {mentor.email && (
+                <p className="flex max-w-full items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <Mail className="h-3.5 w-3.5 shrink-0 text-rose-500" />
+                  <span className="truncate" title={mentor.email}>
+                    {mentor.email}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -75,10 +98,24 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
                 variant="outline"
                 size="icon"
                 className="h-9 w-9 rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                title="Gửi email cho mentor"
+                aria-label="Gửi email cho mentor"
                 onClick={() => {
                   window.location.href = `mailto:${mentor.email}`;
                 }}>
                 <Mail className="h-4 w-4" />
+              </Button>
+            )}
+
+            {mentor.email && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                title="Sao chép email mentor"
+                aria-label="Sao chép email mentor"
+                onClick={handleCopyEmail}>
+                <Copy className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -112,7 +149,7 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
 
         <div className="mt-auto grid grid-cols-2 gap-2">
           <Button
-            className="h-10 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-cyan-700 sm:text-sm"
+            className="h-10 rounded-xl bg-linear-to-r from-blue-600 to-cyan-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-blue-700 hover:to-cyan-700 sm:text-sm"
             onClick={() => onStartChat(mentor)}>
             <MessageSquare className="mr-1.5 h-4 w-4" />
             Bắt đầu hội thoại
@@ -120,7 +157,7 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
 
           <Button
             type="button"
-            className="h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-violet-700 sm:text-sm"
+            className="h-10 rounded-xl bg-linear-to-r from-indigo-600 to-violet-600 px-3 text-xs font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-violet-700 sm:text-sm"
             onClick={() => onViewProfile(mentor)}>
             <ArrowUpRight className="mr-1.5 h-4 w-4" />
             Xem hồ sơ chi tiết
