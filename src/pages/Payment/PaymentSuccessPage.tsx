@@ -2,14 +2,17 @@ import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import type { UserSubscriptionResponse } from "@/interfaces";
+import type { PaymentPurpose, UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
   clearPendingSessionPaymentContext,
-  extractTransactionCodeFromUrl,
+  getLatestRecoveryForSessionPayment,
   getLatestRecoveryForUser,
+  getLatestRecoveryForUserByPurpose,
   getPendingSessionPaymentContext,
+  getRecoveryByCheckoutToken,
   getRecoveryByOrderCode,
+  getRecoveryByTransactionCode,
   type PaymentRecoveryContext,
   upsertPaymentRecoveryContext,
 } from "@/lib";
@@ -58,11 +61,45 @@ const markOrderAsActivated = (orderCode: string): void => {
   localStorage.setItem(ACTIVATED_ORDERS_STORAGE_KEY, JSON.stringify([...next]));
 };
 
+const getSuccessSubtitle = (purpose?: PaymentPurpose): string => {
+  switch (purpose) {
+    case "BUY_MEMBERSHIP":
+      return "Hệ thống đang xác nhận và tự động kích hoạt gói thành viên cho bạn.";
+    case "MENTOR_INTERVIEW":
+      return "Hệ thống đang cập nhật trạng thái phiên phỏng vấn của bạn.";
+    case "TOP_UP_WALLET":
+      return "Hệ thống đang cập nhật số dư ví của bạn.";
+    case "WITHDRAW_FROM_WALLET":
+      return "Yêu cầu giao dịch ví đã được xác nhận thành công.";
+    default:
+      return "Hệ thống đang xác nhận giao dịch của bạn.";
+  }
+};
+
+const getPrimaryRedirect = (purpose?: PaymentPurpose): { to: string; label: string } => {
+  switch (purpose) {
+    case "MENTOR_INTERVIEW":
+      return { to: "/user?tab=interviewHistory", label: "Xem lịch sử phỏng vấn" };
+    case "TOP_UP_WALLET":
+    case "WITHDRAW_FROM_WALLET":
+      return { to: "/user?tab=account&subtab=wallet", label: "Đến ví của tôi" };
+    case "BUY_MEMBERSHIP":
+    default:
+      return { to: "/user?tab=account", label: "Quay lại tài khoản" };
+  }
+};
+
 export function PaymentSuccessPage() {
   const { user } = useAuthStore();
   const query = useMemo(() => new URLSearchParams(window.location.search), []);
   const orderCode = query.get("orderCode")?.trim() || "";
-  const queryTransactionCode = query.get("transactionCode")?.trim() || "";
+  const queryTransactionCode =
+    query.get("transactionCode")?.trim() || query.get("transaction_code")?.trim() || "";
+  const callbackCheckoutToken =
+    query.get("id")?.trim() ||
+    query.get("checkoutId")?.trim() ||
+    query.get("checkout_id")?.trim() ||
+    "";
   const status = query.get("status")?.trim() || "PAID";
   const source = query.get("source")?.trim() || "callback";
   const paid = isPaidStatus(status);
@@ -71,13 +108,6 @@ export function PaymentSuccessPage() {
     () => getPendingSessionPaymentContext(currentUserId || undefined),
     [currentUserId]
   );
-  const pendingSessionOrderCode = pendingSessionPayment?.orderCode?.trim() || "";
-  const shouldRedirectToPendingSession = Boolean(
-    pendingSessionPayment?.sessionId &&
-    orderCode &&
-    pendingSessionOrderCode &&
-    pendingSessionOrderCode === orderCode
-  );
 
   const [resolveState, setResolveState] = useState<ResolveState>("checking");
   const [resolveError, setResolveError] = useState<string>("");
@@ -85,7 +115,7 @@ export function PaymentSuccessPage() {
   const [recoveryContext, setRecoveryContext] = useState<PaymentRecoveryContext | null>(null);
   const [subscription, setSubscription] = useState<UserSubscriptionResponse | null>(null);
   const [isKnownActivatedOrder, setIsKnownActivatedOrder] = useState(false);
-  const [autoSubscribeOrderCode, setAutoSubscribeOrderCode] = useState<string>("");
+  const [autoSubscribeKey, setAutoSubscribeKey] = useState<string>("");
 
   const loadActiveSubscription = useCallback(
     async (userId: number): Promise<UserSubscriptionResponse | null> => {
@@ -105,57 +135,45 @@ export function PaymentSuccessPage() {
     []
   );
 
-  useEffect(() => {
-    if (!pendingSessionPayment?.sessionId || !orderCode || !pendingSessionOrderCode) {
-      return;
-    }
-
-    if (pendingSessionOrderCode === orderCode) {
-      return;
-    }
-
-    addPaymentSupportLog({
-      orderCode,
-      userId: currentUserId || undefined,
-      status: "UNMAPPED_ORDER",
-      message: "Bo qua pending session payment do orderCode khong khop callback.",
-      payload: {
-        pendingSessionOrderCode,
-        callbackOrderCode: orderCode,
-      },
-    });
-    clearPendingSessionPaymentContext();
-  }, [currentUserId, orderCode, pendingSessionOrderCode, pendingSessionPayment]);
-
-  useEffect(() => {
-    if (!shouldRedirectToPendingSession || !pendingSessionPayment?.sessionId) {
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("payment", paid ? "success" : "failed");
-    if (orderCode) {
-      params.set("orderCode", orderCode);
-    }
-
-    clearPendingSessionPaymentContext();
-    window.location.replace(
-      `/user/mock-interview/history/${pendingSessionPayment.sessionId}?${params.toString()}`
-    );
-  }, [orderCode, paid, pendingSessionPayment, shouldRedirectToPendingSession]);
-
   const handleResolveOrder = useCallback(async () => {
     setSubscribeError("");
     setSubscription(null);
     setResolveError("");
     setRecoveryContext(null);
 
-    if (!orderCode) {
+    if (!currentUserId) {
       addPaymentSupportLog({
+        orderCode,
+        transactionCode: queryTransactionCode || undefined,
+        checkoutToken: callbackCheckoutToken || undefined,
         status: "UNMAPPED_ORDER",
-        message: "Callback success thieu orderCode.",
+        message: "Khong tim thay user session khi vao callback success.",
         payload: {
-          transactionCode: queryTransactionCode || null,
+          source,
+          status,
+          paid,
+        },
+      });
+      setResolveState("unmapped");
+      setResolveError("Không tìm thấy phiên đăng nhập. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    const hasAnyIdentifier = Boolean(
+      orderCode ||
+      queryTransactionCode ||
+      callbackCheckoutToken ||
+      pendingSessionPayment?.checkoutToken ||
+      pendingSessionPayment?.transactionCode ||
+      pendingSessionPayment?.sessionId
+    );
+
+    if (!hasAnyIdentifier) {
+      addPaymentSupportLog({
+        userId: currentUserId,
+        status: "UNMAPPED_ORDER",
+        message: "Callback success khong co du dinh danh de map giao dich.",
+        payload: {
           source,
           status,
           paid,
@@ -168,74 +186,59 @@ export function PaymentSuccessPage() {
 
     setResolveState("checking");
 
-    if (!currentUserId) {
-      addPaymentSupportLog({
-        orderCode,
-        status: "UNMAPPED_ORDER",
-        message: "Khong tim thay user session khi vao callback success.",
-        payload: {
-          transactionCode: queryTransactionCode || null,
-          source,
-          status,
-          paid,
-        },
-      });
-      setResolveState("unmapped");
-      setResolveError("Không tìm thấy phiên đăng nhập. Vui lòng đăng nhập lại.");
-      return;
+    let nextContext: PaymentRecoveryContext | null = null;
+
+    if (orderCode) {
+      nextContext = getRecoveryByOrderCode(orderCode, currentUserId);
     }
 
-    let nextContext = getRecoveryByOrderCode(orderCode, currentUserId);
-    if (!nextContext) {
-      const fallback = getLatestRecoveryForUser(currentUserId);
-      if (fallback && !fallback.orderCode) {
-        nextContext = upsertPaymentRecoveryContext({
-          supportCode: fallback.supportCode,
-          orderCode,
-          transactionCode: queryTransactionCode || fallback.transactionCode,
-          userId: fallback.userId,
-          planId: fallback.planId,
-          planName: fallback.planName,
-          amount: fallback.amount,
-          checkoutUrl: fallback.checkoutUrl,
-          status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
-          note: paid
-            ? "Auto-map orderCode tu callback vao giao dich gan nhat cua user."
-            : "Callback tra ve status khong hop le.",
-        });
+    if (!nextContext && queryTransactionCode) {
+      nextContext = getRecoveryByTransactionCode(queryTransactionCode, currentUserId);
+    }
 
-        addPaymentSupportLog({
-          supportCode: nextContext.supportCode,
-          orderCode,
-          userId: nextContext.userId,
-          planId: nextContext.planId,
-          planName: nextContext.planName,
-          amount: nextContext.amount,
-          status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
-          message: paid
-            ? "Map orderCode vao giao dich cho user thanh cong."
-            : "Callback co orderCode nhung status khong hop le.",
-          payload: {
-            transactionCode: queryTransactionCode || null,
-            source,
-            status,
-            paid,
-          },
-        });
-      }
+    if (!nextContext && callbackCheckoutToken) {
+      nextContext = getRecoveryByCheckoutToken(callbackCheckoutToken, currentUserId);
+    }
+
+    if (!nextContext && pendingSessionPayment?.checkoutToken) {
+      nextContext = getRecoveryByCheckoutToken(pendingSessionPayment.checkoutToken, currentUserId);
+    }
+
+    if (!nextContext && pendingSessionPayment?.transactionCode) {
+      nextContext = getRecoveryByTransactionCode(
+        pendingSessionPayment.transactionCode,
+        currentUserId
+      );
+    }
+
+    if (!nextContext && pendingSessionPayment?.sessionId) {
+      nextContext = getLatestRecoveryForSessionPayment(
+        pendingSessionPayment.sessionId,
+        currentUserId
+      );
+    }
+
+    if (!nextContext && pendingSessionPayment?.paymentPurpose === "MENTOR_INTERVIEW") {
+      nextContext = getLatestRecoveryForUserByPurpose(currentUserId, "MENTOR_INTERVIEW");
+    }
+
+    if (!nextContext) {
+      nextContext = getLatestRecoveryForUser(currentUserId);
     }
 
     if (!nextContext) {
       addPaymentSupportLog({
         orderCode,
+        transactionCode: queryTransactionCode || undefined,
+        checkoutToken: callbackCheckoutToken || undefined,
         userId: currentUserId,
         status: "UNMAPPED_ORDER",
-        message: "Khong tim thay recovery context cho orderCode.",
+        message: "Khong tim thay recovery context cho callback success.",
         payload: {
-          transactionCode: queryTransactionCode || null,
           source,
           status,
           paid,
+          pendingSessionPayment,
         },
       });
       setResolveState("unmapped");
@@ -243,22 +246,18 @@ export function PaymentSuccessPage() {
       return;
     }
 
-    const resolvedTransactionCode =
-      queryTransactionCode ||
-      nextContext.transactionCode ||
-      (nextContext.checkoutUrl
-        ? extractTransactionCodeFromUrl(nextContext.checkoutUrl)?.trim() || ""
-        : "");
-
     if (nextContext.userId !== currentUserId) {
       addPaymentSupportLog({
         supportCode: nextContext.supportCode,
         orderCode,
+        transactionCode: queryTransactionCode || undefined,
+        checkoutToken: callbackCheckoutToken || undefined,
         userId: currentUserId,
+        paymentPurpose: nextContext.paymentPurpose,
+        sessionId: nextContext.sessionId,
         status: "UNMAPPED_ORDER",
-        message: "OrderCode map sang user khac voi phien hien tai.",
+        message: "Giao dich callback khong thuoc user hien tai.",
         payload: {
-          transactionCode: resolvedTransactionCode || null,
           expectedUserId: nextContext.userId,
           actualUserId: currentUserId,
           source,
@@ -270,34 +269,48 @@ export function PaymentSuccessPage() {
       return;
     }
 
+    const resolvedOrderCode = orderCode || nextContext.orderCode;
+    const resolvedTransactionCode =
+      queryTransactionCode || nextContext.transactionCode || pendingSessionPayment?.transactionCode;
+    const resolvedCheckoutToken =
+      callbackCheckoutToken || nextContext.checkoutToken || pendingSessionPayment?.checkoutToken;
+    const resolvedPurpose =
+      nextContext.paymentPurpose ||
+      (pendingSessionPayment?.paymentPurpose as PaymentPurpose | undefined);
+    const resolvedSessionId = nextContext.sessionId || pendingSessionPayment?.sessionId;
+
     const updatedContext = upsertPaymentRecoveryContext({
       supportCode: nextContext.supportCode,
-      orderCode,
-      transactionCode: resolvedTransactionCode || undefined,
+      orderCode: resolvedOrderCode,
+      transactionCode: resolvedTransactionCode,
+      checkoutToken: resolvedCheckoutToken,
       userId: nextContext.userId,
       planId: nextContext.planId,
       planName: nextContext.planName,
       amount: nextContext.amount,
+      paymentPurpose: resolvedPurpose,
+      sessionId: resolvedSessionId,
       checkoutUrl: nextContext.checkoutUrl,
       status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
-      note: paid
-        ? "Callback success hop le, san sang tu dong kich hoat goi."
-        : "Callback tra ve status khong hop le.",
+      note: paid ? "Callback success hop le." : "Callback tra ve status thanh toan khong hop le.",
     });
 
     addPaymentSupportLog({
       supportCode: updatedContext.supportCode,
-      orderCode,
+      orderCode: updatedContext.orderCode,
+      transactionCode: updatedContext.transactionCode,
+      checkoutToken: updatedContext.checkoutToken,
       userId: updatedContext.userId,
       planId: updatedContext.planId,
       planName: updatedContext.planName,
       amount: updatedContext.amount,
+      paymentPurpose: updatedContext.paymentPurpose,
+      sessionId: updatedContext.sessionId,
       status: paid ? "CALLBACK_SUCCESS" : "UNMAPPED_ORDER",
       message: paid
-        ? "Da xac nhan callback thanh cong, he thong se tu dong kich hoat goi."
-        : "Callback co orderCode nhung status thanh toan khong hop le.",
+        ? "Da xac nhan callback thanh cong."
+        : "Callback co du lieu giao dich nhung status thanh toan khong hop le.",
       payload: {
-        transactionCode: resolvedTransactionCode || null,
         source,
         status,
         paid,
@@ -305,21 +318,56 @@ export function PaymentSuccessPage() {
     });
 
     setRecoveryContext(updatedContext);
-    setIsKnownActivatedOrder(getActivatedOrderCodes().has(orderCode));
+    const normalizedOrderCode = (updatedContext.orderCode || "").trim();
+    setIsKnownActivatedOrder(
+      normalizedOrderCode.length > 0 && getActivatedOrderCodes().has(normalizedOrderCode)
+    );
+
     if (!paid) {
       setResolveState("unmapped");
       setResolveError("Thanh toán chưa được xác nhận thành công. Vui lòng thử lại sau.");
       return;
     }
 
-    setResolveState("ready");
-  }, [currentUserId, orderCode, paid, queryTransactionCode, source, status]);
+    if (updatedContext.paymentPurpose === "MENTOR_INTERVIEW") {
+      const targetSessionId = updatedContext.sessionId || pendingSessionPayment?.sessionId;
 
-  useEffect(() => {
-    if (shouldRedirectToPendingSession) {
-      return;
+      if (targetSessionId) {
+        const params = new URLSearchParams();
+        params.set("payment", "success");
+        if (updatedContext.orderCode) {
+          params.set("orderCode", updatedContext.orderCode);
+        }
+
+        clearPendingSessionPaymentContext();
+        window.location.replace(
+          `/user/mock-interview/history/${targetSessionId}?${params.toString()}`
+        );
+        return;
+      }
+
+      setResolveError(
+        "Đã xác nhận thanh toán nhưng chưa tìm thấy phiên phỏng vấn để chuyển hướng."
+      );
     }
 
+    if (pendingSessionPayment?.sessionId && updatedContext.paymentPurpose !== "MENTOR_INTERVIEW") {
+      clearPendingSessionPaymentContext();
+    }
+
+    setResolveState("ready");
+  }, [
+    callbackCheckoutToken,
+    currentUserId,
+    orderCode,
+    paid,
+    pendingSessionPayment,
+    queryTransactionCode,
+    source,
+    status,
+  ]);
+
+  useEffect(() => {
     const timerId = window.setTimeout(() => {
       void handleResolveOrder();
     }, 0);
@@ -327,14 +375,10 @@ export function PaymentSuccessPage() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [handleResolveOrder, shouldRedirectToPendingSession]);
+  }, [handleResolveOrder]);
 
   const handleConfirmSubscribe = useCallback(async () => {
-    if (!recoveryContext) {
-      return;
-    }
-
-    if (resolveState === "subscribing" || !orderCode) {
+    if (!recoveryContext || resolveState === "subscribing") {
       return;
     }
 
@@ -348,12 +392,23 @@ export function PaymentSuccessPage() {
       return;
     }
 
+    if (recoveryContext.paymentPurpose !== "BUY_MEMBERSHIP") {
+      setSubscribeError("Giao dịch này không áp dụng cho gói thành viên.");
+      return;
+    }
+
+    if (!recoveryContext.planId) {
+      setSubscribeError("Không tìm thấy gói thành viên cần kích hoạt.");
+      return;
+    }
+
     if (!paid) {
       setSubscribeError("Thanh toán chưa được xác nhận thành công.");
       return;
     }
 
-    if (resolveState === "subscribed" || isKnownActivatedOrder) {
+    const activationOrderCode = (recoveryContext.orderCode || "").trim();
+    if (resolveState === "subscribed" || (activationOrderCode && isKnownActivatedOrder)) {
       setResolveState("subscribed");
       setSubscribeError("");
       toast.info("Gói này đã được kích hoạt trước đó.");
@@ -371,12 +426,15 @@ export function PaymentSuccessPage() {
     if (!subscribeResult.success) {
       const updatedContext = upsertPaymentRecoveryContext({
         supportCode: recoveryContext.supportCode,
-        orderCode,
+        orderCode: recoveryContext.orderCode,
         transactionCode: recoveryContext.transactionCode,
+        checkoutToken: recoveryContext.checkoutToken,
         userId: recoveryContext.userId,
         planId: recoveryContext.planId,
         planName: recoveryContext.planName,
         amount: recoveryContext.amount,
+        paymentPurpose: recoveryContext.paymentPurpose,
+        sessionId: recoveryContext.sessionId,
         checkoutUrl: recoveryContext.checkoutUrl,
         status: "SUBSCRIBE_FAILED",
         note: subscribeResult.error || "Subscribe that bai.",
@@ -384,11 +442,15 @@ export function PaymentSuccessPage() {
 
       addPaymentSupportLog({
         supportCode: updatedContext.supportCode,
-        orderCode,
+        orderCode: updatedContext.orderCode,
+        transactionCode: updatedContext.transactionCode,
+        checkoutToken: updatedContext.checkoutToken,
         userId: updatedContext.userId,
         planId: updatedContext.planId,
         planName: updatedContext.planName,
         amount: updatedContext.amount,
+        paymentPurpose: updatedContext.paymentPurpose,
+        sessionId: updatedContext.sessionId,
         status: "SUBSCRIBE_FAILED",
         message: "He thong kich hoat goi tu dong that bai do backend tra ve loi.",
         payload: {
@@ -407,12 +469,15 @@ export function PaymentSuccessPage() {
 
     const updatedContext = upsertPaymentRecoveryContext({
       supportCode: recoveryContext.supportCode,
-      orderCode,
+      orderCode: recoveryContext.orderCode,
       transactionCode: recoveryContext.transactionCode,
+      checkoutToken: recoveryContext.checkoutToken,
       userId: recoveryContext.userId,
       planId: recoveryContext.planId,
       planName: recoveryContext.planName,
       amount: recoveryContext.amount,
+      paymentPurpose: recoveryContext.paymentPurpose,
+      sessionId: recoveryContext.sessionId,
       checkoutUrl: recoveryContext.checkoutUrl,
       status: "SUBSCRIBE_SUCCESS",
       note: "Subscribe thanh cong tu callback success page.",
@@ -420,11 +485,15 @@ export function PaymentSuccessPage() {
 
     addPaymentSupportLog({
       supportCode: updatedContext.supportCode,
-      orderCode,
+      orderCode: updatedContext.orderCode,
+      transactionCode: updatedContext.transactionCode,
+      checkoutToken: updatedContext.checkoutToken,
       userId: updatedContext.userId,
       planId: updatedContext.planId,
       planName: updatedContext.planName,
       amount: updatedContext.amount,
+      paymentPurpose: updatedContext.paymentPurpose,
+      sessionId: updatedContext.sessionId,
       status: "SUBSCRIBE_SUCCESS",
       message: "He thong da kich hoat goi thanh cong sau callback.",
       payload: {
@@ -433,67 +502,56 @@ export function PaymentSuccessPage() {
     });
 
     setRecoveryContext(updatedContext);
-    markOrderAsActivated(orderCode);
-    setIsKnownActivatedOrder(true);
+    if (activationOrderCode) {
+      markOrderAsActivated(activationOrderCode);
+      setIsKnownActivatedOrder(true);
+    }
     setResolveState("subscribed");
     toast.success("Đã kích hoạt gói thành công.");
   }, [
     currentUserId,
     isKnownActivatedOrder,
     loadActiveSubscription,
-    orderCode,
     paid,
     recoveryContext,
     resolveState,
   ]);
 
   useEffect(() => {
-    if (shouldRedirectToPendingSession || resolveState !== "ready" || !recoveryContext || !paid) {
+    if (
+      resolveState !== "ready" ||
+      !recoveryContext ||
+      !paid ||
+      recoveryContext.paymentPurpose !== "BUY_MEMBERSHIP"
+    ) {
       return;
     }
 
-    const resolvedOrderCode = (recoveryContext.orderCode || orderCode).trim();
-    if (!resolvedOrderCode || autoSubscribeOrderCode === resolvedOrderCode) {
+    const key = (recoveryContext.orderCode || recoveryContext.supportCode || "").trim();
+    if (!key || autoSubscribeKey === key) {
       return;
     }
 
     const timerId = window.setTimeout(() => {
-      setAutoSubscribeOrderCode(resolvedOrderCode);
+      setAutoSubscribeKey(key);
       void handleConfirmSubscribe();
     }, 0);
 
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [
-    autoSubscribeOrderCode,
-    handleConfirmSubscribe,
-    orderCode,
-    paid,
-    shouldRedirectToPendingSession,
-    recoveryContext,
-    resolveState,
-  ]);
+  }, [autoSubscribeKey, handleConfirmSubscribe, paid, recoveryContext, resolveState]);
 
-  const resolvedOrderCode = (recoveryContext?.orderCode || orderCode).trim();
+  const resolvedPurpose = recoveryContext?.paymentPurpose;
+  const successSubtitle = getSuccessSubtitle(resolvedPurpose);
+  const primaryRedirect = getPrimaryRedirect(resolvedPurpose);
+  const subscribeKey = (recoveryContext?.orderCode || recoveryContext?.supportCode || "").trim();
   const canRetrySubscribe =
+    resolvedPurpose === "BUY_MEMBERSHIP" &&
     resolveState === "ready" &&
     !!recoveryContext &&
-    resolvedOrderCode.length > 0 &&
-    autoSubscribeOrderCode === resolvedOrderCode;
-
-  if (shouldRedirectToPendingSession) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-emerald-50 to-blue-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">
-        <div className="mx-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900">
-          <Loader2 className="h-5 w-5 animate-spin text-emerald-600 dark:text-emerald-300" />
-          <p className="font-['Inter'] text-sm text-slate-700 dark:text-slate-200">
-            Đang chuyển hướng về trang chi tiết phiên phỏng vấn...
-          </p>
-        </div>
-      </div>
-    );
-  }
+    subscribeKey.length > 0 &&
+    autoSubscribeKey === subscribeKey;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-emerald-50 to-blue-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">
@@ -507,7 +565,7 @@ export function PaymentSuccessPage() {
               Thanh toán thành công
             </h1>
             <p className="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
-              Hệ thống đang xác nhận và tự động kích hoạt gói thành viên cho bạn.
+              {successSubtitle}
             </p>
           </div>
         </div>
@@ -537,7 +595,15 @@ export function PaymentSuccessPage() {
           </div>
         )}
 
-        {subscribeError && (
+        {resolveState === "ready" && !!resolveError && paid && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/40 dark:bg-amber-900/10">
+            <p className="font-['Inter'] text-sm text-amber-700 dark:text-amber-300">
+              {resolveError}
+            </p>
+          </div>
+        )}
+
+        {resolvedPurpose === "BUY_MEMBERSHIP" && !!subscribeError && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/40 dark:bg-amber-900/10">
             <p className="font-['Inter'] text-sm text-amber-700 dark:text-amber-300">
               {subscribeError}
@@ -545,7 +611,7 @@ export function PaymentSuccessPage() {
           </div>
         )}
 
-        {isKnownActivatedOrder && (
+        {resolvedPurpose === "BUY_MEMBERSHIP" && isKnownActivatedOrder && (
           <div className="rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/40 dark:bg-violet-900/10">
             <p className="font-['Inter'] text-sm text-violet-700 dark:text-violet-300">
               Gói này đã được kích hoạt trước đó.
@@ -555,10 +621,11 @@ export function PaymentSuccessPage() {
 
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/user?tab=account"
+            to={primaryRedirect.to}
             className="rounded-xl bg-[#0047AB] px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white hover:bg-[#003b8d]">
-            Quay lại tài khoản
+            {primaryRedirect.label}
           </Link>
+
           {(resolveState === "unmapped" || !paid) && (
             <button
               onClick={() => void handleResolveOrder()}
@@ -566,14 +633,16 @@ export function PaymentSuccessPage() {
               Thử xác nhận lại
             </button>
           )}
-          {canRetrySubscribe && (
+
+          {resolvedPurpose === "BUY_MEMBERSHIP" && canRetrySubscribe && (
             <button
-              onClick={handleConfirmSubscribe}
+              onClick={() => void handleConfirmSubscribe()}
               className="rounded-xl bg-emerald-600 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white hover:bg-emerald-700">
               Thử kích hoạt lại
             </button>
           )}
-          {resolveState === "subscribing" && (
+
+          {resolvedPurpose === "BUY_MEMBERSHIP" && resolveState === "subscribing" && (
             <button
               disabled
               className="flex items-center gap-2 rounded-xl bg-emerald-500/80 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white">
@@ -581,9 +650,17 @@ export function PaymentSuccessPage() {
               Đang kích hoạt gói...
             </button>
           )}
+
+          {resolvedPurpose === "BUY_MEMBERSHIP" && (
+            <Link
+              to="/user?tab=account"
+              className="rounded-xl border border-slate-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+              Chọn gói thành viên khác
+            </Link>
+          )}
         </div>
 
-        {resolveState === "subscribed" && (
+        {resolvedPurpose === "BUY_MEMBERSHIP" && resolveState === "subscribed" && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/40 dark:bg-emerald-900/10">
             <p className="mb-2 font-['Inter'] text-sm font-semibold text-emerald-700 dark:text-emerald-300">
               Đã kích hoạt gói thành công

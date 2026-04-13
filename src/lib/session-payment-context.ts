@@ -1,4 +1,8 @@
-import { extractOrderCodeFromUrl } from "./payment-recovery";
+import {
+  extractCheckoutTokenFromUrl,
+  extractOrderCodeFromUrl,
+  extractTransactionCodeFromUrl,
+} from "./payment-recovery";
 
 const SESSION_PAYMENT_STORAGE_KEY = "inblue.session-payment.pending";
 const SESSION_PAYMENT_MAX_AGE_MS = 1000 * 60 * 60 * 2;
@@ -6,8 +10,11 @@ const SESSION_PAYMENT_MAX_AGE_MS = 1000 * 60 * 60 * 2;
 export interface SessionPaymentContext {
   sessionId: number;
   userId?: number;
+  paymentPurpose: "MENTOR_INTERVIEW";
   checkoutUrl?: string;
+  checkoutToken?: string;
   orderCode?: string;
+  transactionCode?: string;
   createdAt: string;
 }
 
@@ -69,8 +76,11 @@ const parseContext = (value: unknown): SessionPaymentContext | null => {
   return {
     sessionId,
     userId: asOptionalNumber(value.userId),
+    paymentPurpose: "MENTOR_INTERVIEW",
     checkoutUrl: asOptionalString(value.checkoutUrl),
+    checkoutToken: asOptionalString(value.checkoutToken),
     orderCode: asOptionalString(value.orderCode),
+    transactionCode: asOptionalString(value.transactionCode),
     createdAt,
   };
 };
@@ -82,8 +92,13 @@ export const savePendingSessionPaymentContext = (
   const context: SessionPaymentContext = {
     sessionId: Number(input.sessionId),
     userId: input.userId,
+    paymentPurpose: "MENTOR_INTERVIEW",
     checkoutUrl,
+    checkoutToken: checkoutUrl ? extractCheckoutTokenFromUrl(checkoutUrl) || undefined : undefined,
     orderCode: checkoutUrl ? extractOrderCodeFromUrl(checkoutUrl) || undefined : undefined,
+    transactionCode: checkoutUrl
+      ? extractTransactionCodeFromUrl(checkoutUrl) || undefined
+      : undefined,
     createdAt: new Date().toISOString(),
   };
 

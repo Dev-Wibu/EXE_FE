@@ -20,8 +20,15 @@ import { usePagination } from "@/hooks/usePagination";
 import { useMakeSessionPayment, useUserSessions } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
+import {
+  addPaymentSupportLog,
+  extractCheckoutTokenFromUrl,
+  extractOrderCodeFromUrl,
+  extractTransactionCodeFromUrl,
+  savePendingSessionPaymentContext,
+  upsertPaymentRecoveryContext,
+} from "@/lib";
 import { formatCurrency } from "@/lib/formatting";
-import { savePendingSessionPaymentContext } from "@/lib/session-payment-context";
 import { useAuthStore } from "@/stores/authStore";
 
 // Status badge mapping
@@ -242,13 +249,76 @@ export function SessionHistoryPage() {
     setPayingSessionId(session.id);
     try {
       const checkoutUrl = await makeSessionPayment(session.id);
+      const normalizedCheckoutUrl = new URL(checkoutUrl, window.location.origin).toString();
+      const orderCode = extractOrderCodeFromUrl(normalizedCheckoutUrl) || undefined;
+      const transactionCode = extractTransactionCodeFromUrl(normalizedCheckoutUrl) || undefined;
+      const checkoutToken = extractCheckoutTokenFromUrl(normalizedCheckoutUrl) || undefined;
+      const paymentAmount =
+        typeof session.totalPrice === "number" && session.totalPrice > 0
+          ? session.totalPrice
+          : undefined;
+
+      const createdRecovery = upsertPaymentRecoveryContext({
+        orderCode,
+        transactionCode,
+        checkoutToken,
+        userId: Number(user.id),
+        amount: paymentAmount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        checkoutUrl: normalizedCheckoutUrl,
+        status: "CREATED",
+        note: "Da tao checkoutUrl thanh toan phien phong van.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: createdRecovery.supportCode,
+        orderCode,
+        transactionCode,
+        checkoutToken,
+        userId: createdRecovery.userId,
+        amount: createdRecovery.amount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        status: "CREATED",
+        message: "Da tao checkoutUrl thanh cong cho thanh toan phien phong van.",
+      });
+
+      upsertPaymentRecoveryContext({
+        supportCode: createdRecovery.supportCode,
+        orderCode,
+        transactionCode,
+        checkoutToken,
+        userId: createdRecovery.userId,
+        amount: createdRecovery.amount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        checkoutUrl: normalizedCheckoutUrl,
+        status: "REDIRECTED",
+        note: "Da redirect sang trang thanh toan phien phong van.",
+      });
+
       savePendingSessionPaymentContext({
         sessionId: session.id,
         userId: Number(user.id),
-        checkoutUrl,
+        checkoutUrl: normalizedCheckoutUrl,
       });
-      window.location.assign(checkoutUrl);
-    } catch {
+      window.location.assign(normalizedCheckoutUrl);
+    } catch (error) {
+      addPaymentSupportLog({
+        userId: Number(user.id),
+        amount:
+          typeof session.totalPrice === "number" && session.totalPrice > 0
+            ? session.totalPrice
+            : undefined,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        status: "CREATE_FAILED",
+        message: "Tao link thanh toan phien phong van that bai.",
+        payload: {
+          error: error instanceof Error ? error.message : "unknown",
+        },
+      });
       // Error toast is handled inside useMakeSessionPayment hook.
     } finally {
       setPayingSessionId(null);

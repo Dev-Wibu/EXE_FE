@@ -1,10 +1,19 @@
 import { Crown, FileText, User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { normalizeMajor } from "@/constants/majors";
-import type { Wallet } from "@/mocks/user.mock";
-import { usersAdminManager } from "@/services";
+import type { TransactionEntity } from "@/interfaces";
+import {
+  addPaymentSupportLog,
+  extractCheckoutTokenFromUrl,
+  extractOrderCodeFromUrl,
+  extractTransactionCodeFromUrl,
+  upsertPaymentRecoveryContext,
+} from "@/lib";
+import type { Transaction, Wallet } from "@/mocks/user.mock";
+import { transactionManager, usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
@@ -18,16 +27,72 @@ const DEFAULT_WALLET: Wallet = {
   transactions: [],
 };
 
+type AccountSubTab = "profile" | "wallet" | "candidateProfile" | "membership";
+
+const parseAccountSubTab = (value?: string | null): AccountSubTab | null => {
+  if (
+    value === "profile" ||
+    value === "wallet" ||
+    value === "candidateProfile" ||
+    value === "membership"
+  ) {
+    return value;
+  }
+
+  return null;
+};
+
+const TOP_UP_MIN_AMOUNT = 10_000;
+const TOP_UP_MAX_AMOUNT = 20_000_000;
+const TOP_UP_STEP = 1_000;
+const TOP_UP_PRESET_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000];
+
+const mapTransactionToWalletTransaction = (transaction: TransactionEntity): Transaction => {
+  const rawAmount = Math.abs(Number(transaction.amount || 0));
+  const isIncoming =
+    transaction.paymentPurpose === "TOP_UP_WALLET" || transaction.transactionType === true;
+  const type: Transaction["type"] =
+    transaction.paymentPurpose === "TOP_UP_WALLET"
+      ? "deposit"
+      : transaction.paymentPurpose === "WITHDRAW_FROM_WALLET"
+        ? "refund"
+        : "payment";
+
+  const description =
+    transaction.description ||
+    (transaction.paymentPurpose === "TOP_UP_WALLET"
+      ? "Nạp tiền vào ví"
+      : transaction.paymentPurpose === "MENTOR_INTERVIEW"
+        ? "Thanh toán phiên phỏng vấn"
+        : transaction.paymentPurpose === "BUY_MEMBERSHIP"
+          ? "Thanh toán gói thành viên"
+          : "Giao dịch ví");
+
+  return {
+    id: Number(transaction.id || Date.now()),
+    type,
+    amount: isIncoming ? rawAmount : -rawAmount,
+    date: transaction.createdAt || new Date().toISOString(),
+    description,
+    status: "completed",
+  };
+};
+
 export function AccountPage() {
   const { user: authUser, setUser } = useAuthStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [wallet, setWallet] = useState<Wallet>(DEFAULT_WALLET);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "profile" | "wallet" | "candidateProfile" | "membership"
-  >("profile");
+  const [activeTab, setActiveTab] = useState<AccountSubTab>(
+    parseAccountSubTab(searchParams.get("subtab")) || "profile"
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isWalletLoading, setIsWalletLoading] = useState(false);
+  const [isTopUpLoading, setIsTopUpLoading] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState<string>(String(TOP_UP_PRESET_AMOUNTS[1]));
 
   // Form state for editing
   const [formData, setFormData] = useState<Partial<UserProfileData>>({});
@@ -106,10 +171,58 @@ export function AccountPage() {
     }
   }, [authUser]);
 
+  const fetchWalletTransactions = useCallback(async () => {
+    if (!authUser?.id) {
+      setWallet((prev) => ({ ...prev, transactions: [] }));
+      return;
+    }
+
+    setIsWalletLoading(true);
+    try {
+      const response = await transactionManager.getByUserId(Number(authUser.id));
+      if (response.success && response.data) {
+        const mappedTransactions = response.data
+          .map(mapTransactionToWalletTransaction)
+          .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+
+        setWallet((prev) => ({ ...prev, transactions: mappedTransactions }));
+      }
+    } catch {
+      setWallet((prev) => ({ ...prev, transactions: [] }));
+    } finally {
+      setIsWalletLoading(false);
+    }
+  }, [authUser?.id]);
+
   // Load user data on mount
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+
+  useEffect(() => {
+    void fetchWalletTransactions();
+  }, [fetchWalletTransactions]);
+
+  useEffect(() => {
+    const nextTab = parseAccountSubTab(searchParams.get("subtab")) || "profile";
+    setActiveTab((prev) => (prev === nextTab ? prev : nextTab));
+  }, [searchParams]);
+
+  const handleSwitchTab = useCallback(
+    (nextTab: AccountSubTab) => {
+      setActiveTab(nextTab);
+
+      const nextParams = new URLSearchParams(searchParams);
+      if (nextTab === "profile") {
+        nextParams.delete("subtab");
+      } else {
+        nextParams.set("subtab", nextTab);
+      }
+
+      setSearchParams(nextParams, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   // Cleanup blob URLs when component unmounts
   useEffect(() => {
@@ -121,7 +234,7 @@ export function AccountPage() {
   }, [avatarPreview]);
 
   const handleRefreshData = async () => {
-    await fetchUserData();
+    await Promise.all([fetchUserData(), fetchWalletTransactions()]);
     toast.success("Đã cập nhật dữ liệu!");
   };
 
@@ -250,6 +363,106 @@ export function AccountPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleTopUpAmountChange = (value: string) => {
+    const normalized = value.replace(/[^\d]/g, "");
+    setTopUpAmount(normalized);
+  };
+
+  const handleTopUpWallet = async (amount: number) => {
+    if (!authUser?.id) {
+      toast.error("Không tìm thấy tài khoản người dùng");
+      return;
+    }
+
+    if (amount < TOP_UP_MIN_AMOUNT || amount > TOP_UP_MAX_AMOUNT || amount % TOP_UP_STEP !== 0) {
+      toast.error(
+        `Số tiền nạp phải từ ${TOP_UP_MIN_AMOUNT.toLocaleString("vi-VN")} đến ${TOP_UP_MAX_AMOUNT.toLocaleString("vi-VN")} và chia hết cho ${TOP_UP_STEP.toLocaleString("vi-VN")}.`
+      );
+      return;
+    }
+
+    setIsTopUpLoading(true);
+    try {
+      const response = await transactionManager.transferIn(amount, Number(authUser.id));
+      if (!response.success || !response.data) {
+        addPaymentSupportLog({
+          userId: Number(authUser.id),
+          amount,
+          paymentPurpose: "TOP_UP_WALLET",
+          status: "CREATE_FAILED",
+          message: "Tao link nap tien vi that bai.",
+          payload: {
+            error: response.error || null,
+          },
+        });
+        toast.error(response.error || "Không thể tạo link nạp tiền.");
+        return;
+      }
+
+      const redirectUrl = new URL(response.data, window.location.origin).toString();
+      const orderCode = extractOrderCodeFromUrl(redirectUrl) || undefined;
+      const transactionCode = extractTransactionCodeFromUrl(redirectUrl) || undefined;
+      const checkoutToken = extractCheckoutTokenFromUrl(redirectUrl) || undefined;
+
+      const createdRecovery = upsertPaymentRecoveryContext({
+        orderCode,
+        transactionCode,
+        checkoutToken,
+        userId: Number(authUser.id),
+        amount,
+        paymentPurpose: "TOP_UP_WALLET",
+        checkoutUrl: redirectUrl,
+        status: "CREATED",
+        note: "Da tao checkoutUrl nap tien vi.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: createdRecovery.supportCode,
+        orderCode,
+        transactionCode,
+        checkoutToken,
+        userId: createdRecovery.userId,
+        amount: createdRecovery.amount,
+        paymentPurpose: "TOP_UP_WALLET",
+        status: "CREATED",
+        message: "Da tao checkoutUrl nap tien vi thanh cong.",
+        payload: {
+          checkoutUrl: redirectUrl,
+        },
+      });
+
+      upsertPaymentRecoveryContext({
+        supportCode: createdRecovery.supportCode,
+        orderCode,
+        transactionCode,
+        checkoutToken,
+        userId: createdRecovery.userId,
+        amount: createdRecovery.amount,
+        paymentPurpose: "TOP_UP_WALLET",
+        checkoutUrl: redirectUrl,
+        status: "REDIRECTED",
+        note: "Da redirect sang trang thanh toan nap tien vi.",
+      });
+
+      toast.success("Đã tạo link nạp tiền. Đang chuyển hướng...");
+      window.location.assign(redirectUrl);
+    } catch (error) {
+      addPaymentSupportLog({
+        userId: Number(authUser.id),
+        amount,
+        paymentPurpose: "TOP_UP_WALLET",
+        status: "CREATE_FAILED",
+        message: "Exception khi tao link nap tien vi.",
+        payload: {
+          error: error instanceof Error ? error.message : "unknown",
+        },
+      });
+      toast.error("Không thể tạo link nạp tiền.");
+    } finally {
+      setIsTopUpLoading(false);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "profile":
@@ -271,7 +484,20 @@ export function AccountPage() {
           />
         ) : null;
       case "wallet":
-        return <WalletTab wallet={wallet} />;
+        return (
+          <WalletTab
+            wallet={wallet}
+            isLoading={isWalletLoading}
+            isTopUpLoading={isTopUpLoading}
+            topUpAmount={topUpAmount}
+            minTopUp={TOP_UP_MIN_AMOUNT}
+            maxTopUp={TOP_UP_MAX_AMOUNT}
+            step={TOP_UP_STEP}
+            presetAmounts={TOP_UP_PRESET_AMOUNTS}
+            onTopUpAmountChange={handleTopUpAmountChange}
+            onTopUp={handleTopUpWallet}
+          />
+        );
       case "candidateProfile":
         return <CandidateProfileTab />;
       case "membership":
@@ -317,7 +543,7 @@ export function AccountPage() {
       {/* Tab Navigation */}
       <div className="flex gap-4 border-b border-gray-200 dark:border-slate-700">
         <button
-          onClick={() => setActiveTab("profile")}
+          onClick={() => handleSwitchTab("profile")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "profile"
               ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
@@ -326,7 +552,7 @@ export function AccountPage() {
           Thông tin cá nhân
         </button>
         <button
-          onClick={() => setActiveTab("wallet")}
+          onClick={() => handleSwitchTab("wallet")}
           className={`px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "wallet"
               ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
@@ -335,7 +561,7 @@ export function AccountPage() {
           Ví tiền
         </button>
         <button
-          onClick={() => setActiveTab("candidateProfile")}
+          onClick={() => handleSwitchTab("candidateProfile")}
           className={`flex items-center gap-2 px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "candidateProfile"
               ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
@@ -345,7 +571,7 @@ export function AccountPage() {
           Hồ sơ ứng viên
         </button>
         <button
-          onClick={() => setActiveTab("membership")}
+          onClick={() => handleSwitchTab("membership")}
           className={`flex items-center gap-2 px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
             activeTab === "membership"
               ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
