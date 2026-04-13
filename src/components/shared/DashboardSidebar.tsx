@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Settings } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -112,7 +112,11 @@ export function DashboardSidebar({
     return false;
   });
 
-  const [showFlyout, setShowFlyout] = useState<string | null>(null);
+  const desktopSidebarRef = useRef<HTMLElement | null>(null);
+
+  const [hoveredDesktopParent, setHoveredDesktopParent] = useState<string | null>(null);
+  const [pinnedDesktopParent, setPinnedDesktopParent] = useState<string | null>(null);
+  const [collapsedDropdownParent, setCollapsedDropdownParent] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedMobileItem, setExpandedMobileItem] = useState<string | null>(() => {
     const saved = localStorage.getItem(`${storageKey}_mobile_expanded`);
@@ -132,10 +136,40 @@ export function DashboardSidebar({
     localStorage.removeItem(`${storageKey}_mobile_expanded`);
   }, [expandedMobileItem, storageKey]);
 
-  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+  useEffect(() => {
+    if (!isCollapsed || !collapsedDropdownParent) {
+      return;
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (!desktopSidebarRef.current?.contains(target)) {
+        setCollapsedDropdownParent(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [collapsedDropdownParent, isCollapsed]);
+
+  const toggleCollapse = () => {
+    setHoveredDesktopParent(null);
+    setCollapsedDropdownParent(null);
+    setPinnedDesktopParent(null);
+    setIsCollapsed((prev) => !prev);
+  };
 
   const handleNavigate = (type: string) => {
     onNavigate(type);
+    setCollapsedDropdownParent(null);
+    setHoveredDesktopParent(null);
     setIsMobileOpen(false);
   };
 
@@ -204,18 +238,36 @@ export function DashboardSidebar({
   const renderFlyoutItem = (item: SidebarMenuItem) => {
     const isAnyChildActive = item.children!.some((c) => activeTab === c.type);
     const isActive = activeTab === item.type || isAnyChildActive;
+    const isCollapsedDropdownOpen = collapsedDropdownParent === item.type;
+    const isExpandedDropdownOpen =
+      !isCollapsed &&
+      (hoveredDesktopParent === item.type ||
+        (!hoveredDesktopParent && (pinnedDesktopParent === item.type || isAnyChildActive)));
 
     return (
       <div
         key={item.type}
         className="relative"
-        onMouseEnter={() => !isCollapsed && setShowFlyout(item.type)}
-        onMouseLeave={() => setShowFlyout(null)}>
+        onMouseEnter={() => {
+          if (!isCollapsed) {
+            setHoveredDesktopParent(item.type);
+          }
+        }}
+        onMouseLeave={() => {
+          if (!isCollapsed) {
+            setHoveredDesktopParent((prev) => (prev === item.type ? null : prev));
+          }
+        }}>
         {isCollapsed ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={() => handleNavigate(item.type)}
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={isCollapsedDropdownOpen}
+                onClick={() =>
+                  setCollapsedDropdownParent((prev) => (prev === item.type ? null : item.type))
+                }
                 className={cn(
                   "flex w-full items-center justify-center rounded-lg px-2 text-sm font-medium transition-colors",
                   theme.itemPy,
@@ -235,6 +287,12 @@ export function DashboardSidebar({
           </Tooltip>
         ) : (
           <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={isExpandedDropdownOpen}
+            onClick={() =>
+              setPinnedDesktopParent((prev) => (prev === item.type ? null : item.type))
+            }
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
               theme.itemPy,
@@ -247,28 +305,34 @@ export function DashboardSidebar({
               )}
             />
             {item.label}
-            <ChevronRight className="ml-auto h-4 w-4 opacity-60" />
+            <ChevronDown
+              className={cn(
+                "ml-auto h-4 w-4 shrink-0 opacity-70 transition-transform duration-200",
+                isExpandedDropdownOpen && "rotate-180"
+              )}
+            />
           </button>
         )}
 
-        {/* Flyout submenu */}
-        {!isCollapsed && showFlyout === item.type && item.children && (
+        {isCollapsed && isCollapsedDropdownOpen && item.children && (
           <div
             className={cn(
-              "absolute top-0 left-full z-70 w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "absolute top-0 left-[calc(100%+0.5rem)] z-70 min-w-52 rounded-xl border bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900",
               theme.flyoutBorder
             )}>
+            <p className="px-2.5 pt-1 pb-1.5 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400">
+              {item.label}
+            </p>
+
             {item.children.map((child) => {
               const isChildActive = activeTab === child.type;
               return (
                 <button
                   key={child.type}
-                  onClick={() => {
-                    onNavigate(child.type);
-                    setShowFlyout(null);
-                  }}
+                  type="button"
+                  onClick={() => handleNavigate(child.type)}
                   className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-sm font-medium transition-colors",
+                    "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm font-medium transition-colors",
                     isChildActive
                       ? theme.flyoutActiveItem || theme.activeItem
                       : theme.flyoutInactiveItem ||
@@ -280,7 +344,36 @@ export function DashboardSidebar({
                       isChildActive && theme.flyoutActiveIcon ? theme.flyoutActiveIcon : child.color
                     )}
                   />
-                  {child.label}
+                  <span className="truncate">{child.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {!isCollapsed && isExpandedDropdownOpen && item.children && (
+          <div className="mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700/80">
+            {item.children.map((child) => {
+              const isChildActive = activeTab === child.type;
+              return (
+                <button
+                  key={child.type}
+                  type="button"
+                  onClick={() => handleNavigate(child.type)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                    isChildActive
+                      ? theme.flyoutActiveItem || theme.activeItem
+                      : theme.flyoutInactiveItem ||
+                          "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+                  )}>
+                  <child.icon
+                    className={cn(
+                      "h-4 w-4 shrink-0",
+                      isChildActive && theme.flyoutActiveIcon ? theme.flyoutActiveIcon : child.color
+                    )}
+                  />
+                  <span className="truncate">{child.label}</span>
                 </button>
               );
             })}
@@ -490,6 +583,7 @@ export function DashboardSidebar({
         )}
 
         <aside
+          ref={desktopSidebarRef}
           className={cn(
             "relative z-30 hidden flex-col overflow-visible transition-all duration-300 md:flex dark:border-slate-800 dark:bg-slate-900",
             isCollapsed ? "w-20" : theme.expandedWidth,
