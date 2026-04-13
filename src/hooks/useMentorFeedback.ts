@@ -22,6 +22,22 @@ export const FEEDBACK_QUERY_KEYS = {
   bySession: (sessionId: number) => ["mentor-feedbacks", "session", sessionId] as const,
 };
 
+const getFeedbackMentorId = (feedback: MentorFeedback): number | undefined => {
+  if (typeof feedback.mentor?.id === "number") {
+    return feedback.mentor.id;
+  }
+
+  return feedback.session?.userId2;
+};
+
+const getFeedbackUserId = (feedback: MentorFeedback): number | undefined => {
+  if (typeof feedback.user?.id === "number") {
+    return feedback.user.id;
+  }
+
+  return feedback.session?.userId;
+};
+
 /**
  * Hook to fetch all mentor feedbacks
  */
@@ -71,7 +87,9 @@ export const useMentorFeedbacksByMentor = (mentorId: number) => {
     queryFn: async () => {
       const response = await mentorFeedbackManager.getByMentorId(mentorId);
       if (response.success && response.data) {
-        return response.data;
+        return response.data.filter(
+          (feedback: MentorFeedback) => getFeedbackMentorId(feedback) === mentorId
+        );
       }
       return [];
     },
@@ -85,9 +103,16 @@ export const useMentorFeedbacksByMentor = (mentorId: number) => {
 export const useMentorFeedbacksByUser = (userId: number) => {
   const { data: allFeedbacks = [], ...rest } = useMentorFeedbacks();
 
+  if (!userId) {
+    return {
+      data: [] as MentorFeedback[],
+      ...rest,
+    };
+  }
+
   // Filter feedbacks by user ID
   const userFeedbacks = allFeedbacks.filter(
-    (feedback: MentorFeedback) => feedback.user?.id === userId
+    (feedback: MentorFeedback) => getFeedbackUserId(feedback) === userId
   );
 
   return {
@@ -101,6 +126,13 @@ export const useMentorFeedbacksByUser = (userId: number) => {
  */
 export const useMentorFeedbackBySession = (sessionId: number) => {
   const { data: allFeedbacks = [], ...rest } = useMentorFeedbacks();
+
+  if (!sessionId) {
+    return {
+      data: undefined,
+      ...rest,
+    };
+  }
 
   // Find feedback for this session
   const sessionFeedback = allFeedbacks.find(

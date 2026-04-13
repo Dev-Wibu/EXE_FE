@@ -22,6 +22,22 @@ export const REVIEW_QUERY_KEYS = {
   bySession: (sessionId: number) => ["mentor-reviews", "session", sessionId] as const,
 };
 
+const getReviewMentorId = (review: MentorReview): number | undefined => {
+  if (typeof review.mentor?.id === "number") {
+    return review.mentor.id;
+  }
+
+  return review.session?.userId2;
+};
+
+const getReviewUserId = (review: MentorReview): number | undefined => {
+  if (typeof review.user?.id === "number") {
+    return review.user.id;
+  }
+
+  return review.session?.userId;
+};
+
 /**
  * Hook to fetch all mentor reviews
  */
@@ -68,8 +84,17 @@ export const useMentorReviewById = (id: number) => {
 export const useMentorReviewsByMentor = (mentorId: number) => {
   const { data: allReviews = [], ...rest } = useMentorReviews();
 
+  if (!mentorId) {
+    return {
+      data: [] as MentorReview[],
+      ...rest,
+    };
+  }
+
   // Filter reviews by mentor ID
-  const mentorReviews = allReviews.filter((review: MentorReview) => review.mentor?.id === mentorId);
+  const mentorReviews = allReviews.filter(
+    (review: MentorReview) => getReviewMentorId(review) === mentorId
+  );
 
   return {
     data: mentorReviews,
@@ -83,8 +108,17 @@ export const useMentorReviewsByMentor = (mentorId: number) => {
 export const useMentorReviewsByUser = (userId: number) => {
   const { data: allReviews = [], ...rest } = useMentorReviews();
 
+  if (!userId) {
+    return {
+      data: [] as MentorReview[],
+      ...rest,
+    };
+  }
+
   // Filter reviews by user ID
-  const userReviews = allReviews.filter((review: MentorReview) => review.user?.id === userId);
+  const userReviews = allReviews.filter(
+    (review: MentorReview) => getReviewUserId(review) === userId
+  );
 
   return {
     data: userReviews,
@@ -97,6 +131,13 @@ export const useMentorReviewsByUser = (userId: number) => {
  */
 export const useMentorReviewBySession = (sessionId: number) => {
   const { data: allReviews = [], ...rest } = useMentorReviews();
+
+  if (!sessionId) {
+    return {
+      data: undefined,
+      ...rest,
+    };
+  }
 
   // Find review for this session
   const sessionReview = allReviews.find((review: MentorReview) => review.session?.id === sessionId);
