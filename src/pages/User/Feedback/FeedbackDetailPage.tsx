@@ -24,17 +24,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { StarRating } from "@/components/ui/star-rating";
 import { TimeAgo } from "@/components/ui/time-ago";
+import { useMentorById } from "@/hooks/useMentor";
 import { useMentorReviewById } from "@/hooks/useMentorReview";
+import { useAuthStore } from "@/stores/authStore";
 
 export function FeedbackDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const reviewId = Number(id);
   const navigate = useNavigate();
-  const { data: review, isLoading } = useMentorReviewById(Number(id));
+  const currentUser = useAuthStore((state) => state.user);
+  const { data: review, isLoading } = useMentorReviewById(reviewId);
+  const mentorId = review?.mentor?.id || review?.session?.userId2 || 0;
+  const { data: mentorInfo } = useMentorById(mentorId);
 
   const hasStarNotes =
     review?.situationNote || review?.taskNote || review?.actionNote || review?.resultNote;
 
   const hasAdditionalNotes = review?.strength || review?.weakness || review?.improve;
+  const mentorName =
+    review?.mentor?.name || mentorInfo?.name || (mentorId ? `Mentor #${mentorId}` : "Mentor");
+  const mentorAvatarUrl = review?.mentor?.avatarUrl || mentorInfo?.avatarUrl;
+  const mentorExpertise = review?.mentor?.expertise || mentorInfo?.expertise;
+  const mentorCompany = review?.mentor?.currentCompany || mentorInfo?.currentCompany;
 
   if (isLoading) {
     return (
@@ -61,6 +72,26 @@ export function FeedbackDetailPage() {
             <Star className="mx-auto h-12 w-12 text-slate-400" />
             <h3 className="mt-4 font-semibold">Không tìm thấy đánh giá</h3>
             <p className="mt-1 text-sm text-slate-500">Đánh giá này không tồn tại hoặc đã bị xóa</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentUser?.id || review.session?.userId !== currentUser.id) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => navigate("/user?tab=feedback")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại danh sách
+        </Button>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <User className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 font-semibold">Không có quyền truy cập</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Bạn không thể xem đánh giá không thuộc về các phiên phỏng vấn của mình.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -94,19 +125,15 @@ export function FeedbackDetailPage() {
         <CardContent>
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={review.mentor?.avatarUrl} alt={review.mentor?.name} />
+              <AvatarImage src={mentorAvatarUrl} alt={mentorName} />
               <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                {review.mentor?.name?.charAt(0) || "M"}
+                {mentorName.charAt(0) || "M"}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold">{review.mentor?.name || "Mentor"}</h3>
-              <p className="text-sm text-slate-500">
-                {review.mentor?.expertise || "Chuyên gia phỏng vấn"}
-              </p>
-              {review.mentor?.currentCompany && (
-                <p className="text-sm text-slate-500">{review.mentor.currentCompany}</p>
-              )}
+              <h3 className="text-lg font-semibold">{mentorName}</h3>
+              <p className="text-sm text-slate-500">{mentorExpertise || "Chuyên gia phỏng vấn"}</p>
+              {mentorCompany && <p className="text-sm text-slate-500">{mentorCompany}</p>}
             </div>
           </div>
         </CardContent>

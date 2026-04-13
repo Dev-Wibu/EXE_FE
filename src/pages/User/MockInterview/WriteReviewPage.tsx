@@ -5,6 +5,7 @@
 
 import { ArrowLeft, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import { MentorFeedbackForm } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,14 @@ import { useAuthStore } from "@/stores/authStore";
 
 export function WriteReviewPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const numericSessionId = Number(sessionId);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const currentUserId = user?.id;
 
-  const { data: session, isLoading: sessionLoading } = useSessionById(Number(sessionId));
-  const { data: existingFeedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
-    Number(sessionId)
-  );
+  const { data: session, isLoading: sessionLoading } = useSessionById(numericSessionId);
+  const { data: existingFeedback, isLoading: feedbackLoading } =
+    useMentorFeedbackBySession(numericSessionId);
   const { mutate: createFeedback, isPending: isCreating } = useCreateMentorFeedback();
   const { mutate: updateFeedback, isPending: isUpdating } = useUpdateMentorFeedback();
 
@@ -41,36 +43,50 @@ export function WriteReviewPage() {
     mentorId: number;
     userId: number;
   }) => {
+    if (!session || !currentUserId || session.userId !== currentUserId) {
+      toast.error("Bạn không có quyền gửi phản hồi cho phiên phỏng vấn này.");
+      return;
+    }
+
+    if (session.status !== "COMPLETED") {
+      toast.error("Bạn chỉ có thể gửi phản hồi sau khi phiên phỏng vấn đã hoàn thành.");
+      return;
+    }
+
+    if (!session.id || !session.userId2) {
+      toast.error("Không xác định được mentor của phiên phỏng vấn để gửi phản hồi.");
+      return;
+    }
+
+    const payload = {
+      sessionId: session.id,
+      mentorId: session.userId2,
+      userId: currentUserId,
+      rating: data.rating,
+      comment: data.comment,
+    };
+
     if (isEdit && existingFeedback?.id) {
       updateFeedback(
         {
           id: existingFeedback.id,
           data: {
-            rating: data.rating,
-            comment: data.comment,
+            rating: payload.rating,
+            comment: payload.comment,
           },
         },
         {
           onSuccess: () => {
-            navigate(`/user/mock-interview/history/${sessionId}`);
+            navigate(`/user/mock-interview/history/${numericSessionId}`);
           },
         }
       );
     } else {
-      createFeedback(
-        {
-          sessionId: data.sessionId,
-          mentorId: data.mentorId,
-          userId: data.userId,
-          rating: data.rating,
-          comment: data.comment,
+      createFeedback(payload, {
+        onSuccess: () => {
+          navigate(`/user/mock-interview/history/${numericSessionId}`);
         },
-        {
-          onSuccess: () => {
-            navigate(`/user/mock-interview/history/${sessionId}`);
-          },
-        }
-      );
+      });
     }
   };
 
@@ -103,6 +119,26 @@ export function WriteReviewPage() {
     );
   }
 
+  if (!currentUserId || session.userId !== currentUserId) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại
+        </Button>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Star className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 font-semibold">Không có quyền truy cập</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Bạn không thể gửi phản hồi cho phiên phỏng vấn không thuộc về mình.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (session.status !== "COMPLETED") {
     return (
       <div className="space-y-6">
@@ -113,9 +149,29 @@ export function WriteReviewPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Star className="mx-auto h-12 w-12 text-slate-400" />
-            <h3 className="mt-4 font-semibold">Chua the viet phan hoi</h3>
+            <h3 className="mt-4 font-semibold">Chưa thể viết phản hồi</h3>
             <p className="mt-1 text-sm text-slate-500">
-              Ban chi co the viet phan hoi sau khi phien phong van hoan thanh
+              Bạn chỉ có thể viết phản hồi sau khi phiên phỏng vấn hoàn thành
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!session.userId2) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại
+        </Button>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Star className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 font-semibold">Thiếu thông tin mentor</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Không tìm thấy mentor của phiên phỏng vấn này để gửi phản hồi.
             </p>
           </CardContent>
         </Card>
@@ -126,7 +182,9 @@ export function WriteReviewPage() {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate(`/user/mock-interview/history/${sessionId}`)}>
+      <Button
+        variant="ghost"
+        onClick={() => navigate(`/user/mock-interview/history/${numericSessionId}`)}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại chi tiết phiên
       </Button>
@@ -140,18 +198,18 @@ export function WriteReviewPage() {
           </div>
           <CardDescription>
             {isEdit
-              ? "Cap nhat phan hoi cua ban cho mentor"
-              : "Chia se phan hoi cua ban ve buoi phong van voi mentor"}
+              ? "Cập nhật phản hồi của bạn cho mentor"
+              : "Chia sẻ phản hồi của bạn về buổi phỏng vấn với mentor"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <MentorFeedbackForm
-            sessionId={Number(sessionId)}
-            mentorId={session.userId2 || 0}
-            userId={user?.id || 0}
+            sessionId={numericSessionId}
+            mentorId={session.userId2}
+            userId={currentUserId}
             existingFeedback={existingFeedback}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(`/user/mock-interview/history/${sessionId}`)}
+            onCancel={() => navigate(`/user/mock-interview/history/${numericSessionId}`)}
             isLoading={isSubmitting}
           />
         </CardContent>

@@ -5,6 +5,7 @@
 
 import { MessageSquare } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { ReviewList, ReviewStats } from "@/components/review";
 import { PaginationControl } from "@/components/shared/PaginationControl";
@@ -17,6 +18,7 @@ import { useSortable } from "@/hooks/useSortable";
 import { useAuthStore } from "@/stores/authStore";
 
 export function UserFeedbackListPage() {
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(10);
   const {
@@ -125,6 +127,11 @@ export function UserFeedbackListPage() {
             reviews={pageData}
             isLoading={isLoading}
             showMentor
+            onSelect={(review) => {
+              if (review.id) {
+                navigate(`/user/feedback/${review.id}`);
+              }
+            }}
             emptyTitle="Chưa có đánh giá"
             emptyDescription="Bạn chưa nhận được đánh giá nào từ mentor. Hãy tham gia phỏng vấn để nhận nhận xét!"
           />

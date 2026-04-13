@@ -183,6 +183,26 @@ export function SessionDetailPage() {
     );
   }
 
+  if (session.userId !== user?.id) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => navigate("/user?tab=interviewHistory")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại lịch sử
+        </Button>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <User className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 font-semibold">Không có quyền truy cập</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Bạn không thể xem phiên phỏng vấn không thuộc về mình.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
 
   return (
