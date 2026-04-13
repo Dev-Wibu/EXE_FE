@@ -3,6 +3,7 @@
  * Displays detailed review from a student
  */
 
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Calendar,
@@ -25,11 +26,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StarRating } from "@/components/ui/star-rating";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { useMentorReviewById } from "@/hooks/useMentorReview";
+import { chatManager } from "@/services/chat.manager";
+import { useAuthStore } from "@/stores/authStore";
 
 export function ReviewDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const reviewId = Number(id);
   const navigate = useNavigate();
-  const { data: review, isLoading } = useMentorReviewById(Number(id));
+  const currentUser = useAuthStore((state) => state.user);
+  const { data: review, isLoading } = useMentorReviewById(reviewId);
+
+  const studentId = review?.user?.id || review?.session?.userId || 0;
+  const { data: studentInfo } = useQuery({
+    queryKey: ["mentor-review-student", studentId],
+    queryFn: async () => {
+      const response = await chatManager.getUserDetail(studentId);
+      return response.success ? response.data : null;
+    },
+    enabled: !!review && studentId > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const studentName =
+    review?.user?.name || studentInfo?.name || (studentId ? `Học viên #${studentId}` : "Học viên");
+  const studentEmail = review?.user?.email || studentInfo?.email;
+  const studentUniversity = review?.user?.university || studentInfo?.university;
+  const studentAvatarUrl = review?.user?.avatarUrl || studentInfo?.avatarUrl;
 
   if (isLoading) {
     return (
@@ -62,6 +84,26 @@ export function ReviewDetailPage() {
     );
   }
 
+  if (!currentUser?.id || review.session?.userId2 !== currentUser.id) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => navigate("/mentor?tab=reviews")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Quay lại danh sách
+        </Button>
+        <Card className="border-emerald-100 dark:border-slate-800">
+          <CardContent className="py-12 text-center">
+            <User className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 font-semibold">Không có quyền truy cập</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Bạn không thể xem đánh giá không thuộc về các phiên phỏng vấn của mình.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Back Button */}
@@ -74,7 +116,7 @@ export function ReviewDetailPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Chi Tiết Đánh Giá</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Đánh giá từ học viên sau phiên phỏng vấn
+          Đánh giá bạn đã gửi cho học viên sau phiên phỏng vấn
         </p>
       </div>
 
@@ -89,17 +131,15 @@ export function ReviewDetailPage() {
         <CardContent>
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={review.user?.avatarUrl} alt={review.user?.name} />
+              <AvatarImage src={studentAvatarUrl} alt={studentName} />
               <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                {review.user?.name?.charAt(0) || "U"}
+                {studentName.charAt(0) || "H"}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold">{review.user?.name || "Học viên"}</h3>
-              <p className="text-sm text-slate-500">{review.user?.email}</p>
-              {review.user?.university && (
-                <p className="text-sm text-slate-500">{review.user.university}</p>
-              )}
+              <h3 className="text-lg font-semibold">{studentName}</h3>
+              {studentEmail && <p className="text-sm text-slate-500">{studentEmail}</p>}
+              {studentUniversity && <p className="text-sm text-slate-500">{studentUniversity}</p>}
             </div>
           </div>
         </CardContent>

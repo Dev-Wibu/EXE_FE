@@ -5,6 +5,7 @@
 
 import { ArrowLeft, Star, User } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import { MentorReviewForm } from "@/components/review";
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,13 @@ import { useAuthStore } from "@/stores/authStore";
 
 export function WriteFeedbackPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const numericSessionId = Number(sessionId);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
-  const { data: session, isLoading: sessionLoading } = useSessionById(Number(sessionId));
-  const { data: existingReview, isLoading: reviewLoading } = useMentorReviewBySession(
-    Number(sessionId)
-  );
+  const { data: session, isLoading: sessionLoading } = useSessionById(numericSessionId);
+  const { data: existingReview, isLoading: reviewLoading } =
+    useMentorReviewBySession(numericSessionId);
   const { mutate: createReview, isPending: isCreating } = useCreateMentorReview();
   const { mutate: updateReview, isPending: isUpdating } = useUpdateMentorReview();
 
@@ -47,19 +48,48 @@ export function WriteFeedbackPage() {
     mentorId: number;
     userId: number;
   }) => {
+    if (!session || !user?.id || session.userId2 !== user.id) {
+      toast.error("Bạn không có quyền gửi đánh giá cho phiên phỏng vấn này.");
+      return;
+    }
+
+    if (session.status !== "COMPLETED") {
+      toast.error("Bạn chỉ có thể gửi đánh giá sau khi phiên phỏng vấn hoàn thành.");
+      return;
+    }
+
+    if (!session.id || !session.userId) {
+      toast.error("Thiếu thông tin học viên của phiên phỏng vấn.");
+      return;
+    }
+
+    const payload = {
+      sessionId: session.id,
+      mentorId: user.id,
+      userId: session.userId,
+      rating: data.rating,
+      situationNote: data.situationNote,
+      taskNote: data.taskNote,
+      actionNote: data.actionNote,
+      resultNote: data.resultNote,
+      strength: data.strength,
+      weakness: data.weakness,
+      improve: data.improve,
+    };
+
     if (isEdit && existingReview?.id) {
       updateReview(
         {
           id: existingReview.id,
           data: {
-            rating: data.rating,
-            situationNote: data.situationNote,
-            taskNote: data.taskNote,
-            actionNote: data.actionNote,
-            resultNote: data.resultNote,
-            strength: data.strength,
-            weakness: data.weakness,
-            improve: data.improve,
+            rating: payload.rating,
+            situationNote: payload.situationNote,
+            taskNote: payload.taskNote,
+            actionNote: payload.actionNote,
+            resultNote: payload.resultNote,
+            strength: payload.strength,
+            weakness: payload.weakness,
+            improve: payload.improve,
           },
         },
         {
@@ -69,26 +99,11 @@ export function WriteFeedbackPage() {
         }
       );
     } else {
-      createReview(
-        {
-          sessionId: data.sessionId,
-          mentorId: data.mentorId,
-          userId: data.userId,
-          rating: data.rating,
-          situationNote: data.situationNote,
-          taskNote: data.taskNote,
-          actionNote: data.actionNote,
-          resultNote: data.resultNote,
-          strength: data.strength,
-          weakness: data.weakness,
-          improve: data.improve,
+      createReview(payload, {
+        onSuccess: () => {
+          navigate("/mentor?tab=sessions");
         },
-        {
-          onSuccess: () => {
-            navigate("/mentor?tab=sessions");
-          },
-        }
-      );
+      });
     }
   };
 
@@ -200,7 +215,7 @@ export function WriteFeedbackPage() {
         </CardHeader>
         <CardContent>
           <MentorReviewForm
-            sessionId={Number(sessionId)}
+            sessionId={numericSessionId}
             mentorId={user?.id || 0}
             userId={session.userId || 0}
             existingReview={existingReview}
