@@ -40,9 +40,11 @@ const statusMap: Record<
 interface SessionCardProps {
   session: Session;
   hasReview: boolean;
+  reviewId?: number;
   now: number;
   onJoinSession: () => void;
   onWriteReview: () => void;
+  onViewReview: () => void;
   onAcceptSession: () => void;
   onRejectSession: () => void;
   isUpdatingStatus: boolean;
@@ -51,9 +53,11 @@ interface SessionCardProps {
 function SessionCard({
   session,
   hasReview,
+  reviewId,
   now,
   onJoinSession,
   onWriteReview,
+  onViewReview,
   onAcceptSession,
   onRejectSession,
   isUpdatingStatus,
@@ -201,9 +205,14 @@ function SessionCard({
             </Button>
           )}
           {isCompleted && hasReview && (
-            <Button variant="secondary" size="sm" disabled className="gap-1">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onViewReview}
+              disabled={!reviewId}
+              className="gap-1">
               <MessageSquare className="h-4 w-4 text-emerald-600" />
-              Đã gửi đánh giá
+              Xem chi tiết
             </Button>
           )}
           {!isCompleted && !canJoin && (
@@ -252,9 +261,13 @@ export function MentorSessionsPage() {
   const mentorSessions = allSessions.filter((session: Session) => session.userId2 === user?.id);
 
   // Get session IDs that already have mentor reviews
-  const reviewSessionIds = new Set(
-    reviews.map((r: { session?: { id?: number } }) => r.session?.id).filter(Boolean)
-  );
+  const reviewBySessionId = new Map<number, number>();
+  reviews.forEach((review) => {
+    if (typeof review.session?.id === "number" && typeof review.id === "number") {
+      reviewBySessionId.set(review.session.id, review.id);
+    }
+  });
+  const reviewSessionIds = new Set(reviewBySessionId.keys());
 
   // Apply sorting
   const { sortedData, getSortProps } = useSortable(mentorSessions);
@@ -278,6 +291,10 @@ export function MentorSessionsPage() {
 
   const handleWriteReview = (session: Session) => {
     navigate(`/mentor/sessions/${session.id}/review`);
+  };
+
+  const handleViewReview = (reviewId: number) => {
+    navigate(`/mentor/reviews/${reviewId}`);
   };
 
   const handleAcceptSession = (session: Session) => {
@@ -353,7 +370,10 @@ export function MentorSessionsPage() {
             <CardTitle className="text-2xl text-amber-600">
               {
                 mentorSessions.filter(
-                  (s: Session) => s.status === "COMPLETED" && !reviewSessionIds.has(s.id)
+                  (s: Session) =>
+                    s.status === "COMPLETED" &&
+                    typeof s.id === "number" &&
+                    !reviewSessionIds.has(s.id)
                 ).length
               }
             </CardTitle>
@@ -385,13 +405,24 @@ export function MentorSessionsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {pageData.map((session) => (
+              // Prefer opening existing review detail when available.
               <SessionCard
                 key={session.id}
                 session={session}
-                hasReview={reviewSessionIds.has(session.id)}
+                hasReview={typeof session.id === "number" && reviewSessionIds.has(session.id)}
+                reviewId={
+                  typeof session.id === "number" ? reviewBySessionId.get(session.id) : undefined
+                }
                 now={now}
                 onJoinSession={() => handleJoinSession(session)}
                 onWriteReview={() => handleWriteReview(session)}
+                onViewReview={() => {
+                  if (typeof session.id !== "number") return;
+                  const reviewId = reviewBySessionId.get(session.id);
+                  if (reviewId) {
+                    handleViewReview(reviewId);
+                  }
+                }}
                 onAcceptSession={() => handleAcceptSession(session)}
                 onRejectSession={() => handleRejectSession(session)}
                 isUpdatingStatus={updateStatusMutation.isPending}

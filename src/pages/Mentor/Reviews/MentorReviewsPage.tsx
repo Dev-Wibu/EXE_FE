@@ -5,6 +5,7 @@
 
 import { Star } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { ReviewList, ReviewStats } from "@/components/review";
 import { PaginationControl } from "@/components/shared/PaginationControl";
@@ -17,6 +18,7 @@ import { useSortable } from "@/hooks/useSortable";
 import { useAuthStore } from "@/stores/authStore";
 
 export function MentorReviewsPage() {
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(10);
   const {
@@ -121,6 +123,11 @@ export function MentorReviewsPage() {
             isLoading={isLoading}
             showUser
             showMentor={false}
+            onSelect={(review) => {
+              if (review.id) {
+                navigate(`/mentor/reviews/${review.id}`);
+              }
+            }}
             emptyTitle="Chưa có đánh giá"
             emptyDescription="Bạn chưa gửi đánh giá nào cho học viên."
           />

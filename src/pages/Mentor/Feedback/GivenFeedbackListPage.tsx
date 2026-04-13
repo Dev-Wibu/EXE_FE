@@ -4,17 +4,28 @@
  */
 
 import { MessageSquare, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
 
 import { FeedbackCard, FeedbackStats } from "@/components/feedback";
 import { ReloadButton } from "@/components/shared";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
-import { useMentorFeedbacksByMentor } from "@/hooks/useMentorFeedback";
+import { StarRating } from "@/components/ui/star-rating";
+import { useMentorFeedbacksByMentor, type MentorFeedback } from "@/hooks/useMentorFeedback";
 import { useAuthStore } from "@/stores/authStore";
 
 export function GivenFeedbackListPage() {
   const user = useAuthStore((state) => state.user);
+  const [selectedFeedback, setSelectedFeedback] = useState<MentorFeedback | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const {
     data: feedbacks = [],
     isLoading,
@@ -37,9 +48,13 @@ export function GivenFeedbackListPage() {
 
   // Sort feedbacks by session ID descending (newest first)
   const sortedFeedbacks = [...feedbacks].sort(
-    (a: { session?: { id?: number } }, b: { session?: { id?: number } }) =>
-      (b.session?.id || 0) - (a.session?.id || 0)
+    (a: MentorFeedback, b: MentorFeedback) => (b.session?.id || 0) - (a.session?.id || 0)
   );
+
+  const handleOpenDetail = (feedback: MentorFeedback) => {
+    setSelectedFeedback(feedback);
+    setIsDetailOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -124,19 +139,74 @@ export function GivenFeedbackListPage() {
             />
           ) : (
             <div className="space-y-4">
-              {sortedFeedbacks.map((feedback: { id?: number }) => (
+              {sortedFeedbacks.map((feedback: MentorFeedback) => (
                 <FeedbackCard
                   key={feedback.id}
                   feedback={feedback}
                   showUser
                   showMentor={false}
                   showSession
+                  onClick={() => handleOpenDetail(feedback)}
                 />
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi Tiết Phản Hồi #{selectedFeedback?.id}</DialogTitle>
+            <DialogDescription>
+              Phản hồi từ {selectedFeedback?.user?.name || "học viên"} gửi cho bạn
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedFeedback && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center">
+                <StarRating value={selectedFeedback.rating || 0} readOnly size="lg" />
+              </div>
+
+              <div>
+                <h4 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Nội dung phản hồi
+                </h4>
+                <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedFeedback.comment || "Học viên chưa để lại nhận xét chi tiết."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <span className="text-slate-500">Mã phiên:</span>{" "}
+                  <span className="font-medium">#{selectedFeedback.session?.id || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">Tên phòng:</span>{" "}
+                  <span className="font-medium">{selectedFeedback.session?.roomName || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500">Học viên:</span>{" "}
+                  <span className="font-medium">
+                    {selectedFeedback.user?.name ||
+                      (selectedFeedback.session?.userId
+                        ? `Học viên #${selectedFeedback.session.userId}`
+                        : "N/A")}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500">Email học viên:</span>{" "}
+                  <span className="font-medium">{selectedFeedback.user?.email || "N/A"}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
