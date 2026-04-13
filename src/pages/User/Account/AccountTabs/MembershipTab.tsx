@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import type { UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
+  extractCheckoutTokenFromUrl,
   extractOrderCodeFromUrl,
   extractTransactionCodeFromUrl,
   upsertPaymentRecoveryContext,
@@ -405,6 +406,7 @@ export function MembershipTab() {
           planId: Number(selectedPlanId),
           planName: selectedPlan,
           amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
           status: "CREATE_FAILED",
           message: "Tao link thanh toan that bai tai MembershipTab.",
           payload: {
@@ -418,14 +420,17 @@ export function MembershipTab() {
       const redirectUrl = new URL(paymentResult.data, window.location.origin).toString();
       const orderCode = extractOrderCodeFromUrl(redirectUrl) || undefined;
       const transactionCode = extractTransactionCodeFromUrl(redirectUrl) || undefined;
+      const checkoutToken = extractCheckoutTokenFromUrl(redirectUrl) || undefined;
 
       const createdRecovery = upsertPaymentRecoveryContext({
         orderCode,
         transactionCode,
+        checkoutToken,
         userId: Number(user.id),
         planId: Number(selectedPlanId),
         planName: selectedPlan,
         amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
         checkoutUrl: redirectUrl,
         status: "CREATED",
         note: "Da tao checkoutUrl tu payment API.",
@@ -434,10 +439,13 @@ export function MembershipTab() {
       addPaymentSupportLog({
         supportCode: createdRecovery.supportCode,
         orderCode,
+        transactionCode,
+        checkoutToken,
         userId: createdRecovery.userId,
         planId: createdRecovery.planId,
         planName: createdRecovery.planName,
         amount: createdRecovery.amount,
+        paymentPurpose: "BUY_MEMBERSHIP",
         status: "CREATED",
         message: "Da tao checkoutUrl thanh cong.",
         payload: {
@@ -450,10 +458,12 @@ export function MembershipTab() {
         supportCode: createdRecovery.supportCode,
         orderCode,
         transactionCode,
+        checkoutToken,
         userId: createdRecovery.userId,
         planId: createdRecovery.planId,
         planName: createdRecovery.planName,
         amount: createdRecovery.amount,
+        paymentPurpose: "BUY_MEMBERSHIP",
         checkoutUrl: redirectUrl,
         status: "REDIRECTED",
         note: "Da redirect sang trang thanh toan.",
@@ -462,10 +472,13 @@ export function MembershipTab() {
       addPaymentSupportLog({
         supportCode: redirectedRecovery.supportCode,
         orderCode,
+        transactionCode,
+        checkoutToken,
         userId: redirectedRecovery.userId,
         planId: redirectedRecovery.planId,
         planName: redirectedRecovery.planName,
         amount: redirectedRecovery.amount,
+        paymentPurpose: "BUY_MEMBERSHIP",
         status: "REDIRECTED",
         message: "Frontend chuan bi redirect den checkoutUrl.",
         payload: {
@@ -476,10 +489,12 @@ export function MembershipTab() {
       if (!orderCode) {
         addPaymentSupportLog({
           supportCode: redirectedRecovery.supportCode,
+          checkoutToken,
           userId: redirectedRecovery.userId,
           planId: redirectedRecovery.planId,
           planName: redirectedRecovery.planName,
           amount: redirectedRecovery.amount,
+          paymentPurpose: "BUY_MEMBERSHIP",
           status: "UNMAPPED_ORDER",
           message: "Khong trich xuat duoc orderCode tu checkoutUrl, se can callback map fallback.",
           payload: {
@@ -497,6 +512,7 @@ export function MembershipTab() {
         planId: Number(selectedPlanId),
         planName: selectedPlan,
         amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
         status: "CREATE_FAILED",
         message: "Exception khi tao link thanh toan o MembershipTab.",
       });

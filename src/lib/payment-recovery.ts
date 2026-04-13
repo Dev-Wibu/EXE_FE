@@ -1,12 +1,17 @@
+import type { PaymentPurpose } from "@/interfaces";
+
 type PaymentRecoveryStorageRecord = {
   id: string;
   supportCode: string;
   orderCode?: string;
   transactionCode?: string;
+  checkoutToken?: string;
   userId: number;
-  planId: number;
+  planId?: number;
   planName?: string;
-  amount: number;
+  amount?: number;
+  paymentPurpose?: PaymentPurpose;
+  sessionId?: number;
   checkoutUrl?: string;
   status: PaymentRecoveryStatus;
   note?: string;
@@ -19,10 +24,14 @@ type PaymentSupportLogStorageRecord = {
   id: string;
   supportCode: string;
   orderCode?: string;
+  transactionCode?: string;
+  checkoutToken?: string;
   userId?: number;
   planId?: number;
   planName?: string;
   amount?: number;
+  paymentPurpose?: PaymentPurpose;
+  sessionId?: number;
   status: PaymentRecoveryStatus;
   message: string;
   payload?: Record<string, unknown>;
@@ -48,10 +57,13 @@ export interface UpsertPaymentRecoveryInput {
   supportCode?: string;
   orderCode?: string;
   transactionCode?: string;
+  checkoutToken?: string;
   userId: number;
-  planId: number;
+  planId?: number;
   planName?: string;
-  amount: number;
+  amount?: number;
+  paymentPurpose?: PaymentPurpose;
+  sessionId?: number;
   checkoutUrl?: string;
   status: PaymentRecoveryStatus;
   note?: string;
@@ -61,10 +73,14 @@ export interface UpsertPaymentRecoveryInput {
 export interface AddPaymentSupportLogInput {
   supportCode?: string;
   orderCode?: string;
+  transactionCode?: string;
+  checkoutToken?: string;
   userId?: number;
   planId?: number;
   planName?: string;
   amount?: number;
+  paymentPurpose?: PaymentPurpose;
+  sessionId?: number;
   status: PaymentRecoveryStatus;
   message: string;
   payload?: Record<string, unknown>;
@@ -127,6 +143,22 @@ const asStatus = (value: unknown): PaymentRecoveryStatus | undefined => {
     : undefined;
 };
 
+const asPaymentPurpose = (value: unknown): PaymentPurpose | undefined => {
+  const normalized = asString(value);
+  if (!normalized) {
+    return undefined;
+  }
+
+  const allow: PaymentPurpose[] = [
+    "BUY_MEMBERSHIP",
+    "TOP_UP_WALLET",
+    "WITHDRAW_FROM_WALLET",
+    "MENTOR_INTERVIEW",
+  ];
+
+  return allow.includes(normalized as PaymentPurpose) ? (normalized as PaymentPurpose) : undefined;
+};
+
 const safeReadJson = <T>(storageKey: string): T | null => {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -151,22 +183,11 @@ const parseRecoveryRecord = (value: unknown): PaymentRecoveryStorageRecord | nul
   const id = asString(value.id);
   const supportCode = asString(value.supportCode);
   const userId = asNumber(value.userId);
-  const planId = asNumber(value.planId);
-  const amount = asNumber(value.amount);
   const status = asStatus(value.status);
   const createdAt = asString(value.createdAt);
   const updatedAt = asString(value.updatedAt);
 
-  if (
-    !id ||
-    !supportCode ||
-    !userId ||
-    !planId ||
-    amount == null ||
-    !status ||
-    !createdAt ||
-    !updatedAt
-  ) {
+  if (!id || !supportCode || !userId || !status || !createdAt || !updatedAt) {
     return null;
   }
 
@@ -175,10 +196,13 @@ const parseRecoveryRecord = (value: unknown): PaymentRecoveryStorageRecord | nul
     supportCode,
     orderCode: asString(value.orderCode),
     transactionCode: asString(value.transactionCode),
+    checkoutToken: asString(value.checkoutToken),
     userId,
-    planId,
+    planId: asNumber(value.planId),
     planName: asString(value.planName),
-    amount,
+    amount: asNumber(value.amount),
+    paymentPurpose: asPaymentPurpose(value.paymentPurpose),
+    sessionId: asNumber(value.sessionId),
     checkoutUrl: asString(value.checkoutUrl),
     status,
     note: asString(value.note),
@@ -207,10 +231,14 @@ const parseSupportLogRecord = (value: unknown): PaymentSupportLogStorageRecord |
     id,
     supportCode,
     orderCode: asString(value.orderCode),
+    transactionCode: asString(value.transactionCode),
+    checkoutToken: asString(value.checkoutToken),
     userId: asNumber(value.userId),
     planId: asNumber(value.planId),
     planName: asString(value.planName),
     amount: asNumber(value.amount),
+    paymentPurpose: asPaymentPurpose(value.paymentPurpose),
+    sessionId: asNumber(value.sessionId),
     status,
     message,
     payload: isRecord(value.payload) ? value.payload : undefined,
@@ -286,13 +314,13 @@ export const createSupportCode = (orderCode?: string): string => {
 export const extractOrderCodeFromUrl = (checkoutUrl: string): string | null => {
   try {
     const url = new URL(checkoutUrl, window.location.origin);
-    const fromQuery = asString(url.searchParams.get("orderCode"));
+    const fromQuery =
+      asString(url.searchParams.get("orderCode")) || asString(url.searchParams.get("order_code"));
     if (fromQuery) {
       return fromQuery;
     }
 
-    const fromPath = asString(url.searchParams.get("order_code"));
-    return fromPath || null;
+    return null;
   } catch {
     return null;
   }
@@ -311,20 +339,80 @@ export const extractTransactionCodeFromUrl = (checkoutUrl: string): string | nul
   }
 };
 
+export const extractCheckoutTokenFromUrl = (checkoutUrl: string): string | null => {
+  try {
+    const url = new URL(checkoutUrl, window.location.origin);
+    const fromQuery =
+      asString(url.searchParams.get("id")) ||
+      asString(url.searchParams.get("checkoutId")) ||
+      asString(url.searchParams.get("checkout_id"));
+
+    if (fromQuery) {
+      return fromQuery;
+    }
+
+    const segments = url.pathname
+      .split("/")
+      .map((segment) => segment.trim())
+      .filter((segment) => segment.length > 0);
+
+    if (segments.length === 0) {
+      return null;
+    }
+
+    return asString(segments[segments.length - 1]) || null;
+  } catch {
+    return null;
+  }
+};
+
 export const upsertPaymentRecoveryContext = (
   input: UpsertPaymentRecoveryInput
 ): PaymentRecoveryContext => {
   const records = readRecoveryRecords();
 
+  const normalizedOrderCode = asString(input.orderCode);
+  const normalizedTransactionCode = asString(input.transactionCode);
+  const normalizedCheckoutToken =
+    asString(input.checkoutToken) ||
+    (input.checkoutUrl ? extractCheckoutTokenFromUrl(input.checkoutUrl) || undefined : undefined);
+
   let targetIndex = -1;
-  if (input.orderCode) {
+
+  if (input.supportCode) {
+    targetIndex = records.findIndex((item) => item.supportCode === input.supportCode);
+  }
+
+  if (targetIndex < 0 && normalizedOrderCode) {
     targetIndex = records.findIndex(
-      (item) => item.orderCode === input.orderCode && item.userId === input.userId
+      (item) => item.orderCode === normalizedOrderCode && item.userId === input.userId
     );
   }
 
-  if (targetIndex < 0 && input.supportCode) {
-    targetIndex = records.findIndex((item) => item.supportCode === input.supportCode);
+  if (targetIndex < 0 && normalizedTransactionCode) {
+    targetIndex = records.findIndex(
+      (item) => item.transactionCode === normalizedTransactionCode && item.userId === input.userId
+    );
+  }
+
+  if (targetIndex < 0 && normalizedCheckoutToken) {
+    targetIndex = records.findIndex(
+      (item) => item.checkoutToken === normalizedCheckoutToken && item.userId === input.userId
+    );
+  }
+
+  if (
+    targetIndex < 0 &&
+    input.paymentPurpose === "MENTOR_INTERVIEW" &&
+    Number.isFinite(input.sessionId) &&
+    (input.sessionId || 0) > 0
+  ) {
+    targetIndex = records.findIndex(
+      (item) =>
+        item.userId === input.userId &&
+        item.paymentPurpose === "MENTOR_INTERVIEW" &&
+        item.sessionId === input.sessionId
+    );
   }
 
   const timestamp = nowIso();
@@ -332,12 +420,15 @@ export const upsertPaymentRecoveryContext = (
     const prev = records[targetIndex];
     const next: PaymentRecoveryStorageRecord = {
       ...prev,
-      orderCode: input.orderCode || prev.orderCode,
-      transactionCode: input.transactionCode || prev.transactionCode,
+      orderCode: normalizedOrderCode || prev.orderCode,
+      transactionCode: normalizedTransactionCode || prev.transactionCode,
+      checkoutToken: normalizedCheckoutToken || prev.checkoutToken,
       userId: input.userId,
-      planId: input.planId,
+      planId: input.planId ?? prev.planId,
       planName: input.planName || prev.planName,
-      amount: input.amount,
+      amount: input.amount ?? prev.amount,
+      paymentPurpose: input.paymentPurpose || prev.paymentPurpose,
+      sessionId: input.sessionId ?? prev.sessionId,
       checkoutUrl: input.checkoutUrl || prev.checkoutUrl,
       status: input.status,
       note: input.note || prev.note,
@@ -350,16 +441,19 @@ export const upsertPaymentRecoveryContext = (
     return next;
   }
 
-  const supportCode = input.supportCode || createSupportCode(input.orderCode);
+  const supportCode = input.supportCode || createSupportCode(normalizedOrderCode);
   const created: PaymentRecoveryStorageRecord = {
     id: newId(),
     supportCode,
-    orderCode: input.orderCode,
-    transactionCode: input.transactionCode,
+    orderCode: normalizedOrderCode,
+    transactionCode: normalizedTransactionCode,
+    checkoutToken: normalizedCheckoutToken,
     userId: input.userId,
     planId: input.planId,
     planName: input.planName,
     amount: input.amount,
+    paymentPurpose: input.paymentPurpose,
+    sessionId: input.sessionId,
     checkoutUrl: input.checkoutUrl,
     status: input.status,
     note: input.note,
@@ -396,12 +490,97 @@ export const getRecoveryByOrderCode = (
   return item || null;
 };
 
+export const getRecoveryByTransactionCode = (
+  transactionCode: string,
+  userId?: number
+): PaymentRecoveryContext | null => {
+  const normalized = asString(transactionCode);
+  if (!normalized) {
+    return null;
+  }
+
+  const item = readRecoveryRecords().find((record) => {
+    if (record.transactionCode !== normalized) {
+      return false;
+    }
+
+    if (!userId) {
+      return true;
+    }
+
+    return record.userId === userId;
+  });
+
+  return item || null;
+};
+
+export const getRecoveryByCheckoutToken = (
+  checkoutToken: string,
+  userId?: number
+): PaymentRecoveryContext | null => {
+  const normalized = asString(checkoutToken);
+  if (!normalized) {
+    return null;
+  }
+
+  const item = readRecoveryRecords().find((record) => {
+    if (record.checkoutToken !== normalized) {
+      return false;
+    }
+
+    if (!userId) {
+      return true;
+    }
+
+    return record.userId === userId;
+  });
+
+  return item || null;
+};
+
 export const getLatestRecoveryForUser = (userId: number): PaymentRecoveryContext | null => {
   if (!Number.isFinite(userId) || userId <= 0) {
     return null;
   }
 
   const item = readRecoveryRecords().find((record) => record.userId === userId);
+  return item || null;
+};
+
+export const getLatestRecoveryForUserByPurpose = (
+  userId: number,
+  paymentPurpose: PaymentPurpose
+): PaymentRecoveryContext | null => {
+  if (!Number.isFinite(userId) || userId <= 0) {
+    return null;
+  }
+
+  const item = readRecoveryRecords().find(
+    (record) => record.userId === userId && record.paymentPurpose === paymentPurpose
+  );
+  return item || null;
+};
+
+export const getLatestRecoveryForSessionPayment = (
+  sessionId: number,
+  userId?: number
+): PaymentRecoveryContext | null => {
+  if (!Number.isFinite(sessionId) || sessionId <= 0) {
+    return null;
+  }
+
+  const item = readRecoveryRecords().find((record) => {
+    if (record.paymentPurpose !== "MENTOR_INTERVIEW" || record.sessionId !== sessionId) {
+      return false;
+    }
+
+    if (!userId) {
+      return true;
+    }
+
+    return record.userId === userId;
+  });
+
   return item || null;
 };
 
@@ -417,22 +596,34 @@ export const clearRecoveryBySupportCode = (supportCode: string): void => {
 
 export const addPaymentSupportLog = (input: AddPaymentSupportLogInput): PaymentSupportLog => {
   const contexts = readRecoveryRecords();
+  const normalizedOrderCode = asString(input.orderCode);
+  const normalizedTransactionCode = asString(input.transactionCode);
+  const normalizedCheckoutToken = asString(input.checkoutToken);
+
   const linkedContext =
     (input.supportCode && contexts.find((item) => item.supportCode === input.supportCode)) ||
-    (input.orderCode && contexts.find((item) => item.orderCode === input.orderCode)) ||
+    (normalizedOrderCode && contexts.find((item) => item.orderCode === normalizedOrderCode)) ||
+    (normalizedTransactionCode &&
+      contexts.find((item) => item.transactionCode === normalizedTransactionCode)) ||
+    (normalizedCheckoutToken &&
+      contexts.find((item) => item.checkoutToken === normalizedCheckoutToken)) ||
     null;
 
   const supportCode =
-    input.supportCode || linkedContext?.supportCode || createSupportCode(input.orderCode);
+    input.supportCode || linkedContext?.supportCode || createSupportCode(normalizedOrderCode);
 
   const next: PaymentSupportLogStorageRecord = {
     id: newId(),
     supportCode,
-    orderCode: input.orderCode || linkedContext?.orderCode,
+    orderCode: normalizedOrderCode || linkedContext?.orderCode,
+    transactionCode: normalizedTransactionCode || linkedContext?.transactionCode,
+    checkoutToken: normalizedCheckoutToken || linkedContext?.checkoutToken,
     userId: input.userId ?? linkedContext?.userId,
     planId: input.planId ?? linkedContext?.planId,
     planName: input.planName || linkedContext?.planName,
     amount: input.amount ?? linkedContext?.amount,
+    paymentPurpose: input.paymentPurpose || linkedContext?.paymentPurpose,
+    sessionId: input.sessionId ?? linkedContext?.sessionId,
     status: input.status,
     message: input.message,
     payload: input.payload,
