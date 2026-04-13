@@ -114,11 +114,23 @@ export function DashboardSidebar({
 
   const [showFlyout, setShowFlyout] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [expandedMobileItem, setExpandedMobileItem] = useState<string | null>(null);
+  const [expandedMobileItem, setExpandedMobileItem] = useState<string | null>(() => {
+    const saved = localStorage.getItem(`${storageKey}_mobile_expanded`);
+    return saved || null;
+  });
 
   useEffect(() => {
     localStorage.setItem(storageKey, String(isCollapsed));
   }, [isCollapsed, storageKey]);
+
+  useEffect(() => {
+    if (expandedMobileItem) {
+      localStorage.setItem(`${storageKey}_mobile_expanded`, expandedMobileItem);
+      return;
+    }
+
+    localStorage.removeItem(`${storageKey}_mobile_expanded`);
+  }, [expandedMobileItem, storageKey]);
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
@@ -243,7 +255,7 @@ export function DashboardSidebar({
         {!isCollapsed && showFlyout === item.type && item.children && (
           <div
             className={cn(
-              "absolute top-0 left-full z-[70] w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "absolute top-0 left-full z-70 w-48 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
               theme.flyoutBorder
             )}>
             {item.children.map((child) => {
@@ -286,7 +298,11 @@ export function DashboardSidebar({
           key={item.type}
           onClick={() => handleNavigate(item.type)}
           className={cn(
-            "flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+            "group flex w-full items-center gap-3 rounded-2xl border px-3.5 text-left text-sm font-semibold transition-all",
+            "min-h-11 border-transparent",
+            isActive
+              ? "border-[#0047AB]/20 shadow-sm shadow-[#0047AB]/10 dark:border-[#66B2FF]/25 dark:shadow-[#66B2FF]/10"
+              : "hover:border-slate-200/90 hover:shadow-[0_6px_16px_-14px_rgba(15,23,42,0.6)] dark:hover:border-slate-700/80 dark:hover:shadow-black/30",
             theme.itemPy,
             isActive ? theme.activeItem : theme.inactiveItem
           )}>
@@ -296,7 +312,7 @@ export function DashboardSidebar({
               isActive && theme.activeIconOverride ? theme.activeIconOverride : item.color
             )}
           />
-          {item.label}
+          <span className="truncate">{item.label}</span>
         </button>
       );
     }
@@ -314,7 +330,11 @@ export function DashboardSidebar({
             })
           }
           className={cn(
-            "flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+            "group flex w-full items-center gap-3 rounded-2xl border px-3.5 text-left text-sm font-semibold transition-all",
+            "min-h-11 border-transparent",
+            isAnyChildActive
+              ? "border-[#0047AB]/20 shadow-sm shadow-[#0047AB]/10 dark:border-[#66B2FF]/25 dark:shadow-[#66B2FF]/10"
+              : "hover:border-slate-200/90 hover:shadow-[0_6px_16px_-14px_rgba(15,23,42,0.6)] dark:hover:border-slate-700/80 dark:hover:shadow-black/30",
             theme.itemPy,
             isAnyChildActive ? theme.activeItem : theme.inactiveItem
           )}>
@@ -324,14 +344,17 @@ export function DashboardSidebar({
               isAnyChildActive && theme.activeIconOverride ? theme.activeIconOverride : item.color
             )}
           />
-          {item.label}
+          <span className="truncate">{item.label}</span>
           <ChevronDown
-            className={cn("ml-auto h-4 w-4 transition-transform", isExpanded && "rotate-180")}
+            className={cn(
+              "ml-auto h-4 w-4 shrink-0 transition-transform duration-300 ease-out",
+              isExpanded && "rotate-180"
+            )}
           />
         </button>
 
         {isExpanded && (
-          <div className="space-y-1 pl-8">
+          <div className="mt-1 ml-6 space-y-1 border-l border-slate-200/90 pl-3 dark:border-slate-700/90">
             {item.children.map((child) => {
               const isChildActive = activeTab === child.type;
               return (
@@ -339,7 +362,11 @@ export function DashboardSidebar({
                   key={child.type}
                   onClick={() => handleNavigate(child.type)}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-medium transition-all",
+                    "border-transparent",
+                    isChildActive
+                      ? "border-[#0047AB]/20 shadow-sm shadow-[#0047AB]/10 dark:border-[#66B2FF]/25 dark:shadow-[#66B2FF]/10"
+                      : "hover:border-slate-200/80 dark:hover:border-slate-700/80",
                     isChildActive
                       ? theme.flyoutActiveItem || theme.activeItem
                       : theme.flyoutInactiveItem ||
@@ -347,11 +374,11 @@ export function DashboardSidebar({
                   )}>
                   <child.icon
                     className={cn(
-                      "h-4 w-4 shrink-0",
+                      "h-[18px] w-[18px] shrink-0",
                       isChildActive && theme.flyoutActiveIcon ? theme.flyoutActiveIcon : child.color
                     )}
                   />
-                  {child.label}
+                  <span className="truncate">{child.label}</span>
                 </button>
               );
             })}
@@ -371,32 +398,39 @@ export function DashboardSidebar({
                 <button
                   type="button"
                   aria-label="Mở menu điều hướng"
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-300/90 bg-white/95 shadow-md shadow-slate-300/50 transition-all hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40 dark:hover:bg-slate-800">
                   <Menu className="h-5 w-5 text-slate-700 dark:text-slate-200" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0 sm:w-96">
-                <div className={cn("flex h-full flex-col", theme.wrapper)}>
-                  <div
-                    className={cn(
-                      "flex items-center dark:border-slate-800",
-                      theme.logoBorder,
-                      "gap-3 px-4 py-4"
-                    )}>
-                    {logo}
+              <SheetContent side="left" className="w-[83vw] max-w-[336px] p-0 sm:max-w-[352px]">
+                <div className="flex h-full min-h-0 flex-col overflow-hidden bg-linear-to-b from-slate-100/95 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+                  <div className="shrink-0 border-b border-slate-200/90 px-3.5 pt-[calc(0.9rem+env(safe-area-inset-top))] pb-3 dark:border-slate-800/90">
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200/85 bg-white/85 px-3 py-2 shadow-sm shadow-slate-300/30 backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/80 dark:shadow-black/30">
+                      {logo}
+                    </div>
                   </div>
 
-                  <nav className={cn(theme.navWrapper, "p-4")}>
+                  <nav
+                    className={cn(
+                      theme.navWrapper,
+                      "min-h-0 flex-1 overflow-y-auto px-2.5 pt-3 pb-4"
+                    )}>
                     {menuGroups.map((group, groupIdx) => (
-                      <div key={`mobile-group-${groupIdx}`}>
+                      <div key={`mobile-group-${groupIdx}`} className="space-y-1">
                         {groupIdx > 0 && (
                           <>
                             {group.label ? (
-                              <p className={cn("mt-4 mb-2", theme.sectionLabel)}>{group.label}</p>
+                              <p
+                                className={cn(
+                                  "mt-5 mb-2 px-3 text-[11px] font-semibold tracking-[0.16em] text-slate-500 dark:text-slate-400",
+                                  theme.sectionLabel
+                                )}>
+                                {group.label}
+                              </p>
                             ) : (
                               <div
                                 className={cn(
-                                  "my-2 border-t",
+                                  "my-4 border-t border-dashed",
                                   theme.divider,
                                   "dark:border-slate-700"
                                 )}
@@ -405,27 +439,46 @@ export function DashboardSidebar({
                           </>
                         )}
                         {groupIdx === 0 && group.label && (
-                          <p className={cn("mb-2", theme.sectionLabel)}>{group.label}</p>
+                          <p
+                            className={cn(
+                              "mb-2 px-3 text-[11px] font-semibold tracking-[0.16em] text-slate-500 dark:text-slate-400",
+                              theme.sectionLabel
+                            )}>
+                            {group.label}
+                          </p>
                         )}
                         {group.items.map(renderMobileMenuItem)}
                       </div>
                     ))}
                   </nav>
 
-                  <div className={cn(theme.footerBorder, "dark:border-slate-800", "p-4")}>
-                    <div className="mb-2 flex items-center justify-between rounded-lg px-3 py-2">
+                  <div
+                    className={cn(
+                      theme.footerBorder,
+                      "shrink-0 border-t border-slate-200/90 bg-slate-50/88 px-2.5 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/72"
+                    )}>
+                    <div className="mb-1.5 flex items-center justify-between rounded-2xl border border-slate-200/85 bg-white/82 px-3 py-2.5 shadow-sm shadow-slate-300/20 dark:border-slate-700/80 dark:bg-slate-900/52 dark:shadow-none">
                       <span className="text-sm font-medium text-gray-600 dark:text-slate-400">
                         {theme.themeToggleLabel}
                       </span>
                       <ThemeToggle iconOnly />
                     </div>
                     {showSettings && (
-                      <button className={settingsExpandedClass}>
+                      <button
+                        className={cn(
+                          settingsExpandedClass,
+                          "rounded-2xl border border-transparent"
+                        )}>
                         <Settings className="h-5 w-5" />
                         {settingsLabel}
                       </button>
                     )}
-                    <button onClick={handleLogout} className={theme.logoutExpandedBtn}>
+                    <button
+                      onClick={handleLogout}
+                      className={cn(
+                        theme.logoutExpandedBtn,
+                        "mt-1 rounded-2xl border border-transparent"
+                      )}>
                       <LogOut className={cn("h-5 w-5", theme.logoutIcon)} />
                       <span>{theme.logoutLabel}</span>
                     </button>
