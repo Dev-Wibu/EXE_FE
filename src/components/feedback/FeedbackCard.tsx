@@ -19,6 +19,7 @@ interface FeedbackCardProps {
   showUser?: boolean;
   showSession?: boolean;
   showActions?: boolean;
+  onClick?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   className?: string;
@@ -30,12 +31,32 @@ export function FeedbackCard({
   showUser = false,
   showSession = true,
   showActions = false,
+  onClick,
   onEdit,
   onDelete,
   className,
 }: FeedbackCardProps) {
+  const fallbackUserName = feedback.session?.userId
+    ? `Học viên #${feedback.session.userId}`
+    : "Học viên";
+  const fallbackMentorName = feedback.session?.userId2
+    ? `Mentor #${feedback.session.userId2}`
+    : "Mentor";
+  const displayName = showMentor
+    ? feedback.mentor?.name || fallbackMentorName
+    : showUser
+      ? feedback.user?.name || fallbackUserName
+      : "Ẩn danh";
+  const occurredAt = feedback.session?.endTime1 || feedback.session?.startTime1;
+
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card
+      onClick={onClick}
+      className={cn(
+        "overflow-hidden",
+        onClick && "cursor-pointer transition-shadow hover:shadow-md",
+        className
+      )}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -43,7 +64,7 @@ export function FeedbackCard({
             <Avatar className="h-10 w-10">
               <AvatarImage
                 src={showMentor ? feedback.mentor?.avatarUrl : feedback.user?.avatarUrl}
-                alt={showMentor ? feedback.mentor?.name : feedback.user?.name}
+                alt={displayName}
               />
               <AvatarFallback
                 className={cn(
@@ -57,13 +78,7 @@ export function FeedbackCard({
 
             <div className="min-w-0 flex-1">
               {/* Name */}
-              <p className="font-medium text-slate-900 dark:text-slate-100">
-                {showMentor
-                  ? feedback.mentor?.name || "Mentor"
-                  : showUser
-                    ? feedback.user?.name || "Học viên"
-                    : "Ẩn danh"}
-              </p>
+              <p className="font-medium text-slate-900 dark:text-slate-100">{displayName}</p>
 
               {/* Meta info */}
               <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -80,7 +95,7 @@ export function FeedbackCard({
           {/* Rating */}
           <div className="flex flex-col items-end gap-1">
             <StarRating value={feedback.rating || 0} readOnly size="sm" />
-            {feedback.id && <TimeAgo date={new Date()} className="text-xs" />}
+            {occurredAt && <TimeAgo date={occurredAt} className="text-xs" />}
           </div>
         </div>
       </CardHeader>
@@ -105,7 +120,13 @@ export function FeedbackCard({
         {showActions && (onEdit || onDelete) && (
           <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-2 dark:border-slate-800">
             {onEdit && (
-              <Button variant="ghost" size="sm" onClick={onEdit}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit();
+                }}>
                 <Edit className="mr-1 h-4 w-4" />
                 Chỉnh sửa
               </Button>
@@ -114,7 +135,10 @@ export function FeedbackCard({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onDelete}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDelete();
+                }}
                 className="text-red-600 hover:bg-red-50 hover:text-red-700">
                 <Trash2 className="mr-1 h-4 w-4" />
                 Xóa

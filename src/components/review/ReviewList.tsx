@@ -17,6 +17,7 @@ interface ReviewListProps {
   showMentor?: boolean;
   showUser?: boolean;
   showActions?: boolean;
+  onSelect?: (review: MentorReview) => void;
   onEdit?: (review: MentorReview) => void;
   onDelete?: (review: MentorReview) => void;
   emptyTitle?: string;
@@ -30,6 +31,7 @@ export function ReviewList({
   showMentor = true,
   showUser = false,
   showActions = false,
+  onSelect,
   onEdit,
   onDelete,
   emptyTitle = "Chưa có đánh giá",
@@ -62,6 +64,7 @@ export function ReviewList({
           showMentor={showMentor}
           showUser={showUser}
           showActions={showActions}
+          onClick={onSelect ? () => onSelect(review) : undefined}
           onEdit={onEdit ? () => onEdit(review) : undefined}
           onDelete={onDelete ? () => onDelete(review) : undefined}
         />
