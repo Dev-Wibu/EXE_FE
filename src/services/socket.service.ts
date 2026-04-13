@@ -3,6 +3,8 @@ import { useAuthStore } from "@/stores/authStore";
 import { Client, type Message } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
+export type SocketConnectionState = "connecting" | "connected" | "disconnected";
+
 export interface ChatMessageDto {
   id?: string | number;
   senderId: string;
@@ -15,8 +17,15 @@ export interface ChatMessageDto {
 
 class SocketService {
   private stompClient: Client | null = null;
-  private onMessageReceived: ((msg: ChatMessageDto) => void) | null = null;
+  private onMessageReceived: ((_msg: ChatMessageDto) => void) | null = null;
+  private onConnectionStateChange: ((_state: SocketConnectionState) => void) | null = null;
   private currentUserId: string | null = null;
+  private connectionState: SocketConnectionState = "disconnected";
+
+  private setConnectionState(state: SocketConnectionState) {
+    this.connectionState = state;
+    this.onConnectionStateChange?.(state);
+  }
 
   private initClient(userId: string) {
     const token = useAuthStore.getState().token;
@@ -32,6 +41,7 @@ class SocketService {
     });
 
     this.stompClient.onConnect = (frame) => {
+      this.setConnectionState("connected");
       console.log("Connected to STOMP: " + frame);
 
       const subUserId = this.currentUserId || userId;
@@ -51,30 +61,52 @@ class SocketService {
     };
 
     this.stompClient.onStompError = (frame) => {
+      this.setConnectionState("disconnected");
       console.error("STOMP broker error", frame.headers["message"], frame.body);
     };
 
     this.stompClient.onWebSocketClose = (event) => {
+      this.setConnectionState("disconnected");
       console.warn("WebSocket closed", event.code);
+    };
+
+    this.stompClient.onWebSocketError = (event) => {
+      this.setConnectionState("disconnected");
+      console.error("WebSocket error", event);
+    };
+
+    this.stompClient.onDisconnect = () => {
+      this.setConnectionState("disconnected");
     };
   }
 
-  connect(userId: string, onMessageCallback: (msg: ChatMessageDto) => void) {
+  connect(
+    userId: string,
+    onMessageCallback: (_msg: ChatMessageDto) => void,
+    onConnectionStateChange?: (_state: SocketConnectionState) => void
+  ) {
     this.onMessageReceived = onMessageCallback;
+    this.onConnectionStateChange = onConnectionStateChange || null;
     this.currentUserId = userId;
 
     if (!this.stompClient) {
       this.initClient(userId);
     }
 
+    if (this.stompClient?.connected) {
+      this.setConnectionState("connected");
+      return;
+    }
+
     if (!this.stompClient?.active) {
+      this.setConnectionState("connecting");
       this.stompClient?.activate();
     }
   }
 
-  sendMessage(recipientId: string, content: string) {
+  sendMessage(recipientId: string, content: string): boolean {
     const user = useAuthStore.getState().user;
-    if (!user) return;
+    if (!user) return false;
 
     if (!this.stompClient) {
       const fullId = `${user.role?.toUpperCase()}_${user.id}`;
@@ -83,14 +115,17 @@ class SocketService {
 
     if (!this.stompClient?.connected) {
       console.warn("Socket not connected, activating...");
-      this.stompClient?.activate();
-      return;
+      this.setConnectionState("connecting");
+      if (!this.stompClient?.active) {
+        this.stompClient?.activate();
+      }
+      return false;
     }
 
     const senderId = useAuthStore.getState().user?.id;
     const senderRole = useAuthStore.getState().user?.role?.toUpperCase();
 
-    if (!senderId || !senderRole) return;
+    if (!senderId || !senderRole) return false;
 
     // Backend expects a single string like "USER_1" for both IDs
     const chatDto: ChatMessageDto = {
@@ -101,17 +136,29 @@ class SocketService {
 
     console.log("DEBUG: Sending Payload:", chatDto);
 
-    this.stompClient.publish({
-      destination: "/app/chat",
-      body: JSON.stringify(chatDto),
-    });
+    try {
+      this.stompClient.publish({
+        destination: "/app/chat",
+        body: JSON.stringify(chatDto),
+      });
+      return true;
+    } catch (error) {
+      console.error("Failed to publish message", error);
+      this.setConnectionState("disconnected");
+      return false;
+    }
   }
 
   disconnect() {
     if (this.stompClient) {
       this.stompClient.deactivate();
+      this.setConnectionState("disconnected");
       console.log("Disconnected from STOMP");
     }
+  }
+
+  getConnectionState(): SocketConnectionState {
+    return this.connectionState;
   }
 }
 

@@ -1,5 +1,6 @@
 // Shared Components - Reusable UI components across the application
 
+export { ChatComposer } from "./ChatComposer";
 export { DashboardChromeTabs } from "./DashboardChromeTabs";
 export type {
   ChromeTabMenuGroup,
@@ -16,11 +17,15 @@ export type {
 } from "./DashboardSidebar";
 export { Filter } from "./Filter";
 export type { FilterCriteria, FilterGroup, FilterOption, FilterProps } from "./Filter";
+export { MessageBubble } from "./MessageBubble";
+export type { MessageDeliveryStatus } from "./MessageBubble";
 export { PaginationControl } from "./PaginationControl";
 export { ProtectedRoute } from "./ProtectedRoute";
 export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { ReloadButton } from "./ReloadButton";
 export type { ReloadButtonProps } from "./ReloadButton";
 export { SessionExpiryGuard } from "./SessionExpiryGuard";
+export { SocketStatusBadge } from "./SocketStatusBadge";
+export type { SocketConnectionState } from "./SocketStatusBadge";
 export { SortButton } from "./SortButton";
 export type { SortDirection } from "./SortButton";

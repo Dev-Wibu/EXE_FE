@@ -1,3 +1,9 @@
+import {
+  ChatComposer,
+  MessageBubble,
+  SocketStatusBadge,
+  type MessageDeliveryStatus,
+} from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,12 +12,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "@/mocks/chat.mock";
 import { chatManager, type ChatHistoryMessage } from "@/services/chat.manager";
-import { socketService, type ChatMessageDto } from "@/services/socket.service";
+import {
+  socketService,
+  type ChatMessageDto,
+  type SocketConnectionState,
+} from "@/services/socket.service";
 import { useAuthStore } from "@/stores/authStore";
-import { ArrowLeft, MessageSquare, Plus, Search, Send, User as UserIcon, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  MessageSquare,
+  Pin,
+  PinOff,
+  Plus,
+  Search,
+  User as UserIcon,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -28,6 +46,14 @@ interface Contact {
 interface MessengerLocationState {
   openMentorId?: number;
   mentorData?: SchemaMentorResponse;
+}
+
+interface MessengerMessage {
+  id: string;
+  sender: "ai" | "user";
+  content: string;
+  timestamp: string;
+  status?: MessageDeliveryStatus;
 }
 
 const createContactFromMentor = (mentorData?: SchemaMentorResponse): Contact | null => {
@@ -47,19 +73,97 @@ const getRoleLabel = (role: Contact["role"]): string => {
   return role === "MENTOR" ? "Mentor" : "Học viên";
 };
 
+const createMessageId = (prefix: "temp" | "server" = "temp", rawId?: string | number): string => {
+  if (prefix === "server" && rawId !== undefined) {
+    return `server-${rawId}`;
+  }
+
+  return `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
+
+const getDraftStorageKey = (
+  userRole: string,
+  userId: number | string,
+  contactRole: Contact["role"],
+  contactId: number
+) => {
+  return `messenger-draft:${userRole}:${userId}:${contactRole}:${contactId}`;
+};
+
+const getConversationKey = (contact: Contact) => `${contact.role}_${contact.id}`;
+
+const getPinnedStorageKey = (
+  userRole: string,
+  userId: number | string,
+  contactRole: Contact["role"],
+  contactId: number
+) => {
+  return `messenger-pinned:${userRole}:${userId}:${contactRole}:${contactId}`;
+};
+
 export function MessengerPage() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const locationState = location.state as MessengerLocationState | null;
   const { user } = useAuthStore();
+  const currentUserId = user?.id;
+  const currentRole = user?.role?.toUpperCase();
+  const initialSelectedContact = createContactFromMentor(locationState?.mentorData);
+
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(true);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(() =>
-    createContactFromMentor(locationState?.mentorData)
-  );
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(initialSelectedContact);
+  const [messages, setMessages] = useState<MessengerMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [messageInput, setMessageInput] = useState("");
+  const [messageInput, setMessageInput] = useState(() => {
+    if (!initialSelectedContact || !currentRole || !currentUserId) {
+      return "";
+    }
+
+    try {
+      return (
+        localStorage.getItem(
+          getDraftStorageKey(
+            currentRole,
+            currentUserId,
+            initialSelectedContact.role,
+            initialSelectedContact.id
+          )
+        ) || ""
+      );
+    } catch {
+      return "";
+    }
+  });
+  const [pinnedMessageIds, setPinnedMessageIds] = useState<Record<string, string>>(() => {
+    if (!initialSelectedContact || !currentRole || !currentUserId) {
+      return {};
+    }
+
+    try {
+      const storedPinnedId = localStorage.getItem(
+        getPinnedStorageKey(
+          currentRole,
+          currentUserId,
+          initialSelectedContact.role,
+          initialSelectedContact.id
+        )
+      );
+
+      if (!storedPinnedId) {
+        return {};
+      }
+
+      return {
+        [getConversationKey(initialSelectedContact)]: storedPinnedId,
+      };
+    } catch {
+      return {};
+    }
+  });
+  const [connectionState, setConnectionState] = useState<SocketConnectionState>(() =>
+    socketService.getConnectionState()
+  );
 
   // Search states
   const [contactSearchQuery, setContactSearchQuery] = useState("");
@@ -71,12 +175,9 @@ export function MessengerPage() {
   const [mentors, setMentors] = useState<SchemaMentorResponse[]>([]);
   const [loadingMentors, setLoadingMentors] = useState(false);
 
-  const currentUserId = user?.id;
-  const currentRole = user?.role?.toUpperCase();
-
   const selectedContactRef = useRef<Contact | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Sync ref with state
   useEffect(() => {
@@ -87,17 +188,6 @@ export function MessengerPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Auto-resize composer
-  useEffect(() => {
-    const textarea = composerRef.current;
-    if (!textarea) {
-      return;
-    }
-
-    textarea.style.height = "0px";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 132)}px`;
-  }, [messageInput, selectedContact]);
 
   // Load contacts
   useEffect(() => {
@@ -163,6 +253,54 @@ export function MessengerPage() {
     fetchMentors();
   }, [showMentorList, mentors.length]);
 
+  useEffect(() => {
+    if (!selectedContact || !currentRole || !currentUserId) {
+      return;
+    }
+
+    const draftKey = getDraftStorageKey(
+      currentRole,
+      currentUserId,
+      selectedContact.role,
+      selectedContact.id
+    );
+
+    try {
+      if (messageInput.trim().length === 0) {
+        localStorage.removeItem(draftKey);
+      } else {
+        localStorage.setItem(draftKey, messageInput);
+      }
+    } catch {
+      // Ignore draft persistence errors to keep chat usable.
+    }
+  }, [messageInput, selectedContact, currentRole, currentUserId]);
+
+  useEffect(() => {
+    if (!selectedContact || !currentRole || !currentUserId) {
+      return;
+    }
+
+    const conversationKey = getConversationKey(selectedContact);
+    const pinnedMessageId = pinnedMessageIds[conversationKey];
+    const pinnedStorageKey = getPinnedStorageKey(
+      currentRole,
+      currentUserId,
+      selectedContact.role,
+      selectedContact.id
+    );
+
+    try {
+      if (!pinnedMessageId) {
+        localStorage.removeItem(pinnedStorageKey);
+      } else {
+        localStorage.setItem(pinnedStorageKey, pinnedMessageId);
+      }
+    } catch {
+      // Ignore pin persistence errors to keep chat usable.
+    }
+  }, [pinnedMessageIds, selectedContact, currentRole, currentUserId]);
+
   // Load messages when contact is selected
   useEffect(() => {
     const fetchMessages = async () => {
@@ -177,7 +315,7 @@ export function MessengerPage() {
       const res = await chatManager.getChatHistoryByParticipants(currentFullId, recipientFullId);
 
       if (res.success && res.data) {
-        const mappedMessages: ChatMessage[] = res.data.map((msg: ChatHistoryMessage) => {
+        const mappedMessages: MessengerMessage[] = res.data.map((msg: ChatHistoryMessage) => {
           const senderId = msg.senderId ?? msg.sender_id;
           const senderType = msg.senderType ?? msg.sender_type;
 
@@ -190,16 +328,14 @@ export function MessengerPage() {
           }
 
           return {
-            id: typeof msg.id === "number" ? msg.id : Date.now() + Math.floor(Math.random() * 1000),
+            id:
+              typeof msg.id === "number"
+                ? createMessageId("server", msg.id)
+                : createMessageId("temp"),
             content: msg.content ?? "",
             sender: isMe ? "user" : "ai",
-            time: msg.timestamp
-              ? new Date(msg.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : msg.time ||
-                new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            timestamp: msg.timestamp || new Date().toISOString(),
+            status: isMe ? "sent" : undefined,
           };
         });
 
@@ -222,49 +358,86 @@ export function MessengerPage() {
 
     const currentFullId = `${currentRole}_${currentUserId}`;
 
-    socketService.connect(currentFullId, (receivedMsg: ChatMessageDto) => {
-      const senderFullId = receivedMsg.senderType
-        ? `${receivedMsg.senderType}_${receivedMsg.senderId}`
-        : String(receivedMsg.senderId);
+    socketService.connect(
+      currentFullId,
+      (receivedMsg: ChatMessageDto) => {
+        const senderFullId = receivedMsg.senderType
+          ? `${receivedMsg.senderType}_${receivedMsg.senderId}`
+          : String(receivedMsg.senderId);
 
-      const recipientFullId = receivedMsg.recipientType
-        ? `${receivedMsg.recipientType}_${receivedMsg.recipientId}`
-        : String(receivedMsg.recipientId);
-
-      if (
-        recipientFullId.toUpperCase() === currentFullId.toUpperCase() ||
-        String(receivedMsg.recipientId) === String(currentUserId)
-      ) {
-        const activeContact = selectedContactRef.current;
-        const activeContactFullId = activeContact
-          ? `${activeContact.role}_${activeContact.id}`
-          : "";
+        const recipientFullId = receivedMsg.recipientType
+          ? `${receivedMsg.recipientType}_${receivedMsg.recipientId}`
+          : String(receivedMsg.recipientId);
 
         if (
-          activeContact &&
-          (senderFullId.toUpperCase() === activeContactFullId.toUpperCase() ||
-            String(receivedMsg.senderId) === String(activeContact.id))
+          recipientFullId.toUpperCase() === currentFullId.toUpperCase() ||
+          String(receivedMsg.recipientId) === String(currentUserId)
         ) {
-          const newMessage: ChatMessage = {
-            id: Number(receivedMsg.id) || Date.now(),
-            sender: "ai",
-            content: receivedMsg.content,
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          };
-          setMessages((prev) => [...prev, newMessage]);
-        } else {
-          toast.info("Bạn có tin nhắn mới");
+          const activeContact = selectedContactRef.current;
+          const activeContactFullId = activeContact
+            ? `${activeContact.role}_${activeContact.id}`
+            : "";
+
+          if (
+            activeContact &&
+            (senderFullId.toUpperCase() === activeContactFullId.toUpperCase() ||
+              String(receivedMsg.senderId) === String(activeContact.id))
+          ) {
+            const incomingId = createMessageId(
+              receivedMsg.id !== undefined ? "server" : "temp",
+              receivedMsg.id
+            );
+
+            const newMessage: MessengerMessage = {
+              id: incomingId,
+              sender: "ai",
+              content: receivedMsg.content,
+              timestamp: receivedMsg.timestamp || new Date().toISOString(),
+            };
+
+            setMessages((prev) => {
+              if (prev.some((message) => message.id === incomingId)) {
+                return prev;
+              }
+              return [...prev, newMessage];
+            });
+          } else {
+            toast.info("Bạn có tin nhắn mới");
+          }
         }
-      }
-    });
+      },
+      setConnectionState
+    );
 
     return () => {
       socketService.disconnect();
     };
   }, [currentRole, currentUserId]);
 
+  const closeConversation = () => {
+    setSelectedContact(null);
+    setMessageInput("");
+    setMessageSearchQuery("");
+    setIsMessageSearchOpen(false);
+  };
+
   const openConversation = (contact: Contact) => {
+    const conversationKey = getConversationKey(contact);
+    const storedPinnedId = getStoredPinnedMessageId(contact);
+
     setSelectedContact(contact);
+    setMessageInput(getStoredDraft(contact));
+    setPinnedMessageIds((prev) => {
+      const next = { ...prev };
+
+      if (!storedPinnedId) {
+        delete next[conversationKey];
+      } else {
+        next[conversationKey] = storedPinnedId;
+      }
+
+      return next;
+    });
     setMessageSearchQuery("");
     setIsMessageSearchOpen(false);
   };
@@ -277,28 +450,234 @@ export function MessengerPage() {
     }
 
     const recipientFullId = `${selectedContact.role.toUpperCase()}_${selectedContact.id}`;
+    const newMessageId = createMessageId("temp");
 
-    socketService.sendMessage(recipientFullId, trimmed);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: newMessageId,
+        sender: "user",
+        content: trimmed,
+        timestamp: new Date().toISOString(),
+        status: "sending",
+      },
+    ]);
 
-    const newMessage: ChatMessage = {
-      id: Date.now(),
-      sender: "user",
-      content: trimmed,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
+    const isSent = socketService.sendMessage(recipientFullId, trimmed);
+    if (isSent) {
+      window.setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === newMessageId ? { ...message, status: "sent" } : message
+          )
+        );
+      }, 250);
+    } else {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === newMessageId ? { ...message, status: "failed" } : message
+        )
+      );
+      toast.error("Kết nối chưa sẵn sàng. Vui lòng gửi lại sau vài giây");
+    }
 
-    setMessages((prev) => [...prev, newMessage]);
     setMessageInput("");
   };
 
-  const handleComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (isMobile) {
+  const handleRetryMessage = (messageId: string) => {
+    if (!selectedContact) {
       return;
     }
 
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleSendMessage();
+    const messageToRetry = messages.find((message) => message.id === messageId);
+    if (!messageToRetry) {
+      return;
+    }
+
+    const recipientFullId = `${selectedContact.role.toUpperCase()}_${selectedContact.id}`;
+
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.id === messageId ? { ...message, status: "sending" } : message
+      )
+    );
+
+    const isSent = socketService.sendMessage(recipientFullId, messageToRetry.content);
+    if (isSent) {
+      window.setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId ? { ...message, status: "sent" } : message
+          )
+        );
+      }, 250);
+      toast.success("Đã gửi lại tin nhắn");
+    } else {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === messageId ? { ...message, status: "failed" } : message
+        )
+      );
+      toast.error("Gửi lại chưa thành công. Hãy thử lại sau");
+    }
+  };
+
+  const handleCopyMessage = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast.success("Đã sao chép nội dung tin nhắn");
+    } catch {
+      toast.error("Không thể sao chép nội dung. Vui lòng thử lại");
+    }
+  };
+
+  const handleForwardMessage = (content: string) => {
+    const quotedContent = content
+      .split("\n")
+      .map((line) => `> ${line}`)
+      .join("\n");
+
+    setMessageInput((current) => {
+      if (!current.trim()) {
+        return `${quotedContent}\n`;
+      }
+
+      return `${current}\n\n${quotedContent}\n`;
+    });
+
+    const composer = document.querySelector<HTMLTextAreaElement>(
+      "textarea[data-messenger-composer='true']"
+    );
+    composer?.focus();
+    toast.success("Đã chuyển nội dung vào ô soạn");
+  };
+
+  const handleTogglePinMessage = (messageId: string) => {
+    if (!selectedContact) {
+      return;
+    }
+
+    const conversationKey = getConversationKey(selectedContact);
+    const isPinned = pinnedMessageIds[conversationKey] === messageId;
+
+    setPinnedMessageIds((prev) => {
+      const next = { ...prev };
+
+      if (isPinned) {
+        delete next[conversationKey];
+      } else {
+        next[conversationKey] = messageId;
+      }
+
+      return next;
+    });
+
+    if (isPinned) {
+      toast.info("Đã bỏ ghim tin nhắn");
+    } else {
+      toast.success("Đã ghim tin nhắn quan trọng");
+    }
+  };
+
+  const handleConversationTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
+    if (!isMobile || !selectedContact) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  };
+
+  const handleConversationTouchEnd = (event: ReactTouchEvent<HTMLElement>) => {
+    if (!isMobile || !selectedContact || !touchStartRef.current) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    if (deltaX > 90 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      closeConversation();
+      toast.info("Đã quay lại danh sách hội thoại");
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalShortcut = (event: KeyboardEvent) => {
+      if (!selectedContact) {
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setIsMessageSearchOpen(true);
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "m") {
+        event.preventDefault();
+        const composer = document.querySelector<HTMLTextAreaElement>(
+          "textarea[data-messenger-composer='true']"
+        );
+        composer?.focus();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        const conversationKey = getConversationKey(selectedContact);
+        const pinnedMessageId = pinnedMessageIds[conversationKey];
+
+        if (pinnedMessageId) {
+          setPinnedMessageIds((prev) => {
+            const next = { ...prev };
+            delete next[conversationKey];
+            return next;
+          });
+          toast.info("Đã bỏ ghim tin nhắn");
+        }
+      }
+
+      if (event.key === "Escape" && isMessageSearchOpen) {
+        setMessageSearchQuery("");
+        setIsMessageSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalShortcut);
+    return () => window.removeEventListener("keydown", handleGlobalShortcut);
+  }, [selectedContact, isMessageSearchOpen, pinnedMessageIds]);
+
+  const getStoredDraft = (contact: Contact): string => {
+    if (!currentRole || !currentUserId) {
+      return "";
+    }
+
+    try {
+      return (
+        localStorage.getItem(
+          getDraftStorageKey(currentRole, currentUserId, contact.role, contact.id)
+        ) || ""
+      );
+    } catch {
+      return "";
+    }
+  };
+
+  const getStoredPinnedMessageId = (contact: Contact): string | null => {
+    if (!currentRole || !currentUserId) {
+      return null;
+    }
+
+    try {
+      return localStorage.getItem(
+        getPinnedStorageKey(currentRole, currentUserId, contact.role, contact.id)
+      );
+    } catch {
+      return null;
     }
   };
 
@@ -315,6 +694,14 @@ export function MessengerPage() {
         message.content.toLowerCase().includes(messageSearchQuery.toLowerCase())
       )
     : messages;
+
+  const activeConversationKey = selectedContact ? getConversationKey(selectedContact) : null;
+  const pinnedMessageId = activeConversationKey
+    ? pinnedMessageIds[activeConversationKey]
+    : undefined;
+  const pinnedMessage = pinnedMessageId
+    ? messages.find((message) => message.id === pinnedMessageId)
+    : undefined;
 
   const shouldShowSidebar = !isMobile || !selectedContact;
   const shouldShowConversation = !isMobile || !!selectedContact;
@@ -491,7 +878,10 @@ export function MessengerPage() {
                                 {contact.name.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="absolute -right-1 -bottom-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900" />
+                            <span
+                              className="absolute -right-1 -bottom-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-slate-300 dark:border-slate-900 dark:bg-slate-600"
+                              title="Chưa có trạng thái hoạt động theo thời gian thực"
+                            />
                           </div>
 
                           <div className="min-w-0 flex-1">
@@ -529,7 +919,10 @@ export function MessengerPage() {
         )}
 
         {shouldShowConversation && (
-          <section className="relative flex min-h-0 flex-col bg-linear-to-b from-slate-50 via-white to-slate-100/60 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+          <section
+            className="relative flex min-h-0 flex-col bg-linear-to-b from-slate-50 via-white to-slate-100/60 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900"
+            onTouchStart={handleConversationTouchStart}
+            onTouchEnd={handleConversationTouchEnd}>
             {selectedContact ? (
               <>
                 <div className="border-b border-slate-200/80 bg-white/80 px-3 py-3 backdrop-blur-sm md:px-5 dark:border-slate-800 dark:bg-slate-900/80">
@@ -540,7 +933,7 @@ export function MessengerPage() {
                           variant="outline"
                           size="icon"
                           className="h-9 w-9 shrink-0 rounded-xl border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
-                          onClick={() => setSelectedContact(null)}>
+                          onClick={closeConversation}>
                           <ArrowLeft className="h-4 w-4" />
                         </Button>
                       )}
@@ -559,13 +952,15 @@ export function MessengerPage() {
                         <p className="truncate text-sm font-black text-slate-900 md:text-base dark:text-white">
                           {selectedContact.name}
                         </p>
-                        <p className="truncate text-xs text-emerald-600 dark:text-emerald-400">
-                          Đang trực tuyến
-                        </p>
+                        <SocketStatusBadge state={connectionState} />
                       </div>
                     </div>
 
                     <div className="flex items-center gap-1.5 md:gap-2">
+                      <p className="hidden text-[11px] text-slate-400 xl:block">
+                        Ctrl+K tìm kiếm · Ctrl+Shift+M soạn nhanh · Ctrl+Shift+P bỏ ghim
+                      </p>
+
                       {isMessageSearchOpen && (
                         <div className={cn("relative", isMobile ? "w-36" : "w-56 lg:w-72")}>
                           <Input
@@ -606,6 +1001,34 @@ export function MessengerPage() {
                   </div>
                 </div>
 
+                {pinnedMessage && (
+                  <div className="border-b border-slate-200/70 bg-amber-50/60 px-3 py-2 md:px-5 dark:border-slate-800 dark:bg-amber-900/10">
+                    <div className="mx-auto flex w-full max-w-5xl items-start gap-2 rounded-xl border border-amber-200/80 bg-white/90 px-3 py-2.5 dark:border-amber-900/70 dark:bg-slate-900/85">
+                      <div className="mt-0.5 rounded-lg bg-amber-100 p-1 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                        <Pin className="h-3.5 w-3.5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold tracking-wide text-amber-700 uppercase dark:text-amber-300">
+                          Tin nhắn đã ghim
+                        </p>
+                        <p className="line-clamp-2 text-sm text-slate-700 dark:text-slate-200">
+                          {pinnedMessage.content}
+                        </p>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 rounded-lg text-xs text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                        onClick={() => handleTogglePinMessage(pinnedMessage.id)}>
+                        <PinOff className="mr-1.5 h-3.5 w-3.5" />
+                        Bỏ ghim
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="custom-scrollbar flex-1 overflow-y-auto px-3 py-4 md:px-5 md:py-5">
                   <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
                     {loadingMessages ? (
@@ -639,23 +1062,20 @@ export function MessengerPage() {
                       </div>
                     ) : (
                       visibleMessages.map((message) => (
-                        <article
+                        <MessageBubble
                           key={message.id}
-                          className={cn(
-                            "flex max-w-[88%] flex-col gap-1 sm:max-w-[80%] lg:max-w-[70%]",
-                            message.sender === "user" ? "ml-auto items-end" : "items-start"
-                          )}>
-                          <div
-                            className={cn(
-                              "rounded-2xl px-3.5 py-2.5 text-sm leading-6 wrap-break-word whitespace-pre-wrap shadow-sm",
-                              message.sender === "user"
-                                ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-blue-500/20"
-                                : "border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            )}>
-                            {message.content}
-                          </div>
-                          <span className="px-1 text-[11px] text-slate-400">{message.time}</span>
-                        </article>
+                          id={message.id}
+                          sender={message.sender}
+                          content={message.content}
+                          timestamp={message.timestamp}
+                          status={message.status}
+                          searchQuery={messageSearchQuery}
+                          isPinned={pinnedMessageId === message.id}
+                          onCopy={handleCopyMessage}
+                          onRetry={handleRetryMessage}
+                          onForward={handleForwardMessage}
+                          onTogglePin={handleTogglePinMessage}
+                        />
                       ))
                     )}
 
@@ -664,30 +1084,17 @@ export function MessengerPage() {
                 </div>
 
                 <div className="border-t border-slate-200/80 bg-white/90 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-5 md:py-4 dark:border-slate-800 dark:bg-slate-900/90">
-                  <div className="mx-auto flex w-full max-w-5xl items-end gap-2">
-                    <div className="flex-1">
-                      <textarea
-                        ref={composerRef}
-                        value={messageInput}
-                        onChange={(event) => setMessageInput(event.target.value)}
-                        onKeyDown={handleComposerKeyDown}
-                        rows={1}
-                        placeholder={
-                          isMobile
-                            ? "Nhập nội dung tin nhắn..."
-                            : "Nhập nội dung tin nhắn... (Enter gửi, Shift+Enter xuống dòng)"
-                        }
-                        className="max-h-[132px] min-h-11 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm leading-6 text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-700 dark:focus:ring-blue-900/40"
-                      />
-                    </div>
-
-                    <Button
-                      onClick={handleSendMessage}
-                      size="icon"
-                      className="h-11 w-11 shrink-0 rounded-xl bg-blue-600 hover:bg-blue-700">
-                      <Send className="h-4.5 w-4.5" />
-                    </Button>
-                  </div>
+                  <ChatComposer
+                    value={messageInput}
+                    onChange={setMessageInput}
+                    onSend={handleSendMessage}
+                    isMobile={isMobile}
+                    placeholder={
+                      isMobile
+                        ? "Nhập nội dung tin nhắn..."
+                        : "Nhập nội dung tin nhắn... (Enter gửi, Shift+Enter xuống dòng)"
+                    }
+                  />
                 </div>
               </>
             ) : (
