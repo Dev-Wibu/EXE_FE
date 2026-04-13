@@ -5,6 +5,7 @@ export interface Mentor {
   name: string;
   position: string;
   company: string;
+  pricePerMinute: number;
   location: string;
   language: string;
   rating: number;
@@ -59,6 +60,7 @@ export const mockMentors: Mentor[] = [
     name: "NGUYỄN VĂN A",
     position: "Tech lead",
     company: "FPT Software",
+    pricePerMinute: 6000,
     location: "Quận 9",
     language: "Tiếng Việt",
     rating: 4.5,
@@ -72,6 +74,7 @@ export const mockMentors: Mentor[] = [
     name: "NGUYỄN VĂN B",
     position: "Tech lead",
     company: "FPT Software",
+    pricePerMinute: 5500,
     location: "Quận 10",
     language: "Tiếng Việt",
     rating: 3.9,
@@ -85,6 +88,7 @@ export const mockMentors: Mentor[] = [
     name: "TRẦN THỊ C",
     position: "Senior Developer",
     company: "VNG Corporation",
+    pricePerMinute: 7500,
     location: "Quận 7",
     language: "Tiếng Việt",
     rating: 4.8,

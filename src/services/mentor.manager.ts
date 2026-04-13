@@ -66,6 +66,7 @@ export class MentorManager implements BaseManager<Mentor> {
       bio: `${mockMentor.position} at ${mockMentor.company}`,
       expertise: mockMentor.skills.join(", "),
       currentCompany: mockMentor.company,
+      pricePerMinute: mockMentor.pricePerMinute,
       totalSession: mockMentor.totalSessions,
       averageRating: mockMentor.rating,
       active: true,
