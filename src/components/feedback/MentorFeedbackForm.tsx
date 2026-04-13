@@ -105,7 +105,7 @@ export function MentorFeedbackForm({
                 />
               </FormControl>
               <FormDescription>
-                Nhận xét chi tiết giúp học viên cải thiện kỹ năng phỏng vấn
+                Nhận xét chi tiết giúp mentor hiểu rõ trải nghiệm phỏng vấn của bạn
               </FormDescription>
               <FormMessage />
             </FormItem>

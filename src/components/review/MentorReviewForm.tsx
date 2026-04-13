@@ -106,7 +106,7 @@ export function MentorReviewForm({
             Phương pháp STAR (Tùy chọn)
           </h3>
           <p className="text-sm text-slate-500">
-            Mô tả chi tiết trải nghiệm phỏng vấn của bạn theo phương pháp STAR
+            Mô tả chi tiết đánh giá học viên của bạn theo phương pháp STAR
           </p>
 
           <FormField
@@ -117,7 +117,7 @@ export function MentorReviewForm({
                 <FormLabel>Tình huống (Situation)</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Mô tả tình huống phỏng vấn..."
+                    placeholder="Mô tả bối cảnh của phiên phỏng vấn..."
                     className="min-h-[80px]"
                     {...field}
                   />
@@ -135,7 +135,7 @@ export function MentorReviewForm({
                 <FormLabel>Nhiệm vụ (Task)</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Nhiệm vụ bạn được yêu cầu thực hiện..."
+                    placeholder="Nhiệm vụ học viên cần hoàn thành..."
                     className="min-h-[80px]"
                     {...field}
                   />
@@ -153,7 +153,7 @@ export function MentorReviewForm({
                 <FormLabel>Hành động (Action)</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Cách bạn thực hiện và hành động của mentor..."
+                    placeholder="Các hành động học viên đã thực hiện trong phiên..."
                     className="min-h-[80px]"
                     {...field}
                   />
@@ -171,7 +171,7 @@ export function MentorReviewForm({
                 <FormLabel>Kết quả (Result)</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Kết quả và bài học rút ra..."
+                    placeholder="Kết quả học viên đạt được sau phiên phỏng vấn..."
                     className="min-h-[80px]"
                     {...field}
                   />
@@ -193,10 +193,10 @@ export function MentorReviewForm({
             name="strength"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Điểm mạnh của Mentor</FormLabel>
+                <FormLabel>Điểm mạnh của học viên</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Những điểm mạnh bạn nhận thấy ở mentor..."
+                    placeholder="Những điểm mạnh bạn nhận thấy ở học viên..."
                     className="min-h-[60px]"
                     {...field}
                   />
@@ -214,7 +214,7 @@ export function MentorReviewForm({
                 <FormLabel>Điểm cần cải thiện</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Những điểm mentor có thể cải thiện..."
+                    placeholder="Những điểm học viên có thể cải thiện..."
                     className="min-h-[60px]"
                     {...field}
                   />
@@ -232,7 +232,7 @@ export function MentorReviewForm({
                 <FormLabel>Đề xuất cải thiện</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Đề xuất của bạn để cải thiện trải nghiệm..."
+                    placeholder="Đề xuất cụ thể của bạn để học viên cải thiện..."
                     className="min-h-[60px]"
                     {...field}
                   />
