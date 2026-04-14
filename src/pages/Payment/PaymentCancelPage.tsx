@@ -1,5 +1,5 @@
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { PaymentPurpose } from "@/interfaces";
@@ -23,18 +23,33 @@ import { toast } from "sonner";
 
 type CancelChainResult = "idle" | "success" | "failed" | "missing";
 
-const isNotFoundError = (error?: string): boolean => {
+const isIdempotentHandledError = (error?: string): boolean => {
   if (!error) {
     return false;
   }
 
   const normalized = error.toLowerCase();
-  return normalized.includes("not found") || normalized.includes("404");
+  return (
+    normalized.includes("not found") ||
+    normalized.includes("404") ||
+    normalized.includes("already") ||
+    normalized.includes("đã được xử lý") ||
+    normalized.includes("da duoc xu ly") ||
+    normalized.includes("đã hủy") ||
+    normalized.includes("da huy") ||
+    normalized.includes("processed")
+  );
 };
 
-const getCancelPrimaryRedirect = (purpose?: PaymentPurpose): { to: string; label: string } => {
+const getCancelPrimaryRedirect = (
+  purpose?: PaymentPurpose,
+  sessionId?: number
+): { to: string; label: string } => {
   switch (purpose) {
     case "MENTOR_INTERVIEW":
+      if (sessionId) {
+        return { to: `/user/mock-interview/history/${sessionId}`, label: "Xem chi tiết phiên" };
+      }
       return { to: "/user?tab=interviewHistory", label: "Xem lịch sử phỏng vấn" };
     case "TOP_UP_WALLET":
     case "WITHDRAW_FROM_WALLET":
@@ -67,29 +82,40 @@ export function PaymentCancelPage() {
   const [chainResult, setChainResult] = useState<CancelChainResult>("idle");
   const [resultMessage, setResultMessage] = useState("Đang xử lý yêu cầu của bạn...");
   const [recoveryContext, setRecoveryContext] = useState<PaymentRecoveryContext | null>(null);
+  const recoveryContextRef = useRef<PaymentRecoveryContext | null>(null);
+  const inFlightTransactionCodeRef = useRef<string | null>(null);
+  const handledTransactionCodesRef = useRef<Set<string>>(new Set());
+  const autoRunKeyRef = useRef("");
 
-  const redirectToSessionIfNeeded = useCallback(
-    (purpose?: PaymentPurpose, sessionId?: number, resolvedOrderCode?: string) => {
-      if (purpose !== "MENTOR_INTERVIEW" || !sessionId) {
-        return false;
-      }
+  useEffect(() => {
+    recoveryContextRef.current = recoveryContext;
+  }, [recoveryContext]);
 
-      const params = new URLSearchParams();
-      params.set("payment", "cancelled");
-      if (resolvedOrderCode) {
-        params.set("orderCode", resolvedOrderCode);
-      }
-
-      clearPendingSessionPaymentContext();
-      window.location.replace(`/user/mock-interview/history/${sessionId}?${params.toString()}`);
-      return true;
-    },
-    []
+  const autoRunKey = useMemo(
+    () =>
+      [
+        String(currentUserId || 0),
+        orderCode,
+        queryTransactionCode,
+        callbackCheckoutToken,
+        status,
+        String(pendingSessionPayment?.sessionId || ""),
+        pendingSessionPayment?.transactionCode || "",
+      ].join("|"),
+    [
+      callbackCheckoutToken,
+      currentUserId,
+      orderCode,
+      pendingSessionPayment?.sessionId,
+      pendingSessionPayment?.transactionCode,
+      queryTransactionCode,
+      status,
+    ]
   );
 
   const runCancelChain = useCallback(async () => {
     const userIdFilter = currentUserId > 0 ? currentUserId : undefined;
-    let context: PaymentRecoveryContext | null = recoveryContext;
+    let context: PaymentRecoveryContext | null = recoveryContextRef.current;
 
     if (!context && orderCode) {
       context = getRecoveryByOrderCode(orderCode, userIdFilter);
@@ -141,7 +167,7 @@ export function PaymentCancelPage() {
       queryTransactionCode ||
       context?.transactionCode ||
       pendingSessionPayment?.transactionCode ||
-      resolvedOrderCode;
+      "";
     const resolvedCheckoutToken =
       callbackCheckoutToken ||
       context?.checkoutToken ||
@@ -229,22 +255,134 @@ export function PaymentCancelPage() {
       );
       toast.error("Không tìm thấy giao dịch cần hủy.");
 
-      if (redirectToSessionIfNeeded(resolvedPurpose, resolvedSessionId, resolvedOrderCode)) {
-        return;
-      }
-
       if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
         clearPendingSessionPaymentContext();
       }
       return;
     }
 
+    if (inFlightTransactionCodeRef.current === resolvedTransactionCode) {
+      return;
+    }
+
+    if (handledTransactionCodesRef.current.has(resolvedTransactionCode)) {
+      setChainResult("success");
+      setResultMessage("Giao dịch này đã được hủy trước đó.");
+      return;
+    }
+
+    inFlightTransactionCodeRef.current = resolvedTransactionCode;
     setProcessing(true);
     setChainResult("idle");
 
-    const cancelResult = await paymentManager.cancel(resolvedTransactionCode);
-    if (!cancelResult.success) {
-      const log = addPaymentSupportLog({
+    try {
+      const cancelResult = await paymentManager.cancel(resolvedTransactionCode);
+      const cancelHandled = cancelResult.success || isIdempotentHandledError(cancelResult.error);
+
+      if (!cancelHandled) {
+        const log = addPaymentSupportLog({
+          supportCode: context?.supportCode || undefined,
+          orderCode: resolvedOrderCode || undefined,
+          transactionCode: resolvedTransactionCode,
+          checkoutToken: resolvedCheckoutToken,
+          userId: context?.userId || currentUserId || undefined,
+          planId: context?.planId,
+          planName: context?.planName,
+          amount: context?.amount,
+          paymentPurpose: resolvedPurpose,
+          sessionId: resolvedSessionId,
+          status: "CANCEL_CHAIN_FAILED",
+          message: "Hủy thanh toán thất bại.",
+          payload: {
+            error: cancelResult.error || null,
+          },
+        });
+
+        if (context) {
+          const failedContext = upsertPaymentRecoveryContext({
+            supportCode: log.supportCode || context.supportCode,
+            orderCode: resolvedOrderCode || context.orderCode,
+            transactionCode: resolvedTransactionCode,
+            checkoutToken: resolvedCheckoutToken || context.checkoutToken,
+            userId: context.userId,
+            planId: context.planId,
+            planName: context.planName,
+            amount: context.amount,
+            paymentPurpose: resolvedPurpose,
+            sessionId: resolvedSessionId,
+            checkoutUrl: context.checkoutUrl,
+            status: "CANCEL_CHAIN_FAILED",
+            note: cancelResult.error || "Hủy thanh toán thất bại.",
+          });
+          setRecoveryContext(failedContext);
+        }
+
+        setChainResult("failed");
+        setResultMessage("Không thể hủy thanh toán lúc này. Vui lòng thử lại sau ít phút.");
+        toast.error("Không thể hủy thanh toán.");
+
+        if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
+          clearPendingSessionPaymentContext();
+        }
+        return;
+      }
+
+      const deleteResult = await transactionManager.delete(resolvedTransactionCode);
+      const deleteHandled = deleteResult.success || isIdempotentHandledError(deleteResult.error);
+
+      if (!deleteHandled) {
+        const log = addPaymentSupportLog({
+          supportCode: context?.supportCode || undefined,
+          orderCode: resolvedOrderCode || undefined,
+          transactionCode: resolvedTransactionCode,
+          checkoutToken: resolvedCheckoutToken,
+          userId: context?.userId || currentUserId || undefined,
+          planId: context?.planId,
+          planName: context?.planName,
+          amount: context?.amount,
+          paymentPurpose: resolvedPurpose,
+          sessionId: resolvedSessionId,
+          status: "CANCEL_CHAIN_FAILED",
+          message: "Xóa giao dịch thất bại sau khi hủy thanh toán.",
+          payload: {
+            error: deleteResult.error || null,
+          },
+        });
+
+        if (context) {
+          const failedContext = upsertPaymentRecoveryContext({
+            supportCode: log.supportCode || context.supportCode,
+            orderCode: resolvedOrderCode || context.orderCode,
+            transactionCode: resolvedTransactionCode,
+            checkoutToken: resolvedCheckoutToken || context.checkoutToken,
+            userId: context.userId,
+            planId: context.planId,
+            planName: context.planName,
+            amount: context.amount,
+            paymentPurpose: resolvedPurpose,
+            sessionId: resolvedSessionId,
+            checkoutUrl: context.checkoutUrl,
+            status: "CANCEL_CHAIN_FAILED",
+            note: deleteResult.error || "Xóa giao dịch thất bại.",
+          });
+          setRecoveryContext(failedContext);
+        }
+
+        setChainResult("failed");
+        setResultMessage(
+          "Thanh toán đã được hủy nhưng hệ thống đang hoàn tất bước cập nhật cuối cùng. Vui lòng thử lại sau."
+        );
+        toast.error("Không thể hoàn tất yêu cầu hủy.");
+
+        if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
+          clearPendingSessionPaymentContext();
+        }
+        return;
+      }
+
+      handledTransactionCodesRef.current.add(resolvedTransactionCode);
+
+      addPaymentSupportLog({
         supportCode: context?.supportCode || undefined,
         orderCode: resolvedOrderCode || undefined,
         transactionCode: resolvedTransactionCode,
@@ -255,152 +393,62 @@ export function PaymentCancelPage() {
         amount: context?.amount,
         paymentPurpose: resolvedPurpose,
         sessionId: resolvedSessionId,
-        status: "CANCEL_CHAIN_FAILED",
-        message: "Hủy thanh toán thất bại.",
-        payload: {
-          error: cancelResult.error || null,
-        },
-      });
-
-      if (context) {
-        const failedContext = upsertPaymentRecoveryContext({
-          supportCode: log.supportCode || context.supportCode,
-          orderCode: resolvedOrderCode || context.orderCode,
-          transactionCode: resolvedTransactionCode,
-          checkoutToken: resolvedCheckoutToken || context.checkoutToken,
-          userId: context.userId,
-          planId: context.planId,
-          planName: context.planName,
-          amount: context.amount,
-          paymentPurpose: resolvedPurpose,
-          sessionId: resolvedSessionId,
-          checkoutUrl: context.checkoutUrl,
-          status: "CANCEL_CHAIN_FAILED",
-          note: cancelResult.error || "Hủy thanh toán thất bại.",
-        });
-        setRecoveryContext(failedContext);
-      }
-
-      setChainResult("failed");
-      setResultMessage(
-        isNotFoundError(cancelResult.error)
-          ? "Không tìm thấy giao dịch cần hủy hoặc giao dịch đã được xử lý trước đó."
-          : "Không thể hủy thanh toán lúc này. Vui lòng thử lại sau ít phút."
-      );
-      setProcessing(false);
-      toast.error("Không thể hủy thanh toán.");
-
-      if (redirectToSessionIfNeeded(resolvedPurpose, resolvedSessionId, resolvedOrderCode)) {
-        return;
-      }
-
-      if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
-        clearPendingSessionPaymentContext();
-      }
-      return;
-    }
-
-    const deleteResult = await transactionManager.delete(resolvedTransactionCode);
-    if (!deleteResult.success) {
-      const log = addPaymentSupportLog({
-        supportCode: context?.supportCode || undefined,
-        orderCode: resolvedOrderCode || undefined,
-        transactionCode: resolvedTransactionCode,
-        checkoutToken: resolvedCheckoutToken,
-        userId: context?.userId || currentUserId || undefined,
-        planId: context?.planId,
-        planName: context?.planName,
-        amount: context?.amount,
-        paymentPurpose: resolvedPurpose,
-        sessionId: resolvedSessionId,
-        status: "CANCEL_CHAIN_FAILED",
-        message: "Xóa giao dịch thất bại sau khi hủy thanh toán.",
-        payload: {
-          error: deleteResult.error || null,
-        },
-      });
-
-      if (context) {
-        const failedContext = upsertPaymentRecoveryContext({
-          supportCode: log.supportCode || context.supportCode,
-          orderCode: resolvedOrderCode || context.orderCode,
-          transactionCode: resolvedTransactionCode,
-          checkoutToken: resolvedCheckoutToken || context.checkoutToken,
-          userId: context.userId,
-          planId: context.planId,
-          planName: context.planName,
-          amount: context.amount,
-          paymentPurpose: resolvedPurpose,
-          sessionId: resolvedSessionId,
-          checkoutUrl: context.checkoutUrl,
-          status: "CANCEL_CHAIN_FAILED",
-          note: deleteResult.error || "Xóa giao dịch thất bại.",
-        });
-        setRecoveryContext(failedContext);
-      }
-
-      setChainResult("failed");
-      setResultMessage(
-        "Thanh toán đã được hủy nhưng hệ thống đang hoàn tất bước cập nhật cuối cùng. Vui lòng thử lại sau."
-      );
-      setProcessing(false);
-      toast.error("Không thể hoàn tất yêu cầu hủy.");
-
-      if (redirectToSessionIfNeeded(resolvedPurpose, resolvedSessionId, resolvedOrderCode)) {
-        return;
-      }
-
-      if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
-        clearPendingSessionPaymentContext();
-      }
-      return;
-    }
-
-    addPaymentSupportLog({
-      supportCode: context?.supportCode || undefined,
-      orderCode: resolvedOrderCode || undefined,
-      transactionCode: resolvedTransactionCode,
-      checkoutToken: resolvedCheckoutToken,
-      userId: context?.userId || currentUserId || undefined,
-      planId: context?.planId,
-      planName: context?.planName,
-      amount: context?.amount,
-      paymentPurpose: resolvedPurpose,
-      sessionId: resolvedSessionId,
-      status: "CANCEL_CHAIN_SUCCESS",
-      message: "Đã hủy thanh toán thành công.",
-    });
-
-    if (context) {
-      const successContext = upsertPaymentRecoveryContext({
-        supportCode: context.supportCode,
-        orderCode: resolvedOrderCode || context.orderCode,
-        transactionCode: resolvedTransactionCode,
-        checkoutToken: resolvedCheckoutToken || context.checkoutToken,
-        userId: context.userId,
-        planId: context.planId,
-        planName: context.planName,
-        amount: context.amount,
-        paymentPurpose: resolvedPurpose,
-        sessionId: resolvedSessionId,
-        checkoutUrl: context.checkoutUrl,
         status: "CANCEL_CHAIN_SUCCESS",
-        note: "Đã hủy thanh toán thành công.",
+        message:
+          cancelResult.success && deleteResult.success
+            ? "Đã hủy thanh toán thành công."
+            : "Giao dịch đã được xử lý trước đó.",
+        payload:
+          cancelResult.success && deleteResult.success
+            ? undefined
+            : {
+                cancelError: cancelResult.error || null,
+                deleteError: deleteResult.error || null,
+                idempotentHandled: true,
+              },
       });
-      setRecoveryContext(successContext);
-    }
 
-    setChainResult("success");
-    setResultMessage("Yêu cầu hủy thanh toán đã được xử lý thành công.");
-    setProcessing(false);
-    toast.success("Đã hủy thanh toán thành công.");
+      if (context) {
+        const successContext = upsertPaymentRecoveryContext({
+          supportCode: context.supportCode,
+          orderCode: resolvedOrderCode || context.orderCode,
+          transactionCode: resolvedTransactionCode,
+          checkoutToken: resolvedCheckoutToken || context.checkoutToken,
+          userId: context.userId,
+          planId: context.planId,
+          planName: context.planName,
+          amount: context.amount,
+          paymentPurpose: resolvedPurpose,
+          sessionId: resolvedSessionId,
+          checkoutUrl: context.checkoutUrl,
+          status: "CANCEL_CHAIN_SUCCESS",
+          note:
+            cancelResult.success && deleteResult.success
+              ? "Đã hủy thanh toán thành công."
+              : "Giao dịch đã được xử lý trước đó.",
+        });
+        setRecoveryContext(successContext);
+      }
 
-    if (redirectToSessionIfNeeded(resolvedPurpose, resolvedSessionId, resolvedOrderCode)) {
-      return;
-    }
+      setChainResult("success");
+      setResultMessage(
+        cancelResult.success && deleteResult.success
+          ? "Yêu cầu hủy thanh toán đã được xử lý thành công."
+          : "Yêu cầu hủy đã được ghi nhận. Giao dịch này đã được xử lý trước đó."
+      );
 
-    if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
-      clearPendingSessionPaymentContext();
+      if (cancelResult.success && deleteResult.success) {
+        toast.success("Đã hủy thanh toán thành công.");
+      } else {
+        toast.info("Giao dịch đã được xử lý trước đó.");
+      }
+
+      if (pendingSessionPayment?.sessionId) {
+        clearPendingSessionPaymentContext();
+      }
+    } finally {
+      inFlightTransactionCodeRef.current = null;
+      setProcessing(false);
     }
   }, [
     callbackCheckoutToken,
@@ -408,12 +456,15 @@ export function PaymentCancelPage() {
     orderCode,
     pendingSessionPayment,
     queryTransactionCode,
-    recoveryContext,
-    redirectToSessionIfNeeded,
     status,
   ]);
 
   useEffect(() => {
+    if (autoRunKeyRef.current === autoRunKey) {
+      return;
+    }
+
+    autoRunKeyRef.current = autoRunKey;
     const timerId = window.setTimeout(() => {
       void runCancelChain();
     }, 0);
@@ -421,13 +472,14 @@ export function PaymentCancelPage() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [runCancelChain]);
+  }, [autoRunKey, runCancelChain]);
 
   const canRetry = !processing && (chainResult === "failed" || chainResult === "missing");
   const resolvedPurpose =
     recoveryContext?.paymentPurpose ||
     (pendingSessionPayment?.paymentPurpose as PaymentPurpose | undefined);
-  const primaryRedirect = getCancelPrimaryRedirect(resolvedPurpose);
+  const resolvedSessionId = recoveryContext?.sessionId || pendingSessionPayment?.sessionId;
+  const primaryRedirect = getCancelPrimaryRedirect(resolvedPurpose, resolvedSessionId);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-amber-50 to-rose-50 px-4 py-10 dark:from-slate-950 dark:to-slate-900">

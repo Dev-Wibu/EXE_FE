@@ -82,6 +82,7 @@ export function SessionDetailPage() {
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [isPollingPayment, setIsPollingPayment] = useState(false);
   const pollingAttemptsRef = useRef(0);
+  const hasHandledCancelledParamRef = useRef(false);
 
   const paymentQuery = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const paymentState = paymentQuery.get("payment")?.trim();
@@ -194,13 +195,14 @@ export function SessionDetailPage() {
     }
 
     if (paymentState === "cancelled") {
-      toast.info("Bạn đã hủy thanh toán cho phiên phỏng vấn này.");
-      navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+      if (!hasHandledCancelledParamRef.current) {
+        hasHandledCancelledParamRef.current = true;
+        toast.info("Bạn đã hủy thanh toán cho phiên phỏng vấn này.");
+      }
       return;
     }
 
     if (paymentState !== "success") {
-      navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
       return;
     }
 
