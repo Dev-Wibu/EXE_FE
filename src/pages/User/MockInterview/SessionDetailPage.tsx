@@ -34,23 +34,44 @@ import {
   savePendingSessionPaymentContext,
   upsertPaymentRecoveryContext,
 } from "@/lib";
-import { formatCurrency } from "@/lib/formatting";
+import { formatCurrency, formatDateTime } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
 // Status badge mapping
-const statusMap: Record<
-  string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
-> = {
-  DRAFT: { label: "Chờ duyệt", variant: "secondary" },
-  SCHEDULED: { label: "Đã lên lịch", variant: "secondary" },
-  PAID: { label: "Đã thanh toán", variant: "default" },
-  ACTIVE: { label: "Đang diễn ra", variant: "default" },
-  ONGOING: { label: "Đang diễn ra", variant: "default" },
-  COMPLETED: { label: "Hoàn thành", variant: "outline" },
-  REJECTED: { label: "Bị từ chối", variant: "destructive" },
-  CANCELED: { label: "Đã hủy", variant: "destructive" },
+const statusMap: Record<string, { label: string; badgeClass: string }> = {
+  DRAFT: {
+    label: "Chờ duyệt",
+    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  SCHEDULED: {
+    label: "Đã lên lịch",
+    badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  PAID: {
+    label: "Đã thanh toán",
+    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  },
+  ACTIVE: {
+    label: "Đang diễn ra",
+    badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  },
+  ONGOING: {
+    label: "Đang diễn ra",
+    badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  },
+  COMPLETED: {
+    label: "Hoàn thành",
+    badgeClass: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  },
+  REJECTED: {
+    label: "Bị từ chối",
+    badgeClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  },
+  CANCELED: {
+    label: "Đã hủy",
+    badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+  },
 };
 
 export function SessionDetailPage() {
@@ -239,11 +260,11 @@ export function SessionDetailPage() {
   if (!session) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
+        <Button variant="outline" className="w-fit" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại
         </Button>
-        <Card>
+        <Card className="border-slate-200/80 dark:border-slate-800">
           <CardContent className="py-12 text-center">
             <Video className="mx-auto h-12 w-12 text-slate-400" />
             <h3 className="mt-4 font-semibold">Không tìm thấy phiên phỏng vấn</h3>
@@ -259,11 +280,14 @@ export function SessionDetailPage() {
   if (session.userId !== user?.id) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => navigate("/user?tab=interviewHistory")}>
+        <Button
+          variant="outline"
+          className="w-fit"
+          onClick={() => navigate("/user?tab=interviewHistory")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại lịch sử
         </Button>
-        <Card>
+        <Card className="border-slate-200/80 dark:border-slate-800">
           <CardContent className="py-12 text-center">
             <User className="mx-auto h-12 w-12 text-slate-400" />
             <h3 className="mt-4 font-semibold">Không có quyền truy cập</h3>
@@ -277,21 +301,27 @@ export function SessionDetailPage() {
   }
 
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
+  const canJoinRoom =
+    !!session.roomUrl && (session.status === "PAID" || session.status === "ONGOING");
+  const canWriteFeedback = isCompleted && !myFeedback;
+  const canPaySession = session.status === "SCHEDULED";
+  const isPaidSession = session.status === "PAID";
 
   return (
-    <div className="space-y-6">
-      {/* Back Button */}
-      <Button variant="ghost" onClick={() => navigate("/user?tab=interviewHistory")}>
+    <div className="space-y-5">
+      <Button
+        variant="outline"
+        className="w-fit"
+        onClick={() => navigate("/user?tab=interviewHistory")}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại lịch sử
       </Button>
 
-      {/* Session Info */}
-      <Card>
+      <Card className="border-slate-200/80 dark:border-slate-800">
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0047AB]/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
                 <Video className="h-6 w-6 text-[#0047AB]" />
               </div>
               <div>
@@ -299,14 +329,15 @@ export function SessionDetailPage() {
                 <CardDescription>Chi tiết phiên phỏng vấn</CardDescription>
               </div>
             </div>
-            <Badge variant={status.variant} className="text-sm">
-              {status.label}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">Mã #{session.id || "-"}</Badge>
+              <Badge className={status.badgeClass}>{status.label}</Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-2 text-sm">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <User className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Người hướng dẫn:</span>
               <span className="font-medium">
@@ -314,17 +345,24 @@ export function SessionDetailPage() {
                   (session.userId2 ? `Mentor #${session.userId2}` : "Chưa xác định")}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <Calendar className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Mã phiên:</span>
               <span className="font-medium">{session.id}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
+              <Clock className="h-4 w-4 text-slate-400" />
+              <span className="text-slate-600 dark:text-slate-400">Giờ hẹn:</span>
+              <span className="font-medium">
+                {session.joinTime ? formatDateTime(session.joinTime) : "-"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <Clock className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Trạng thái:</span>
               <span className="font-medium">{session.status}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <Clock className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Thời lượng dự kiến:</span>
               <span className="font-medium">
@@ -333,7 +371,7 @@ export function SessionDetailPage() {
                   : "-"}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <CreditCard className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Tổng giá:</span>
               <span className="font-medium">
@@ -342,67 +380,80 @@ export function SessionDetailPage() {
                   : "-"}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm sm:col-span-2 lg:col-span-3 dark:bg-slate-900/50">
               <CreditCard className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Mã giao dịch:</span>
               <span className="font-medium">{session.transactionCode || "-"}</span>
             </div>
-            {session.roomUrl && (session.status === "PAID" || session.status === "ONGOING") && (
-              <div className="flex items-center gap-2 text-sm">
-                <Video className="h-4 w-4 text-slate-400" />
-                <span className="text-slate-600 dark:text-slate-400">Phòng:</span>
-                <button
-                  onClick={() => navigate(`/user/mock-interview/room/${session.id}`)}
-                  className="font-medium text-[#0047AB] hover:underline">
-                  Tham gia phòng
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Action Buttons */}
-          {isCompleted && !myFeedback && (
-            <div className="border-t pt-4">
-              <Button
-                onClick={() => navigate(`/user/mock-interview/history/${session.id}/feedback`)}
-                className="gap-2">
-                <Star className="h-4 w-4" />
-                Viết phản hồi cho Mentor
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+            <p className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
+              Hành động nhanh
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => navigate("/user?tab=interviewHistory")}>
+                Xem lịch sử
               </Button>
+
+              {canJoinRoom && (
+                <Button
+                  onClick={() => navigate(`/user/mock-interview/room/${session.id}`)}
+                  className="gap-2">
+                  <Video className="h-4 w-4" />
+                  Vào phòng phỏng vấn
+                </Button>
+              )}
+
+              {canWriteFeedback && (
+                <Button
+                  onClick={() => navigate(`/user/mock-interview/history/${session.id}/feedback`)}
+                  className="gap-2">
+                  <Star className="h-4 w-4" />
+                  Viết phản hồi cho Mentor
+                </Button>
+              )}
+
+              {canPaySession && (
+                <Button
+                  onClick={() => void handlePaySession()}
+                  disabled={isCreatingPayment}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                  <CreditCard className="h-4 w-4" />
+                  {isCreatingPayment ? "Đang tạo link thanh toán..." : "Thanh toán phiên phỏng vấn"}
+                </Button>
+              )}
+
+              {isPaidSession && (
+                <Button variant="secondary" disabled className="gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Phiên đã thanh toán
+                </Button>
+              )}
+
+              {!canJoinRoom && !canWriteFeedback && !canPaySession && !isPaidSession && (
+                <p className="text-sm text-slate-500">
+                  Phiên hiện ở chế độ theo dõi, chưa có thao tác bổ sung.
+                </p>
+              )}
             </div>
-          )}
-          {session.status === "SCHEDULED" && (
-            <div className="border-t pt-4">
-              <Button
-                onClick={() => void handlePaySession()}
-                disabled={isCreatingPayment}
-                className="gap-2">
-                <CreditCard className="h-4 w-4" />
-                {isCreatingPayment ? "Đang tạo link thanh toán..." : "Thanh toán phiên phỏng vấn"}
-              </Button>
+
+            {canPaySession && (
               <p className="mt-2 text-xs text-slate-500">
                 Sau khi thanh toán xong, hệ thống sẽ cập nhật trạng thái sang PAID.
               </p>
-            </div>
-          )}
-          {session.status === "PAID" && (
-            <div className="border-t pt-4">
-              <Button variant="secondary" disabled className="gap-2">
-                <CreditCard className="h-4 w-4" />
-                Phiên đã thanh toán
-              </Button>
-            </div>
-          )}
-          {isPollingPayment && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-              Hệ thống đang đối soát thanh toán. Trạng thái sẽ được cập nhật tự động.
-            </div>
-          )}
+            )}
+
+            {isPollingPayment && (
+              <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                Hệ thống đang đối soát thanh toán. Trạng thái sẽ được cập nhật tự động.
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* User Feedback Section */}
-      <Card>
+      <Card className="border-slate-200/80 dark:border-slate-800">
         <CardHeader>
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-emerald-600" />
@@ -413,7 +464,7 @@ export function SessionDetailPage() {
           {feedbackLoading ? (
             <Skeleton className="h-32" />
           ) : myFeedback ? (
-            <div className="space-y-3">
+            <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/30">
               <FeedbackCard
                 feedback={myFeedback}
                 showMentor
@@ -428,7 +479,7 @@ export function SessionDetailPage() {
               </Button>
             </div>
           ) : isCompleted ? (
-            <div className="py-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
               <MessageSquare className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-2 text-slate-500">Bạn chưa gửi phản hồi cho phiên này</p>
               <Button
@@ -439,7 +490,7 @@ export function SessionDetailPage() {
               </Button>
             </div>
           ) : (
-            <div className="py-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
               <MessageSquare className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-2 text-slate-500">
                 Phản hồi chỉ có thể gửi sau khi phiên phỏng vấn hoàn thành
@@ -449,8 +500,7 @@ export function SessionDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Mentor Review Section */}
-      <Card>
+      <Card className="border-slate-200/80 dark:border-slate-800">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-[#FFD700]" />
@@ -461,7 +511,7 @@ export function SessionDetailPage() {
           {reviewLoading ? (
             <Skeleton className="h-32" />
           ) : mentorReview ? (
-            <div className="space-y-3">
+            <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/30">
               <ReviewCard
                 review={mentorReview}
                 showMentor
@@ -481,12 +531,12 @@ export function SessionDetailPage() {
               )}
             </div>
           ) : isCompleted ? (
-            <div className="py-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
               <Star className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-2 text-slate-500">Mentor chưa gửi đánh giá cho phiên này</p>
             </div>
           ) : (
-            <div className="py-8 text-center">
+            <div className="rounded-xl border border-dashed border-slate-300 py-8 text-center dark:border-slate-700">
               <Star className="mx-auto h-10 w-10 text-slate-300" />
               <p className="mt-2 text-slate-500">
                 Đánh giá sẽ có sau khi phiên phỏng vấn hoàn thành

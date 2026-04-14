@@ -1,26 +1,43 @@
-import { Calendar, ChevronLeft, ChevronRight, Clock, Star, TrendingUp, Users } from "lucide-react";
+import { format as formatDateFn } from "date-fns";
+import { vi } from "date-fns/locale";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Filter,
+  Star,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar as DatePicker } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMentorReviewsByMentor } from "@/hooks/useMentorReview";
 import { useSessions } from "@/hooks/useSession";
 import type { Session } from "@/interfaces";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 
 import {
   MENTOR_CALENDAR_STATUSES,
+  type MentorCalendarSession,
   buildMentorCalendarSessions,
   formatCalendarTime,
   groupMentorCalendarByDate,
 } from "./mentorSchedule.utils";
 
-const MAX_VISIBLE_SESSIONS = 3;
+const MAX_VISIBLE_SESSIONS = 2;
+const MOBILE_VIEW_AGENDA = "agenda";
+const MOBILE_VIEW_CALENDAR = "calendar";
 const WEEK_DAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 const MONTH_NAMES = [
   "Tháng 1",
@@ -66,9 +83,92 @@ const getDaysInMonth = (year: number, month: number): number => {
   return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 };
 
+const toDateKeyFromParts = (year: number, month: number, day: number) => {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+};
+
 const getFirstDayOfMonth = (year: number, month: number): number => {
   return new Date(Date.UTC(year, month, 1)).getUTCDay();
 };
+
+const toFilterDateKey = (value?: Date): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(
+    value.getDate()
+  ).padStart(2, "0")}`;
+};
+
+const isDateKeyInRange = (dateKey: string, fromKey?: string, toKey?: string) => {
+  if (fromKey && dateKey < fromKey) {
+    return false;
+  }
+
+  if (toKey && dateKey > toKey) {
+    return false;
+  }
+
+  return true;
+};
+
+function AgendaSessionItem({
+  item,
+  onOpenDetail,
+  onOpenRoom,
+  onOpenReview,
+}: {
+  item: MentorCalendarSession;
+  onOpenDetail: (_sessionId?: number) => void;
+  onOpenRoom: (_sessionId?: number) => void;
+  onOpenReview: (_sessionId?: number) => void;
+}) {
+  const status = statusConfig[item.session.status || "SCHEDULED"] || defaultStatusConfig;
+  const canJoinRoom =
+    (item.session.status === "PAID" || item.session.status === "ONGOING") && !!item.session.roomUrl;
+  const canReview = item.session.status === "COMPLETED";
+
+  return (
+    <div className="space-y-3 rounded-xl border border-slate-200/80 bg-white p-3 transition-colors dark:border-slate-800 dark:bg-slate-950/40">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {item.session.roomName || `Phiên #${item.session.id}`}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Học viên #{item.session.userId || "-"}
+          </p>
+        </div>
+        <Badge className={cn("border-0", status.badgeClass)}>{status.label}</Badge>
+      </div>
+
+      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <Clock className="h-3.5 w-3.5" />
+        <span>{formatDateTime(item.session.joinTime)}</span>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" onClick={() => onOpenDetail(item.session.id)}>
+          Xem chi tiết
+        </Button>
+        {canJoinRoom && (
+          <Button
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => onOpenRoom(item.session.id)}>
+            Vào phòng
+          </Button>
+        )}
+        {canReview && (
+          <Button size="sm" variant="secondary" onClick={() => onOpenReview(item.session.id)}>
+            Đánh giá
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const getReviewSortTimestamp = (review: { id?: number; session?: Session }) => {
   const value = review.session?.endTime1 || review.session?.startTime1;
@@ -112,12 +212,15 @@ export function MentorOverviewPage() {
 
   const now = new Date();
   const nowTimestamp = now.getTime();
-  const todayKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(
-    now.getUTCDate()
-  ).padStart(2, "0")}`;
+  const todayKey = toDateKeyFromParts(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 
   const [currentYear, setCurrentYear] = useState(now.getUTCFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getUTCMonth());
+  const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([...MENTOR_CALENDAR_STATUSES]);
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [mobileView, setMobileView] = useState<string>(MOBILE_VIEW_AGENDA);
 
   const mentorSessions = useMemo(() => {
     if (!mentorId) {
@@ -130,9 +233,19 @@ export function MentorOverviewPage() {
     return buildMentorCalendarSessions(allSessions, mentorId);
   }, [allSessions, mentorId]);
 
+  const fromKey = useMemo(() => toFilterDateKey(fromDate), [fromDate]);
+  const toKey = useMemo(() => toFilterDateKey(toDate), [toDate]);
+
+  const filteredCalendarItems = useMemo(() => {
+    return calendarItems.filter((item) => {
+      const status = item.session.status || "";
+      return selectedStatuses.includes(status) && isDateKeyInRange(item.dateKey, fromKey, toKey);
+    });
+  }, [calendarItems, selectedStatuses, fromKey, toKey]);
+
   const sessionsByDate = useMemo(() => {
-    return groupMentorCalendarByDate(calendarItems);
-  }, [calendarItems]);
+    return groupMentorCalendarByDate(filteredCalendarItems);
+  }, [filteredCalendarItems]);
 
   const totalSessions = mentorSessions.length;
   const completedSessions = mentorSessions.filter(
@@ -163,9 +276,20 @@ export function MentorOverviewPage() {
     return typeof session.totalPrice === "number" ? sum + session.totalPrice : sum;
   }, 0);
 
-  const upcomingScheduleItems = calendarItems
+  const upcomingScheduleItems = filteredCalendarItems
     .filter((item) => item.timestamp >= nowTimestamp && item.session.status !== "COMPLETED")
     .slice(0, 4);
+
+  const selectedDayItems = sessionsByDate.get(selectedDateKey) || [];
+
+  const selectedDateDisplay = useMemo(() => {
+    const [year, month, day] = selectedDateKey.split("-").map(Number);
+    if (!year || !month || !day) {
+      return "Ngày đã chọn";
+    }
+
+    return formatDateFn(new Date(year, month - 1, day), "EEEE, dd/MM/yyyy", { locale: vi });
+  }, [selectedDateKey]);
 
   const recentReviews = [...reviews]
     .sort((a, b) => getReviewSortTimestamp(b) - getReviewSortTimestamp(a))
@@ -215,98 +339,50 @@ export function MentorOverviewPage() {
     }
   };
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="rounded-3xl bg-linear-to-r from-emerald-500 to-teal-600 p-8 text-white shadow-lg">
-        <h1 className="text-3xl font-bold">Chào mừng trở lại, {user?.name || "Mentor"}!</h1>
-        <p className="mt-2 text-emerald-100">
-          Theo dõi lịch hẹn, đánh giá và hiệu suất mentoring của bạn tại INBLUE AI.
-        </p>
-      </div>
+  const handleOpenSessionRoom = (sessionId?: number) => {
+    if (typeof sessionId === "number") {
+      navigate(`/mentor/sessions/room/${sessionId}`);
+    }
+  };
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-emerald-100 dark:border-emerald-900/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 dark:text-slate-400">
-              Tổng phiên phỏng vấn
-            </CardTitle>
-            <Calendar className="h-5 w-5 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-zinc-800 dark:text-white">{totalSessions}</div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">
-              {completedSessions} hoàn thành • {upcomingSessions} sắp tới
-            </p>
-          </CardContent>
-        </Card>
+  const handleOpenSessionReview = (sessionId?: number) => {
+    if (typeof sessionId === "number") {
+      navigate(`/mentor/sessions/${sessionId}/review`);
+    }
+  };
 
-        <Card className="border-blue-100 dark:border-blue-900/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 dark:text-slate-400">
-              Học viên đã hỗ trợ
-            </CardTitle>
-            <Users className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-zinc-800 dark:text-white">{totalStudents}</div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Tính theo lịch sử mentoring</p>
-          </CardContent>
-        </Card>
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses((current) => {
+      if (current.includes(status)) {
+        return current.filter((item) => item !== status);
+      }
+      return [...current, status];
+    });
+  };
 
-        <Card className="border-yellow-100 dark:border-yellow-900/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 dark:text-slate-400">
-              Đánh giá trung bình
-            </CardTitle>
-            <Star className="h-5 w-5 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-zinc-800 dark:text-white">
-                {averageRating}
-              </span>
-              <span className="text-lg text-gray-500">/5</span>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Dựa trên đánh giá đã gửi</p>
-          </CardContent>
-        </Card>
+  const resetFilters = () => {
+    setSelectedStatuses([...MENTOR_CALENDAR_STATUSES]);
+    setFromDate(undefined);
+    setToDate(undefined);
+  };
 
-        <Card className="border-green-100 dark:border-green-900/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 dark:text-slate-400">
-              Tổng thu nhập ước tính
-            </CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-zinc-800 dark:text-white">
-              {formatCurrency(totalEarnings)}
-            </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Từ các phiên đã hoàn thành</p>
-          </CardContent>
-        </Card>
-      </div>
+  const jumpToToday = () => {
+    setCurrentYear(now.getUTCFullYear());
+    setCurrentMonth(now.getUTCMonth());
+    setSelectedDateKey(todayKey);
+  };
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-4">
+  const renderCalendarContent = () => (
+    <Card className="border-slate-200/80 dark:border-slate-800">
+      <CardHeader className="gap-4 pb-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-2xl font-bold uppercase">
+            <CardTitle className="text-xl font-bold uppercase">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </CardTitle>
-            <CardDescription>Lịch hẹn mentoring của bạn</CardDescription>
+            <CardDescription>Lịch hẹn mentoring theo tháng</CardDescription>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden flex-wrap items-center gap-3 text-xs lg:flex">
-              {MENTOR_CALENDAR_STATUSES.map((status) => {
-                const cfg = statusConfig[status] || defaultStatusConfig;
-                return (
-                  <span key={status} className="flex items-center gap-1">
-                    <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-                    <span className="text-muted-foreground">{cfg.label}</span>
-                  </span>
-                );
-              })}
-            </div>
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="icon"
@@ -317,205 +393,450 @@ export function MentorOverviewPage() {
             <Button variant="outline" size="icon" onClick={handleNextMonth} aria-label="Tháng sau">
               <ChevronRight className="h-5 w-5" />
             </Button>
+            <Button variant="outline" size="sm" onClick={jumpToToday}>
+              Hôm nay
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-7 gap-1 border-b pb-2">
-            {WEEK_DAYS.map((day) => (
-              <div
-                key={day}
-                className="text-muted-foreground text-center text-sm font-medium uppercase">
-                {day}
-              </div>
-            ))}
-          </div>
+        </div>
 
-          <div className="mt-2 space-y-1">
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="grid grid-cols-7 gap-1">
-                {week.map((day, dayIndex) => {
-                  if (day === null) {
-                    return (
-                      <div
-                        key={`${weekIndex}-${dayIndex}`}
-                        className="border-border min-h-[108px] rounded-lg border p-2 opacity-30"
-                      />
-                    );
-                  }
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          {MENTOR_CALENDAR_STATUSES.map((status) => {
+            const cfg = statusConfig[status] || defaultStatusConfig;
+            return (
+              <span
+                key={status}
+                className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                <span className={`h-2.5 w-2.5 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+              </span>
+            );
+          })}
+        </div>
+      </CardHeader>
 
-                  const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                  const dayItems = sessionsByDate.get(dateKey) || [];
-                  const isToday = dateKey === todayKey;
-                  const visibleItems = dayItems.slice(0, MAX_VISIBLE_SESSIONS);
-                  const overflowCount = dayItems.length - MAX_VISIBLE_SESSIONS;
+      <CardContent>
+        <div className="grid grid-cols-7 gap-1 border-b border-slate-200 pb-2 dark:border-slate-800">
+          {WEEK_DAYS.map((day) => (
+            <div
+              key={day}
+              className="text-center text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              {day}
+            </div>
+          ))}
+        </div>
 
+        <div className="mt-2 space-y-1">
+          {weeks.map((week, weekIndex) => (
+            <div key={weekIndex} className="grid grid-cols-7 gap-1">
+              {week.map((day, dayIndex) => {
+                if (day === null) {
                   return (
                     <div
                       key={`${weekIndex}-${dayIndex}`}
-                      className={`border-border min-h-[108px] rounded-lg border p-2 transition-colors ${
-                        isToday
-                          ? "border-emerald-400 bg-emerald-50/70 dark:border-emerald-600 dark:bg-emerald-950/20"
-                          : dayItems.length > 0
-                            ? "hover:bg-muted/40"
-                            : "hover:bg-muted/20"
-                      }`}>
-                      <div
-                        className={`mb-1 text-sm font-medium ${
-                          isToday
-                            ? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white"
-                            : "text-muted-foreground"
-                        }`}>
+                      className="min-h-32 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 opacity-50 dark:border-slate-800 dark:bg-slate-900/20"
+                    />
+                  );
+                }
+
+                const dateKey = toDateKeyFromParts(currentYear, currentMonth, day);
+                const dayItems = sessionsByDate.get(dateKey) || [];
+                const visibleItems = dayItems.slice(0, MAX_VISIBLE_SESSIONS);
+                const overflowCount = dayItems.length - MAX_VISIBLE_SESSIONS;
+                const isToday = dateKey === todayKey;
+                const isSelected = dateKey === selectedDateKey;
+
+                return (
+                  <div
+                    key={`${weekIndex}-${dayIndex}`}
+                    className={cn(
+                      "bg-background min-h-32 rounded-xl border p-2.5 transition-colors",
+                      isSelected
+                        ? "border-emerald-500 ring-1 ring-emerald-500/30"
+                        : isToday
+                          ? "border-blue-400/70 bg-blue-50/50 dark:border-blue-700 dark:bg-blue-950/20"
+                          : "border-slate-200/80 dark:border-slate-800",
+                      !isSelected &&
+                        dayItems.length > 0 &&
+                        "hover:border-slate-300 dark:hover:border-slate-700"
+                    )}>
+                    <div className="mb-2 flex items-center justify-between">
+                      <button
+                        onClick={() => setSelectedDateKey(dateKey)}
+                        className={cn(
+                          "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold transition-colors",
+                          isSelected
+                            ? "bg-emerald-600 text-white"
+                            : isToday
+                              ? "bg-blue-600 text-white"
+                              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                        )}
+                        aria-label={`Chọn ngày ${day}`}>
                         {String(day).padStart(2, "0")}
-                      </div>
-
+                      </button>
                       {dayItems.length > 0 && (
-                        <div className="flex flex-col gap-0.5">
-                          {visibleItems.map((item) => {
-                            const cfg =
-                              statusConfig[item.session.status || "SCHEDULED"] ||
-                              defaultStatusConfig;
-                            return (
-                              <button
-                                key={item.session.id}
-                                onClick={() => handleOpenSessionDetail(item.session.id)}
-                                className={`flex items-center gap-1 rounded px-1 py-0.5 text-left transition-colors hover:opacity-80 ${cfg.badgeClass}`}
-                                title={`${formatCalendarTime(item.session.joinTime)} — ${item.session.roomName || `Phiên #${item.session.id}`}`}>
-                                <Clock className="h-2.5 w-2.5 shrink-0" />
-                                <span className="truncate text-[10px] font-medium">
-                                  {formatCalendarTime(item.session.joinTime)}
-                                </span>
-                              </button>
-                            );
-                          })}
-
-                          {overflowCount > 0 && (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <button className="text-muted-foreground hover:text-foreground mt-0.5 text-center text-[10px] font-medium transition-colors">
-                                  +{overflowCount} phiên khác
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-80 p-2"
-                                side="right"
-                                align="start"
-                                sideOffset={8}>
-                                <p className="mb-2 text-xs font-semibold">{`${String(day).padStart(2, "0")}/${String(
-                                  currentMonth + 1
-                                ).padStart(2, "0")}/${currentYear} — ${dayItems.length} phiên`}</p>
-                                <div className="flex max-h-52 flex-col gap-0.5 overflow-y-auto">
-                                  {dayItems.map((item) => (
-                                    <CalendarSessionEntry
-                                      key={item.session.id}
-                                      session={item.session}
-                                      onOpen={handleOpenSessionDetail}
-                                    />
-                                  ))}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          )}
-                        </div>
+                        <Badge className="border-0 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                          {dayItems.length}
+                        </Badge>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between gap-3">
-            <div>
-              <CardTitle>Phiên cần theo dõi</CardTitle>
-              <CardDescription>Các lịch hẹn sắp diễn ra hoặc đang diễn ra</CardDescription>
+                    {dayItems.length > 0 && (
+                      <div className="space-y-1">
+                        {visibleItems.map((item) => {
+                          const cfg =
+                            statusConfig[item.session.status || "SCHEDULED"] || defaultStatusConfig;
+                          return (
+                            <button
+                              key={item.session.id}
+                              onClick={() => handleOpenSessionDetail(item.session.id)}
+                              className={cn(
+                                "flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[11px] transition-colors hover:opacity-90",
+                                cfg.badgeClass
+                              )}>
+                              <Clock className="h-3 w-3 shrink-0" />
+                              <span className="shrink-0 font-medium">
+                                {formatCalendarTime(item.session.joinTime)}
+                              </span>
+                              <span className="truncate">
+                                {item.session.roomName || `#${item.session.id}`}
+                              </span>
+                            </button>
+                          );
+                        })}
+
+                        {overflowCount > 0 && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-full rounded-md border border-dashed border-slate-300 px-2 py-1 text-center text-[11px] font-medium text-slate-600 transition-colors hover:border-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600">
+                                +{overflowCount} phiên khác
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-80 p-2"
+                              side="bottom"
+                              align="start"
+                              sideOffset={8}>
+                              <p className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                {`${String(day).padStart(2, "0")}/${String(currentMonth + 1).padStart(2, "0")}/${currentYear} - ${dayItems.length} phiên`}
+                              </p>
+                              <div className="flex max-h-52 flex-col gap-1 overflow-y-auto">
+                                {dayItems.map((item) => (
+                                  <CalendarSessionEntry
+                                    key={item.session.id}
+                                    session={item.session}
+                                    onOpen={handleOpenSessionDetail}
+                                  />
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderAgendaContent = () => (
+    <Card className="border-slate-200/80 dark:border-slate-800">
+      <CardHeader className="space-y-4 pb-4">
+        <div className="space-y-1">
+          <CardTitle className="text-lg">Lịch hẹn theo ngày</CardTitle>
+          <CardDescription className="capitalize">{selectedDateDisplay}</CardDescription>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+            <Filter className="h-4 w-4" />
+            Bộ lọc
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {MENTOR_CALENDAR_STATUSES.map((status) => {
+              const cfg = statusConfig[status] || defaultStatusConfig;
+              const active = selectedStatuses.includes(status);
+              return (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant={active ? "default" : "outline"}
+                  onClick={() => toggleStatus(status)}
+                  className={cn("h-8", active && "bg-emerald-600 hover:bg-emerald-700")}>
+                  <span className={`mr-1.5 h-2 w-2 rounded-full ${cfg.dot}`} />
+                  {cfg.label}
+                </Button>
+              );
+            })}
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start text-left font-normal">
+                  {fromDate ? formatDateFn(fromDate, "dd/MM/yyyy", { locale: vi }) : "Từ ngày"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <DatePicker
+                  mode="single"
+                  selected={fromDate}
+                  onSelect={(value) => {
+                    setFromDate(value);
+                    if (value && toDate && value > toDate) {
+                      setToDate(undefined);
+                    }
+                  }}
+                  locale={vi}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start text-left font-normal">
+                  {toDate ? formatDateFn(toDate, "dd/MM/yyyy", { locale: vi }) : "Đến ngày"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <DatePicker
+                  mode="single"
+                  selected={toDate}
+                  onSelect={setToDate}
+                  locale={vi}
+                  disabled={(date) => (fromDate ? date < fromDate : false)}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Button variant="ghost" size="sm" className="w-fit" onClick={resetFilters}>
+            Đặt lại bộ lọc
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        {sessionsLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
+        ) : selectedDayItems.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center dark:border-slate-700">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Không có lịch hẹn trong ngày đã chọn
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Thử đổi ngày hoặc điều chỉnh bộ lọc để xem thêm phiên phù hợp.
+            </p>
+          </div>
+        ) : (
+          selectedDayItems.map((item) => (
+            <AgendaSessionItem
+              key={item.session.id}
+              item={item}
+              onOpenDetail={handleOpenSessionDetail}
+              onOpenRoom={handleOpenSessionRoom}
+              onOpenReview={handleOpenSessionReview}
+            />
+          ))
+        )}
+
+        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+              Phiên cần theo dõi
+            </p>
             <Button variant="outline" size="sm" onClick={() => navigate("/mentor?tab=sessions")}>
               Xem toàn bộ
             </Button>
+          </div>
+
+          {upcomingScheduleItems.length === 0 ? (
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Hiện chưa có phiên nào cần theo dõi.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {upcomingScheduleItems.map((item) => {
+                const cfg = statusConfig[item.session.status || "SCHEDULED"] || defaultStatusConfig;
+                return (
+                  <button
+                    key={item.session.id}
+                    onClick={() => handleOpenSessionDetail(item.session.id)}
+                    className="hover:bg-background flex w-full items-center justify-between rounded-lg border border-slate-200/80 bg-white p-2.5 text-left transition-colors dark:border-slate-800 dark:bg-slate-950/50">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {item.session.roomName || `Phiên #${item.session.id}`}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {formatDateTime(item.session.joinTime)}
+                      </p>
+                    </div>
+                    <Badge className={cn("border-0", cfg.badgeClass)}>{cfg.label}</Badge>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+          <p className="mb-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
+            Đánh giá gần đây
+          </p>
+          {reviewsLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-12" />
+              <Skeleton className="h-12" />
+            </div>
+          ) : recentReviews.length === 0 ? (
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Bạn chưa có đánh giá nào gần đây.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {recentReviews.map((review) => (
+                <button
+                  key={review.id}
+                  onClick={() => {
+                    if (review.id) {
+                      navigate(`/mentor/reviews/${review.id}`);
+                    }
+                  }}
+                  className="hover:bg-background flex w-full items-center justify-between rounded-lg border border-slate-200/80 bg-white p-2.5 text-left transition-colors dark:border-slate-800 dark:bg-slate-950/50">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {review.session?.roomName || `Phiên #${review.session?.id || review.id}`}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Học viên #{review.session?.userId || "-"}
+                    </p>
+                  </div>
+                  <span className="flex items-center gap-1 text-xs font-medium text-yellow-600">
+                    <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
+                    {typeof review.rating === "number" ? review.rating.toFixed(1) : "-"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="border-emerald-200/70 bg-white dark:border-emerald-900/50 dark:bg-slate-950">
+        <CardContent className="flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              Dashboard Mentor
+            </p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Chào mừng trở lại, {user?.name || "Mentor"}
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Theo dõi lịch hẹn, tiến độ mentoring và các hành động ưu tiên trong ngày.
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/mentor?tab=sessions")}>
+            Quản lý phiên
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="border-slate-200/80 dark:border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              Tổng phiên phỏng vấn
+            </CardTitle>
+            <Calendar className="h-5 w-5 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            {sessionsLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-              </div>
-            ) : upcomingScheduleItems.length === 0 ? (
-              <p className="text-sm text-slate-500">Hiện chưa có phiên nào cần theo dõi.</p>
-            ) : (
-              <div className="space-y-2">
-                {upcomingScheduleItems.map((item) => {
-                  const cfg =
-                    statusConfig[item.session.status || "SCHEDULED"] || defaultStatusConfig;
-                  return (
-                    <button
-                      key={item.session.id}
-                      onClick={() => handleOpenSessionDetail(item.session.id)}
-                      className="hover:bg-muted flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors">
-                      <div>
-                        <p className="text-sm font-semibold">
-                          {item.session.roomName || `Phiên #${item.session.id}`}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {formatDateTime(item.session.joinTime)}
-                        </p>
-                      </div>
-                      <Badge className={cfg.badgeClass}>{cfg.label}</Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {totalSessions}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {completedSessions} hoàn thành • {upcomingSessions} sắp tới
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Đánh giá gần đây</CardTitle>
-            <CardDescription>Những đánh giá mentor đã gửi gần nhất</CardDescription>
+        <Card className="border-slate-200/80 dark:border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              Học viên đã hỗ trợ
+            </CardTitle>
+            <Users className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            {reviewsLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-              </div>
-            ) : recentReviews.length === 0 ? (
-              <p className="text-sm text-slate-500">Bạn chưa có đánh giá nào gần đây.</p>
-            ) : (
-              <div className="space-y-2">
-                {recentReviews.map((review) => (
-                  <button
-                    key={review.id}
-                    onClick={() => {
-                      if (review.id) {
-                        navigate(`/mentor/reviews/${review.id}`);
-                      }
-                    }}
-                    className="hover:bg-muted flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors">
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {review.session?.roomName || `Phiên #${review.session?.id || review.id}`}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Học viên #{review.session?.userId || "-"}
-                      </p>
-                    </div>
-                    <span className="flex items-center gap-1 text-sm font-medium text-yellow-600">
-                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                      {typeof review.rating === "number" ? review.rating.toFixed(1) : "-"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {totalStudents}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Tính theo lịch sử mentoring
+            </p>
           </CardContent>
         </Card>
+
+        <Card className="border-slate-200/80 dark:border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              Đánh giá trung bình
+            </CardTitle>
+            <Star className="h-5 w-5 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {averageRating}
+              </span>
+              <span className="text-sm text-slate-500">/5</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Dựa trên đánh giá đã gửi</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200/80 dark:border-slate-800">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              Tổng thu nhập ước tính
+            </CardTitle>
+            <TrendingUp className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {formatCurrency(totalEarnings)}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Từ các phiên đã hoàn thành</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="xl:hidden">
+        <Tabs value={mobileView} onValueChange={setMobileView}>
+          <TabsList className="mb-3 grid w-full grid-cols-2">
+            <TabsTrigger value={MOBILE_VIEW_AGENDA}>Danh sách</TabsTrigger>
+            <TabsTrigger value={MOBILE_VIEW_CALENDAR}>Lịch tháng</TabsTrigger>
+          </TabsList>
+          <TabsContent value={MOBILE_VIEW_AGENDA}>{renderAgendaContent()}</TabsContent>
+          <TabsContent value={MOBILE_VIEW_CALENDAR}>{renderCalendarContent()}</TabsContent>
+        </Tabs>
+      </div>
+
+      <div className="hidden gap-6 xl:grid xl:grid-cols-[minmax(0,1.7fr)_minmax(340px,1fr)]">
+        {renderCalendarContent()}
+        {renderAgendaContent()}
       </div>
     </div>
   );

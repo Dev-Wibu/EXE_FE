@@ -77,17 +77,17 @@ export function MentorSessionDetailPage() {
   const canReview = session.status === "COMPLETED";
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" onClick={() => navigate("/mentor?tab=sessions")}>
+    <div className="space-y-5">
+      <Button variant="outline" className="w-fit" onClick={() => navigate("/mentor?tab=sessions")}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại danh sách phiên
       </Button>
 
-      <Card className="border-emerald-100 dark:border-slate-800">
+      <Card className="border-slate-200/80 dark:border-slate-800">
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
                 <Video className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
@@ -95,34 +95,37 @@ export function MentorSessionDetailPage() {
                 <CardDescription>Chi tiết phiên phỏng vấn mentor</CardDescription>
               </div>
             </div>
-            <Badge className={status.badgeClass}>{status.label}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">Mã #{session.id || "-"}</Badge>
+              <Badge className={status.badgeClass}>{status.label}</Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <Calendar className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Mã phiên:</span>
               <span className="font-medium">{session.id || "-"}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <User className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Học viên:</span>
               <span className="font-medium">#{session.userId || "-"}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <User className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Mentor:</span>
               <span className="font-medium">
                 {mentorInfo?.name || (session.userId2 ? `Mentor #${session.userId2}` : "-")}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <Clock className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Giờ hẹn:</span>
               <span className="font-medium">{formatDateTime(session.joinTime)}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <Clock className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Thời lượng:</span>
               <span className="font-medium">
@@ -131,7 +134,7 @@ export function MentorSessionDetailPage() {
                   : "-"}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-900/50">
               <CreditCard className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Tổng giá:</span>
               <span className="font-medium">
@@ -140,14 +143,17 @@ export function MentorSessionDetailPage() {
                   : "-"}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-3">
+            <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm sm:col-span-2 lg:col-span-3 dark:bg-slate-900/50">
               <CreditCard className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 dark:text-slate-400">Mã giao dịch:</span>
               <span className="font-medium">{session.transactionCode || "-"}</span>
             </div>
           </div>
 
-          <div className="border-t pt-4">
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+            <p className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
+              Hành động nhanh
+            </p>
             <div className="flex flex-wrap gap-2">
               {canJoinRoom && (
                 <Button
@@ -195,7 +201,7 @@ export function MentorSessionDetailPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-emerald-100 dark:border-slate-800">
+      <Card className="border-slate-200/80 dark:border-slate-800">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-[#FFD700]" />
@@ -209,7 +215,7 @@ export function MentorSessionDetailPage() {
           ) : !mentorReview ? (
             <p className="text-sm text-slate-500">Phiên này chưa có đánh giá nào được gửi.</p>
           ) : (
-            <div className="space-y-3 text-sm">
+            <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 text-sm dark:border-slate-800 dark:bg-slate-900/30">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="bg-yellow-100 text-yellow-700">
                   <Star className="mr-1 h-3 w-3 fill-yellow-500 text-yellow-500" />
