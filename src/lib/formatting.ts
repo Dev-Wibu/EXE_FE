@@ -37,7 +37,9 @@ export function getTransactionTypeLabel(type: string): string {
     case "payment":
       return "Thanh toán";
     case "refund":
-      return "Hoàn tiền";
+      return "Rút tiền";
+    case "unknown":
+      return "Không xác định";
     default:
       return type;
   }

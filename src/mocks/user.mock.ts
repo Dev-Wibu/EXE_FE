@@ -17,7 +17,7 @@ export interface Wallet {
 
 export interface Transaction {
   id: number;
-  type: "deposit" | "payment" | "refund";
+  type: "deposit" | "payment" | "refund" | "unknown";
   amount: number;
   date: string;
   description: string;

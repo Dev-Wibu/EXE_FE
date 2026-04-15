@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowUpRight, Plus, Wallet as WalletIcon } from "lucide-react";
+import { AlertCircle, ArrowDownLeft, ArrowUpRight, Plus, Wallet as WalletIcon } from "lucide-react";
 
 import {
   formatCurrency,
@@ -121,15 +121,17 @@ export function WalletTab({
                       transaction.type === "deposit"
                         ? "bg-emerald-100 dark:bg-emerald-900/30"
                         : transaction.type === "refund"
-                          ? "bg-blue-100 dark:bg-blue-900/30"
-                          : "bg-rose-100 dark:bg-rose-900/30"
+                          ? "bg-rose-100 dark:bg-rose-900/30"
+                          : transaction.type === "unknown"
+                            ? "bg-slate-100 dark:bg-slate-700/50"
+                            : "bg-rose-100 dark:bg-rose-900/30"
                     }`}>
-                    {transaction.type === "deposit" || transaction.type === "refund" ? (
-                      <ArrowDownLeft
-                        className={`h-5 w-5 ${
-                          transaction.type === "deposit" ? "text-emerald-500" : "text-blue-500"
-                        }`}
-                      />
+                    {transaction.type === "deposit" ? (
+                      <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
+                    ) : transaction.type === "refund" ? (
+                      <ArrowUpRight className="h-5 w-5 text-rose-500" />
+                    ) : transaction.type === "unknown" ? (
+                      <AlertCircle className="h-5 w-5 text-slate-500 dark:text-slate-300" />
                     ) : (
                       <ArrowUpRight className="h-5 w-5 text-rose-500" />
                     )}

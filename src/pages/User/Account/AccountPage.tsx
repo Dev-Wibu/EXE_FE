@@ -1,10 +1,9 @@
 import { Crown, FileText, User } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { normalizeMajor } from "@/constants/majors";
-import type { TransactionEntity } from "@/interfaces";
 import {
   addPaymentSupportLog,
   extractCheckoutTokenFromUrl,
@@ -12,7 +11,7 @@ import {
   extractTransactionCodeFromUrl,
   upsertPaymentRecoveryContext,
 } from "@/lib";
-import type { Transaction, Wallet } from "@/mocks/user.mock";
+import type { Wallet } from "@/mocks/user.mock";
 import { transactionManager, usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
@@ -20,6 +19,7 @@ import { toast } from "sonner";
 import { MembershipTab, ProfileTab, WalletTab } from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
+import { isWalletScopedTransaction, mapTransactionToWalletTransaction } from "./wallet-mapping";
 
 const DEFAULT_WALLET: Wallet = {
   balance: 0,
@@ -47,37 +47,6 @@ const TOP_UP_MAX_AMOUNT = 20_000_000;
 const TOP_UP_STEP = 1_000;
 const TOP_UP_PRESET_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000];
 
-const mapTransactionToWalletTransaction = (transaction: TransactionEntity): Transaction => {
-  const rawAmount = Math.abs(Number(transaction.amount || 0));
-  const isIncoming =
-    transaction.paymentPurpose === "TOP_UP_WALLET" || transaction.transactionType === true;
-  const type: Transaction["type"] =
-    transaction.paymentPurpose === "TOP_UP_WALLET"
-      ? "deposit"
-      : transaction.paymentPurpose === "WITHDRAW_FROM_WALLET"
-        ? "refund"
-        : "payment";
-
-  const description =
-    transaction.description ||
-    (transaction.paymentPurpose === "TOP_UP_WALLET"
-      ? "Nạp tiền vào ví"
-      : transaction.paymentPurpose === "MENTOR_INTERVIEW"
-        ? "Thanh toán phiên phỏng vấn"
-        : transaction.paymentPurpose === "BUY_MEMBERSHIP"
-          ? "Thanh toán gói thành viên"
-          : "Giao dịch ví");
-
-  return {
-    id: Number(transaction.id || Date.now()),
-    type,
-    amount: isIncoming ? rawAmount : -rawAmount,
-    date: transaction.createdAt || new Date().toISOString(),
-    description,
-    status: "completed",
-  };
-};
-
 export function AccountPage() {
   const { user: authUser, setUser } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -93,6 +62,7 @@ export function AccountPage() {
   const [isWalletLoading, setIsWalletLoading] = useState(false);
   const [isTopUpLoading, setIsTopUpLoading] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState<string>(String(TOP_UP_PRESET_AMOUNTS[1]));
+  const topUpInFlightRef = useRef(false);
 
   // Form state for editing
   const [formData, setFormData] = useState<Partial<UserProfileData>>({});
@@ -182,6 +152,7 @@ export function AccountPage() {
       const response = await transactionManager.getByUserId(Number(authUser.id));
       if (response.success && response.data) {
         const mappedTransactions = response.data
+          .filter(isWalletScopedTransaction)
           .map(mapTransactionToWalletTransaction)
           .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 
@@ -374,6 +345,10 @@ export function AccountPage() {
       return;
     }
 
+    if (topUpInFlightRef.current) {
+      return;
+    }
+
     if (amount < TOP_UP_MIN_AMOUNT || amount > TOP_UP_MAX_AMOUNT || amount % TOP_UP_STEP !== 0) {
       toast.error(
         `Số tiền nạp phải từ ${TOP_UP_MIN_AMOUNT.toLocaleString("vi-VN")} đến ${TOP_UP_MAX_AMOUNT.toLocaleString("vi-VN")} và chia hết cho ${TOP_UP_STEP.toLocaleString("vi-VN")}.`
@@ -381,6 +356,7 @@ export function AccountPage() {
       return;
     }
 
+    topUpInFlightRef.current = true;
     setIsTopUpLoading(true);
     try {
       const response = await transactionManager.transferIn(amount, Number(authUser.id));
@@ -478,6 +454,7 @@ export function AccountPage() {
       });
       toast.error("Không thể tạo link nạp tiền.");
     } finally {
+      topUpInFlightRef.current = false;
       setIsTopUpLoading(false);
     }
   };
