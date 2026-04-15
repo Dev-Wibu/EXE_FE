@@ -14,13 +14,7 @@ import type {
   SchemaMentorResponse,
 } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
-import * as mentorMock from "@/mocks/mentors.mock";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
 // Re-export Mentor type for convenience
 export type { Mentor } from "@/interfaces";
@@ -47,43 +41,8 @@ function createEmptyFilePlaceholder(): File {
   return new File([], "empty.txt", { type: "text/plain" });
 }
 
-// Local mutable array for mock CRUD operations
-let mockMentorsData: Mentor[] | null = null;
-
 export class MentorManager implements BaseManager<Mentor> {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
-
-  /**
-   * Transform mock mentor data to backend schema format
-   */
-  private transformMockMentor(mockMentor: mentorMock.Mentor): Mentor {
-    return {
-      id: mockMentor.id,
-      name: mockMentor.name,
-      email: `${mockMentor.name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
-      role: "MENTOR",
-      bio: `${mockMentor.position} at ${mockMentor.company}`,
-      expertise: mockMentor.skills.join(", "),
-      currentCompany: mockMentor.company,
-      pricePerMinute: mockMentor.pricePerMinute,
-      totalSession: mockMentor.totalSessions,
-      averageRating: mockMentor.rating,
-      active: true,
-      avatarUrl: mockMentor.avatar || undefined,
-    };
-  }
-
-  /**
-   * Get mock mentors data, initializing if needed
-   */
-  private async getMockMentors(): Promise<Mentor[]> {
-    if (!mockMentorsData) {
-      const mockMentors = await mentorMock.fetchMentors();
-      mockMentorsData = mockMentors.map((m) => this.transformMockMentor(m));
-    }
-    return mockMentorsData;
-  }
 
   /**
    * Get all mentors
@@ -92,14 +51,6 @@ export class MentorManager implements BaseManager<Mentor> {
   async getAll(
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<Mentor> | Mentor[]>> {
-    if (this.mode === "mock") {
-      const mentors = await this.getMockMentors();
-      return {
-        success: true,
-        data: [...mentors],
-      };
-    }
-
     try {
       const response = await this.api.get<
         SchemaMentorResponse[] | PaginatedResponse<SchemaMentorResponse>
@@ -121,21 +72,6 @@ export class MentorManager implements BaseManager<Mentor> {
    * GET /api/mentors/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<Mentor>> {
-    if (this.mode === "mock") {
-      const mentors = await this.getMockMentors();
-      const mentor = mentors.find((m) => m.id === Number(id));
-      if (!mentor) {
-        return {
-          success: false,
-          error: "Mentor not found",
-        };
-      }
-      return {
-        success: true,
-        data: { ...mentor },
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, { id });
       const response = await this.api.get<SchemaMentorResponse>(endpoint);
@@ -157,33 +93,6 @@ export class MentorManager implements BaseManager<Mentor> {
    * According to schema: { data: MentorInfo, avatar?: File, identityFile?: File, degreeFile?: File, otherFile?: File }
    */
   async create(_data: Partial<Mentor> | CreateMentorData): Promise<ApiResponse<Mentor>> {
-    if (this.mode === "mock") {
-      // Ensure mock data is initialized
-      await this.getMockMentors();
-      // Use robust ID generation
-      const newId = Date.now() + Math.floor(Math.random() * 1000);
-      const newMentor: Mentor = {
-        id: newId,
-        name: _data.name,
-        email: _data.email,
-        role: "MENTOR",
-        bio: _data.bio,
-        expertise: _data.expertise,
-        yearsOfExperience: _data.yearsOfExperience,
-        linkedInUrl: _data.linkedInUrl,
-        currentCompany: _data.currentCompany,
-        pricePerMinute: (_data as Mentor).pricePerMinute,
-        averageRating: (_data as Mentor).averageRating,
-        totalSession: 0,
-        active: (_data as Mentor).active !== false,
-      };
-      mockMentorsData?.push(newMentor);
-      return {
-        success: true,
-        data: newMentor,
-      };
-    }
-
     try {
       // Validate required fields
       if (!_data.name || !_data.name.trim()) {
@@ -293,33 +202,6 @@ export class MentorManager implements BaseManager<Mentor> {
     _id: string | number,
     _data: Partial<Mentor> | CreateMentorData
   ): Promise<ApiResponse<Mentor>> {
-    if (this.mode === "mock") {
-      const mentors = await this.getMockMentors();
-      const index = mentors.findIndex((m) => m.id === Number(_id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Mentor not found",
-        };
-      }
-      // Extract file fields and only keep Mentor-compatible fields
-      // Prefix unused destructured variables with underscore to avoid lint errors
-
-      const { avatar, identityFile, degreeFile, otherFile, ...mentorData } =
-        _data as Partial<Mentor> & CreateMentorData;
-      // Note: Files (avatar, identityFile, degreeFile, otherFile) are ignored in mock mode
-      void avatar;
-      void identityFile;
-      void degreeFile;
-      void otherFile;
-
-      mockMentorsData![index] = { ...mockMentorsData![index], ...mentorData };
-      return {
-        success: true,
-        data: mockMentorsData![index],
-      };
-    }
-
     try {
       // Backend uses POST /api/mentors for both create and update (multipart/form-data)
       // For update, include 'id' in the JSON data field
@@ -417,23 +299,6 @@ export class MentorManager implements BaseManager<Mentor> {
    * According to schema-from-be.d.ts
    */
   async toggleActive(_id: string | number): Promise<ApiResponse<Mentor>> {
-    if (this.mode === "mock") {
-      const mentors = await this.getMockMentors();
-      const index = mentors.findIndex((m) => m.id === Number(_id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Mentor not found",
-        };
-      }
-      // Toggle active status
-      mockMentorsData![index].active = !mockMentorsData![index].active;
-      return {
-        success: true,
-        data: mockMentorsData![index],
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.TOGGLE, { id: _id });
       const response = await this.api.get(endpoint);

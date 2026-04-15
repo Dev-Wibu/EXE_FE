@@ -6,12 +6,7 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type { PracticeSetItem } from "./practice-set-item.manager";
 import type { Major } from "./question-major.manager";
 
@@ -94,33 +89,7 @@ export interface PracticeSetFormData {
   majorId?: number;
 }
 
-// Mock data for development
-const mockPracticeSets: PracticeSet[] = [
-  {
-    id: 1,
-    practiceSetName: "Frontend Developer Interview",
-    objective: "Assess React and JavaScript skills",
-    level: "JUNIOR",
-    major: { id: 1, majorName: "Software Engineering" },
-  },
-  {
-    id: 2,
-    practiceSetName: "Data Science Fundamentals",
-    objective: "Test Python and ML knowledge",
-    level: "FRESHER",
-    major: { id: 2, majorName: "Data Science" },
-  },
-  {
-    id: 3,
-    practiceSetName: "Product Manager Assessment",
-    objective: "Evaluate product thinking",
-    level: "MIDDLE",
-    major: { id: 3, majorName: "Product Management" },
-  },
-];
-
 export class PracticeSetManager implements BaseManager<PracticeSet> {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -130,13 +99,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
   async getAll(
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<PracticeSet> | PracticeSet[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [...mockPracticeSets],
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.PRACTICE_SETS.LIST, { params: _params });
       return {
@@ -156,20 +118,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * GET /api/practice-sets/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<PracticeSet>> {
-    if (this.mode === "mock") {
-      const practiceSet = mockPracticeSets.find((qs) => qs.id === Number(id));
-      if (!practiceSet) {
-        return {
-          success: false,
-          error: "Practice set not found",
-        };
-      }
-      return {
-        success: true,
-        data: practiceSet,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DETAIL, { id });
       const response = await this.api.get(endpoint);
@@ -190,14 +138,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * GET /api/practice-sets/level/{level}
    */
   async getByLevel(level: PracticeSetLevel): Promise<ApiResponse<PracticeSet[]>> {
-    if (this.mode === "mock") {
-      const filtered = mockPracticeSets.filter((qs) => qs.level === level);
-      return {
-        success: true,
-        data: filtered,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_LEVEL, { level });
       const response = await this.api.get(endpoint);
@@ -219,22 +159,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * Backend requires full PracticeSet schema including id: 0 for creation
    */
   async create(data: Partial<PracticeSet>): Promise<ApiResponse<PracticeSet>> {
-    if (this.mode === "mock") {
-      const newId = Math.max(...mockPracticeSets.map((qs) => qs.id || 0)) + 1;
-      const newPracticeSet: PracticeSet = {
-        id: newId,
-        practiceSetName: data.practiceSetName,
-        objective: data.objective,
-        level: data.level,
-        major: data.major,
-      };
-      mockPracticeSets.push(newPracticeSet);
-      return {
-        success: true,
-        data: newPracticeSet,
-      };
-    }
-
     try {
       // Backend requires full PracticeSet schema for creation
       // id: 0 indicates new record creation
@@ -263,21 +187,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * PUT /api/practice-sets (JSON body)
    */
   async update(id: string | number, data: Partial<PracticeSet>): Promise<ApiResponse<PracticeSet>> {
-    if (this.mode === "mock") {
-      const index = mockPracticeSets.findIndex((qs) => qs.id === Number(id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Practice set not found",
-        };
-      }
-      mockPracticeSets[index] = { ...mockPracticeSets[index], ...data };
-      return {
-        success: true,
-        data: mockPracticeSets[index],
-      };
-    }
-
     try {
       const practiceSetData: PracticeSet = { ...data, id: Number(id) };
       const response = await this.api.put(API_ENDPOINTS.PRACTICE_SETS.UPDATE, practiceSetData);
@@ -299,20 +208,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * Schema provides DELETE endpoint for practice sets
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      const index = mockPracticeSets.findIndex((qs) => qs.id === Number(id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Practice set not found",
-        };
-      }
-      mockPracticeSets.splice(index, 1);
-      return {
-        success: true,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DELETE, { id });
       // Use DELETE method as per schema
@@ -338,13 +233,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
       practiceSetItem: PracticeSetItem[];
     }>
   > {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Full set view not supported in mock mode",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.FULL_SET, { id });
       const response = await this.api.get(endpoint);
@@ -364,9 +252,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
   async getByInterviewSession(
     interviewSessionId: number
   ): Promise<ApiResponse<PracticeSetResponse[]>> {
-    if (this.mode === "mock") {
-      return { success: true, data: [] };
-    }
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_INTERVIEW_SESSION, {
         interviewSessionId,
@@ -393,13 +278,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     aiInterviewId?: number;
     dateNumber: number;
   }): Promise<ApiResponse<PracticeSet>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Tạo lộ trình AI không được hỗ trợ ở chế độ mock",
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.PRACTICE_SETS.CREATE_BY_AI, data);
       return { success: true, data: response.data };
@@ -416,10 +294,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    * GET /api/practice-sets/user/{userId}
    */
   async getByUser(userId: number): Promise<ApiResponse<PracticeSetResponse[]>> {
-    if (this.mode === "mock") {
-      return { success: true, data: [] };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_USER, { userId });
       const response = await this.api.get(endpoint);
@@ -452,13 +326,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
       hint?: string;
     }>;
   }): Promise<ApiResponse<PracticeSet>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Create full set not supported in mock mode",
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.PRACTICE_SETS.CREATE_FULL, data);
       return { success: true, data: response.data };

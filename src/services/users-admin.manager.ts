@@ -14,14 +14,8 @@ import type {
   User,
 } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import { normalizeMajor } from "@/constants/majors";
-import * as usersMock from "@/mocks/users-admin.mock";
 
 // Re-export User type for convenience
 export type { User } from "@/interfaces";
@@ -70,7 +64,6 @@ function createEmptyFilePlaceholder(): File {
 }
 
 export class UsersAdminManager implements BaseManager<User> {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -78,14 +71,6 @@ export class UsersAdminManager implements BaseManager<User> {
    * GET /api/users
    */
   async getAll(_params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<User> | User[]>> {
-    if (this.mode === "mock") {
-      const users = await usersMock.fetchUsers();
-      return {
-        success: true,
-        data: users,
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.USERS.LIST, { params: _params });
       return {
@@ -105,20 +90,6 @@ export class UsersAdminManager implements BaseManager<User> {
    * GET /api/users/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<User>> {
-    if (this.mode === "mock") {
-      const user = await usersMock.fetchUser(Number(id));
-      if (!user) {
-        return {
-          success: false,
-          error: "User not found",
-        };
-      }
-      return {
-        success: true,
-        data: user,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.USERS.DETAIL, { id });
       const response = await this.api.get(endpoint);
@@ -142,25 +113,6 @@ export class UsersAdminManager implements BaseManager<User> {
    * Note: Registration does NOT require avatar or CV upload (2026-01-20 update)
    */
   async create(_data: Partial<User> | CreateUserData): Promise<ApiResponse<User>> {
-    if (this.mode === "mock") {
-      // In mock mode, simulate creating a user with robust ID generation
-      const newId = Date.now() + Math.floor(Math.random() * 1000);
-      const newUser: User = {
-        id: newId,
-        name: _data.name,
-        email: _data.email,
-        role: (_data as User).role || "USER",
-        isActive: (_data as User).isActive !== false,
-        university: _data.university,
-        major: normalizeMajor(_data.major),
-      };
-      usersMock.mockUsers.push(newUser);
-      return {
-        success: true,
-        data: newUser,
-      };
-    }
-
     try {
       // Validate required fields
       if (!_data.name || !_data.name.trim()) {
@@ -268,22 +220,6 @@ export class UsersAdminManager implements BaseManager<User> {
     avatar?: File,
     cvFile?: File
   ): Promise<ApiResponse<User>> {
-    if (this.mode === "mock") {
-      // In mock mode, simulate updating a user
-      const index = usersMock.mockUsers.findIndex((u) => u.id === Number(_id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "User not found",
-        };
-      }
-      usersMock.mockUsers[index] = { ...usersMock.mockUsers[index], ..._data };
-      return {
-        success: true,
-        data: usersMock.mockUsers[index],
-      };
-    }
-
     try {
       // According to schema, use multipart/form-data with JSON 'data' field (same as create)
       const formData = new FormData();
@@ -367,23 +303,6 @@ export class UsersAdminManager implements BaseManager<User> {
    * @param userData Current user data to preserve during toggle operation
    */
   async toggleActive(_id: string | number, userData?: Partial<User>): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      // In mock mode, toggle isActive status
-      const index = usersMock.mockUsers.findIndex((u) => u.id === Number(_id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "User not found",
-        };
-      }
-      // Toggle - if currently active (or null/undefined), deactivate; if inactive, activate
-      const currentlyActive = usersMock.mockUsers[index].isActive !== false;
-      usersMock.mockUsers[index].isActive = !currentlyActive;
-      return {
-        success: true,
-      };
-    }
-
     try {
       // If no user data provided, fetch it first to preserve existing data
       let currentUserData = userData;
@@ -490,28 +409,6 @@ export class UsersAdminManager implements BaseManager<User> {
     userId: string | number,
     cvFile: File
   ): Promise<ApiResponse<SchemaCandidateProfile>> {
-    if (this.mode === "mock") {
-      // In mock mode, simulate CV upload
-      return {
-        success: true,
-        data: {
-          id: Date.now(),
-          user: { id: Number(userId) },
-          targetRole: "Software Engineer",
-          targetLevel: "Junior",
-          introduction: "Mock CV data",
-          technicalSkills: ["JavaScript", "React"],
-          softSkills: ["Communication"],
-          tools: ["VS Code"],
-          projects: [],
-          workExperiences: [],
-          educations: [],
-          certifications: [],
-          achievements: [],
-        },
-      };
-    }
-
     try {
       // Validate userId
       if (userId === null || userId === undefined) {

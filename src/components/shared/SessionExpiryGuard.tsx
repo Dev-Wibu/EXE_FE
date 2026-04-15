@@ -5,7 +5,6 @@ import { isSessionExpired } from "@/lib/auth-session";
 import { useAuthStore } from "@/stores/authStore";
 
 const SESSION_CHECK_INTERVAL_MS = 30000;
-const IS_API_MODE = import.meta.env.VITE_MANAGER_MODE === "api";
 
 export function SessionExpiryGuard() {
   const navigate = useNavigate();
@@ -13,7 +12,7 @@ export function SessionExpiryGuard() {
   const { isLoading, isLoggedIn, expiresAt, clearAuth } = useAuthStore();
 
   const enforceSessionExpiry = useCallback(() => {
-    if (!IS_API_MODE || isLoading || !isLoggedIn) {
+    if (isLoading || !isLoggedIn) {
       return;
     }
 
@@ -36,7 +35,7 @@ export function SessionExpiryGuard() {
   }, [enforceSessionExpiry]);
 
   useEffect(() => {
-    if (!IS_API_MODE || !isLoggedIn) {
+    if (!isLoggedIn) {
       return;
     }
 
@@ -50,10 +49,6 @@ export function SessionExpiryGuard() {
   }, [enforceSessionExpiry, isLoggedIn]);
 
   useEffect(() => {
-    if (!IS_API_MODE) {
-      return;
-    }
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         enforceSessionExpiry();

@@ -4,22 +4,39 @@
  */
 
 import type { ApiResponse } from "@/interfaces";
-import type { User as AuthUser, MentorRegistration } from "@/mocks/auth.mock";
 import type { components } from "../../schema-from-be";
 
 import {
   API_BASE_URL,
   API_ENDPOINTS,
   ERROR_MESSAGES,
-  MANAGER_MODE,
   createApiInstance,
 } from "@/constants/api.config";
 import { isValidMajor } from "@/constants/majors";
 import { fetchClient } from "@/lib/api";
-import * as authMock from "@/mocks/auth.mock";
 
 // Type from backend schema
 type BackendUser = components["schemas"]["User"];
+
+type AuthRole = "ADMIN" | "USER" | "MENTOR" | "STAFF";
+
+type AuthUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  role: AuthRole;
+  avatar?: string | null;
+  bio?: string;
+};
+
+type MentorRegistration = {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: string;
+  reviewedAt: string | null;
+};
 
 type LoginPayload = {
   user: AuthUser;
@@ -146,7 +163,6 @@ export interface MentorRegisterData {
 }
 
 export class AuthManager {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -508,18 +524,6 @@ export class AuthManager {
    */
   async login(credentials: LoginCredentials): Promise<ApiResponse<LoginPayload>> {
     // For mock mode, use mock implementation
-    if (this.mode === "mock") {
-      const result = await authMock.mockLogin(credentials.email, credentials.password);
-      return {
-        success: result.success,
-        data: result.user
-          ? {
-              user: result.user,
-            }
-          : undefined,
-        error: result.error,
-      };
-    }
 
     try {
       const { data, error } = await fetchClient.POST("/api/auth/login", {
@@ -689,19 +693,6 @@ export class AuthManager {
    * }
    */
   async signup(data: SignupData): Promise<ApiResponse<LoginPayload>> {
-    if (this.mode === "mock") {
-      const result = await authMock.mockSignup(data);
-      return {
-        success: result.success,
-        data: result.user
-          ? {
-              user: result.user,
-            }
-          : undefined,
-        error: result.error,
-      };
-    }
-
     try {
       if (!isValidMajor(data.major)) {
         return {
@@ -766,26 +757,6 @@ export class AuthManager {
       registration: MentorRegistration;
     }>
   > {
-    if (this.mode === "mock") {
-      const result = await authMock.mockMentorRegister({
-        fullName: data.name,
-        email: data.email,
-        password: data.password,
-        phone: "",
-        yearsOfExperience: String(data.yearsOfExperience || 0),
-        company: data.currentCompany,
-        position: "",
-        expertise: data.expertise,
-        bio: data.bio,
-        linkedInUrl: data.linkedInUrl,
-      });
-      return {
-        success: result.success,
-        data: result.registration ? { registration: result.registration } : undefined,
-        error: result.error,
-      };
-    }
-
     try {
       // Create FormData for multipart/form-data request
       const formData = new FormData();
@@ -871,14 +842,6 @@ export class AuthManager {
    * Check mentor registration status
    */
   async checkMentorStatus(): Promise<ApiResponse<MentorRegistration>> {
-    if (this.mode === "mock") {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return {
-        success: true,
-        data: authMock.mockMentorRegistration,
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.AUTH.CHECK_STATUS);
       return {
@@ -897,14 +860,6 @@ export class AuthManager {
    * Refresh authentication token
    */
   async refreshToken(): Promise<ApiResponse<{ token: string }>> {
-    if (this.mode === "mock") {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return {
-        success: true,
-        data: { token: "mock-refreshed-token" },
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.AUTH.REFRESH);
       return {

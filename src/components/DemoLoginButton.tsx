@@ -26,8 +26,6 @@ interface DemoAccount {
   description: string;
 }
 
-const isApiMode = import.meta.env.VITE_MANAGER_MODE === "api";
-
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     role: "USER",
@@ -47,12 +45,6 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     password: "12345",
     description: "Tài khoản mentor để quản lý phiên phỏng vấn và hỗ trợ học viên",
   },
-  {
-    role: "STAFF",
-    email: "staff@example.com",
-    password: "staff123",
-    description: "Tài khoản nhân viên chỉ dùng cho mock mode",
-  },
 ];
 
 interface DemoLoginButtonProps {
@@ -62,9 +54,6 @@ interface DemoLoginButtonProps {
 export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const visibleAccounts = isApiMode
-    ? DEMO_ACCOUNTS.filter((account) => account.role !== "STAFF")
-    : DEMO_ACCOUNTS;
 
   const handleCopy = async (text: string, fieldId: string) => {
     try {
@@ -145,16 +134,15 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
                 <strong>Lưu ý:</strong> Đây là tài khoản ảo dùng để thử nghiệm chức năng. Click vào
                 tài khoản để tự động điền thông tin đăng nhập.
               </p>
-              {isApiMode && (
-                <p className="mt-1 text-xs text-amber-700">
-                  Chế độ API đang bật nên tài khoản STAFF được ẩn để tránh đăng nhập thất bại.
-                </p>
-              )}
+              <p className="mt-1 text-xs text-amber-700">
+                Hệ thống đang chạy API-only nên danh sách demo chỉ giữ các tài khoản backend đang hỗ
+                trợ.
+              </p>
             </div>
 
             {/* Account Cards */}
             <div className="space-y-4">
-              {visibleAccounts.map((account, index) => (
+              {DEMO_ACCOUNTS.map((account, index) => (
                 <div
                   key={`${account.role}-${account.email}`}
                   className="cursor-pointer rounded-xl border border-gray-200 p-4 transition-all hover:border-indigo-300 hover:bg-indigo-50"

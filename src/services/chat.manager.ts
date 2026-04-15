@@ -6,12 +6,7 @@
 import type { ApiResponse, PaginatedResponse, PaginationParams } from "@/interfaces";
 import type { components } from "../../schema-from-be";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
 export interface ChatSession {
   id: number;
@@ -69,7 +64,6 @@ const formatTimeForUi = (timestamp?: string): string => {
 };
 
 export class ChatManager {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   private mapBackendMessageToUi(raw: BackendChatMessage | Record<string, unknown>): ChatMessage {
@@ -112,14 +106,6 @@ export class ChatManager {
   async getChatSessions(
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<ChatSession> | ChatSession[]>> {
-    if (this.mode === "mock") {
-      void params;
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.CHAT.SESSIONS, { params });
       return {
@@ -138,14 +124,6 @@ export class ChatManager {
    * Get chat session by ID
    */
   async getChatSession(sessionId: number): Promise<ApiResponse<ChatSession>> {
-    if (this.mode === "mock") {
-      void sessionId;
-      return {
-        success: false,
-        error: "Không hỗ trợ tải phiên trò chuyện ở chế độ mock",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, { id: sessionId });
       const response = await this.api.get(endpoint);
@@ -168,15 +146,6 @@ export class ChatManager {
     sessionId: number,
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<ChatMessage> | ChatMessage[]>> {
-    if (this.mode === "mock") {
-      void sessionId;
-      void params;
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.MESSAGES, { id: sessionId });
       const response = await this.api.get(endpoint, { params });
@@ -209,15 +178,6 @@ export class ChatManager {
     currentFullId: string,
     recipientFullId: string
   ): Promise<ApiResponse<ChatHistoryMessage[]>> {
-    if (this.mode === "mock") {
-      void currentFullId;
-      void recipientFullId;
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MESSAGES.HISTORY, {
         currentFullId,
@@ -241,13 +201,6 @@ export class ChatManager {
    * GET /api/messages/contacts?myId={id}&role={ROLE}
    */
   async getContacts(myId: number, role: string): Promise<ApiResponse<number[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [1, 2, 3],
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.MESSAGES.CONTACTS, {
         params: { myId, role: role.toUpperCase() },
@@ -327,19 +280,6 @@ export class ChatManager {
    * Send a message in a chat session
    */
   async sendMessage(sessionId: number, content: string): Promise<ApiResponse<ChatMessage>> {
-    if (this.mode === "mock") {
-      void sessionId;
-      return {
-        success: true,
-        data: {
-          id: Date.now(),
-          sender: "user",
-          content,
-          time: formatTimeForUi(),
-        },
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SEND_MESSAGE, { id: sessionId });
       const response = await this.api.post(endpoint, { content });
@@ -359,14 +299,6 @@ export class ChatManager {
    * Get AI response for a chat session
    */
   async getAIResponse(sessionId: number): Promise<ApiResponse<ChatMessage>> {
-    if (this.mode === "mock") {
-      void sessionId;
-      return {
-        success: false,
-        error: "AI Chat hiện đã tắt ở chế độ mock",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.AI_RESPONSE, { id: sessionId });
       const response = await this.api.post(endpoint);
@@ -386,18 +318,6 @@ export class ChatManager {
    * Create a new chat session
    */
   async createChatSession(title: string): Promise<ApiResponse<ChatSession>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: {
-          id: Date.now(),
-          title,
-          lastMessage: "",
-          lastMessageTime: formatTimeForUi(),
-        },
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.CHAT.CREATE_SESSION, { title });
       return {
@@ -416,14 +336,6 @@ export class ChatManager {
    * Delete a chat session
    */
   async deleteChatSession(sessionId: number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      void sessionId;
-      return {
-        success: false,
-        error: "Delete operation not supported in mock mode",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, { id: sessionId });
       await this.api.post(endpoint);

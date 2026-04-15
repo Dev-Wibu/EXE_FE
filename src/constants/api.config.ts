@@ -6,9 +6,8 @@
 import type { ApiConfig, ManagerMode } from "@/interfaces";
 import axios, { AxiosHeaders, type AxiosInstance } from "axios";
 
-// Determine manager mode from environment variable or default to mock
-const envMode = import.meta.env.VITE_MANAGER_MODE as string;
-export const MANAGER_MODE: ManagerMode = envMode === "api" || envMode === "mock" ? envMode : "mock";
+// API-only mode: mock branches are removed from service managers.
+export const MANAGER_MODE: ManagerMode = "api";
 
 // API Base URL from environment or default (use localhost for development)
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";

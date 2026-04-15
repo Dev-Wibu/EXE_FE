@@ -6,12 +6,7 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type {
   Post,
   PostCommentRequest,
@@ -60,108 +55,7 @@ function unwrapPostResponses(data: unknown): Post[] {
   });
 }
 
-// Mock data for development
-const mockPosts: Post[] = [
-  {
-    postId: 1,
-    title: "Getting Started with System Design",
-    content: "System design interviews are crucial for senior engineering roles...",
-    summary: "A guide to system design interviews",
-    status: "PUBLISHED",
-    author: { id: 1, name: "John Doe", email: "john@example.com" },
-    creationDate: "2026-01-15T10:00:00Z",
-    lastModifiedDate: "2026-01-15T10:00:00Z",
-    major: { id: 1, name: "Computer Science", description: "CS Major" },
-    coverImgUrl: "https://example.com/cover1.jpg",
-    tags: ["system-design", "interview"],
-  },
-  {
-    postId: 2,
-    title: "Top 10 Behavioral Interview Tips",
-    content: "Behavioral interviews assess your soft skills and cultural fit...",
-    summary: "Tips for acing behavioral interviews",
-    status: "PUBLISHED",
-    author: { id: 2, name: "Jane Smith", email: "jane@example.com" },
-    creationDate: "2026-01-16T14:30:00Z",
-    lastModifiedDate: "2026-01-16T14:30:00Z",
-    major: { id: 2, name: "Business", description: "Business Major" },
-    coverImgUrl: "https://example.com/cover2.jpg",
-    tags: ["behavioral", "tips"],
-  },
-  {
-    postId: 3,
-    title: "Data Structures Cheat Sheet",
-    content: "Here is a quick reference for common data structures...",
-    summary: "Quick reference for data structures",
-    status: "DRAFT",
-    author: { id: 1, name: "John Doe", email: "john@example.com" },
-    creationDate: "2026-01-17T09:00:00Z",
-    lastModifiedDate: "2026-01-17T09:00:00Z",
-    tags: ["data-structures", "cheat-sheet"],
-  },
-];
-
-const mockComments: PostCommentResponse[] = [
-  {
-    id: 1,
-    postId: 1,
-    userId: 2,
-    userName: "Jane Smith",
-    userAvatar: "https://example.com/avatar2.jpg",
-    content: "Great article! Very helpful.",
-    createdAt: "2026-01-15T12:00:00Z",
-    updatedAt: "2026-01-15T12:00:00Z",
-  },
-  {
-    id: 2,
-    postId: 1,
-    userId: 3,
-    userName: "Bob Wilson",
-    userAvatar: "https://example.com/avatar3.jpg",
-    content: "Could you elaborate on the CAP theorem section?",
-    createdAt: "2026-01-15T13:00:00Z",
-    updatedAt: "2026-01-15T13:00:00Z",
-  },
-  {
-    id: 3,
-    postId: 1,
-    userId: 1,
-    userName: "John Doe",
-    content: "Sure! I will add more details soon.",
-    parentCommentId: 2,
-    createdAt: "2026-01-15T14:00:00Z",
-    updatedAt: "2026-01-15T14:00:00Z",
-  },
-];
-
-const mockLikes: PostLikeResponse[] = [
-  {
-    id: 1,
-    postId: 1,
-    userId: 2,
-    userName: "Jane Smith",
-    userAvatar: "https://example.com/avatar2.jpg",
-    createdAt: "2026-01-15T11:00:00Z",
-  },
-  {
-    id: 2,
-    postId: 1,
-    userId: 3,
-    userName: "Bob Wilson",
-    userAvatar: "https://example.com/avatar3.jpg",
-    createdAt: "2026-01-15T12:30:00Z",
-  },
-  {
-    id: 3,
-    postId: 2,
-    userId: 1,
-    userName: "John Doe",
-    createdAt: "2026-01-16T15:00:00Z",
-  },
-];
-
 export class PostManager implements BaseManager<Post> {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -169,22 +63,6 @@ export class PostManager implements BaseManager<Post> {
    * POST /api/posts (multipart/form-data)
    */
   async createPost(data: PostCreateRequest): Promise<ApiResponse<Post>> {
-    if (this.mode === "mock") {
-      const newId = Math.max(...mockPosts.map((p) => p.postId || 0)) + 1;
-      const newPost: Post = {
-        postId: newId,
-        title: data.title,
-        content: data.content,
-        summary: data.summary,
-        status: data.status || "DRAFT",
-        tags: data.tags,
-        creationDate: new Date().toISOString(),
-        lastModifiedDate: new Date().toISOString(),
-      };
-      mockPosts.push(newPost);
-      return { success: true, data: newPost };
-    }
-
     try {
       const formData = new FormData();
       if (data.title) formData.append("title", data.title);
@@ -216,11 +94,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/{postId}/comments
    */
   async getCommentsByPostId(postId: number): Promise<ApiResponse<PostCommentResponse[]>> {
-    if (this.mode === "mock") {
-      const comments = mockComments.filter((c) => c.postId === postId && !c.parentCommentId);
-      return { success: true, data: comments };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENTS, { postId });
       const response = await this.api.get(endpoint);
@@ -238,11 +111,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/{postId}/comments/count
    */
   async getCommentsCount(postId: number): Promise<ApiResponse<number>> {
-    if (this.mode === "mock") {
-      const count = mockComments.filter((c) => c.postId === postId).length;
-      return { success: true, data: count };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENTS_COUNT, { postId });
       const response = await this.api.get(endpoint);
@@ -260,21 +128,6 @@ export class PostManager implements BaseManager<Post> {
    * POST /api/posts/comments
    */
   async createComment(data: PostCommentRequest): Promise<ApiResponse<PostCommentResponse>> {
-    if (this.mode === "mock") {
-      const newId = Math.max(...mockComments.map((c) => c.id || 0)) + 1;
-      const newComment: PostCommentResponse = {
-        id: newId,
-        postId: data.postId,
-        userId: data.userId,
-        content: data.content,
-        parentCommentId: data.parentCommentId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      mockComments.push(newComment);
-      return { success: true, data: newComment };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.POSTS.CREATE_COMMENT, data);
       return { success: true, data: response.data };
@@ -291,14 +144,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/comments/{commentId}
    */
   async getCommentById(commentId: number): Promise<ApiResponse<PostCommentResponse>> {
-    if (this.mode === "mock") {
-      const comment = mockComments.find((c) => c.id === commentId);
-      if (!comment) {
-        return { success: false, error: "Comment not found" };
-      }
-      return { success: true, data: comment };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENT_DETAIL, { commentId });
       const response = await this.api.get(endpoint);
@@ -319,19 +164,6 @@ export class PostManager implements BaseManager<Post> {
     commentId: number,
     data: Partial<PostCommentRequest>
   ): Promise<ApiResponse<PostCommentResponse>> {
-    if (this.mode === "mock") {
-      const index = mockComments.findIndex((c) => c.id === commentId);
-      if (index === -1) {
-        return { success: false, error: "Comment not found" };
-      }
-      mockComments[index] = {
-        ...mockComments[index],
-        content: data.content || mockComments[index].content,
-        updatedAt: new Date().toISOString(),
-      };
-      return { success: true, data: mockComments[index] };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.UPDATE_COMMENT, { commentId });
       const response = await this.api.put(endpoint, data);
@@ -349,15 +181,6 @@ export class PostManager implements BaseManager<Post> {
    * DELETE /api/posts/comments/{commentId}
    */
   async deleteComment(commentId: number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      const index = mockComments.findIndex((c) => c.id === commentId);
-      if (index === -1) {
-        return { success: false, error: "Comment not found" };
-      }
-      mockComments.splice(index, 1);
-      return { success: true };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DELETE_COMMENT, { commentId });
       await this.api.delete(endpoint);
@@ -375,11 +198,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/comments/{parentCommentId}/replies
    */
   async getReplies(parentCommentId: number): Promise<ApiResponse<PostCommentResponse[]>> {
-    if (this.mode === "mock") {
-      const replies = mockComments.filter((c) => c.parentCommentId === parentCommentId);
-      return { success: true, data: replies };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENT_REPLIES, { parentCommentId });
       const response = await this.api.get(endpoint);
@@ -397,18 +215,6 @@ export class PostManager implements BaseManager<Post> {
    * POST /api/posts/likes
    */
   async likePost(data: PostLikeRequest): Promise<ApiResponse<PostLikeResponse>> {
-    if (this.mode === "mock") {
-      const newId = Math.max(...mockLikes.map((l) => l.id || 0)) + 1;
-      const newLike: PostLikeResponse = {
-        id: newId,
-        postId: data.postId,
-        userId: data.userId,
-        createdAt: new Date().toISOString(),
-      };
-      mockLikes.push(newLike);
-      return { success: true, data: newLike };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.POSTS.LIKE, data);
       return { success: true, data: response.data };
@@ -425,11 +231,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/likes/{postId}
    */
   async getLikesByPostId(postId: number): Promise<ApiResponse<PostLikeResponse[]>> {
-    if (this.mode === "mock") {
-      const likes = mockLikes.filter((l) => l.postId === postId);
-      return { success: true, data: likes };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.LIKES_BY_POST, { postId });
       const response = await this.api.get(endpoint);
@@ -447,11 +248,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/likes/{postId}/count
    */
   async getLikesCount(postId: number): Promise<ApiResponse<number>> {
-    if (this.mode === "mock") {
-      const count = mockLikes.filter((l) => l.postId === postId).length;
-      return { success: true, data: count };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.LIKES_COUNT, { postId });
       const response = await this.api.get(endpoint);
@@ -469,11 +265,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/likes/{postId}/check/{userId}
    */
   async checkLiked(postId: number, userId: number): Promise<ApiResponse<boolean>> {
-    if (this.mode === "mock") {
-      const liked = mockLikes.some((l) => l.postId === postId && l.userId === userId);
-      return { success: true, data: liked };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHECK_LIKED, { postId, userId });
       const response = await this.api.get(endpoint);
@@ -491,15 +282,6 @@ export class PostManager implements BaseManager<Post> {
    * DELETE /api/posts/likes/{postId}/{userId}
    */
   async unlikePost(postId: number, userId: number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      const index = mockLikes.findIndex((l) => l.postId === postId && l.userId === userId);
-      if (index === -1) {
-        return { success: false, error: "Like not found" };
-      }
-      mockLikes.splice(index, 1);
-      return { success: true };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.UNLIKE, { postId, userId });
       await this.api.delete(endpoint);
@@ -514,10 +296,6 @@ export class PostManager implements BaseManager<Post> {
 
   // BaseManager interface methods
   async getAll(_params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<Post> | Post[]>> {
-    if (this.mode === "mock") {
-      return { success: true, data: [...mockPosts] };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.POSTS.LIST, { params: _params });
       // Backend returns PostResponse[] wrapper — unwrap into Post[]
@@ -532,14 +310,6 @@ export class PostManager implements BaseManager<Post> {
   }
 
   async getById(id: string | number): Promise<ApiResponse<Post>> {
-    if (this.mode === "mock") {
-      const post = mockPosts.find((p) => p.postId === Number(id));
-      if (!post) {
-        return { success: false, error: "Post not found" };
-      }
-      return { success: true, data: post };
-    }
-
     try {
       // No GET /api/posts/{postId} endpoint in schema.
       // Fetch all posts and filter by postId as a workaround.
@@ -563,11 +333,6 @@ export class PostManager implements BaseManager<Post> {
    * GET /api/posts/published
    */
   async getPublished(): Promise<ApiResponse<Post[]>> {
-    if (this.mode === "mock") {
-      const published = mockPosts.filter((p) => p.status === "PUBLISHED");
-      return { success: true, data: published };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.POSTS.PUBLISHED);
       // Backend returns PostResponse[] wrapper — unwrap into Post[]
@@ -589,15 +354,6 @@ export class PostManager implements BaseManager<Post> {
     postId: number,
     status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
   ): Promise<ApiResponse<Record<string, string>>> {
-    if (this.mode === "mock") {
-      const index = mockPosts.findIndex((p) => p.postId === postId);
-      if (index === -1) {
-        return { success: false, error: "Post not found" };
-      }
-      mockPosts[index] = { ...mockPosts[index], status };
-      return { success: true, data: { message: "Status changed" } };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHANGE_STATUS, { postId });
       const response = await this.api.get(endpoint, { params: { status } });
@@ -615,15 +371,6 @@ export class PostManager implements BaseManager<Post> {
   }
 
   async update(id: string | number, data: Partial<Post>): Promise<ApiResponse<Post>> {
-    if (this.mode === "mock") {
-      const index = mockPosts.findIndex((p) => p.postId === Number(id));
-      if (index === -1) {
-        return { success: false, error: "Post not found" };
-      }
-      mockPosts[index] = { ...mockPosts[index], ...data };
-      return { success: true, data: mockPosts[index] };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.POSTS.UPDATE, {
         ...data,
@@ -643,23 +390,6 @@ export class PostManager implements BaseManager<Post> {
    * POST /api/posts (multipart/form-data) — backend uses postId presence to detect update
    */
   async updatePost(id: string | number, data: PostCreateRequest): Promise<ApiResponse<Post>> {
-    if (this.mode === "mock") {
-      const index = mockPosts.findIndex((p) => p.postId === Number(id));
-      if (index === -1) {
-        return { success: false, error: "Post not found" };
-      }
-      mockPosts[index] = {
-        ...mockPosts[index],
-        title: data.title,
-        content: data.content,
-        summary: data.summary,
-        status: data.status ?? mockPosts[index].status,
-        tags: data.tags,
-        lastModifiedDate: new Date().toISOString(),
-      };
-      return { success: true, data: mockPosts[index] };
-    }
-
     try {
       const formData = new FormData();
       formData.append("postId", String(id));
@@ -689,15 +419,6 @@ export class PostManager implements BaseManager<Post> {
   }
 
   async delete(id: string | number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      const index = mockPosts.findIndex((p) => p.postId === Number(id));
-      if (index === -1) {
-        return { success: false, error: "Post not found" };
-      }
-      mockPosts.splice(index, 1);
-      return { success: true };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DELETE, { postId: id });
       await this.api.delete(endpoint);

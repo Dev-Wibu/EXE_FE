@@ -6,12 +6,7 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
 /**
  * Major type based on backend schema
@@ -30,17 +25,7 @@ export interface MajorFormData {
   description?: string;
 }
 
-// Mock data for development
-const mockMajors: Major[] = [
-  { id: 1, majorName: "Software Engineering", description: "Software development and engineering" },
-  { id: 2, majorName: "Data Science", description: "Data analysis and machine learning" },
-  { id: 3, majorName: "Product Management", description: "Product strategy and management" },
-  { id: 4, majorName: "UI/UX Design", description: "User interface and experience design" },
-  { id: 5, majorName: "DevOps", description: "Development operations and infrastructure" },
-];
-
 export class QuestionMajorManager implements BaseManager<Major> {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -50,13 +35,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
   async getAll(
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<Major> | Major[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [...mockMajors],
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.QUESTION_MAJORS.LIST, { params: _params });
       return {
@@ -76,20 +54,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
    * GET /api/question-majors/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<Major>> {
-    if (this.mode === "mock") {
-      const major = mockMajors.find((m) => m.id === Number(id));
-      if (!major) {
-        return {
-          success: false,
-          error: "Question major not found",
-        };
-      }
-      return {
-        success: true,
-        data: major,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_MAJORS.DETAIL, { id });
       const response = await this.api.get(endpoint);
@@ -106,20 +70,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
   }
 
   async create(data: Partial<Major>): Promise<ApiResponse<Major>> {
-    if (this.mode === "mock") {
-      const newId = Math.max(...mockMajors.map((m) => m.id || 0)) + 1;
-      const newMajor: Major = {
-        id: newId,
-        majorName: data.majorName,
-        description: data.description,
-      };
-      mockMajors.push(newMajor);
-      return {
-        success: true,
-        data: newMajor,
-      };
-    }
-
     try {
       // Backend requires query params for creation
       // id: 0 indicates new record creation
@@ -142,21 +92,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
   }
 
   async update(id: string | number, data: Partial<Major>): Promise<ApiResponse<Major>> {
-    if (this.mode === "mock") {
-      const index = mockMajors.findIndex((m) => m.id === Number(id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Question major not found",
-        };
-      }
-      mockMajors[index] = { ...mockMajors[index], ...data };
-      return {
-        success: true,
-        data: mockMajors[index],
-      };
-    }
-
     try {
       // Backend requires query params for updates
       const params = {
@@ -184,20 +119,6 @@ export class QuestionMajorManager implements BaseManager<Major> {
    * Schema provides DELETE endpoint for majors
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      const index = mockMajors.findIndex((m) => m.id === Number(id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Question major not found",
-        };
-      }
-      mockMajors.splice(index, 1);
-      return {
-        success: true,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_MAJORS.DELETE, { id });
       // Use DELETE method as per schema

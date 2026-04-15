@@ -6,12 +6,7 @@
 
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type { Mentor, Session, User } from "@/interfaces";
 
 /**
@@ -46,56 +41,7 @@ export interface UpdateMentorFeedbackRequest {
   comment?: string;
 }
 
-// Mock data for development
-const mockMentorFeedbacks: MentorFeedback[] = [
-  {
-    id: 1,
-    session: { id: 1, roomName: "interview-1" },
-    mentor: { id: 1, name: "Mentor A", email: "mentorA@example.com" },
-    user: { id: 1, name: "John Doe", email: "john@example.com" },
-    rating: 5,
-    comment: "Excellent mentor! Very helpful and patient.",
-  },
-  {
-    id: 2,
-    session: { id: 2, roomName: "interview-2" },
-    mentor: { id: 1, name: "Mentor A", email: "mentorA@example.com" },
-    user: { id: 2, name: "Jane Smith", email: "jane@example.com" },
-    rating: 4,
-    comment: "Great session, learned a lot about system design.",
-  },
-  {
-    id: 3,
-    session: { id: 3, roomName: "interview-3" },
-    mentor: { id: 2, name: "Mentor B", email: "mentorB@example.com" },
-    user: { id: 1, name: "John Doe", email: "john@example.com" },
-    rating: 5,
-    comment: "Very professional and knowledgeable.",
-  },
-];
-
-const getApiErrorMessage = (error: unknown, fallback: string): string => {
-  const responseData = (error as { response?: { data?: { message?: string; error?: string } } })
-    ?.response?.data;
-  const apiMessage = responseData?.message || responseData?.error;
-
-  if (typeof apiMessage === "string" && apiMessage.trim().length > 0) {
-    return apiMessage;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-};
-
-const isNotFoundLikeMessage = (message: string): boolean => {
-  return /not found|no value present/i.test(message);
-};
-
 export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -105,13 +51,6 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
   async getAll(
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<MentorFeedback> | MentorFeedback[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [...mockMentorFeedbacks],
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.MENTOR_FEEDBACKS.LIST, { params: _params });
       return {
@@ -131,20 +70,6 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
    * GET /api/mentor-feedbacks/{id}
    */
   async getById(id: string | number): Promise<ApiResponse<MentorFeedback>> {
-    if (this.mode === "mock") {
-      const feedback = mockMentorFeedbacks.find((f) => f.id === Number(id));
-      if (!feedback) {
-        return {
-          success: false,
-          error: "Mentor feedback not found",
-        };
-      }
-      return {
-        success: true,
-        data: feedback,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR_FEEDBACKS.DETAIL, { id });
       const response = await this.api.get(endpoint);
@@ -161,11 +86,21 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
         data: response.data,
       };
     } catch (error) {
-      const errorMessage = getApiErrorMessage(error, "Failed to fetch mentor feedback");
+      const responseData = (error as { response?: { data?: { message?: string; error?: string } } })
+        ?.response?.data;
+      const apiMessage = responseData?.message || responseData?.error;
+      const errorMessage =
+        typeof apiMessage === "string" && apiMessage.trim().length > 0
+          ? apiMessage
+          : error instanceof Error
+            ? error.message
+            : "Failed to fetch mentor feedback";
 
       return {
         success: false,
-        error: isNotFoundLikeMessage(errorMessage) ? "Không tìm thấy phản hồi" : errorMessage,
+        error: /not found|no value present/i.test(errorMessage)
+          ? "Không tìm thấy phản hồi"
+          : errorMessage,
       };
     }
   }
@@ -175,14 +110,6 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
    * GET /api/mentor-feedbacks/mentor/{mentorId}
    */
   async getByMentorId(mentorId: string | number): Promise<ApiResponse<MentorFeedback[]>> {
-    if (this.mode === "mock") {
-      const feedbacks = mockMentorFeedbacks.filter((f) => f.mentor?.id === Number(mentorId));
-      return {
-        success: true,
-        data: feedbacks,
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR_FEEDBACKS.BY_MENTOR, { mentorId });
       const response = await this.api.get(endpoint);
@@ -205,19 +132,6 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
   async create(
     data: Partial<MentorFeedback> | CreateMentorFeedbackRequest
   ): Promise<ApiResponse<MentorFeedback>> {
-    if (this.mode === "mock") {
-      const newId = Math.max(...mockMentorFeedbacks.map((f) => f.id || 0)) + 1;
-      const newFeedback: MentorFeedback = {
-        id: newId,
-        ...(data as Partial<MentorFeedback>),
-      };
-      mockMentorFeedbacks.push(newFeedback);
-      return {
-        success: true,
-        data: newFeedback,
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.MENTOR_FEEDBACKS.CREATE, data);
       return {
@@ -240,21 +154,6 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     id: string | number,
     data: Partial<MentorFeedback> | UpdateMentorFeedbackRequest
   ): Promise<ApiResponse<MentorFeedback>> {
-    if (this.mode === "mock") {
-      const index = mockMentorFeedbacks.findIndex((f) => f.id === Number(id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Mentor feedback not found",
-        };
-      }
-      mockMentorFeedbacks[index] = { ...mockMentorFeedbacks[index], ...data };
-      return {
-        success: true,
-        data: mockMentorFeedbacks[index],
-      };
-    }
-
     try {
       const updateData: UpdateMentorFeedbackRequest = {
         id: Number(id),
@@ -277,19 +176,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
    * Delete mentor feedback (not supported by current API)
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      const index = mockMentorFeedbacks.findIndex((f) => f.id === Number(id));
-      if (index === -1) {
-        return {
-          success: false,
-          error: "Mentor feedback not found",
-        };
-      }
-      mockMentorFeedbacks.splice(index, 1);
-      return {
-        success: true,
-      };
-    }
+    void id;
 
     return {
       success: false,

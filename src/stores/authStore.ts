@@ -9,8 +9,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type { User } from "@/interfaces/schema.types";
 import { getTokenExpiresAt, isSessionExpired } from "@/lib/auth-session";
 
-const IS_API_MODE = import.meta.env.VITE_MANAGER_MODE === "api";
-
 export interface AuthState {
   // State
   isLoggedIn: boolean;
@@ -74,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
             state.setExpiresAt(restoredExpiresAt);
           }
 
-          if (IS_API_MODE && state.isLoggedIn && isSessionExpired(restoredExpiresAt)) {
+          if (state.isLoggedIn && isSessionExpired(restoredExpiresAt)) {
             state.clearAuth();
           }
 

@@ -4,32 +4,21 @@
  */
 
 import type { ApiResponse, User, UserSubscriptionResponse } from "@/interfaces";
-import type { Transaction, UserProfile, UserSettings, Wallet } from "@/mocks/user.mock";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
-import * as userMock from "@/mocks/user.mock";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+
+type UserProfile = Record<string, unknown>;
+type UserSettings = Record<string, unknown>;
+type Wallet = Record<string, unknown>;
+type Transaction = Record<string, unknown>;
 
 export class UserManager {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
    * Get user profile
    */
   async getProfile(): Promise<ApiResponse<UserProfile>> {
-    if (this.mode === "mock") {
-      const profile = await userMock.fetchUserProfile();
-      return {
-        success: true,
-        data: profile,
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.USER.PROFILE);
       return {
@@ -48,14 +37,6 @@ export class UserManager {
    * Update user profile
    */
   async updateProfile(data: Partial<UserProfile>): Promise<ApiResponse<UserProfile>> {
-    if (this.mode === "mock") {
-      const result = await userMock.updateUserProfile(data);
-      return {
-        success: result.success,
-        data: result.user,
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.USER.UPDATE_PROFILE, data);
       return {
@@ -77,14 +58,6 @@ export class UserManager {
     currentPassword: string,
     newPassword: string
   ): Promise<ApiResponse<{ message: string }>> {
-    if (this.mode === "mock") {
-      const result = await userMock.updatePassword(currentPassword, newPassword);
-      return {
-        success: result.success,
-        data: { message: result.message },
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.USER.UPDATE_PASSWORD, {
         currentPassword,
@@ -106,14 +79,6 @@ export class UserManager {
    * Get user settings
    */
   async getSettings(): Promise<ApiResponse<UserSettings>> {
-    if (this.mode === "mock") {
-      const settings = await userMock.fetchUserSettings();
-      return {
-        success: true,
-        data: settings,
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.USER.SETTINGS);
       return {
@@ -132,14 +97,6 @@ export class UserManager {
    * Update user settings
    */
   async updateSettings(settings: Partial<UserSettings>): Promise<ApiResponse<UserSettings>> {
-    if (this.mode === "mock") {
-      const result = await userMock.updateUserSettings(settings);
-      return {
-        success: result.success,
-        data: result.settings,
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.USER.SETTINGS, settings);
       return {

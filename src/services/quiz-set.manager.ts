@@ -6,12 +6,7 @@
 
 import type { ApiResponse } from "@/interfaces";
 
-import {
-  API_ENDPOINTS,
-  MANAGER_MODE,
-  buildEndpoint,
-  createApiInstance,
-} from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type { PracticeSet } from "./practice-set.manager";
 
 /**
@@ -69,7 +64,6 @@ export interface QuizItemCreateRequest {
 }
 
 export class QuizSetManager {
-  private mode = MANAGER_MODE;
   private api = createApiInstance();
 
   /**
@@ -77,13 +71,6 @@ export class QuizSetManager {
    * GET /api/quiz-sets
    */
   async getAll(): Promise<ApiResponse<QuizSet[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
     try {
       const response = await this.api.get(API_ENDPOINTS.QUIZ_SETS.LIST);
       return { success: true, data: response.data };
@@ -100,13 +87,6 @@ export class QuizSetManager {
    * GET /api/quiz-sets/{quizId}
    */
   async getById(quizId: number): Promise<ApiResponse<QuizSet>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Quiz set not found in mock mode",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.DETAIL, { quizId });
       const response = await this.api.get(endpoint);
@@ -125,13 +105,6 @@ export class QuizSetManager {
    * Note: Uses query params, NOT JSON body
    */
   async create(quizId: number, quizName: string): Promise<ApiResponse<QuizSet>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Create quiz set not supported in mock mode",
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE, null, {
         params: { quizId, quizName },
@@ -156,13 +129,6 @@ export class QuizSetManager {
     quizName: string,
     items: QuizItemCreateRequest[]
   ): Promise<ApiResponse<QuizItem[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Create full quiz set not supported in mock mode",
-      };
-    }
-
     try {
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE_FULL, items, {
         params: { practiceSetId, QuizName: quizName },
@@ -182,13 +148,6 @@ export class QuizSetManager {
    * No body needed — AI generates the questions from the practice set content
    */
   async createFullAi(practiceSetId: number): Promise<ApiResponse<QuizResponse>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Create AI quiz set not supported in mock mode",
-      };
-    }
-
     try {
       // AI generation can take significantly longer than the default 30s timeout
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE_FULL_AI, null, {
@@ -210,13 +169,6 @@ export class QuizSetManager {
    * Body: Record<string, string> (question → answer mapping)
    */
   async submit(quizId: number, answers: Record<string, string>): Promise<ApiResponse<QuizSet>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Submit quiz not supported in mock mode",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.SUBMIT, { quizId });
       const response = await this.api.post(endpoint, answers);
@@ -234,13 +186,6 @@ export class QuizSetManager {
    * GET /api/quiz-sets/by-practice-set/{practiceSetId}
    */
   async getByPracticeSet(practiceSetId: number): Promise<ApiResponse<QuizSet[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.BY_PRACTICE_SET, {
         practiceSetId,
@@ -260,13 +205,6 @@ export class QuizSetManager {
    * DELETE /api/quiz-sets/{quizId}
    */
   async delete(quizId: number): Promise<ApiResponse<void>> {
-    if (this.mode === "mock") {
-      return {
-        success: false,
-        error: "Delete quiz set not supported in mock mode",
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.DELETE, { quizId });
       await this.api.delete(endpoint);
@@ -284,13 +222,6 @@ export class QuizSetManager {
    * GET /api/quiz-set-items/by-quiz-set/{quizSetId}
    */
   async getQuizItems(quizSetId: number): Promise<ApiResponse<QuizItem[]>> {
-    if (this.mode === "mock") {
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.ITEMS_BY_QUIZ_SET, {
         quizSetId,

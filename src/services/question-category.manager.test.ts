@@ -1,88 +1,146 @@
-/**
- * Example Unit Test: QuestionCategoryManager
- * This is a sample test to demonstrate Vitest unit testing
- */
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock the api.config module to ensure mock mode is used
-vi.mock("@/constants/api.config", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/constants/api.config")>();
+const { mockApi } = vi.hoisted(() => ({
+  mockApi: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+vi.mock("@/constants/api.config", async () => {
+  const actual =
+    await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
+
   return {
     ...actual,
-    MANAGER_MODE: "mock", // Force mock mode for tests
+    createApiInstance: () => mockApi,
   };
 });
 
 import { QuestionCategoryManager } from "@/services/question-category.manager";
 
 describe("QuestionCategoryManager", () => {
-  let manager: QuestionCategoryManager;
-
   beforeEach(() => {
-    manager = new QuestionCategoryManager();
+    mockApi.get.mockReset();
+    mockApi.post.mockReset();
+    mockApi.put.mockReset();
+    mockApi.delete.mockReset();
   });
 
-  describe("getAll", () => {
-    it("should return all question categories in mock mode", async () => {
-      const result = await manager.getAll();
+  it("maps lessonName to categoryName in getAll", async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: [
+        {
+          id: 1,
+          lessonName: "Technical Skills",
+          description: "Questions about technical knowledge",
+          urlTutorial: "",
+        },
+      ],
+    });
 
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
+    const manager = new QuestionCategoryManager();
+    const result = await manager.getAll();
+    const firstCategory = Array.isArray(result.data) ? result.data[0] : undefined;
+
+    expect(result.success).toBe(true);
+    expect(Array.isArray(result.data)).toBe(true);
+    expect(firstCategory).toMatchObject({
+      id: 1,
+      categoryName: "Technical Skills",
+      description: "Questions about technical knowledge",
+    });
+    expect(mockApi.get).toHaveBeenCalledTimes(1);
+    expect(mockApi.get.mock.calls[0]?.[0]).toBe("/api/question-categories");
+  });
+
+  it("returns mapped category by id", async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        id: 1,
+        lessonName: "Behavioral",
+        description: "Questions about behavior",
+      },
+    });
+
+    const manager = new QuestionCategoryManager();
+    const result = await manager.getById(1);
+
+    expect(result.success).toBe(true);
+    expect(result.data).toMatchObject({
+      id: 1,
+      categoryName: "Behavioral",
+      description: "Questions about behavior",
+    });
+    expect(mockApi.get).toHaveBeenCalledWith("/api/question-categories/1");
+  });
+
+  it("sends backend-aligned payload when creating category", async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: {
+        id: 10,
+        lessonName: "System Design",
+        description: "Advanced topics",
+        urlTutorial: "",
+      },
+    });
+
+    const manager = new QuestionCategoryManager();
+    const result = await manager.create({
+      categoryName: "System Design",
+      description: "Advanced topics",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockApi.post).toHaveBeenCalledWith("/api/question-categories", {
+      id: 0,
+      lessonName: "System Design",
+      description: "Advanced topics",
+      urlTutorial: "",
     });
   });
 
-  describe("getById", () => {
-    it("should return a question category by ID in mock mode", async () => {
-      const result = await manager.getById(1);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data?.id).toBe(1);
+  it("sends backend-aligned payload when updating category", async () => {
+    mockApi.put.mockResolvedValueOnce({
+      data: {
+        id: 1,
+        lessonName: "Updated Category",
+      },
     });
 
-    it("should return error for non-existent ID", async () => {
-      const result = await manager.getById(999);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+    const manager = new QuestionCategoryManager();
+    const result = await manager.update(1, {
+      categoryName: "Updated Category",
     });
-  });
 
-  describe("create", () => {
-    it("should create a new question category in mock mode", async () => {
-      const newCategory = {
-        categoryName: "New Category",
-        description: "Test description",
-      };
-
-      const result = await manager.create(newCategory);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBeDefined();
-      expect(result.data?.categoryName).toBe("New Category");
+    expect(result.success).toBe(true);
+    expect(mockApi.put).toHaveBeenCalledWith("/api/question-categories", {
+      id: 1,
+      lessonName: "Updated Category",
+      description: undefined,
+      urlTutorial: undefined,
     });
   });
 
-  describe("update", () => {
-    it("should update a question category in mock mode", async () => {
-      const updateData = {
-        categoryName: "Updated Category",
-      };
+  it("calls delete endpoint with built id path", async () => {
+    mockApi.delete.mockResolvedValueOnce({});
 
-      const result = await manager.update(1, updateData);
+    const manager = new QuestionCategoryManager();
+    const result = await manager.delete(1);
 
-      expect(result.success).toBe(true);
-      expect(result.data?.categoryName).toBe("Updated Category");
-    });
+    expect(result.success).toBe(true);
+    expect(mockApi.delete).toHaveBeenCalledWith("/api/question-categories/1");
   });
 
-  describe("delete", () => {
-    it("should delete a question category in mock mode", async () => {
-      const result = await manager.delete(1);
+  it("returns error response when request fails", async () => {
+    mockApi.get.mockRejectedValueOnce(new Error("Not found"));
 
-      expect(result.success).toBe(true);
-    });
+    const manager = new QuestionCategoryManager();
+    const result = await manager.getById(999);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Not found");
   });
 });
