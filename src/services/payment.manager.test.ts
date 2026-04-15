@@ -135,6 +135,23 @@ describe("PaymentManager API mode", () => {
     expect(mockApi.get).toHaveBeenCalledTimes(1);
   });
 
+  it("returns backend cancel error message when API rejects", async () => {
+    mockApi.get.mockRejectedValueOnce({
+      response: {
+        data: {
+          error: "Payment not found with transaction code: ORDER-404",
+        },
+      },
+      message: "Request failed with status code 404",
+    });
+
+    const manager = new PaymentManager();
+    const result = await manager.cancel("ORDER-404");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Payment not found with transaction code");
+  });
+
   it("finds payment by transaction code from payment list", async () => {
     mockApi.get.mockResolvedValueOnce({
       data: [

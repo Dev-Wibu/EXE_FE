@@ -484,6 +484,27 @@ export function MembershipTab() {
         },
       });
 
+      if (!transactionCode) {
+        addPaymentSupportLog({
+          supportCode: redirectedRecovery.supportCode,
+          orderCode,
+          checkoutToken,
+          userId: redirectedRecovery.userId,
+          planId: redirectedRecovery.planId,
+          planName: redirectedRecovery.planName,
+          amount: redirectedRecovery.amount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          status: "UNMAPPED_ORDER",
+          message:
+            "Checkout URL membership chua co transactionCode, se fallback orderCode co guard khi callback huy.",
+          payload: {
+            orderCode: orderCode || null,
+            checkoutToken: checkoutToken || null,
+            recoveryStrategy: "orderCode-fallback-guarded",
+          },
+        });
+      }
+
       if (!orderCode) {
         addPaymentSupportLog({
           supportCode: redirectedRecovery.supportCode,

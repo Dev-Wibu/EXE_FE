@@ -6,6 +6,7 @@ import type { PaymentPurpose, UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
   clearPendingSessionPaymentContext,
+  getCallbackIdentifierMismatch,
   getLatestRecoveryForSessionPayment,
   getLatestRecoveryForUser,
   getLatestRecoveryForUserByPurpose,
@@ -13,7 +14,9 @@ import {
   getRecoveryByCheckoutToken,
   getRecoveryByOrderCode,
   getRecoveryByTransactionCode,
+  isLowConfidenceRecoverySource,
   type PaymentRecoveryContext,
+  type PaymentRecoveryLookupSource,
   upsertPaymentRecoveryContext,
 } from "@/lib";
 import { userManager } from "@/services";
@@ -239,17 +242,27 @@ export function PaymentSuccessPage() {
       setResolveState("checking");
 
       let nextContext: PaymentRecoveryContext | null = null;
+      let recoverySource: PaymentRecoveryLookupSource = "none";
 
       if (orderCode) {
         nextContext = getRecoveryByOrderCode(orderCode, currentUserId);
+        if (nextContext) {
+          recoverySource = "order-code";
+        }
       }
 
       if (!nextContext && queryTransactionCode) {
         nextContext = getRecoveryByTransactionCode(queryTransactionCode, currentUserId);
+        if (nextContext) {
+          recoverySource = "query-transaction-code";
+        }
       }
 
       if (!nextContext && callbackCheckoutToken) {
         nextContext = getRecoveryByCheckoutToken(callbackCheckoutToken, currentUserId);
+        if (nextContext) {
+          recoverySource = "callback-checkout-token";
+        }
       }
 
       if (!nextContext && pendingSessionPayment?.checkoutToken) {
@@ -257,6 +270,9 @@ export function PaymentSuccessPage() {
           pendingSessionPayment.checkoutToken,
           currentUserId
         );
+        if (nextContext) {
+          recoverySource = "pending-checkout-token";
+        }
       }
 
       if (!nextContext && pendingSessionPayment?.transactionCode) {
@@ -264,6 +280,9 @@ export function PaymentSuccessPage() {
           pendingSessionPayment.transactionCode,
           currentUserId
         );
+        if (nextContext) {
+          recoverySource = "pending-transaction-code";
+        }
       }
 
       if (!nextContext && pendingSessionPayment?.sessionId) {
@@ -271,14 +290,23 @@ export function PaymentSuccessPage() {
           pendingSessionPayment.sessionId,
           currentUserId
         );
+        if (nextContext) {
+          recoverySource = "session-recovery";
+        }
       }
 
       if (!nextContext && pendingSessionPayment?.paymentPurpose === "MENTOR_INTERVIEW") {
         nextContext = getLatestRecoveryForUserByPurpose(currentUserId, "MENTOR_INTERVIEW");
+        if (nextContext) {
+          recoverySource = "purpose-recovery";
+        }
       }
 
       if (!nextContext) {
         nextContext = getLatestRecoveryForUser(currentUserId);
+        if (nextContext) {
+          recoverySource = "latest-user-recovery";
+        }
       }
 
       if (!nextContext) {
@@ -301,6 +329,69 @@ export function PaymentSuccessPage() {
         return;
       }
 
+      const identifierMismatch = getCallbackIdentifierMismatch(
+        {
+          orderCode,
+          transactionCode: queryTransactionCode,
+          checkoutToken: callbackCheckoutToken,
+        },
+        nextContext
+      );
+
+      if (identifierMismatch.hasMismatch) {
+        addPaymentSupportLog({
+          supportCode: nextContext.supportCode,
+          orderCode: orderCode || nextContext.orderCode,
+          transactionCode: queryTransactionCode || nextContext.transactionCode,
+          checkoutToken: callbackCheckoutToken || nextContext.checkoutToken,
+          userId: currentUserId,
+          paymentPurpose: nextContext.paymentPurpose,
+          sessionId: nextContext.sessionId,
+          status: "UNMAPPED_ORDER",
+          message: "Dinh danh callback success khong khop recovery context.",
+          payload: {
+            recoverySource,
+            mismatchedKeys: identifierMismatch.mismatchedKeys,
+            source,
+            status,
+          },
+        });
+        setResolveState("unmapped");
+        setResolveError(
+          "Không thể đối chiếu chính xác thông tin thanh toán. Vui lòng thử xác nhận lại."
+        );
+        return;
+      }
+
+      const hasStrongCallbackIdentifier = Boolean(
+        orderCode || queryTransactionCode || callbackCheckoutToken
+      );
+
+      if (hasStrongCallbackIdentifier && isLowConfidenceRecoverySource(recoverySource)) {
+        addPaymentSupportLog({
+          supportCode: nextContext.supportCode,
+          orderCode: orderCode || nextContext.orderCode,
+          transactionCode: queryTransactionCode || nextContext.transactionCode,
+          checkoutToken: callbackCheckoutToken || nextContext.checkoutToken,
+          userId: currentUserId,
+          paymentPurpose: nextContext.paymentPurpose,
+          sessionId: nextContext.sessionId,
+          status: "UNMAPPED_ORDER",
+          message:
+            "Callback success chi map duoc qua latest-user fallback, tam dung de tranh map sai.",
+          payload: {
+            recoverySource,
+            source,
+            status,
+          },
+        });
+        setResolveState("unmapped");
+        setResolveError(
+          "Không thể đối chiếu đủ tin cậy cho giao dịch này. Vui lòng thử xác nhận lại."
+        );
+        return;
+      }
+
       if (nextContext.userId !== currentUserId) {
         addPaymentSupportLog({
           supportCode: nextContext.supportCode,
@@ -317,6 +408,7 @@ export function PaymentSuccessPage() {
             actualUserId: currentUserId,
             source,
             status,
+            recoverySource,
           },
         });
         setResolveState("unmapped");
@@ -378,6 +470,7 @@ export function PaymentSuccessPage() {
           source,
           status,
           paid,
+          recoverySource,
         },
       });
 

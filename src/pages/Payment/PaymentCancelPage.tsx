@@ -6,6 +6,7 @@ import type { PaymentPurpose } from "@/interfaces";
 import {
   addPaymentSupportLog,
   clearPendingSessionPaymentContext,
+  getCallbackIdentifierMismatch,
   getLatestRecoveryForSessionPayment,
   getLatestRecoveryForUser,
   getLatestRecoveryForUserByPurpose,
@@ -13,8 +14,11 @@ import {
   getRecoveryByCheckoutToken,
   getRecoveryByOrderCode,
   getRecoveryByTransactionCode,
-  type PaymentRecoveryContext,
+  isLowConfidenceRecoverySource,
+  resolveCancelTransactionCode,
   upsertPaymentRecoveryContext,
+  type PaymentRecoveryContext,
+  type PaymentRecoveryLookupSource,
 } from "@/lib";
 import { paymentManager } from "@/services/payment.manager";
 import { transactionManager } from "@/services/transaction.manager";
@@ -71,6 +75,7 @@ export function PaymentCancelPage() {
     query.get("checkoutId")?.trim() ||
     query.get("checkout_id")?.trim() ||
     "";
+  const cancelQueryFlag = query.get("cancel")?.trim() || "";
   const status = query.get("status")?.trim() || "CANCELLED";
   const currentUserId = Number(user?.id || 0);
   const pendingSessionPayment = useMemo(
@@ -98,12 +103,14 @@ export function PaymentCancelPage() {
         orderCode,
         queryTransactionCode,
         callbackCheckoutToken,
+        cancelQueryFlag,
         status,
         String(pendingSessionPayment?.sessionId || ""),
         pendingSessionPayment?.transactionCode || "",
       ].join("|"),
     [
       callbackCheckoutToken,
+      cancelQueryFlag,
       currentUserId,
       orderCode,
       pendingSessionPayment?.sessionId,
@@ -116,11 +123,15 @@ export function PaymentCancelPage() {
   const runCancelChain = useCallback(async () => {
     const userIdFilter = currentUserId > 0 ? currentUserId : undefined;
     let context: PaymentRecoveryContext | null = recoveryContextRef.current;
+    let recoverySource: PaymentRecoveryLookupSource = context ? "existing-state" : "none";
 
     if (!context && orderCode) {
       context = getRecoveryByOrderCode(orderCode, userIdFilter);
       if (!context && !userIdFilter) {
         context = getRecoveryByOrderCode(orderCode);
+      }
+      if (context) {
+        recoverySource = "order-code";
       }
     }
 
@@ -129,6 +140,9 @@ export function PaymentCancelPage() {
       if (!context && !userIdFilter) {
         context = getRecoveryByTransactionCode(queryTransactionCode);
       }
+      if (context) {
+        recoverySource = "query-transaction-code";
+      }
     }
 
     if (!context && callbackCheckoutToken) {
@@ -136,18 +150,30 @@ export function PaymentCancelPage() {
       if (!context && !userIdFilter) {
         context = getRecoveryByCheckoutToken(callbackCheckoutToken);
       }
+      if (context) {
+        recoverySource = "callback-checkout-token";
+      }
     }
 
     if (!context && pendingSessionPayment?.checkoutToken) {
       context = getRecoveryByCheckoutToken(pendingSessionPayment.checkoutToken, userIdFilter);
+      if (context) {
+        recoverySource = "pending-checkout-token";
+      }
     }
 
     if (!context && pendingSessionPayment?.transactionCode) {
       context = getRecoveryByTransactionCode(pendingSessionPayment.transactionCode, userIdFilter);
+      if (context) {
+        recoverySource = "pending-transaction-code";
+      }
     }
 
     if (!context && pendingSessionPayment?.sessionId) {
       context = getLatestRecoveryForSessionPayment(pendingSessionPayment.sessionId, userIdFilter);
+      if (context) {
+        recoverySource = "session-recovery";
+      }
     }
 
     if (
@@ -156,18 +182,91 @@ export function PaymentCancelPage() {
       pendingSessionPayment?.paymentPurpose === "MENTOR_INTERVIEW"
     ) {
       context = getLatestRecoveryForUserByPurpose(currentUserId, "MENTOR_INTERVIEW");
+      if (context) {
+        recoverySource = "purpose-recovery";
+      }
     }
 
     if (!context && currentUserId > 0) {
       context = getLatestRecoveryForUser(currentUserId);
+      if (context) {
+        recoverySource = "latest-user-recovery";
+      }
+    }
+
+    const identifierMismatch = getCallbackIdentifierMismatch(
+      {
+        orderCode,
+        transactionCode: queryTransactionCode,
+        checkoutToken: callbackCheckoutToken,
+      },
+      context
+    );
+
+    if (identifierMismatch.hasMismatch) {
+      addPaymentSupportLog({
+        supportCode: context?.supportCode || undefined,
+        orderCode: orderCode || context?.orderCode || undefined,
+        transactionCode: queryTransactionCode || context?.transactionCode || undefined,
+        checkoutToken: callbackCheckoutToken || context?.checkoutToken || undefined,
+        userId: context?.userId || currentUserId || undefined,
+        paymentPurpose: context?.paymentPurpose,
+        sessionId: context?.sessionId,
+        status: "UNMAPPED_ORDER",
+        message: "Dinh danh callback khong khop voi recovery context, dung chain huy.",
+        payload: {
+          recoverySource,
+          mismatchedKeys: identifierMismatch.mismatchedKeys,
+        },
+      });
+
+      setChainResult("missing");
+      setResultMessage(
+        "Không thể đối chiếu giao dịch cần hủy. Vui lòng thử lại hoặc thực hiện lại thao tác thanh toán."
+      );
+      toast.error("Không thể đối chiếu giao dịch cần hủy.");
+
+      if (pendingSessionPayment?.sessionId && context?.paymentPurpose !== "MENTOR_INTERVIEW") {
+        clearPendingSessionPaymentContext();
+      }
+      return;
+    }
+
+    const hasStrongCallbackIdentifier = Boolean(
+      orderCode || queryTransactionCode || callbackCheckoutToken
+    );
+
+    if (context && hasStrongCallbackIdentifier && isLowConfidenceRecoverySource(recoverySource)) {
+      addPaymentSupportLog({
+        supportCode: context.supportCode,
+        orderCode: orderCode || context.orderCode,
+        transactionCode: queryTransactionCode || context.transactionCode,
+        checkoutToken: callbackCheckoutToken || context.checkoutToken,
+        userId: context.userId,
+        paymentPurpose: context.paymentPurpose,
+        sessionId: context.sessionId,
+        status: "UNMAPPED_ORDER",
+        message: "Bo qua recovery context co do tin cay thap de tranh map sai giao dich callback.",
+        payload: {
+          recoverySource,
+        },
+      });
+
+      context = null;
+      recoverySource = "none";
     }
 
     const resolvedOrderCode = orderCode || context?.orderCode || "";
-    const resolvedTransactionCode =
-      queryTransactionCode ||
-      context?.transactionCode ||
-      pendingSessionPayment?.transactionCode ||
-      "";
+    const transactionCodeResolution = resolveCancelTransactionCode({
+      queryTransactionCode,
+      contextTransactionCode: context?.transactionCode,
+      pendingTransactionCode: pendingSessionPayment?.transactionCode,
+      orderCode,
+      callbackCheckoutToken,
+      status,
+      cancelFlag: cancelQueryFlag,
+    });
+    const resolvedTransactionCode = transactionCodeResolution.value;
     const resolvedCheckoutToken =
       callbackCheckoutToken ||
       context?.checkoutToken ||
@@ -211,6 +310,9 @@ export function PaymentCancelPage() {
         message: "Người dùng quay về trang hủy thanh toán.",
         payload: {
           callbackStatus: status,
+          recoverySource,
+          transactionCodeSource: transactionCodeResolution.source,
+          usedOrderCodeFallback: transactionCodeResolution.usedOrderCodeFallback,
         },
       });
     }
@@ -227,6 +329,9 @@ export function PaymentCancelPage() {
         message: "Thiếu mã giao dịch để thực hiện hủy thanh toán.",
         payload: {
           status,
+          recoverySource,
+          transactionCodeSource: transactionCodeResolution.source,
+          usedOrderCodeFallback: transactionCodeResolution.usedOrderCodeFallback,
         },
       });
 
@@ -295,6 +400,9 @@ export function PaymentCancelPage() {
           message: "Hủy thanh toán thất bại.",
           payload: {
             error: cancelResult.error || null,
+            recoverySource,
+            transactionCodeSource: transactionCodeResolution.source,
+            usedOrderCodeFallback: transactionCodeResolution.usedOrderCodeFallback,
           },
         });
 
@@ -346,6 +454,9 @@ export function PaymentCancelPage() {
           message: "Xóa giao dịch thất bại sau khi hủy thanh toán.",
           payload: {
             error: deleteResult.error || null,
+            recoverySource,
+            transactionCodeSource: transactionCodeResolution.source,
+            usedOrderCodeFallback: transactionCodeResolution.usedOrderCodeFallback,
           },
         });
 
@@ -405,43 +516,35 @@ export function PaymentCancelPage() {
                 cancelError: cancelResult.error || null,
                 deleteError: deleteResult.error || null,
                 idempotentHandled: true,
+                recoverySource,
+                transactionCodeSource: transactionCodeResolution.source,
+                usedOrderCodeFallback: transactionCodeResolution.usedOrderCodeFallback,
               },
       });
 
-      if (context) {
+      const successUserId = context?.userId || Number(cancelResult.data?.user?.id) || currentUserId;
+      if (successUserId > 0) {
         const successContext = upsertPaymentRecoveryContext({
-          supportCode: context.supportCode,
-          orderCode: resolvedOrderCode || context.orderCode,
+          supportCode: context?.supportCode,
+          orderCode: resolvedOrderCode || context?.orderCode || resolvedTransactionCode,
           transactionCode: resolvedTransactionCode,
-          checkoutToken: resolvedCheckoutToken || context.checkoutToken,
-          userId: context.userId,
-          planId: context.planId,
-          planName: context.planName,
-          amount: context.amount,
-          paymentPurpose: resolvedPurpose,
+          checkoutToken: resolvedCheckoutToken || context?.checkoutToken,
+          userId: successUserId,
+          planId: context?.planId,
+          planName: context?.planName,
+          amount: context?.amount,
+          paymentPurpose: resolvedPurpose || cancelResult.data?.paymentPurpose,
           sessionId: resolvedSessionId,
-          checkoutUrl: context.checkoutUrl,
+          checkoutUrl: context?.checkoutUrl,
           status: "CANCEL_CHAIN_SUCCESS",
-          note:
-            cancelResult.success && deleteResult.success
-              ? "Đã hủy thanh toán thành công."
-              : "Giao dịch đã được xử lý trước đó.",
+          note: "Đã hủy thanh toán thành công.",
         });
         setRecoveryContext(successContext);
       }
 
       setChainResult("success");
-      setResultMessage(
-        cancelResult.success && deleteResult.success
-          ? "Yêu cầu hủy thanh toán đã được xử lý thành công."
-          : "Yêu cầu hủy đã được ghi nhận. Giao dịch này đã được xử lý trước đó."
-      );
-
-      if (cancelResult.success && deleteResult.success) {
-        toast.success("Đã hủy thanh toán thành công.");
-      } else {
-        toast.info("Giao dịch đã được xử lý trước đó.");
-      }
+      setResultMessage("Yêu cầu hủy thanh toán đã được xử lý thành công.");
+      toast.success("Đã hủy thanh toán thành công.");
 
       if (pendingSessionPayment?.sessionId) {
         clearPendingSessionPaymentContext();
@@ -452,6 +555,7 @@ export function PaymentCancelPage() {
     }
   }, [
     callbackCheckoutToken,
+    cancelQueryFlag,
     currentUserId,
     orderCode,
     pendingSessionPayment,

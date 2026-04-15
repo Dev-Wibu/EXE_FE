@@ -148,7 +148,7 @@ export function SessionDetailPage() {
         message: "Da tao checkoutUrl thanh cong cho thanh toan phien.",
       });
 
-      upsertPaymentRecoveryContext({
+      const redirectedRecovery = upsertPaymentRecoveryContext({
         supportCode: createdRecovery.supportCode,
         orderCode,
         transactionCode,
@@ -161,6 +161,26 @@ export function SessionDetailPage() {
         status: "REDIRECTED",
         note: "Da redirect sang trang thanh toan phien tu trang chi tiet.",
       });
+
+      if (!transactionCode) {
+        addPaymentSupportLog({
+          supportCode: redirectedRecovery.supportCode,
+          orderCode,
+          checkoutToken,
+          userId: redirectedRecovery.userId,
+          amount: redirectedRecovery.amount,
+          paymentPurpose: "MENTOR_INTERVIEW",
+          sessionId: session.id,
+          status: "UNMAPPED_ORDER",
+          message:
+            "Checkout URL phien phong van chua co transactionCode, se fallback orderCode co guard khi callback huy.",
+          payload: {
+            orderCode: orderCode || null,
+            checkoutToken: checkoutToken || null,
+            recoveryStrategy: "orderCode-fallback-guarded",
+          },
+        });
+      }
 
       savePendingSessionPaymentContext({
         sessionId: session.id,

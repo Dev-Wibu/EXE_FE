@@ -22,6 +22,39 @@ const asNonEmptyString = (value: unknown): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const extractErrorMessageFromPayload = (payload: unknown): string | undefined => {
+  if (typeof payload === "string") {
+    return asNonEmptyString(payload);
+  }
+
+  if (!isRecord(payload)) {
+    return undefined;
+  }
+
+  return (
+    asNonEmptyString(payload.message) ||
+    asNonEmptyString(payload.error) ||
+    asNonEmptyString(payload.detail) ||
+    asNonEmptyString(payload.title)
+  );
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (isRecord(error) && isRecord(error.response)) {
+    const responseData = (error.response as Record<string, unknown>).data;
+    const responseMessage = extractErrorMessageFromPayload(responseData);
+    if (responseMessage) {
+      return responseMessage;
+    }
+  }
+
+  if (error instanceof Error) {
+    return asNonEmptyString(error.message) || fallback;
+  }
+
+  return fallback;
+};
+
 const DEFAULT_TRANSFER_OUT_PURPOSE: PaymentPurpose = "WITHDRAW_FROM_WALLET";
 
 export class TransactionManager {
@@ -64,7 +97,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tai danh sach giao dich.",
+        error: getErrorMessage(error, "Khong the tai danh sach giao dich."),
       };
     }
   }
@@ -82,7 +115,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tai chi tiet giao dich.",
+        error: getErrorMessage(error, "Khong the tai chi tiet giao dich."),
       };
     }
   }
@@ -100,7 +133,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tai giao dich theo user.",
+        error: getErrorMessage(error, "Khong the tai giao dich theo user."),
       };
     }
   }
@@ -137,7 +170,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tao giao dich transfer-in.",
+        error: getErrorMessage(error, "Khong the tao giao dich transfer-in."),
       };
     }
   }
@@ -179,7 +212,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tao giao dich transfer-out.",
+        error: getErrorMessage(error, "Khong the tao giao dich transfer-out."),
       };
     }
   }
@@ -196,7 +229,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the xoa giao dich.",
+        error: getErrorMessage(error, "Khong the xoa giao dich."),
       };
     }
   }

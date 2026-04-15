@@ -119,4 +119,21 @@ describe("TransactionManager API mode", () => {
     expect(result.success).toBe(true);
     expect(mockApi.delete).toHaveBeenCalledTimes(1);
   });
+
+  it("returns backend delete error message when API rejects", async () => {
+    mockApi.delete.mockRejectedValueOnce({
+      response: {
+        data: {
+          error: "Transaction not found with transaction code: TX-404",
+        },
+      },
+      message: "Request failed with status code 404",
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.delete("TX-404");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Transaction not found with transaction code");
+  });
 });

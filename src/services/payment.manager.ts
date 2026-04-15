@@ -22,6 +22,39 @@ const asNonEmptyString = (value: unknown): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const extractErrorMessageFromPayload = (payload: unknown): string | undefined => {
+  if (typeof payload === "string") {
+    return asNonEmptyString(payload);
+  }
+
+  if (!isRecord(payload)) {
+    return undefined;
+  }
+
+  return (
+    asNonEmptyString(payload.message) ||
+    asNonEmptyString(payload.error) ||
+    asNonEmptyString(payload.detail) ||
+    asNonEmptyString(payload.title)
+  );
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (isRecord(error) && isRecord(error.response)) {
+    const responseData = (error.response as Record<string, unknown>).data;
+    const responseMessage = extractErrorMessageFromPayload(responseData);
+    if (responseMessage) {
+      return responseMessage;
+    }
+  }
+
+  if (error instanceof Error) {
+    return asNonEmptyString(error.message) || fallback;
+  }
+
+  return fallback;
+};
+
 export interface PaymentCreateOptions {
   planId?: number;
   planName?: string;
@@ -70,7 +103,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tai danh sach payment.",
+        error: getErrorMessage(error, "Khong the tai danh sach payment."),
       };
     }
   }
@@ -86,7 +119,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tai chi tiet payment.",
+        error: getErrorMessage(error, "Khong the tai chi tiet payment."),
       };
     }
   }
@@ -111,8 +144,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Khong the tai payment theo transaction code.",
+        error: getErrorMessage(error, "Khong the tai payment theo transaction code."),
       };
     }
   }
@@ -156,7 +188,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the tao payment moi.",
+        error: getErrorMessage(error, "Khong the tao payment moi."),
       };
     }
   }
@@ -176,7 +208,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the huy payment.",
+        error: getErrorMessage(error, "Khong the huy payment."),
       };
     }
   }

@@ -431,7 +431,7 @@ export function AccountPage() {
         },
       });
 
-      upsertPaymentRecoveryContext({
+      const redirectedRecovery = upsertPaymentRecoveryContext({
         supportCode: createdRecovery.supportCode,
         orderCode,
         transactionCode,
@@ -443,6 +443,25 @@ export function AccountPage() {
         status: "REDIRECTED",
         note: "Da redirect sang trang thanh toan nap tien vi.",
       });
+
+      if (!transactionCode) {
+        addPaymentSupportLog({
+          supportCode: redirectedRecovery.supportCode,
+          orderCode,
+          checkoutToken,
+          userId: redirectedRecovery.userId,
+          amount: redirectedRecovery.amount,
+          paymentPurpose: "TOP_UP_WALLET",
+          status: "UNMAPPED_ORDER",
+          message:
+            "Checkout URL nap vi chua co transactionCode, se fallback orderCode co guard khi callback huy.",
+          payload: {
+            orderCode: orderCode || null,
+            checkoutToken: checkoutToken || null,
+            recoveryStrategy: "orderCode-fallback-guarded",
+          },
+        });
+      }
 
       toast.success("Đã tạo link nạp tiền. Đang chuyển hướng...");
       window.location.assign(redirectUrl);
