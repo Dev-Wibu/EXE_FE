@@ -86,7 +86,48 @@ describe("TransactionManager API mode", () => {
     );
   });
 
-  it("passes explicit transfer-out payment purpose when provided", async () => {
+  it("parses transfer-out text response from backend", async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: "Transfer out successful. Current balance: 0",
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.transferOut(44000, 55, "BUY_MEMBERSHIP");
+
+    expect(result.success).toBe(true);
+    expect(result.data?.message).toContain("Transfer out successful");
+    expect(result.data?.currentBalance).toBe(0);
+    expect(mockApi.post).toHaveBeenCalledWith(
+      "/api/transactions/transfer-out",
+      null,
+      expect.objectContaining({
+        params: expect.objectContaining({
+          amount: 44000,
+          userId: 55,
+          paymentPurpose: "BUY_MEMBERSHIP",
+        }),
+      })
+    );
+  });
+
+  it("returns vietnamese insufficient-balance message for transfer-out errors", async () => {
+    mockApi.post.mockRejectedValueOnce({
+      response: {
+        status: 400,
+        data: {
+          error: "Insufficient balance",
+        },
+      },
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.transferOut(999999, 55, "MENTOR_INTERVIEW");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Số dư ví không đủ");
+  });
+
+  it("keeps transfer-out redirect url when backend still responds with checkout link", async () => {
     mockApi.post.mockResolvedValueOnce({
       data: {
         redirectUrl: "https://payos.vn/checkout?orderCode=TX-44",
@@ -97,6 +138,7 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferOut(44000, 55, "BUY_MEMBERSHIP");
 
     expect(result.success).toBe(true);
+    expect(result.data?.redirectUrl).toContain("orderCode=TX-44");
     expect(mockApi.post).toHaveBeenCalledWith(
       "/api/transactions/transfer-out",
       null,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TransactionEntity } from "@/interfaces";
 
-import { isWalletScopedTransaction, mapTransactionToWalletTransaction } from "./wallet-mapping";
+import { getTransactionPurposeLabel, mapTransactionToAccountTransaction } from "./wallet-mapping";
 
 const buildTransaction = (override?: Partial<TransactionEntity>): TransactionEntity => ({
   id: 1,
@@ -13,28 +13,8 @@ const buildTransaction = (override?: Partial<TransactionEntity>): TransactionEnt
 });
 
 describe("wallet-mapping", () => {
-  it("keeps only wallet-scoped purposes and unknown purpose records", () => {
-    expect(isWalletScopedTransaction(buildTransaction({ paymentPurpose: "TOP_UP_WALLET" }))).toBe(
-      true
-    );
-    expect(
-      isWalletScopedTransaction(buildTransaction({ paymentPurpose: "WITHDRAW_FROM_WALLET" }))
-    ).toBe(true);
-    expect(isWalletScopedTransaction(buildTransaction({ paymentPurpose: "BUY_MEMBERSHIP" }))).toBe(
-      false
-    );
-    expect(
-      isWalletScopedTransaction(buildTransaction({ paymentPurpose: "MENTOR_INTERVIEW" }))
-    ).toBe(false);
-    expect(
-      isWalletScopedTransaction(
-        buildTransaction({ paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"] })
-      )
-    ).toBe(true);
-  });
-
   it("maps TOP_UP_WALLET to incoming deposit row", () => {
-    const mapped = mapTransactionToWalletTransaction(
+    const mapped = mapTransactionToAccountTransaction(
       buildTransaction({
         paymentPurpose: "TOP_UP_WALLET",
         transactionType: false,
@@ -43,13 +23,14 @@ describe("wallet-mapping", () => {
     );
 
     expect(mapped.type).toBe("deposit");
+    expect(mapped.direction).toBe("in");
     expect(mapped.amount).toBe(250000);
-    expect(mapped.description).toBe("Nạp tiền vào ví");
+    expect(mapped.purposeLabel).toBe("Nạp tiền vào ví");
     expect(mapped.status).toBe("completed");
   });
 
   it("maps WITHDRAW_FROM_WALLET to outgoing withdrawal row", () => {
-    const mapped = mapTransactionToWalletTransaction(
+    const mapped = mapTransactionToAccountTransaction(
       buildTransaction({
         paymentPurpose: "WITHDRAW_FROM_WALLET",
         transactionType: true,
@@ -58,13 +39,32 @@ describe("wallet-mapping", () => {
     );
 
     expect(mapped.type).toBe("refund");
+    expect(mapped.direction).toBe("out");
     expect(mapped.amount).toBe(-120000);
     expect(mapped.description).toBe("Rút tiền từ ví");
     expect(mapped.status).toBe("completed");
   });
 
-  it("marks unknown-purpose rows as unknown and pending", () => {
-    const mapped = mapTransactionToWalletTransaction(
+  it("maps membership payment to outgoing payment row", () => {
+    const mapped = mapTransactionToAccountTransaction(
+      buildTransaction({
+        paymentPurpose: "BUY_MEMBERSHIP",
+        transactionType: false,
+        amount: 500000,
+        description: undefined,
+      })
+    );
+
+    expect(mapped.type).toBe("payment");
+    expect(mapped.direction).toBe("out");
+    expect(mapped.amount).toBe(-500000);
+    expect(mapped.purposeLabel).toBe("Thanh toán gói thành viên");
+    expect(mapped.description).toBe("Thanh toán gói thành viên");
+    expect(mapped.status).toBe("completed");
+  });
+
+  it("marks unknown-purpose rows as pending with unknown type", () => {
+    const mapped = mapTransactionToAccountTransaction(
       buildTransaction({
         paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"],
         transactionType: false,
@@ -74,7 +74,12 @@ describe("wallet-mapping", () => {
 
     expect(mapped.type).toBe("unknown");
     expect(mapped.amount).toBe(-90000);
-    expect(mapped.description).toBe("Giao dịch ví (không xác định)");
+    expect(mapped.purposeLabel).toBe("Giao dịch chưa phân loại");
     expect(mapped.status).toBe("pending");
+  });
+
+  it("returns vietnamese purpose labels", () => {
+    expect(getTransactionPurposeLabel("MENTOR_INTERVIEW")).toBe("Thanh toán phiên mentor");
+    expect(getTransactionPurposeLabel("UNKNOWN")).toBe("Giao dịch chưa phân loại");
   });
 });

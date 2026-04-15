@@ -18,6 +18,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { FeedbackCard } from "@/components/feedback";
 import { ReviewCard } from "@/components/review";
+import { PaymentMethodDialog } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,7 @@ import {
   upsertPaymentRecoveryContext,
 } from "@/lib";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
+import { transactionManager, usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
@@ -79,9 +81,12 @@ export function SessionDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const [isPollingPayment, setIsPollingPayment] = useState(false);
   const pollingAttemptsRef = useRef(0);
+  const walletPaymentInFlightRef = useRef(false);
   const hasHandledCancelledParamRef = useRef(false);
 
   const paymentQuery = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -105,7 +110,7 @@ export function SessionDetailPage() {
   const isLoading = sessionLoading;
   const isCompleted = session?.status === "COMPLETED";
 
-  const handlePaySession = async () => {
+  const handlePaySessionWithPayOS = async () => {
     if (!session?.id || !user?.id) {
       return;
     }
@@ -207,6 +212,211 @@ export function SessionDetailPage() {
     } finally {
       setIsCreatingPayment(false);
     }
+  };
+
+  const refreshWalletBalance = async (): Promise<number | undefined> => {
+    if (!user?.id) {
+      return undefined;
+    }
+
+    const response = await usersAdminManager.getById(Number(user.id));
+    if (!response.success || !response.data) {
+      return typeof user.walletBalance === "number" ? user.walletBalance : undefined;
+    }
+
+    setUser({
+      ...user,
+      ...response.data,
+    });
+
+    return typeof response.data.walletBalance === "number"
+      ? response.data.walletBalance
+      : typeof user.walletBalance === "number"
+        ? user.walletBalance
+        : undefined;
+  };
+
+  const handlePaySessionWithWallet = async () => {
+    if (!session?.id || !user?.id) {
+      return;
+    }
+
+    const paymentAmount =
+      typeof session.totalPrice === "number" && session.totalPrice > 0 ? session.totalPrice : 0;
+    if (paymentAmount <= 0) {
+      toast.error("Phiên phỏng vấn chưa có tổng tiền hợp lệ để thanh toán bằng ví.");
+      return;
+    }
+
+    if (walletPaymentInFlightRef.current) {
+      toast.info("Hệ thống đang xử lý giao dịch ví. Vui lòng chờ trong giây lát.");
+      return;
+    }
+
+    walletPaymentInFlightRef.current = true;
+    setIsCreatingPayment(true);
+    try {
+      const freshWalletBalance = await refreshWalletBalance();
+      if (typeof freshWalletBalance === "number" && freshWalletBalance < paymentAmount) {
+        toast.error("Số dư ví không đủ. Vui lòng nạp thêm tiền hoặc chọn PayOS.");
+        addPaymentSupportLog({
+          userId: Number(user.id),
+          amount: paymentAmount,
+          paymentPurpose: "MENTOR_INTERVIEW",
+          sessionId: session.id,
+          status: "CREATE_FAILED",
+          message: "Thanh toan vi that bai do so du khong du o trang chi tiet phien.",
+          payload: {
+            walletBalance: freshWalletBalance,
+          },
+        });
+        return;
+      }
+
+      addPaymentSupportLog({
+        userId: Number(user.id),
+        amount: paymentAmount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        status: "CREATED",
+        message: "Bat dau thanh toan bang vi cho phien phong van tu trang chi tiet.",
+      });
+
+      const transferOutResult = await transactionManager.transferOut(
+        paymentAmount,
+        Number(user.id),
+        "MENTOR_INTERVIEW"
+      );
+
+      if (!transferOutResult.success || !transferOutResult.data) {
+        addPaymentSupportLog({
+          userId: Number(user.id),
+          amount: paymentAmount,
+          paymentPurpose: "MENTOR_INTERVIEW",
+          sessionId: session.id,
+          status: "CREATE_FAILED",
+          message: "Thanh toan vi that bai o trang chi tiet phien.",
+          payload: {
+            error: transferOutResult.error || null,
+          },
+        });
+        toast.error(transferOutResult.error || "Không thể thanh toán bằng ví lúc này.");
+        return;
+      }
+
+      const transferData = transferOutResult.data;
+
+      if (typeof transferData.currentBalance === "number") {
+        setUser({
+          ...user,
+          walletBalance: transferData.currentBalance,
+        });
+      }
+
+      if (transferData.redirectUrl) {
+        const normalizedCheckoutUrl = new URL(
+          transferData.redirectUrl,
+          window.location.origin
+        ).toString();
+        const orderCode = extractOrderCodeFromUrl(normalizedCheckoutUrl) || undefined;
+        const transactionCode =
+          transferData.transactionCode ||
+          extractTransactionCodeFromUrl(normalizedCheckoutUrl) ||
+          undefined;
+        const checkoutToken = extractCheckoutTokenFromUrl(normalizedCheckoutUrl) || undefined;
+
+        const createdRecovery = upsertPaymentRecoveryContext({
+          orderCode,
+          transactionCode,
+          checkoutToken,
+          userId: Number(user.id),
+          amount: paymentAmount,
+          paymentPurpose: "MENTOR_INTERVIEW",
+          sessionId: session.id,
+          checkoutUrl: normalizedCheckoutUrl,
+          status: "CREATED",
+          note: "Transfer-out tra ve checkoutUrl, fallback sang flow redirect.",
+        });
+
+        upsertPaymentRecoveryContext({
+          supportCode: createdRecovery.supportCode,
+          orderCode,
+          transactionCode,
+          checkoutToken,
+          userId: Number(user.id),
+          amount: paymentAmount,
+          paymentPurpose: "MENTOR_INTERVIEW",
+          sessionId: session.id,
+          checkoutUrl: normalizedCheckoutUrl,
+          status: "REDIRECTED",
+          note: "Da redirect sang checkoutUrl duoc tra ve tu transfer-out.",
+        });
+
+        savePendingSessionPaymentContext({
+          sessionId: session.id,
+          userId: Number(user.id),
+          checkoutUrl: normalizedCheckoutUrl,
+        });
+        toast.success("Đã tạo phiên thanh toán. Đang chuyển hướng...");
+        window.location.assign(normalizedCheckoutUrl);
+        return;
+      }
+
+      const recoveryContext = upsertPaymentRecoveryContext({
+        transactionCode: transferData.transactionCode,
+        userId: Number(user.id),
+        amount: paymentAmount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        status: "CALLBACK_SUCCESS",
+        note: transferData.message || "Thanh toan bang vi thanh cong.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: recoveryContext.supportCode,
+        transactionCode: transferData.transactionCode,
+        userId: Number(user.id),
+        amount: paymentAmount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        status: "CALLBACK_SUCCESS",
+        message: transferData.message || "Thanh toan bang vi thanh cong.",
+        payload: {
+          currentBalance: transferData.currentBalance,
+          status: transferData.status,
+        },
+      });
+
+      setIsPaymentMethodDialogOpen(false);
+      toast.success("Thanh toán bằng ví thành công. Đang cập nhật trạng thái phiên.");
+      navigate(`/user/mock-interview/history/${session.id}?payment=success`, { replace: true });
+    } catch (error) {
+      addPaymentSupportLog({
+        userId: Number(user.id),
+        amount: paymentAmount,
+        paymentPurpose: "MENTOR_INTERVIEW",
+        sessionId: session.id,
+        status: "CREATE_FAILED",
+        message: "Exception khi thanh toan bang vi o trang chi tiet phien.",
+        payload: {
+          error: error instanceof Error ? error.message : "unknown",
+        },
+      });
+      toast.error("Không thể thanh toán bằng ví lúc này. Vui lòng thử lại.");
+    } finally {
+      walletPaymentInFlightRef.current = false;
+      setIsCreatingPayment(false);
+    }
+  };
+
+  const handleConfirmPaymentMethod = async (method: "payos" | "wallet") => {
+    if (method === "wallet") {
+      await handlePaySessionWithWallet();
+      return;
+    }
+
+    setIsPaymentMethodDialogOpen(false);
+    await handlePaySessionWithPayOS();
   };
 
   useEffect(() => {
@@ -438,11 +648,11 @@ export function SessionDetailPage() {
 
               {canPaySession && (
                 <Button
-                  onClick={() => void handlePaySession()}
-                  disabled={isCreatingPayment}
+                  onClick={() => setIsPaymentMethodDialogOpen(true)}
+                  disabled={isCreatingPayment || isPollingPayment}
                   className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                   <CreditCard className="h-4 w-4" />
-                  {isCreatingPayment ? "Đang tạo link thanh toán..." : "Thanh toán phiên phỏng vấn"}
+                  {isCreatingPayment ? "Đang xử lý thanh toán..." : "Thanh toán phiên phỏng vấn"}
                 </Button>
               )}
 
@@ -567,6 +777,19 @@ export function SessionDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <PaymentMethodDialog
+        open={isPaymentMethodDialogOpen}
+        onOpenChange={setIsPaymentMethodDialogOpen}
+        title="Chọn phương thức thanh toán phiên"
+        description="Bạn có thể thanh toán qua PayOS hoặc thanh toán trực tiếp bằng số dư ví."
+        amount={
+          typeof session.totalPrice === "number" && session.totalPrice > 0 ? session.totalPrice : 0
+        }
+        walletBalance={typeof user?.walletBalance === "number" ? user.walletBalance : undefined}
+        isSubmitting={isCreatingPayment}
+        onConfirm={handleConfirmPaymentMethod}
+      />
     </div>
   );
 }

@@ -22,6 +22,49 @@ const asNonEmptyString = (value: unknown): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const asFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+};
+
+const isLikelyHttpUrl = (value: string): boolean => {
+  return /^https?:\/\//i.test(value.trim());
+};
+
+const extractCurrentBalanceFromMessage = (value: string): number | undefined => {
+  const match = value.match(/current\s+balance\s*:\s*(-?\d+(?:\.\d+)?)/i);
+  if (!match) {
+    return undefined;
+  }
+
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const isInsufficientBalanceError = (statusCode: unknown, message?: string): boolean => {
+  const status = asFiniteNumber(statusCode);
+  if (status === 402) {
+    return true;
+  }
+
+  const normalized = (message || "").toLowerCase();
+  return (
+    normalized.includes("insufficient balance") ||
+    normalized.includes("số dư") ||
+    normalized.includes("so du")
+  );
+};
+
 const extractErrorMessageFromPayload = (payload: unknown): string | undefined => {
   if (typeof payload === "string") {
     return asNonEmptyString(payload);
@@ -41,8 +84,13 @@ const extractErrorMessageFromPayload = (payload: unknown): string | undefined =>
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (isRecord(error) && isRecord(error.response)) {
-    const responseData = (error.response as Record<string, unknown>).data;
+    const response = error.response as Record<string, unknown>;
+    const responseData = response.data;
     const responseMessage = extractErrorMessageFromPayload(responseData);
+    if (isInsufficientBalanceError(response.status, responseMessage)) {
+      return "Số dư ví không đủ. Vui lòng nạp thêm tiền hoặc chọn phương thức khác.";
+    }
+
     if (responseMessage) {
       return responseMessage;
     }
@@ -56,6 +104,14 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 };
 
 const DEFAULT_TRANSFER_OUT_PURPOSE: PaymentPurpose = "WITHDRAW_FROM_WALLET";
+
+export interface TransferOutResult {
+  message: string;
+  redirectUrl?: string;
+  transactionCode?: string;
+  currentBalance?: number;
+  status?: string;
+}
 
 export class TransactionManager {
   private api = createApiInstance();
@@ -85,6 +141,74 @@ export class TransactionManager {
     }
 
     return undefined;
+  }
+
+  private extractTransferOutResult(payload: unknown): TransferOutResult | undefined {
+    if (typeof payload === "string") {
+      const normalized = asNonEmptyString(payload);
+      if (!normalized) {
+        return undefined;
+      }
+
+      if (isLikelyHttpUrl(normalized)) {
+        return {
+          message: "Đã tạo liên kết xử lý giao dịch.",
+          redirectUrl: normalized,
+        };
+      }
+
+      return {
+        message: normalized,
+        currentBalance: extractCurrentBalanceFromMessage(normalized),
+      };
+    }
+
+    if (!isRecord(payload)) {
+      return undefined;
+    }
+
+    const redirectUrl = this.extractRedirectUrl(payload);
+    const transactionCode =
+      asNonEmptyString(payload.transactionCode) ||
+      asNonEmptyString(payload.code) ||
+      asNonEmptyString(payload.transaction_id);
+    const currentBalance =
+      asFiniteNumber(payload.currentBalance) ||
+      asFiniteNumber(payload.balance) ||
+      asFiniteNumber(payload.newBalance);
+    const status = asNonEmptyString(payload.status) || asNonEmptyString(payload.result);
+    const explicitMessage =
+      asNonEmptyString(payload.message) ||
+      asNonEmptyString(payload.error) ||
+      asNonEmptyString(payload.detail) ||
+      asNonEmptyString(payload.title);
+
+    const hasStructuredSignal =
+      Boolean(redirectUrl) ||
+      Boolean(transactionCode) ||
+      currentBalance !== undefined ||
+      Boolean(status) ||
+      Boolean(explicitMessage);
+
+    if (!hasStructuredSignal) {
+      return undefined;
+    }
+
+    const message =
+      explicitMessage ||
+      (redirectUrl ? "Đã tạo liên kết xử lý giao dịch." : "Giao dịch ví đã được xử lý.");
+
+    if (!message && !redirectUrl && !transactionCode && currentBalance === undefined && !status) {
+      return undefined;
+    }
+
+    return {
+      message,
+      redirectUrl,
+      transactionCode,
+      currentBalance,
+      status,
+    };
   }
 
   async getAll(): Promise<ApiResponse<TransactionEntity[]>> {
@@ -179,7 +303,7 @@ export class TransactionManager {
     amount: number,
     userId: number,
     paymentPurpose: PaymentPurpose = DEFAULT_TRANSFER_OUT_PURPOSE
-  ): Promise<ApiResponse<string>> {
+  ): Promise<ApiResponse<TransferOutResult>> {
     const normalizedAmount = normalizeAmount(amount);
     if (normalizedAmount <= 0) {
       return {
@@ -197,8 +321,8 @@ export class TransactionManager {
         },
       });
 
-      const redirectUrl = this.extractRedirectUrl(response.data);
-      if (!redirectUrl) {
+      const transferOutResult = this.extractTransferOutResult(response.data);
+      if (!transferOutResult) {
         return {
           success: false,
           error: "Backend khong tra ve ket qua hop le cho transfer-out.",
@@ -207,7 +331,7 @@ export class TransactionManager {
 
       return {
         success: true,
-        data: redirectUrl,
+        data: transferOutResult,
       };
     } catch (error) {
       return {

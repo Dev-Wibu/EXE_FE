@@ -1,9 +1,10 @@
-import { Crown, FileText, User } from "lucide-react";
+import { Crown, FileText, History, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { normalizeMajor } from "@/constants/majors";
+import type { TransactionEntity } from "@/interfaces";
 import {
   addPaymentSupportLog,
   extractCheckoutTokenFromUrl,
@@ -11,28 +12,26 @@ import {
   extractTransactionCodeFromUrl,
   upsertPaymentRecoveryContext,
 } from "@/lib";
-import type { Wallet } from "@/mocks/user.mock";
 import { transactionManager, usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
-import { MembershipTab, ProfileTab, WalletTab } from "./AccountTabs";
+import { MembershipTab, ProfileTab, TransactionHistoryTab, WalletTab } from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
-import { isWalletScopedTransaction, mapTransactionToWalletTransaction } from "./wallet-mapping";
 
-const DEFAULT_WALLET: Wallet = {
-  balance: 0,
-  currency: "VND",
-  transactions: [],
-};
-
-type AccountSubTab = "profile" | "wallet" | "candidateProfile" | "membership";
+type AccountSubTab =
+  | "profile"
+  | "wallet"
+  | "transactionHistory"
+  | "candidateProfile"
+  | "membership";
 
 const parseAccountSubTab = (value?: string | null): AccountSubTab | null => {
   if (
     value === "profile" ||
     value === "wallet" ||
+    value === "transactionHistory" ||
     value === "candidateProfile" ||
     value === "membership"
   ) {
@@ -52,7 +51,8 @@ export function AccountPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
-  const [wallet, setWallet] = useState<Wallet>(DEFAULT_WALLET);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<AccountSubTab>(
     parseAccountSubTab(searchParams.get("subtab")) || "profile"
@@ -101,7 +101,7 @@ export function AccountPage() {
         });
 
         if (typeof userData.walletBalance === "number") {
-          setWallet((prev) => ({ ...prev, balance: userData.walletBalance || 0 }));
+          setWalletBalance(userData.walletBalance || 0);
         }
       } else {
         // Fallback to authUser data if API fails
@@ -141,9 +141,9 @@ export function AccountPage() {
     }
   }, [authUser]);
 
-  const fetchWalletTransactions = useCallback(async () => {
+  const fetchUserTransactions = useCallback(async () => {
     if (!authUser?.id) {
-      setWallet((prev) => ({ ...prev, transactions: [] }));
+      setTransactions([]);
       return;
     }
 
@@ -151,15 +151,14 @@ export function AccountPage() {
     try {
       const response = await transactionManager.getByUserId(Number(authUser.id));
       if (response.success && response.data) {
-        const mappedTransactions = response.data
-          .filter(isWalletScopedTransaction)
-          .map(mapTransactionToWalletTransaction)
-          .sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+        const sortedTransactions = [...response.data].sort((a, b) => {
+          return Date.parse(b.createdAt || "") - Date.parse(a.createdAt || "");
+        });
 
-        setWallet((prev) => ({ ...prev, transactions: mappedTransactions }));
+        setTransactions(sortedTransactions);
       }
     } catch {
-      setWallet((prev) => ({ ...prev, transactions: [] }));
+      setTransactions([]);
     } finally {
       setIsWalletLoading(false);
     }
@@ -171,8 +170,8 @@ export function AccountPage() {
   }, [fetchUserData]);
 
   useEffect(() => {
-    void fetchWalletTransactions();
-  }, [fetchWalletTransactions]);
+    void fetchUserTransactions();
+  }, [fetchUserTransactions]);
 
   useEffect(() => {
     const nextTab = parseAccountSubTab(searchParams.get("subtab")) || "profile";
@@ -205,7 +204,7 @@ export function AccountPage() {
   }, [avatarPreview]);
 
   const handleRefreshData = async () => {
-    await Promise.all([fetchUserData(), fetchWalletTransactions()]);
+    await Promise.all([fetchUserData(), fetchUserTransactions()]);
     toast.success("Đã cập nhật dữ liệu!");
   };
 
@@ -482,8 +481,7 @@ export function AccountPage() {
       case "wallet":
         return (
           <WalletTab
-            wallet={wallet}
-            isLoading={isWalletLoading}
+            balance={walletBalance}
             isTopUpLoading={isTopUpLoading}
             topUpAmount={topUpAmount}
             minTopUp={TOP_UP_MIN_AMOUNT}
@@ -494,6 +492,8 @@ export function AccountPage() {
             onTopUp={handleTopUpWallet}
           />
         );
+      case "transactionHistory":
+        return <TransactionHistoryTab transactions={transactions} isLoading={isWalletLoading} />;
       case "candidateProfile":
         return <CandidateProfileTab />;
       case "membership":
@@ -528,7 +528,7 @@ export function AccountPage() {
             Tài khoản của bạn
           </h1>
           <p className="font-['Open_Sans'] text-base font-normal text-gray-700 dark:text-slate-300">
-            Quản lý thông tin cá nhân, ví tiền, hồ sơ ứng viên và gói thành viên
+            Quản lý thông tin cá nhân, ví tiền, lịch sử giao dịch, hồ sơ ứng viên và gói thành viên
           </p>
         </div>
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50">
@@ -555,6 +555,16 @@ export function AccountPage() {
               : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}>
           Ví tiền
+        </button>
+        <button
+          onClick={() => handleSwitchTab("transactionHistory")}
+          className={`flex items-center gap-2 px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
+            activeTab === "transactionHistory"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
+              : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
+          }`}>
+          <History className="h-4 w-4" />
+          Lịch sử giao dịch
         </button>
         <button
           onClick={() => handleSwitchTab("candidateProfile")}

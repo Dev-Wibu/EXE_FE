@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { PaymentMethodDialog } from "@/components/shared";
 import type { UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
@@ -22,7 +23,12 @@ import {
   upsertPaymentRecoveryContext,
 } from "@/lib";
 import { formatCurrency } from "@/lib/formatting";
-import { memberShipPlanManager, userManager } from "@/services";
+import {
+  memberShipPlanManager,
+  transactionManager,
+  userManager,
+  usersAdminManager,
+} from "@/services";
 import type { MemberShipPlan } from "@/services/membership-plan.manager";
 import { paymentManager } from "@/services/payment.manager";
 import { useAuthStore } from "@/stores/authStore";
@@ -293,7 +299,8 @@ function PlanCard({
 }
 
 export function MembershipTab() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const [membershipPlans, setMembershipPlans] = useState<MembershipPlan[]>([]);
   const [subscription, setSubscription] = useState<UserSubscriptionResponse | null>(null);
   const [planIdByName, setPlanIdByName] = useState<Partial<Record<PlanName, number>>>({});
@@ -302,7 +309,9 @@ export function MembershipTab() {
   const [selectedPlan, setSelectedPlan] = useState<PlanName | null>(null);
   const [copied, setCopied] = useState<"account" | "content" | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const paymentRef = useRef<HTMLDivElement>(null);
+  const walletPaymentInFlightRef = useRef(false);
 
   useEffect(() => {
     if (user?.id == null) {
@@ -372,15 +381,15 @@ export function MembershipTab() {
     });
   };
 
-  const handleConfirmPayment = async () => {
+  const resolvePaymentTarget = () => {
     if (!selectedPlan || !user?.id) {
-      return;
+      return null;
     }
 
     const selectedPlanId = planIdByName[selectedPlan];
     if (!selectedPlanId) {
       toast.error("Không tìm thấy ID gói thành viên. Vui lòng tải lại trang.");
-      return;
+      return null;
     }
 
     const selectedPlanInfo = membershipPlans.find((plan) => plan.id === selectedPlan);
@@ -388,21 +397,59 @@ export function MembershipTab() {
 
     if (paymentAmount <= 0) {
       toast.info("Gói này không cần thanh toán. Vui lòng chọn gói trả phí.");
+      return null;
+    }
+
+    return {
+      userId: Number(user.id),
+      selectedPlanId: Number(selectedPlanId),
+      selectedPlanName: selectedPlan,
+      paymentAmount,
+    };
+  };
+
+  const refreshWalletBalance = async (): Promise<number | undefined> => {
+    if (!user?.id) {
+      return undefined;
+    }
+
+    const response = await usersAdminManager.getById(Number(user.id));
+    if (!response.success || !response.data) {
+      return typeof user.walletBalance === "number" ? user.walletBalance : undefined;
+    }
+
+    setUser({
+      ...user,
+      ...response.data,
+    });
+
+    return typeof response.data.walletBalance === "number"
+      ? response.data.walletBalance
+      : typeof user.walletBalance === "number"
+        ? user.walletBalance
+        : undefined;
+  };
+
+  const handlePayWithPayOS = async () => {
+    const paymentTarget = resolvePaymentTarget();
+    if (!paymentTarget) {
       return;
     }
+
+    const { userId, selectedPlanId, selectedPlanName, paymentAmount } = paymentTarget;
 
     setIsConfirming(true);
 
     try {
-      const paymentResult = await paymentManager.create(paymentAmount, Number(user.id), {
-        planId: Number(selectedPlanId),
-        planName: selectedPlan,
+      const paymentResult = await paymentManager.create(paymentAmount, userId, {
+        planId: selectedPlanId,
+        planName: selectedPlanName,
       });
       if (!paymentResult.success || !paymentResult.data) {
         addPaymentSupportLog({
-          userId: Number(user.id),
-          planId: Number(selectedPlanId),
-          planName: selectedPlan,
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
           amount: paymentAmount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "CREATE_FAILED",
@@ -424,9 +471,9 @@ export function MembershipTab() {
         orderCode,
         transactionCode,
         checkoutToken,
-        userId: Number(user.id),
-        planId: Number(selectedPlanId),
-        planName: selectedPlan,
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         checkoutUrl: redirectUrl,
@@ -527,9 +574,9 @@ export function MembershipTab() {
       window.location.assign(redirectUrl);
     } catch {
       addPaymentSupportLog({
-        userId: Number(user.id),
-        planId: Number(selectedPlanId),
-        planName: selectedPlan,
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "CREATE_FAILED",
@@ -539,6 +586,252 @@ export function MembershipTab() {
     } finally {
       setIsConfirming(false);
     }
+  };
+
+  const handlePayWithWallet = async () => {
+    const paymentTarget = resolvePaymentTarget();
+    if (!paymentTarget) {
+      return;
+    }
+
+    const { userId, selectedPlanId, selectedPlanName, paymentAmount } = paymentTarget;
+
+    if (walletPaymentInFlightRef.current) {
+      toast.info("Hệ thống đang xử lý giao dịch ví. Vui lòng chờ trong giây lát.");
+      return;
+    }
+
+    walletPaymentInFlightRef.current = true;
+    setIsConfirming(true);
+
+    try {
+      const freshWalletBalance = await refreshWalletBalance();
+      if (typeof freshWalletBalance === "number" && freshWalletBalance < paymentAmount) {
+        addPaymentSupportLog({
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
+          amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          status: "CREATE_FAILED",
+          message: "Thanh toan vi cho goi membership that bai do so du khong du.",
+          payload: {
+            walletBalance: freshWalletBalance,
+          },
+        });
+        toast.error("Số dư ví không đủ. Vui lòng nạp thêm tiền hoặc chọn PayOS.");
+        return;
+      }
+
+      addPaymentSupportLog({
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
+        amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
+        status: "CREATED",
+        message: "Bat dau thanh toan bang vi cho goi membership.",
+      });
+
+      const transferOutResult = await transactionManager.transferOut(
+        paymentAmount,
+        userId,
+        "BUY_MEMBERSHIP"
+      );
+
+      if (!transferOutResult.success || !transferOutResult.data) {
+        addPaymentSupportLog({
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
+          amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          status: "CREATE_FAILED",
+          message: "Transfer-out that bai khi thanh toan membership bang vi.",
+          payload: {
+            error: transferOutResult.error || null,
+          },
+        });
+        toast.error(transferOutResult.error || "Không thể thanh toán bằng ví lúc này.");
+        return;
+      }
+
+      const transferData = transferOutResult.data;
+
+      if (typeof transferData.currentBalance === "number") {
+        setUser({
+          ...user,
+          walletBalance: transferData.currentBalance,
+        });
+      }
+
+      if (transferData.redirectUrl) {
+        const redirectUrl = new URL(transferData.redirectUrl, window.location.origin).toString();
+        const orderCode = extractOrderCodeFromUrl(redirectUrl) || undefined;
+        const transactionCode =
+          transferData.transactionCode || extractTransactionCodeFromUrl(redirectUrl) || undefined;
+        const checkoutToken = extractCheckoutTokenFromUrl(redirectUrl) || undefined;
+
+        const createdRecovery = upsertPaymentRecoveryContext({
+          orderCode,
+          transactionCode,
+          checkoutToken,
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
+          amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          checkoutUrl: redirectUrl,
+          status: "CREATED",
+          note: "Transfer-out tra ve checkoutUrl, fallback sang redirect flow.",
+        });
+
+        upsertPaymentRecoveryContext({
+          supportCode: createdRecovery.supportCode,
+          orderCode,
+          transactionCode,
+          checkoutToken,
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
+          amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          checkoutUrl: redirectUrl,
+          status: "REDIRECTED",
+          note: "Da redirect sang checkoutUrl duoc tra ve tu transfer-out.",
+        });
+
+        setIsPaymentMethodDialogOpen(false);
+        toast.success("Đã tạo link thanh toán. Đang chuyển hướng...");
+        window.location.assign(redirectUrl);
+        return;
+      }
+
+      const transferRecovery = upsertPaymentRecoveryContext({
+        transactionCode: transferData.transactionCode,
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
+        amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
+        status: "CALLBACK_SUCCESS",
+        note: transferData.message || "Thanh toan bang vi thanh cong.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: transferRecovery.supportCode,
+        transactionCode: transferData.transactionCode,
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
+        amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
+        status: "CALLBACK_SUCCESS",
+        message: transferData.message || "Thanh toan bang vi thanh cong.",
+        payload: {
+          currentBalance: transferData.currentBalance,
+          status: transferData.status,
+        },
+      });
+
+      let subscribeResult: Awaited<ReturnType<typeof userManager.subscribePlan>> | null = null;
+      let subscribeAttempt = 0;
+      while (subscribeAttempt < 3) {
+        subscribeAttempt += 1;
+        subscribeResult = await userManager.subscribePlan(userId, selectedPlanId);
+        if (subscribeResult.success) {
+          break;
+        }
+      }
+
+      if (!subscribeResult?.success) {
+        upsertPaymentRecoveryContext({
+          supportCode: transferRecovery.supportCode,
+          transactionCode: transferRecovery.transactionCode,
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
+          amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          status: "SUBSCRIBE_FAILED",
+          note: "Thanh toan vi thanh cong nhung kich hoat goi that bai sau 3 lan retry.",
+        });
+
+        addPaymentSupportLog({
+          supportCode: transferRecovery.supportCode,
+          transactionCode: transferRecovery.transactionCode,
+          userId,
+          planId: selectedPlanId,
+          planName: selectedPlanName,
+          amount: paymentAmount,
+          paymentPurpose: "BUY_MEMBERSHIP",
+          status: "SUBSCRIBE_FAILED",
+          message: "Da tru vi nhung kich hoat goi that bai sau 3 lan retry.",
+          payload: {
+            retryCount: subscribeAttempt,
+            error: subscribeResult?.error || null,
+          },
+        });
+
+        setIsPaymentMethodDialogOpen(false);
+        toast.error("Đã trừ ví nhưng kích hoạt gói chưa thành công. Vui lòng liên hệ hỗ trợ.");
+        return;
+      }
+
+      upsertPaymentRecoveryContext({
+        supportCode: transferRecovery.supportCode,
+        transactionCode: transferRecovery.transactionCode,
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
+        amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
+        status: "SUBSCRIBE_SUCCESS",
+        note: "Thanh toan vi va kich hoat goi thanh cong.",
+      });
+
+      addPaymentSupportLog({
+        supportCode: transferRecovery.supportCode,
+        transactionCode: transferRecovery.transactionCode,
+        userId,
+        planId: selectedPlanId,
+        planName: selectedPlanName,
+        amount: paymentAmount,
+        paymentPurpose: "BUY_MEMBERSHIP",
+        status: "SUBSCRIBE_SUCCESS",
+        message: "Thanh toan vi va kich hoat goi thanh cong.",
+        payload: {
+          retryCount: subscribeAttempt,
+        },
+      });
+
+      const latestSubscription = await userManager.getActiveSubscription(userId);
+      if (latestSubscription.success && latestSubscription.data) {
+        setSubscription(latestSubscription.data);
+        if (latestSubscription.data.planName) {
+          setCurrentPlanName(latestSubscription.data.planName);
+        }
+      }
+
+      await refreshWalletBalance();
+      setIsPaymentMethodDialogOpen(false);
+      toast.success("Thanh toán bằng ví thành công. Gói thành viên đã được kích hoạt.");
+    } catch {
+      toast.error("Không thể thanh toán bằng ví lúc này. Vui lòng thử lại.");
+    } finally {
+      walletPaymentInFlightRef.current = false;
+      setIsConfirming(false);
+    }
+  };
+
+  const handleConfirmPayment = async (method: "payos" | "wallet") => {
+    if (method === "wallet") {
+      await handlePayWithWallet();
+      return;
+    }
+
+    setIsPaymentMethodDialogOpen(false);
+    await handlePayWithPayOS();
   };
 
   const userId = user?.id ?? "00000";
@@ -762,7 +1055,7 @@ export function MembershipTab() {
                 </div>
 
                 <button
-                  onClick={handleConfirmPayment}
+                  onClick={() => setIsPaymentMethodDialogOpen(true)}
                   disabled={!selectedPlan || isConfirming}
                   className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0047AB] px-4 py-3 font-['Inter'] text-sm font-semibold text-white transition-all duration-150 hover:bg-[#003d99] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
                   {isConfirming ? (
@@ -872,6 +1165,17 @@ export function MembershipTab() {
           </div>
         </div>
       </div>
+
+      <PaymentMethodDialog
+        open={isPaymentMethodDialogOpen}
+        onOpenChange={setIsPaymentMethodDialogOpen}
+        title="Chọn phương thức thanh toán gói"
+        description="Bạn có thể thanh toán qua PayOS hoặc thanh toán trực tiếp bằng số dư ví."
+        amount={selectedPlanInfo?.price ?? 0}
+        walletBalance={typeof user?.walletBalance === "number" ? user.walletBalance : undefined}
+        isSubmitting={isConfirming}
+        onConfirm={handleConfirmPayment}
+      />
     </div>
   );
 }

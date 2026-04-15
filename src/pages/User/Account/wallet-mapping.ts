@@ -1,80 +1,122 @@
 import type { PaymentPurpose, TransactionEntity } from "@/interfaces";
-import type { Transaction } from "@/mocks/user.mock";
 
-type WalletScopedPurpose = "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "UNKNOWN";
+export type AccountTransactionDirection = "in" | "out";
+export type AccountTransactionType = "deposit" | "payment" | "refund" | "unknown";
+export type AccountTransactionStatus = "completed" | "pending";
+
+export interface AccountTransactionItem {
+  id: number;
+  type: AccountTransactionType;
+  status: AccountTransactionStatus;
+  direction: AccountTransactionDirection;
+  amount: number;
+  absoluteAmount: number;
+  date: string;
+  transactionCode: string;
+  purpose: PaymentPurpose | "UNKNOWN";
+  purposeLabel: string;
+  description: string;
+  currentBalance?: number;
+}
 
 const normalizePaymentPurpose = (
   value: TransactionEntity["paymentPurpose"] | ""
-): PaymentPurpose | undefined => {
+): PaymentPurpose | "UNKNOWN" => {
   return value === "BUY_MEMBERSHIP" ||
     value === "TOP_UP_WALLET" ||
     value === "WITHDRAW_FROM_WALLET" ||
     value === "MENTOR_INTERVIEW"
     ? value
-    : undefined;
+    : "UNKNOWN";
 };
 
-const resolveWalletScopedPurpose = (
+const resolveDirection = (
+  transaction: TransactionEntity,
+  purpose: PaymentPurpose | "UNKNOWN"
+): AccountTransactionDirection => {
+  if (purpose === "TOP_UP_WALLET") {
+    return "in";
+  }
+
+  if (
+    purpose === "WITHDRAW_FROM_WALLET" ||
+    purpose === "BUY_MEMBERSHIP" ||
+    purpose === "MENTOR_INTERVIEW"
+  ) {
+    return "out";
+  }
+
+  if (transaction.transactionType === true) {
+    return "in";
+  }
+
+  if (transaction.transactionType === false) {
+    return "out";
+  }
+
+  return Number(transaction.amount || 0) >= 0 ? "in" : "out";
+};
+
+export const getTransactionPurposeLabel = (purpose: PaymentPurpose | "UNKNOWN"): string => {
+  switch (purpose) {
+    case "TOP_UP_WALLET":
+      return "Nạp tiền vào ví";
+    case "WITHDRAW_FROM_WALLET":
+      return "Rút tiền từ ví";
+    case "BUY_MEMBERSHIP":
+      return "Thanh toán gói thành viên";
+    case "MENTOR_INTERVIEW":
+      return "Thanh toán phiên mentor";
+    default:
+      return "Giao dịch chưa phân loại";
+  }
+};
+
+const resolveType = (purpose: PaymentPurpose | "UNKNOWN"): AccountTransactionType => {
+  switch (purpose) {
+    case "TOP_UP_WALLET":
+      return "deposit";
+    case "WITHDRAW_FROM_WALLET":
+      return "refund";
+    case "BUY_MEMBERSHIP":
+    case "MENTOR_INTERVIEW":
+      return "payment";
+    default:
+      return "unknown";
+  }
+};
+
+const resolveStatus = (purpose: PaymentPurpose | "UNKNOWN"): AccountTransactionStatus => {
+  return purpose === "UNKNOWN" ? "pending" : "completed";
+};
+
+export const mapTransactionToAccountTransaction = (
   transaction: TransactionEntity
-): WalletScopedPurpose | "EXCLUDED" => {
-  const normalizedPurpose = normalizePaymentPurpose(
+): AccountTransactionItem => {
+  const purpose = normalizePaymentPurpose(
     (transaction.paymentPurpose as TransactionEntity["paymentPurpose"] | "") || ""
   );
-
-  if (normalizedPurpose === "TOP_UP_WALLET" || normalizedPurpose === "WITHDRAW_FROM_WALLET") {
-    return normalizedPurpose;
-  }
-
-  if (normalizedPurpose === "BUY_MEMBERSHIP" || normalizedPurpose === "MENTOR_INTERVIEW") {
-    return "EXCLUDED";
-  }
-
-  return "UNKNOWN";
-};
-
-export const isWalletScopedTransaction = (transaction: TransactionEntity): boolean => {
-  return resolveWalletScopedPurpose(transaction) !== "EXCLUDED";
-};
-
-export const mapTransactionToWalletTransaction = (transaction: TransactionEntity): Transaction => {
-  const scopedPurpose = resolveWalletScopedPurpose(transaction);
+  const direction = resolveDirection(transaction, purpose);
   const sourceAmount = Number(transaction.amount || 0);
   const absoluteAmount = Math.abs(sourceAmount);
-
-  const isIncoming =
-    scopedPurpose === "TOP_UP_WALLET"
-      ? true
-      : scopedPurpose === "WITHDRAW_FROM_WALLET"
-        ? false
-        : transaction.transactionType === true
-          ? true
-          : transaction.transactionType === false
-            ? false
-            : sourceAmount >= 0;
-
-  const type: Transaction["type"] =
-    scopedPurpose === "TOP_UP_WALLET"
-      ? "deposit"
-      : scopedPurpose === "WITHDRAW_FROM_WALLET"
-        ? "refund"
-        : "unknown";
-
-  const description =
-    transaction.description ||
-    (scopedPurpose === "TOP_UP_WALLET"
-      ? "Nạp tiền vào ví"
-      : scopedPurpose === "WITHDRAW_FROM_WALLET"
-        ? "Rút tiền từ ví"
-        : "Giao dịch ví (không xác định)");
-
-  const status: Transaction["status"] = scopedPurpose === "UNKNOWN" ? "pending" : "completed";
+  const amount = direction === "in" ? absoluteAmount : -absoluteAmount;
+  const purposeLabel = getTransactionPurposeLabel(purpose);
 
   return {
     id: Number(transaction.id || Date.now()),
-    type,
-    amount: isIncoming ? absoluteAmount : -absoluteAmount,
+    type: resolveType(purpose),
+    status: resolveStatus(purpose),
+    direction,
+    amount,
+    absoluteAmount,
     date: transaction.createdAt || new Date().toISOString(),
-    description,
-    status,
+    transactionCode: transaction.transactionCode || "—",
+    purpose,
+    purposeLabel,
+    description: (transaction.description || "").trim() || purposeLabel,
+    currentBalance:
+      typeof transaction.currentBalance === "number" && Number.isFinite(transaction.currentBalance)
+        ? transaction.currentBalance
+        : undefined,
   };
 };
