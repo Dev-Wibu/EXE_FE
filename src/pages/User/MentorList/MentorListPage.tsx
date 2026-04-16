@@ -137,7 +137,7 @@ export function MentorListPage() {
   };
 
   return (
-    <section className="relative h-full overflow-hidden rounded-3xl border border-slate-200/70 bg-linear-to-br from-white via-slate-50 to-sky-50/40 dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+    <section className="relative h-full overflow-hidden bg-linear-to-br from-white via-slate-50 to-sky-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
       <div className="pointer-events-none absolute -top-20 -left-14 h-72 w-72 rounded-full bg-blue-300/30 blur-3xl dark:bg-blue-900/25" />
       <div className="pointer-events-none absolute top-10 right-6 h-40 w-40 rounded-full bg-cyan-200/30 blur-3xl dark:bg-cyan-900/25" />
 

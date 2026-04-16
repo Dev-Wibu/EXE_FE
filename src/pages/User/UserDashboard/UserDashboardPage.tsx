@@ -274,7 +274,9 @@ export function UserDashboardPage() {
         <div
           className={cn(
             "flex-1 overflow-hidden",
-            typedActiveTab === "messenger" ? "p-0" : "overflow-auto p-6"
+            typedActiveTab === "messenger" || typedActiveTab === "mentors"
+              ? "p-0"
+              : "overflow-auto p-6"
           )}>
           {outlet ?? renderContent()}
         </div>

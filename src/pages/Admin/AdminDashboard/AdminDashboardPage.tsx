@@ -218,14 +218,14 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
     label: "Đánh giá & phản hồi",
     items: [
-      { type: "reviews", icon: Star, label: "Đánh giá mentor", color: "text-yellow-600" },
+      { type: "reviews", icon: Star, label: "Đánh giá của mentor", color: "text-yellow-600" },
       {
         type: "feedback",
         icon: MessageSquare,
-        label: "Phản hồi ứng viên",
+        label: "Phản hồi từ ứng viên",
         color: "text-cyan-600",
       },
-      { type: "notifications", icon: Bell, label: "Notifications", color: "text-red-600" },
+      { type: "notifications", icon: Bell, label: "Thông báo", color: "text-red-600" },
     ],
   },
   {
