@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, Loader2, Upload, X } from "lucide-react";
+import { ExternalLink, FileText, Upload, X } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 export interface CVUploadModalProps {
@@ -266,7 +267,7 @@ export function CVUploadModal({
           <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
             {isUploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner size="sm" tone="white" className="mr-2" />
                 Đang upload...
               </>
             ) : (

@@ -1,5 +1,6 @@
 import { AlertCircle, ArrowDownLeft, ArrowUpRight, Hash } from "lucide-react";
 
+import { Spinner } from "@/components/ui/spinner";
 import type { TransactionEntity } from "@/interfaces";
 import {
   formatCurrency,
@@ -52,9 +53,10 @@ export function TransactionHistoryTab({ transactions, isLoading }: TransactionHi
       </div>
 
       {isLoading ? (
-        <p className="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex justify-center py-6">
+          <Spinner size="md" />
           Đang tải lịch sử giao dịch...
-        </p>
+        </div>
       ) : transactions.length === 0 ? (
         <p className="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
           Chưa có giao dịch nào.

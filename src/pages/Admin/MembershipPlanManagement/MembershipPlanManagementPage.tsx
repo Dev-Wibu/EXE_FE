@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { extractDataArray } from "@/lib/utils";
 import { memberShipPlanManager } from "@/services";
 import { toast } from "sonner";
@@ -129,8 +130,8 @@ export function MembershipPlanManagementPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
+      <div className="bg-white dark:bg-slate-950">
+        <SpinnerBlock fullScreen size="xl" />
       </div>
     );
   }

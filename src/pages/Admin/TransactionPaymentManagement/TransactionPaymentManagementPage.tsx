@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { Spinner } from "@/components/ui/spinner";
 import type { PaymentEntity, PaymentPurpose, TransactionEntity } from "@/interfaces";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
 import { paymentManager } from "@/services/payment.manager";
@@ -152,7 +153,7 @@ export function TransactionPaymentManagementPage() {
         <button
           onClick={() => void loadData()}
           className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 font-['Inter'] text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          {loading ? <Spinner size="sm" tone="muted" /> : <RefreshCw className="h-4 w-4" />}
           Tải lại
         </button>
       </div>

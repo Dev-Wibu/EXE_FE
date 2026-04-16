@@ -1,6 +1,7 @@
 import { Award } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { mentorManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
@@ -207,8 +208,8 @@ export function MentorAccountPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="font-['Inter'] text-base text-gray-500 dark:text-slate-400">Đang tải...</p>
+      <div className="py-6">
+        <SpinnerBlock size="lg" />
       </div>
     );
   }

@@ -132,6 +132,82 @@
   }
 }
 
+.orbit-spinner {
+  --orbit-spinner-color: #0047ab;
+}
+
+.orbit-spinner__ring {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  animation: orbit-spinner-rotate 1.25s linear infinite;
+}
+
+.orbit-spinner__ring::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in srgb, var(--orbit-spinner-color) 24%, transparent);
+}
+
+.orbit-spinner__dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  background: var(--orbit-spinner-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--orbit-spinner-color) 30%, transparent);
+  animation: orbit-spinner-pulse 1.1s ease-in-out infinite;
+}
+
+.orbit-spinner__dot--one {
+  transform: translate(-50%, -170%);
+  animation-delay: 0ms;
+}
+
+.orbit-spinner__dot--two {
+  transform: translate(72%, 72%);
+  animation-delay: 140ms;
+}
+
+.orbit-spinner__dot--three {
+  transform: translate(-172%, 72%);
+  animation-delay: 280ms;
+}
+
+@keyframes orbit-spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-spinner-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    scale: 0.76;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-spinner__ring,
+  .orbit-spinner__dot {
+    animation-duration: 2.4s;
+  }
+}
+
 /* Global custom scrollbar - replaces default browser scrollbar across entire project */
 * {
   scrollbar-width: thin;

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { normalizeMajor } from "@/constants/majors";
 import type { TransactionEntity } from "@/interfaces";
 import {
@@ -590,8 +591,8 @@ export function AccountPage() {
 
       {/* Tab Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="font-['Inter'] text-base text-gray-500 dark:text-slate-400">Đang tải...</p>
+        <div className="py-6">
+          <SpinnerBlock size="lg" />
         </div>
       ) : (
         renderTabContent()

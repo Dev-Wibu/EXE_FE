@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 
+import { SpinnerBlock } from "@/components/ui/spinner";
 import type { UserRole } from "@/interfaces/schema.types";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -11,11 +12,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { isLoggedIn, isLoading, user } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-      </div>
-    );
+    return <SpinnerBlock fullScreen size="xl" />;
   }
 
   if (!isLoggedIn) {

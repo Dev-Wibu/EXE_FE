@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Spinner, SpinnerBlock } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -128,8 +129,8 @@ export function QuizSetManagementPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
+      <div className="bg-white dark:bg-slate-950">
+        <SpinnerBlock fullScreen size="xl" />
       </div>
     );
   }
@@ -277,7 +278,7 @@ export function QuizSetManagementPage() {
           </DialogHeader>
           {loadingItems ? (
             <div className="flex items-center justify-center py-8">
-              <div className="border-primary h-6 w-6 animate-spin rounded-full border-4 border-t-transparent" />
+              <Spinner size="md" />
             </div>
           ) : quizItems.length === 0 ? (
             <p className="py-8 text-center text-gray-500">Không có câu hỏi nào</p>

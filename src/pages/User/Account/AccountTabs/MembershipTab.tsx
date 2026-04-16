@@ -6,7 +6,6 @@ import {
   ClipboardCopy,
   Crown,
   Diamond,
-  Loader2,
   Sparkles,
   Star,
   Zap,
@@ -14,6 +13,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { PaymentMethodDialog } from "@/components/shared";
+import { Spinner } from "@/components/ui/spinner";
 import type { UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
@@ -866,8 +866,11 @@ export function MembershipTab() {
       </div>
 
       {isLoadingSubscription ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-          Đang tải thông tin gói thành viên...
+        <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex justify-center py-1">
+            <Spinner size="md" />
+            Đang tải thông tin gói thành viên...
+          </div>
         </div>
       ) : subscription ? (
         <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-4 dark:border-slate-700 dark:bg-slate-900">
@@ -1060,7 +1063,7 @@ export function MembershipTab() {
                   className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0047AB] px-4 py-3 font-['Inter'] text-sm font-semibold text-white transition-all duration-150 hover:bg-[#003d99] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
                   {isConfirming ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner size="sm" tone="white" />
                       Đang tạo liên kết thanh toán...
                     </>
                   ) : (

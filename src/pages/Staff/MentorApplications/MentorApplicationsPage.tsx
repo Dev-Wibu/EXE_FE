@@ -1,4 +1,4 @@
-import { CheckCircle, Loader2, Search, UserCheck, XCircle } from "lucide-react";
+import { CheckCircle, Search, UserCheck, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -239,9 +240,8 @@ export function MentorApplicationsPage() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-8 text-center">
-                  <div className="flex items-center justify-center gap-2 text-gray-500">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Đang tải...</span>
+                  <div className="flex items-center justify-center text-gray-500">
+                    <Spinner size="md" />
                   </div>
                 </TableCell>
               </TableRow>
@@ -280,7 +280,7 @@ export function MentorApplicationsPage() {
                             disabled={isProcessing}
                             onClick={() => handleAcceptMentor(mentorId)}>
                             {isProcessing ? (
-                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                              <Spinner size="sm" className="mr-1" />
                             ) : (
                               <CheckCircle className="mr-1 h-4 w-4" />
                             )}
@@ -293,7 +293,7 @@ export function MentorApplicationsPage() {
                             disabled={isProcessing}
                             onClick={() => handleRejectMentor(mentorId)}>
                             {isProcessing ? (
-                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                              <Spinner size="sm" className="mr-1" />
                             ) : (
                               <XCircle className="mr-1 h-4 w-4" />
                             )}
@@ -309,7 +309,7 @@ export function MentorApplicationsPage() {
                           disabled={isProcessing}
                           onClick={() => handleRejectMentor(mentorId)}>
                           {isProcessing ? (
-                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            <Spinner size="sm" className="mr-1" />
                           ) : (
                             <XCircle className="mr-1 h-4 w-4" />
                           )}

@@ -1,8 +1,9 @@
-import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 import { ChatPanel } from "./ChatPanel";
 import { InterviewHeader } from "./InterviewHeader";
@@ -79,7 +80,7 @@ export function AIInterviewSessionPage() {
           </div>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[#0047AB]" />
+          <Spinner size="xl" />
           <p className="text-muted-foreground font-medium">Đang khởi động phỏng vấn...</p>
         </div>
       </div>

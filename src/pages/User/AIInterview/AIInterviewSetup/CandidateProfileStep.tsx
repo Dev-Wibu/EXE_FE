@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   FileText,
   GraduationCap,
-  Loader2,
   Pencil,
   Plus,
   Save,
@@ -19,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { AIInterviewSetupHook } from "./useAIInterviewSetup";
@@ -326,7 +326,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
           <div className="space-y-4">
             {isUploading ? (
               <div className="flex flex-col items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/30">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
+                <Spinner size="lg" tone="success" />
                 <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                   Đang phân tích CV...
                 </p>
@@ -374,7 +374,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
             <div className="flex items-center justify-between rounded-lg border border-dashed border-emerald-300 bg-emerald-50/30 px-4 py-2.5 dark:border-emerald-700 dark:bg-emerald-950/10">
               <span className="text-muted-foreground text-xs">Muốn tự động điền từ CV?</span>
               {isUploading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                <Spinner size="sm" tone="success" />
               ) : (
                 <Button
                   variant="ghost"
@@ -886,7 +886,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                 disabled={!canSave || isSavingProfile}
                 className="gap-1.5 bg-[#0047AB] text-white hover:bg-[#005B9A]">
                 {isSavingProfile ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Spinner size="sm" tone="white" />
                 ) : (
                   <Save className="h-4 w-4" />
                 )}

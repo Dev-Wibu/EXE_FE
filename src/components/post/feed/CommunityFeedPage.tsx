@@ -1,4 +1,4 @@
-import { Loader2, PenSquare, Search } from "lucide-react";
+import { PenSquare, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ReloadButton } from "@/components/shared";
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { usePostFeed } from "@/hooks/usePostFeed";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -203,7 +204,7 @@ export function CommunityFeedPage({
 
       {isFetchingMore && (
         <div className="flex justify-center py-4">
-          <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+          <Spinner size="md" tone="muted" />
         </div>
       )}
 

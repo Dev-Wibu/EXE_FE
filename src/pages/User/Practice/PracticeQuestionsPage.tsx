@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { questionManager } from "@/services";
 import type { PracticeQuestion } from "@/services/question.manager";
 import { toast } from "sonner";
@@ -95,11 +96,8 @@ export function PracticeQuestionsPage() {
 
   if (loading) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          <p className="text-muted-foreground">Đang tải...</p>
-        </div>
+      <div className="bg-background">
+        <SpinnerBlock fullScreen size="xl" />
       </div>
     );
   }

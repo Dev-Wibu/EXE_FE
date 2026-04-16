@@ -1,7 +1,8 @@
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { Spinner } from "@/components/ui/spinner";
 import type { PaymentPurpose } from "@/interfaces";
 import {
   addPaymentSupportLog,
@@ -665,7 +666,7 @@ export function PaymentCancelPage() {
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 font-['Inter'] text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           {processing ? (
             <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Spinner size="sm" tone="muted" />
               Đang xử lý yêu cầu hủy thanh toán...
             </div>
           ) : (

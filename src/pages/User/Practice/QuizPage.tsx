@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, Loader2, LogOut } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, ClipboardList, LogOut } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { quizSetManager } from "@/services";
 import type { QuizItem, QuizItemResponse, QuizSet } from "@/services/quiz-set.manager";
 import { useAuthStore } from "@/stores/authStore";
@@ -318,7 +319,7 @@ export function QuizPage() {
               disabled={submitting}
               className="gap-2 bg-[#0047AB] hover:bg-[#003580]">
               {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner size="sm" tone="white" />
               ) : (
                 <CheckCircle className="h-4 w-4" />
               )}

@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { quizSetManager } from "@/services";
 import type { QuizItem, QuizSet } from "@/services/quiz-set.manager";
 import { toast } from "sonner";
@@ -79,11 +80,8 @@ export function QuizResultPage() {
 
   if (loading) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-          <p className="text-muted-foreground">Đang tải kết quả...</p>
-        </div>
+      <div className="bg-background">
+        <SpinnerBlock fullScreen size="xl" />
       </div>
     );
   }

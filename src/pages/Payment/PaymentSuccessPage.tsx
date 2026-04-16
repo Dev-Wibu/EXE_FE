@@ -1,7 +1,8 @@
-import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { Spinner } from "@/components/ui/spinner";
 import type { PaymentPurpose, UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
@@ -801,7 +802,7 @@ export function PaymentSuccessPage() {
 
         {resolveState === "checking" && (
           <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 font-['Inter'] text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner size="sm" tone="muted" />
             Đang xác nhận thanh toán...
           </div>
         )}
@@ -869,7 +870,7 @@ export function PaymentSuccessPage() {
             <button
               disabled
               className="flex items-center gap-2 rounded-xl bg-emerald-500/80 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Spinner size="sm" tone="white" />
               Đang kích hoạt gói...
             </button>
           )}

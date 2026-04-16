@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Spinner } from "@/components/ui/spinner";
 import type { PaymentEntity, TransactionEntity } from "@/interfaces";
 import { formatCurrency } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
@@ -652,7 +653,8 @@ export function DashboardOverviewPage() {
           </CardHeader>
           <CardContent>
             {loadingUserUsage ? (
-              <div className="flex h-[250px] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex h-[250px] items-center justify-center">
+                <Spinner size="lg" />
                 Đang tải dữ liệu gói thành viên...
               </div>
             ) : membershipUsageError ? (

@@ -3,12 +3,13 @@
  * Full list of notifications for the user
  */
 
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck } from "lucide-react";
 
 import { NotificationList } from "@/components/notification";
 import { ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { useMarkAsRead, useNotifications } from "@/hooks/useNotification";
 import { useNotificationStore } from "@/stores/notificationStore";
 
@@ -96,7 +97,7 @@ export function UserNotificationsPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-[#0047AB]" />
+              <Spinner size="lg" />
             </div>
           ) : (
             <NotificationList

@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
-import { CheckCircle2, LoaderCircle, WifiOff } from "lucide-react";
+import { CheckCircle2, WifiOff } from "lucide-react";
+
+import { Spinner } from "@/components/ui/spinner";
 
 export type SocketConnectionState = "connecting" | "connected" | "disconnected";
 
@@ -12,13 +14,12 @@ const STATE_CONFIG: Record<
   {
     label: string;
     className: string;
-    Icon: typeof LoaderCircle;
+    Icon?: typeof CheckCircle2;
   }
 > = {
   connecting: {
     label: "Đang kết nối",
     className: "text-amber-600 dark:text-amber-400",
-    Icon: LoaderCircle,
   },
   connected: {
     label: "Kết nối ổn định",
@@ -37,7 +38,11 @@ export function SocketStatusBadge({ state }: SocketStatusBadgeProps) {
 
   return (
     <p className={cn("inline-flex items-center gap-1.5 text-xs", className)}>
-      <Icon className={cn("h-3.5 w-3.5", state === "connecting" && "animate-spin")} />
+      {state === "connecting" ? (
+        <Spinner size="xs" className="[--orbit-spinner-color:currentColor]" />
+      ) : (
+        Icon && <Icon className="h-3.5 w-3.5" />
+      )}
       {label}
     </p>
   );

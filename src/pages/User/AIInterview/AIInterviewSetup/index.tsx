@@ -1,16 +1,9 @@
-import {
-  ArrowLeft,
-  Briefcase,
-  CheckCircle2,
-  Loader2,
-  Settings,
-  Sparkles,
-  User,
-} from "lucide-react";
+import { ArrowLeft, Briefcase, CheckCircle2, Settings, Sparkles, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 
 import { CandidateProfileStep } from "./CandidateProfileStep";
 import { ConfigStep } from "./ConfigStep";
@@ -187,7 +180,7 @@ export function AIInterviewSetupPage() {
                   size="lg">
                   {isCreatingSession ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Spinner size="sm" tone="white" className="mr-2" />
                       Đang tạo...
                     </>
                   ) : currentStep === 3 ? (

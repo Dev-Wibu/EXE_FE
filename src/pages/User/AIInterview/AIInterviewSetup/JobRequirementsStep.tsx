@@ -1,10 +1,11 @@
-import { Briefcase, CheckCircle2, Loader2, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { Briefcase, CheckCircle2, Pencil, Plus, Sparkles, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { AIInterviewSetupHook } from "./useAIInterviewSetup";
@@ -71,7 +72,7 @@ export function JobRequirementsStep({ hook }: { hook: AIInterviewSetupHook }) {
           className="bg-amber-600 text-white hover:bg-amber-700">
           {isGeneratingJR ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Spinner size="sm" tone="white" className="mr-2" />
               Đang phân tích mô tả công việc...
             </>
           ) : (

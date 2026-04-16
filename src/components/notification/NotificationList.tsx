@@ -3,8 +3,9 @@
  * Displays a list of notifications with loading and empty states
  */
 
-import { Bell, Loader2 } from "lucide-react";
+import { Bell } from "lucide-react";
 
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/services/notification.manager";
 import { NotificationItem } from "./NotificationItem";
@@ -41,8 +42,7 @@ export function NotificationList({
   if (isLoading && notifications.length === 0) {
     return (
       <div className={cn("flex flex-col items-center justify-center py-8", className)}>
-        <Loader2 className="h-8 w-8 animate-spin text-[#0047AB]" />
-        <p className="mt-2 text-sm text-slate-500">Đang tải thông báo...</p>
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -80,21 +80,14 @@ export function NotificationList({
           onClick={onLoadMore}
           disabled={isLoading}
           className="mt-2 flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-[#0047AB] transition-colors hover:bg-[#0047AB]/5 disabled:opacity-50 dark:text-[#66B2FF] dark:hover:bg-[#0047AB]/10">
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Đang tải...
-            </>
-          ) : (
-            "Xem thêm"
-          )}
+          {isLoading ? <Spinner size="sm" aria-label="Đang tải thêm thông báo" /> : "Xem thêm"}
         </button>
       )}
 
       {/* Loading more indicator */}
       {isLoading && notifications.length > 0 && (
         <div className="flex items-center justify-center py-2">
-          <Loader2 className="h-5 w-5 animate-spin text-[#0047AB]" />
+          <Spinner size="md" />
         </div>
       )}
     </div>

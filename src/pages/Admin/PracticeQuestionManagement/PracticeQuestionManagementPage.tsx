@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -248,8 +249,8 @@ export function PracticeQuestionManagementPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
-        <div className="font-['Inter'] text-lg text-gray-500 dark:text-slate-400">Đang tải...</div>
+      <div className="bg-white dark:bg-slate-950">
+        <SpinnerBlock fullScreen size="xl" />
       </div>
     );
   }

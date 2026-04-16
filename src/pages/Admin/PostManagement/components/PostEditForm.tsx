@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import type { PostStatus } from "@/interfaces/schema.types";
 import { postManager } from "@/services/post.manager";
@@ -130,7 +131,7 @@ export function PostEditForm({ postId, onSuccess, onCancel }: PostEditFormProps)
   };
 
   if (loading) {
-    return <p className="text-muted-foreground">Đang tải bài viết...</p>;
+    return <SpinnerBlock size="lg" />;
   }
 
   return (

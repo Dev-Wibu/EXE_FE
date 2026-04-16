@@ -1,4 +1,4 @@
-import { Loader2, Plus, Search, Trash2, Wand2 } from "lucide-react";
+import { Plus, Search, Trash2, Wand2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { practiceSetItemManager, questionManager } from "@/services";
 import type { PracticeSetItem } from "@/services/practice-set-item.manager";
 import type { PracticeQuestion } from "@/services/question.manager";
@@ -292,7 +293,7 @@ export function ViewPracticeSetItemsDialog({
               disabled={isGenerating || easyCnt + mediumCnt + hardCnt === 0}>
               {isGenerating ? (
                 <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  <Spinner size="xs" className="mr-1.5" />
                   Đang tạo...
                 </>
               ) : (
@@ -330,7 +331,7 @@ export function ViewPracticeSetItemsDialog({
             </div>
             {questionsLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                <Spinner size="md" tone="muted" />
               </div>
             ) : filteredQuestions.length === 0 ? (
               <p className="text-muted-foreground py-4 text-center text-sm">
@@ -363,7 +364,7 @@ export function ViewPracticeSetItemsDialog({
                       onClick={() => handleAddQuestion(q)}
                       disabled={addingQuestionId === q.questionId}>
                       {addingQuestionId === q.questionId ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Spinner size="xs" />
                       ) : (
                         <>
                           <Plus className="h-3.5 w-3.5" />
@@ -386,8 +387,7 @@ export function ViewPracticeSetItemsDialog({
         {/* Current items list */}
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="text-primary h-6 w-6 animate-spin" />
-            <span className="text-muted-foreground ml-2">Đang tải...</span>
+            <Spinner size="md" />
           </div>
         ) : items.length === 0 ? (
           <div className="text-muted-foreground py-8 text-center">
@@ -426,7 +426,7 @@ export function ViewPracticeSetItemsDialog({
                         disabled={removingId === item.id}
                         title="Xóa khỏi bộ luyện tập">
                         {removingId === item.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Spinner size="xs" />
                         ) : (
                           <Trash2 className="h-3.5 w-3.5" />
                         )}

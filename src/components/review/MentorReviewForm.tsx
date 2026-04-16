@@ -4,7 +4,6 @@
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -18,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Spinner } from "@/components/ui/spinner";
 import { StarRating } from "@/components/ui/star-rating";
 import { Textarea } from "@/components/ui/textarea";
 import type { MentorReview } from "@/services/mentor-review.manager";
@@ -61,7 +61,7 @@ interface MentorReviewFormProps {
   mentorId: number;
   userId: number;
   existingReview?: MentorReview;
-  onSubmit: (data: {
+  onSubmit: (_data: {
     sessionId: number;
     mentorId: number;
     userId: number;
@@ -305,7 +305,7 @@ export function MentorReviewForm({
             </Button>
           )}
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <Spinner size="sm" tone="white" className="mr-2" />}
             {isEdit ? "Cập nhật đánh giá" : "Gửi đánh giá"}
           </Button>
         </div>

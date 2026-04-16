@@ -1,16 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
 
+import { SpinnerBlock } from "@/components/ui/spinner";
 import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 
 export function PublicOnlyRoute() {
   const { isLoggedIn, isLoading, user } = useAuthStore();
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-      </div>
-    );
+    return <SpinnerBlock fullScreen size="xl" />;
   }
 
   if (isLoggedIn) {

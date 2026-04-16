@@ -1,13 +1,4 @@
-import {
-  ArrowRight,
-  BookOpen,
-  Calendar,
-  Loader2,
-  Search,
-  Tag,
-  TrendingUp,
-  User,
-} from "lucide-react";
+import { ArrowRight, BookOpen, Calendar, Search, Tag, TrendingUp, User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import type { Post } from "@/interfaces/schema.types";
 import { formatDate } from "@/lib/formatting";
 import { postManager } from "@/services/post.manager";
@@ -129,7 +121,7 @@ export function BlogPage() {
               <div className="grid gap-6 md:grid-cols-2">
                 {loading ? (
                   <div className="col-span-2 flex items-center justify-center py-16">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#0047AB]" />
+                    <Spinner size="lg" />
                   </div>
                 ) : posts.length === 0 ? (
                   <div className="col-span-2 py-16 text-center">

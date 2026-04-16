@@ -10,7 +10,6 @@ import {
   GraduationCap,
   History,
   Lightbulb,
-  Loader2,
   Lock,
   MessageCircle,
   Plus,
@@ -25,6 +24,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { practiceSetItemManager, practiceSetManager, quizSetManager } from "@/services";
 import type { PracticeSetItem } from "@/services/practice-set-item.manager";
 import type { PracticeSet, PracticeSetResponse } from "@/services/practice-set.manager";
@@ -484,11 +484,7 @@ function SessionDayGroup({ ps, dayNumber, dayStatus, isOpen, onToggle }: Session
                     onClick={handleCreateAiQuiz}
                     title="Tạo quiz mới"
                     className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-                    {isCreating ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Plus className="h-3 w-3" />
-                    )}
+                    {isCreating ? <Spinner size="xs" tone="white" /> : <Plus className="h-3 w-3" />}
                   </button>
                   {quizHistory.length > 0 && (
                     <Popover>
@@ -682,11 +678,7 @@ function DayGroup({
                   onClick={handleCreateAiQuiz}
                   title="Tạo quiz mới"
                   className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0047AB] text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-                  {isCreating ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Plus className="h-3 w-3" />
-                  )}
+                  {isCreating ? <Spinner size="xs" tone="white" /> : <Plus className="h-3 w-3" />}
                 </button>
                 {quizHistory.length > 0 && (
                   <Popover>

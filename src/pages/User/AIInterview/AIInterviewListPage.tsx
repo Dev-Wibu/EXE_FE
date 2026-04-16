@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Clock,
   Globe,
-  Loader2,
   Play,
   Plus,
   Search,
@@ -480,7 +479,7 @@ export function AIInterviewListPage() {
                     {searchQuery ? (
                       <Search className="text-muted-foreground h-8 w-8" />
                     ) : (
-                      <Loader2 className="text-muted-foreground h-8 w-8" />
+                      <Clock className="text-muted-foreground h-8 w-8" />
                     )}
                   </div>
                   <div className="text-center">

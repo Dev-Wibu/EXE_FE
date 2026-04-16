@@ -13,13 +13,14 @@ import {
   Clock3,
   Copy,
   CornerUpRight,
-  LoaderCircle,
   Pin,
   PinOff,
   RotateCcw,
   TriangleAlert,
 } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
+
+import { Spinner } from "@/components/ui/spinner";
 
 export type MessageDeliveryStatus = "queued" | "sending" | "retrying" | "sent" | "failed";
 
@@ -169,7 +170,9 @@ export function MessageBubble({
                 )}>
                 {status === "queued" && <Clock3 className="h-3 w-3" />}
                 {status === "sending" && <Clock3 className="h-3 w-3" />}
-                {status === "retrying" && <LoaderCircle className="h-3 w-3 animate-spin" />}
+                {status === "retrying" && (
+                  <Spinner size="xs" className="[--orbit-spinner-color:currentColor]" />
+                )}
                 {status === "sent" && <CheckCheck className="h-3 w-3" />}
                 {status === "failed" && <TriangleAlert className="h-3 w-3" />}
                 {STATUS_LABELS[status]}

@@ -1,4 +1,4 @@
-import { ImagePlus, Loader2, Send, Tag, X } from "lucide-react";
+import { ImagePlus, Send, Tag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { invalidatePostFeedQueries } from "@/lib/post-feed";
 import { postManager } from "@/services/post.manager";
@@ -286,11 +287,7 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
               className="w-full gap-2 bg-[#0047AB] hover:bg-[#003580]"
               onClick={handleSubmit}
               disabled={!title.trim() || !content.trim() || submitting}>
-              {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+              {submitting ? <Spinner size="sm" tone="white" /> : <Send className="h-4 w-4" />}
               Đăng bài
             </Button>
           </div>

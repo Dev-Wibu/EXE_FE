@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SpinnerBlock } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -293,7 +294,7 @@ export function PostManagementPage() {
         </Button>
 
         {detailLoading ? (
-          <p className="text-muted-foreground">Đang tải chi tiết bài viết...</p>
+          <SpinnerBlock size="lg" />
         ) : !detailPost ? (
           <p className="text-muted-foreground">Không tìm thấy bài viết</p>
         ) : (
@@ -587,7 +588,7 @@ export function PostManagementPage() {
           </div>
 
           {loading ? (
-            <p className="text-muted-foreground py-8 text-center">Đang tải danh sách bài viết...</p>
+            <SpinnerBlock size="lg" />
           ) : pageItems.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">Không có bài viết phù hợp</p>
           ) : layout === "table" ? (
