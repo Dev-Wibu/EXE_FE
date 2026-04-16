@@ -78,10 +78,14 @@ export function TransactionHistoryTab({ transactions, isLoading }: TransactionHi
                       </p>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-['Inter'] text-xs text-slate-500 dark:text-slate-400">
                         <span>{formatDateTime(item.date)}</span>
-                        <span>•</span>
-                        <span>{getTransactionTypeLabel(item.type)}</span>
-                        <span>•</span>
-                        <span>{item.purposeLabel}</span>
+                        {item.hasClassifiedPurpose && (
+                          <>
+                            <span>•</span>
+                            <span>{getTransactionTypeLabel(item.type)}</span>
+                            <span>•</span>
+                            <span>{item.purposeLabel}</span>
+                          </>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-2 font-['Inter'] text-xs text-slate-500 dark:text-slate-400">
                         <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 dark:bg-slate-900/60">
@@ -107,14 +111,16 @@ export function TransactionHistoryTab({ transactions, isLoading }: TransactionHi
                       {item.amount >= 0 ? "+" : ""}
                       {new Intl.NumberFormat("vi-VN").format(item.amount)} đ
                     </p>
-                    <span
-                      className={`inline-block rounded-full px-2 py-1 font-['Inter'] text-xs font-medium ${
-                        item.status === "completed"
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                      }`}>
-                      {getTransactionStatusLabel(item.status)}
-                    </span>
+                    {item.status && (
+                      <span
+                        className={`inline-block rounded-full px-2 py-1 font-['Inter'] text-xs font-medium ${
+                          item.status === "completed"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                        }`}>
+                        {getTransactionStatusLabel(item.status)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

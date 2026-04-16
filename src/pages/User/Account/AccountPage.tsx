@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { MembershipTab, ProfileTab, TransactionHistoryTab, WalletTab } from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
+import { shouldHideTransactionFromHistory } from "./wallet-mapping";
 
 type AccountSubTab =
   | "profile"
@@ -152,7 +153,11 @@ export function AccountPage() {
     try {
       const response = await transactionManager.getByUserId(Number(authUser.id));
       if (response.success && response.data) {
-        const sortedTransactions = [...response.data].sort((a, b) => {
+        const visibleTransactions = response.data.filter(
+          (transaction) => !shouldHideTransactionFromHistory(transaction)
+        );
+
+        const sortedTransactions = [...visibleTransactions].sort((a, b) => {
           return Date.parse(b.createdAt || "") - Date.parse(a.createdAt || "");
         });
 

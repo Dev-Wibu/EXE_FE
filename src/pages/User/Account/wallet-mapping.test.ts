@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { TransactionEntity } from "@/interfaces";
 
-import { getTransactionPurposeLabel, mapTransactionToAccountTransaction } from "./wallet-mapping";
+import {
+  getTransactionPurposeLabel,
+  mapTransactionToAccountTransaction,
+  shouldHideTransactionFromHistory,
+} from "./wallet-mapping";
 
 const buildTransaction = (override?: Partial<TransactionEntity>): TransactionEntity => ({
   id: 1,
@@ -63,7 +67,7 @@ describe("wallet-mapping", () => {
     expect(mapped.status).toBe("completed");
   });
 
-  it("marks unknown-purpose rows as pending with unknown type", () => {
+  it("does not synthesize pending status when purpose is unknown", () => {
     const mapped = mapTransactionToAccountTransaction(
       buildTransaction({
         paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"],
@@ -72,10 +76,55 @@ describe("wallet-mapping", () => {
       })
     );
 
-    expect(mapped.type).toBe("unknown");
+    expect(mapped.type).toBe("payment");
     expect(mapped.amount).toBe(-90000);
     expect(mapped.purposeLabel).toBe("Giao dịch chưa phân loại");
-    expect(mapped.status).toBe("pending");
+    expect(mapped.status).toBeUndefined();
+    expect(mapped.hasClassifiedPurpose).toBe(false);
+  });
+
+  it("uses neutral fallback description for unknown-purpose rows", () => {
+    const mapped = mapTransactionToAccountTransaction(
+      buildTransaction({
+        paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"],
+        description: undefined,
+      })
+    );
+
+    expect(mapped.description).toBe("Giao dịch ví");
+  });
+
+  it("hides null-purpose rows created by cancel tests", () => {
+    const shouldHide = shouldHideTransactionFromHistory(
+      buildTransaction({
+        paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"],
+        description: undefined,
+        currentBalance: 0,
+      })
+    );
+
+    expect(shouldHide).toBe(true);
+  });
+
+  it("keeps null-purpose rows when they still contain useful data", () => {
+    const withDescription = shouldHideTransactionFromHistory(
+      buildTransaction({
+        paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"],
+        description: "Nạp tiền vào ví Inblue",
+        currentBalance: 0,
+      })
+    );
+
+    const withBalanceSignal = shouldHideTransactionFromHistory(
+      buildTransaction({
+        paymentPurpose: "" as unknown as TransactionEntity["paymentPurpose"],
+        description: undefined,
+        currentBalance: 150000,
+      })
+    );
+
+    expect(withDescription).toBe(false);
+    expect(withBalanceSignal).toBe(false);
   });
 
   it("returns vietnamese purpose labels", () => {

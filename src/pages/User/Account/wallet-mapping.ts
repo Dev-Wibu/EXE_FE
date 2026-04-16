@@ -7,13 +7,14 @@ export type AccountTransactionStatus = "completed" | "pending";
 export interface AccountTransactionItem {
   id: number;
   type: AccountTransactionType;
-  status: AccountTransactionStatus;
+  status?: AccountTransactionStatus;
   direction: AccountTransactionDirection;
   amount: number;
   absoluteAmount: number;
   date: string;
   transactionCode: string;
   purpose: PaymentPurpose | "UNKNOWN";
+  hasClassifiedPurpose: boolean;
   purposeLabel: string;
   description: string;
   currentBalance?: number;
@@ -28,6 +29,32 @@ const normalizePaymentPurpose = (
     value === "MENTOR_INTERVIEW"
     ? value
     : "UNKNOWN";
+};
+
+const resolvePurpose = (transaction: TransactionEntity): PaymentPurpose | "UNKNOWN" => {
+  return normalizePaymentPurpose(
+    (transaction.paymentPurpose as TransactionEntity["paymentPurpose"] | "") || ""
+  );
+};
+
+const hasMeaningfulDescription = (value: TransactionEntity["description"]): boolean => {
+  return typeof value === "string" && value.trim().length > 0;
+};
+
+const hasZeroCurrentBalance = (value: TransactionEntity["currentBalance"]): boolean => {
+  return typeof value === "number" && Number.isFinite(value) && value === 0;
+};
+
+export const shouldHideTransactionFromHistory = (transaction: TransactionEntity): boolean => {
+  const purpose = resolvePurpose(transaction);
+  if (purpose !== "UNKNOWN") {
+    return false;
+  }
+
+  return (
+    !hasMeaningfulDescription(transaction.description) &&
+    hasZeroCurrentBalance(transaction.currentBalance)
+  );
 };
 
 const resolveDirection = (
@@ -72,7 +99,10 @@ export const getTransactionPurposeLabel = (purpose: PaymentPurpose | "UNKNOWN"):
   }
 };
 
-const resolveType = (purpose: PaymentPurpose | "UNKNOWN"): AccountTransactionType => {
+const resolveType = (
+  purpose: PaymentPurpose | "UNKNOWN",
+  direction: AccountTransactionDirection
+): AccountTransactionType => {
   switch (purpose) {
     case "TOP_UP_WALLET":
       return "deposit";
@@ -82,29 +112,37 @@ const resolveType = (purpose: PaymentPurpose | "UNKNOWN"): AccountTransactionTyp
     case "MENTOR_INTERVIEW":
       return "payment";
     default:
-      return "unknown";
+      return direction === "in" ? "deposit" : "payment";
   }
 };
 
-const resolveStatus = (purpose: PaymentPurpose | "UNKNOWN"): AccountTransactionStatus => {
-  return purpose === "UNKNOWN" ? "pending" : "completed";
+const resolveStatus = (
+  purpose: PaymentPurpose | "UNKNOWN"
+): AccountTransactionStatus | undefined => {
+  if (purpose === "UNKNOWN") {
+    return undefined;
+  }
+
+  return "completed";
 };
 
 export const mapTransactionToAccountTransaction = (
   transaction: TransactionEntity
 ): AccountTransactionItem => {
-  const purpose = normalizePaymentPurpose(
-    (transaction.paymentPurpose as TransactionEntity["paymentPurpose"] | "") || ""
-  );
+  const purpose = resolvePurpose(transaction);
   const direction = resolveDirection(transaction, purpose);
   const sourceAmount = Number(transaction.amount || 0);
   const absoluteAmount = Math.abs(sourceAmount);
   const amount = direction === "in" ? absoluteAmount : -absoluteAmount;
   const purposeLabel = getTransactionPurposeLabel(purpose);
+  const hasClassifiedPurpose = purpose !== "UNKNOWN";
+  const description =
+    (transaction.description || "").trim() ||
+    (hasClassifiedPurpose ? purposeLabel : "Giao dịch ví");
 
   return {
     id: Number(transaction.id || Date.now()),
-    type: resolveType(purpose),
+    type: resolveType(purpose, direction),
     status: resolveStatus(purpose),
     direction,
     amount,
@@ -112,8 +150,9 @@ export const mapTransactionToAccountTransaction = (
     date: transaction.createdAt || new Date().toISOString(),
     transactionCode: transaction.transactionCode || "—",
     purpose,
+    hasClassifiedPurpose,
     purposeLabel,
-    description: (transaction.description || "").trim() || purposeLabel,
+    description,
     currentBalance:
       typeof transaction.currentBalance === "number" && Number.isFinite(transaction.currentBalance)
         ? transaction.currentBalance
