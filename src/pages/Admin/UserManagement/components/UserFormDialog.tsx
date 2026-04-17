@@ -1,6 +1,7 @@
 import { ExternalLink, ImageIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { MediaLightboxDialog, type MediaViewerItem } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MAJOR_OPTIONS } from "@/constants/majors";
+import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 
 import type { User, UserFormData } from "../types";
 
@@ -64,6 +66,8 @@ export function UserFormDialog({
   // State for local file previews (blob URLs for new file uploads)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerItems, setViewerItems] = useState<MediaViewerItem[]>([]);
 
   // Clean up blob URLs when component unmounts or when files change
   useEffect(() => {
@@ -80,6 +84,8 @@ export function UserFormDialog({
       // Reset previews when closing
       setAvatarPreview(null);
       setShowPassword(false);
+      setViewerOpen(false);
+      setViewerItems([]);
     }
     onOpenChange(open);
   };
@@ -109,6 +115,29 @@ export function UserFormDialog({
 
   // Get the display image URL - prioritize new upload preview over existing URL
   const displayAvatarUrl = avatarPreview || selectedUser?.avatarUrl;
+
+  const handlePreviewAvatar = () => {
+    if (!displayAvatarUrl) {
+      return;
+    }
+
+    const avatarKind = inferFileKind({ fileName: displayAvatarUrl });
+    if (avatarKind === "other") {
+      openUrlInNewTab(displayAvatarUrl);
+      return;
+    }
+
+    setViewerItems([
+      {
+        id: "admin-user-avatar-preview",
+        name: "Ảnh đại diện",
+        src: displayAvatarUrl,
+        kind: avatarKind,
+        requireAuth: !displayAvatarUrl.startsWith("blob:"),
+      },
+    ]);
+    setViewerOpen(true);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -220,14 +249,13 @@ export function UserFormDialog({
                       </Button>
                     </>
                   ) : (
-                    <a
-                      href={displayAvatarUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
+                    <button
+                      type="button"
+                      onClick={handlePreviewAvatar}
+                      className="flex items-center gap-1 bg-transparent p-0 text-xs text-blue-600 hover:underline dark:text-blue-400">
                       <span>Xem ảnh đầy đủ</span>
                       <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </button>
                   )}
                 </div>
               </div>
@@ -255,6 +283,13 @@ export function UserFormDialog({
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>
       </DialogContent>
+
+      <MediaLightboxDialog
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        items={viewerItems}
+        initialIndex={0}
+      />
     </Dialog>
   );
 }

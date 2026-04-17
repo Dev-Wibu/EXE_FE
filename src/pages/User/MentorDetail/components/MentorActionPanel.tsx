@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 import { CalendarCheck2, Copy, ExternalLink, Linkedin, Mail, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
@@ -82,8 +83,11 @@ export function MentorActionPanel({ mentor, onBookNow, onStartChat }: MentorActi
         {mentor.linkedInUrl && (
           <a
             href={mentor.linkedInUrl}
-            target="_blank"
             rel="noreferrer"
+            onClick={(event) => {
+              event.preventDefault();
+              openUrlInNewTab(mentor.linkedInUrl || "");
+            }}
             className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:hover:border-slate-500">
             <span className="flex items-center">
               <Linkedin className="mr-2 h-4 w-4 text-cyan-600 dark:text-cyan-200" />

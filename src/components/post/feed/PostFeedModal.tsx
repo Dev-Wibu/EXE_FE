@@ -2,6 +2,7 @@ import { Heart, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { MediaLightboxDialog } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import type { components } from "../../../../schema-from-be";
 import { CommentSection } from "../CommentSection";
 import { LikeButton } from "../LikeButton";
 import { ExpandableText } from "./ExpandableText";
-import { ImageViewerModal } from "./ImageViewerModal";
 
 type PostResponse = components["schemas"]["PostResponse"];
 type PostLikeResponse = components["schemas"]["PostLikeResponse"];
@@ -96,6 +96,19 @@ export function PostFeedModal({
     if (isLiked) return `Bạn và ${likeCount - 1} người khác`;
     return `${likeCount}`;
   })();
+
+  const coverMediaItems = post?.coverImgUrl
+    ? [
+        {
+          id: `post-cover-${postId}`,
+          name: post.title ?? "Ảnh bài viết",
+          src: post.coverImgUrl,
+          alt: post.title ?? "Ảnh bài viết",
+          kind: "image" as const,
+          requireAuth: false,
+        },
+      ]
+    : [];
 
   return (
     <>
@@ -294,12 +307,11 @@ export function PostFeedModal({
         </DialogContent>
       </Dialog>
 
-      {post?.coverImgUrl && (
-        <ImageViewerModal
-          src={post.coverImgUrl}
-          alt={post.title ?? ""}
+      {coverMediaItems.length > 0 && (
+        <MediaLightboxDialog
           open={open && imageViewerOpen}
-          onClose={() => setImageViewerOpen(false)}
+          onOpenChange={(nextOpen) => setImageViewerOpen(nextOpen)}
+          items={coverMediaItems}
         />
       )}
     </>

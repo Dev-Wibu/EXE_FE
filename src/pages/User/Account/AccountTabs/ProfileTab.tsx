@@ -13,7 +13,9 @@ import {
   User,
   X,
 } from "lucide-react";
+import { useState } from "react";
 
+import { MediaLightboxDialog, type MediaViewerItem } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { MAJOR_OPTIONS, getMajorLabel } from "@/constants/majors";
 import { formatDate } from "@/lib/formatting";
+import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 
 import type { UserProfileData } from "./types";
 
@@ -60,6 +63,32 @@ export function ProfileTab({
   onClearAvatar,
   onOpenCvModal,
 }: ProfileTabProps) {
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerItems, setViewerItems] = useState<MediaViewerItem[]>([]);
+
+  const handlePreviewCurrentCv = () => {
+    if (!userProfile.cvUrl) {
+      return;
+    }
+
+    const cvKind = inferFileKind({ fileName: userProfile.cvUrl });
+    if (cvKind === "other") {
+      openUrlInNewTab(userProfile.cvUrl);
+      return;
+    }
+
+    setViewerItems([
+      {
+        id: "profile-current-cv",
+        name: "CV hiện tại",
+        src: userProfile.cvUrl,
+        kind: cvKind,
+        requireAuth: true,
+      },
+    ]);
+    setViewerOpen(true);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Avatar Section */}
@@ -254,14 +283,13 @@ export function ProfileTab({
               <Label className="text-sm text-gray-500 dark:text-slate-400">CV / Resume</Label>
               <div className="mt-1 flex items-center gap-3">
                 {userProfile.cvUrl ? (
-                  <a
-                    href={userProfile.cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 font-['Inter'] text-base font-medium text-green-600 hover:underline dark:text-green-400">
+                  <button
+                    type="button"
+                    onClick={handlePreviewCurrentCv}
+                    className="flex items-center gap-2 bg-transparent p-0 font-['Inter'] text-base font-medium text-green-600 hover:underline dark:text-green-400">
                     <ExternalLink className="h-4 w-4" />
                     Xem CV hiện tại
-                  </a>
+                  </button>
                 ) : (
                   <p className="font-['Inter'] text-base font-medium text-zinc-800 dark:text-white">
                     Chưa có CV
@@ -302,6 +330,13 @@ export function ProfileTab({
           </button>
         </div>
       </div>
+
+      <MediaLightboxDialog
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        items={viewerItems}
+        initialIndex={0}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 
 import type { QuestionCategory } from "../types";
 
@@ -67,8 +68,11 @@ export function QuestionCategoryTable({
               {category.urlTutorial && isValidHttpUrl(category.urlTutorial) ? (
                 <a
                   href={category.urlTutorial}
-                  target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openUrlInNewTab(category.urlTutorial || "");
+                  }}
                   className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline">
                   <ExternalLink className="h-3 w-3" />
                   Link

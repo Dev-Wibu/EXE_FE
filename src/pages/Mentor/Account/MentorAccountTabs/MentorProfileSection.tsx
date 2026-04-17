@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatDate } from "@/lib/formatting";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 
 import type { MentorProfileData } from "./types";
 
@@ -364,8 +365,11 @@ export function MentorProfileSection({
               ) : mentorProfile.linkedInUrl ? (
                 <a
                   href={mentorProfile.linkedInUrl}
-                  target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openUrlInNewTab(mentorProfile.linkedInUrl || "");
+                  }}
                   className="flex items-center gap-2 font-['Inter'] text-base font-medium text-blue-600 hover:underline dark:text-blue-400">
                   Xem LinkedIn
                   <ExternalLink className="h-4 w-4" />

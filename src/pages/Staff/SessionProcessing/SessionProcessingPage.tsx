@@ -35,6 +35,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { useSessions, useUpdateSessionStatus } from "@/hooks/useSession";
 import type { Session, SessionStatus } from "@/interfaces";
 import { formatDateTime } from "@/lib/formatting";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 import { getSessionStatusBadge } from "@/lib/status-utils";
 
 type StatusFilter = SessionStatus | "all";
@@ -357,8 +358,11 @@ export function SessionProcessingPage() {
                   {viewSession.roomUrl ? (
                     <a
                       href={viewSession.roomUrl}
-                      target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openUrlInNewTab(viewSession.roomUrl || "");
+                      }}
                       className="text-blue-600 hover:underline">
                       {viewSession.roomUrl}
                     </a>
@@ -373,8 +377,11 @@ export function SessionProcessingPage() {
                   <span className="text-xs break-all">
                     <a
                       href={viewSession.recordUrl}
-                      target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openUrlInNewTab(viewSession.recordUrl || "");
+                      }}
                       className="text-blue-600 hover:underline">
                       {viewSession.recordUrl}
                     </a>
