@@ -52,6 +52,13 @@ export function PostFeedModal({
 
   const { data: likedData } = useCheckLiked(postId, user?.id ?? 0, enabled && !!user?.id);
 
+  const handlePostModalOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && imageViewerOpen) {
+      return;
+    }
+    onOpenChange(nextOpen);
+  };
+
   const invalidateLivePost = () => {
     invalidatePostFeedQueries(postId);
   };
@@ -92,8 +99,19 @@ export function PostFeedModal({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex max-h-[90vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0">
+      <Dialog open={open} onOpenChange={handlePostModalOpenChange}>
+        <DialogContent
+          className="flex max-h-[90vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0"
+          onEscapeKeyDown={(event) => {
+            if (imageViewerOpen) {
+              event.preventDefault();
+            }
+          }}
+          onInteractOutside={(event) => {
+            if (imageViewerOpen) {
+              event.preventDefault();
+            }
+          }}>
           <DialogHeader className="border-b px-6 py-4">
             <DialogTitle className="text-center">Bài viết của {authorName}</DialogTitle>
           </DialogHeader>
@@ -274,15 +292,16 @@ export function PostFeedModal({
             </div>
           )}
         </DialogContent>
-        {post?.coverImgUrl && (
-          <ImageViewerModal
-            src={post.coverImgUrl}
-            alt={post.title ?? ""}
-            open={imageViewerOpen}
-            onClose={() => setImageViewerOpen(false)}
-          />
-        )}
       </Dialog>
+
+      {post?.coverImgUrl && (
+        <ImageViewerModal
+          src={post.coverImgUrl}
+          alt={post.title ?? ""}
+          open={open && imageViewerOpen}
+          onClose={() => setImageViewerOpen(false)}
+        />
+      )}
     </>
   );
 }
