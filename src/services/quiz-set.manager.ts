@@ -77,7 +77,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch quiz sets",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách bộ trắc nghiệm",
       };
     }
   }
@@ -94,7 +94,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch quiz set",
+        error: error instanceof Error ? error.message : "Không thể tải bộ trắc nghiệm",
       };
     }
   }
@@ -113,7 +113,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create quiz set",
+        error: error instanceof Error ? error.message : "Không thể tạo bộ trắc nghiệm",
       };
     }
   }
@@ -137,7 +137,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create full quiz set",
+        error: error instanceof Error ? error.message : "Không thể tạo bộ trắc nghiệm đầy đủ",
       };
     }
   }
@@ -176,7 +176,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to submit quiz",
+        error: error instanceof Error ? error.message : "Không thể nộp bài trắc nghiệm",
       };
     }
   }
@@ -195,7 +195,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch quiz history",
+        error: error instanceof Error ? error.message : "Không thể tải lịch sử trắc nghiệm",
       };
     }
   }
@@ -212,7 +212,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete quiz set",
+        error: error instanceof Error ? error.message : "Không thể xóa bộ trắc nghiệm",
       };
     }
   }
@@ -231,7 +231,7 @@ export class QuizSetManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch quiz items",
+        error: error instanceof Error ? error.message : "Không thể tải mục trắc nghiệm",
       };
     }
   }

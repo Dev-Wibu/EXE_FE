@@ -44,7 +44,8 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch question majors",
+        error:
+          error instanceof Error ? error.message : "Không thể tải danh sách chuyên ngành câu hỏi",
       };
     }
   }
@@ -64,7 +65,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch question major",
+        error: error instanceof Error ? error.message : "Không thể tải chuyên ngành câu hỏi",
       };
     }
   }
@@ -86,7 +87,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create question major",
+        error: error instanceof Error ? error.message : "Không thể tạo chuyên ngành câu hỏi",
       };
     }
   }
@@ -108,7 +109,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update question major",
+        error: error instanceof Error ? error.message : "Không thể cập nhật chuyên ngành câu hỏi",
       };
     }
   }
@@ -129,7 +130,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete question major",
+        error: error instanceof Error ? error.message : "Không thể xóa chuyên ngành câu hỏi",
       };
     }
   }

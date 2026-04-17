@@ -60,7 +60,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentor feedbacks",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách phản hồi mentor",
       };
     }
   }
@@ -94,7 +94,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
           ? apiMessage
           : error instanceof Error
             ? error.message
-            : "Failed to fetch mentor feedback";
+            : "Không thể tải phản hồi mentor";
 
       return {
         success: false,
@@ -120,7 +120,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch feedbacks for mentor",
+        error: error instanceof Error ? error.message : "Không thể tải phản hồi theo mentor",
       };
     }
   }
@@ -141,7 +141,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create mentor feedback",
+        error: error instanceof Error ? error.message : "Không thể tạo phản hồi mentor",
       };
     }
   }
@@ -167,7 +167,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update mentor feedback",
+        error: error instanceof Error ? error.message : "Không thể cập nhật phản hồi mentor",
       };
     }
   }
@@ -180,7 +180,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
 
     return {
       success: false,
-      error: "Delete operation not supported for mentor feedbacks",
+      error: "Không hỗ trợ xóa phản hồi mentor",
     };
   }
 }

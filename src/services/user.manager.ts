@@ -28,7 +28,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch profile",
+        error: error instanceof Error ? error.message : "Không thể tải hồ sơ",
       };
     }
   }
@@ -46,7 +46,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update profile",
+        error: error instanceof Error ? error.message : "Không thể cập nhật hồ sơ",
       };
     }
   }
@@ -70,7 +70,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update password",
+        error: error instanceof Error ? error.message : "Không thể cập nhật mật khẩu",
       };
     }
   }
@@ -88,7 +88,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch settings",
+        error: error instanceof Error ? error.message : "Không thể tải cài đặt",
       };
     }
   }
@@ -106,7 +106,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update settings",
+        error: error instanceof Error ? error.message : "Không thể cập nhật cài đặt",
       };
     }
   }
@@ -124,7 +124,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch wallet",
+        error: error instanceof Error ? error.message : "Không thể tải ví",
       };
     }
   }
@@ -142,7 +142,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to deposit to wallet",
+        error: error instanceof Error ? error.message : "Không thể nạp tiền vào ví",
       };
     }
   }
@@ -170,7 +170,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to subscribe membership plan",
+        error: error instanceof Error ? error.message : "Không thể đăng ký gói thành viên",
       };
     }
   }
@@ -194,7 +194,8 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch active subscription",
+        error:
+          error instanceof Error ? error.message : "Không thể tải gói thành viên đang hoạt động",
       };
     }
   }

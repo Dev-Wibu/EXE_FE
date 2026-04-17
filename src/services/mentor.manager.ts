@@ -62,7 +62,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentors",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách mentor",
       };
     }
   }
@@ -82,7 +82,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentor",
+        error: error instanceof Error ? error.message : "Không thể tải mentor",
       };
     }
   }
@@ -98,13 +98,13 @@ export class MentorManager implements BaseManager<Mentor> {
       if (!_data.name || !_data.name.trim()) {
         return {
           success: false,
-          error: "Name is required to create a mentor",
+          error: "Tên là bắt buộc để tạo mentor",
         };
       }
       if (!_data.email || !_data.email.trim()) {
         return {
           success: false,
-          error: "Email is required to create a mentor",
+          error: "Email là bắt buộc để tạo mentor",
         };
       }
 
@@ -186,7 +186,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create mentor",
+        error: error instanceof Error ? error.message : "Không thể tạo mentor",
       };
     }
   }
@@ -288,7 +288,7 @@ export class MentorManager implements BaseManager<Mentor> {
       }
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update mentor",
+        error: error instanceof Error ? error.message : "Không thể cập nhật mentor",
       };
     }
   }
@@ -309,7 +309,10 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to toggle mentor active status",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Không thể chuyển trạng thái hoạt động của mentor",
       };
     }
   }

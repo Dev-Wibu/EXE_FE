@@ -221,7 +221,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tai danh sach giao dich."),
+        error: getErrorMessage(error, "Không thể tải danh sách giao dịch."),
       };
     }
   }
@@ -239,7 +239,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tai chi tiet giao dich."),
+        error: getErrorMessage(error, "Không thể tải chi tiết giao dịch."),
       };
     }
   }
@@ -257,7 +257,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tai giao dich theo user."),
+        error: getErrorMessage(error, "Không thể tải giao dịch theo người dùng."),
       };
     }
   }
@@ -267,7 +267,7 @@ export class TransactionManager {
     if (normalizedAmount <= 0) {
       return {
         success: false,
-        error: "So tien nap vi khong hop le.",
+        error: "Số tiền nạp ví không hợp lệ.",
       };
     }
 
@@ -283,7 +283,7 @@ export class TransactionManager {
       if (!redirectUrl) {
         return {
           success: false,
-          error: "Backend khong tra ve link redirect hop le cho transfer-in.",
+          error: "Backend không trả về link redirect hợp lệ cho transfer-in.",
         };
       }
 
@@ -294,7 +294,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tao giao dich transfer-in."),
+        error: getErrorMessage(error, "Không thể tạo giao dịch transfer-in."),
       };
     }
   }
@@ -308,7 +308,7 @@ export class TransactionManager {
     if (normalizedAmount <= 0) {
       return {
         success: false,
-        error: "So tien thanh toan khong hop le.",
+        error: "Số tiền thanh toán không hợp lệ.",
       };
     }
 
@@ -325,7 +325,7 @@ export class TransactionManager {
       if (!transferOutResult) {
         return {
           success: false,
-          error: "Backend khong tra ve ket qua hop le cho transfer-out.",
+          error: "Backend không trả về kết quả hợp lệ cho transfer-out.",
         };
       }
 
@@ -336,7 +336,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tao giao dich transfer-out."),
+        error: getErrorMessage(error, "Không thể tạo giao dịch transfer-out."),
       };
     }
   }
@@ -353,7 +353,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the xoa giao dich."),
+        error: getErrorMessage(error, "Không thể xóa giao dịch."),
       };
     }
   }

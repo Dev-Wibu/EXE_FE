@@ -69,7 +69,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch question categories",
+        error: error instanceof Error ? error.message : "Không thể tải danh mục câu hỏi",
       };
     }
   }
@@ -89,7 +89,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch question category",
+        error: error instanceof Error ? error.message : "Không thể tải danh mục câu hỏi",
       };
     }
   }
@@ -121,7 +121,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create question category",
+        error: error instanceof Error ? error.message : "Không thể tạo danh mục câu hỏi",
       };
     }
   }
@@ -150,7 +150,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update question category",
+        error: error instanceof Error ? error.message : "Không thể cập nhật danh mục câu hỏi",
       };
     }
   }
@@ -171,7 +171,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete question category",
+        error: error instanceof Error ? error.message : "Không thể xóa danh mục câu hỏi",
       };
     }
   }

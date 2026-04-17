@@ -126,7 +126,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch sessions",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách phiên",
       };
     }
   }
@@ -146,7 +146,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch session",
+        error: error instanceof Error ? error.message : "Không thể tải phiên",
       };
     }
   }
@@ -166,7 +166,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch user sessions",
+        error: error instanceof Error ? error.message : "Không thể tải phiên của người dùng",
       };
     }
   }
@@ -215,13 +215,13 @@ export class SessionManager implements BaseManager<Session> {
         if (!userId) {
           return {
             success: false,
-            error: "ID nguoi dung khong hop le.",
+            error: "ID người dùng không hợp lệ.",
           };
         }
         if (!mentorId) {
           return {
             success: false,
-            error: "ID mentor khong hop le.",
+            error: "ID mentor không hợp lệ.",
           };
         }
 
@@ -252,14 +252,14 @@ export class SessionManager implements BaseManager<Session> {
       if (!requestData.userId) {
         return {
           success: false,
-          error: "ID nguoi dung khong hop le.",
+          error: "ID người dùng không hợp lệ.",
         };
       }
 
       if (!requestData.mentorId) {
         return {
           success: false,
-          error: "ID mentor khong hop le.",
+          error: "ID mentor không hợp lệ.",
         };
       }
 
@@ -271,7 +271,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create session",
+        error: error instanceof Error ? error.message : "Không thể tạo phiên",
       };
     }
   }
@@ -291,7 +291,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update session",
+        error: error instanceof Error ? error.message : "Không thể cập nhật phiên",
       };
     }
   }
@@ -309,7 +309,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to cancel session",
+        error: error instanceof Error ? error.message : "Không thể hủy phiên",
       };
     }
   }
@@ -327,7 +327,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to join session",
+        error: error instanceof Error ? error.message : "Không thể tham gia phiên",
       };
     }
   }
@@ -347,7 +347,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update session status",
+        error: error instanceof Error ? error.message : "Không thể cập nhật trạng thái phiên",
       };
     }
   }
@@ -368,7 +368,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create session payment",
+        error: error instanceof Error ? error.message : "Không thể tạo thanh toán phiên",
       };
     }
   }

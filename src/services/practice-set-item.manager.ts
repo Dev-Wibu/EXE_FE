@@ -72,7 +72,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch practice set items",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách mục bộ ôn tập",
       };
     }
   }
@@ -92,7 +92,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch practice set item",
+        error: error instanceof Error ? error.message : "Không thể tải mục bộ ôn tập",
       };
     }
   }
@@ -117,7 +117,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
       return {
         success: false,
         error:
-          error instanceof Error ? error.message : "Failed to fetch practice set items by set ID",
+          error instanceof Error ? error.message : "Không thể tải danh sách mục bộ ôn tập theo ID",
       };
     }
   }
@@ -136,7 +136,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create practice set item",
+        error: error instanceof Error ? error.message : "Không thể tạo mục bộ ôn tập",
       };
     }
   }
@@ -164,7 +164,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create practice set items",
+        error: error instanceof Error ? error.message : "Không thể tạo danh sách mục bộ ôn tập",
       };
     }
   }
@@ -187,7 +187,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update practice set item",
+        error: error instanceof Error ? error.message : "Không thể cập nhật mục bộ ôn tập",
       };
     }
   }
@@ -206,7 +206,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete practice set item",
+        error: error instanceof Error ? error.message : "Không thể xóa mục bộ ôn tập",
       };
     }
   }

@@ -634,7 +634,7 @@ export class AuthManager {
       if (!normalizedToken) {
         return {
           success: false,
-          error: "Khong tim thay token dang nhap Google trong URL callback.",
+          error: "Không tìm thấy token đăng nhập Google trong URL callback.",
         };
       }
 
@@ -670,7 +670,7 @@ export class AuthManager {
     } catch {
       return {
         success: false,
-        error: "Khong the xu ly callback dang nhap Google.",
+        error: "Không thể xử lý callback đăng nhập Google.",
       };
     }
   }
@@ -851,7 +851,7 @@ export class AuthManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to check status",
+        error: error instanceof Error ? error.message : "Không thể kiểm tra trạng thái",
       };
     }
   }
@@ -869,7 +869,7 @@ export class AuthManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Token refresh failed",
+        error: error instanceof Error ? error.message : "Làm mới token thất bại",
       };
     }
   }

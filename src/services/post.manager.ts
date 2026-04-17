@@ -84,7 +84,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create post",
+        error: error instanceof Error ? error.message : "Không thể tạo bài viết",
       };
     }
   }
@@ -101,7 +101,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch comments",
+        error: error instanceof Error ? error.message : "Không thể tải bình luận",
       };
     }
   }
@@ -118,7 +118,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch comments count",
+        error: error instanceof Error ? error.message : "Không thể tải số lượng bình luận",
       };
     }
   }
@@ -134,7 +134,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create comment",
+        error: error instanceof Error ? error.message : "Không thể tạo bình luận",
       };
     }
   }
@@ -151,7 +151,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch comment",
+        error: error instanceof Error ? error.message : "Không thể tải bình luận",
       };
     }
   }
@@ -171,7 +171,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update comment",
+        error: error instanceof Error ? error.message : "Không thể cập nhật bình luận",
       };
     }
   }
@@ -188,7 +188,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete comment",
+        error: error instanceof Error ? error.message : "Không thể xóa bình luận",
       };
     }
   }
@@ -205,7 +205,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch replies",
+        error: error instanceof Error ? error.message : "Không thể tải phản hồi",
       };
     }
   }
@@ -221,7 +221,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to like post",
+        error: error instanceof Error ? error.message : "Không thể thích bài viết",
       };
     }
   }
@@ -238,7 +238,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch likes",
+        error: error instanceof Error ? error.message : "Không thể tải lượt thích",
       };
     }
   }
@@ -255,7 +255,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch likes count",
+        error: error instanceof Error ? error.message : "Không thể tải số lượt thích",
       };
     }
   }
@@ -272,7 +272,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to check like status",
+        error: error instanceof Error ? error.message : "Không thể kiểm tra trạng thái thích",
       };
     }
   }
@@ -289,7 +289,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to unlike post",
+        error: error instanceof Error ? error.message : "Không thể bỏ thích bài viết",
       };
     }
   }
@@ -304,7 +304,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch posts",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách bài viết",
       };
     }
   }
@@ -317,13 +317,13 @@ export class PostManager implements BaseManager<Post> {
       const posts = unwrapPostResponses(response.data);
       const post = posts.find((p) => p.postId === Number(id));
       if (!post) {
-        return { success: false, error: "Post not found" };
+        return { success: false, error: "Không tìm thấy bài viết" };
       }
       return { success: true, data: post };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch post",
+        error: error instanceof Error ? error.message : "Không thể tải bài viết",
       };
     }
   }
@@ -341,7 +341,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch published posts",
+        error: error instanceof Error ? error.message : "Không thể tải bài viết đã xuất bản",
       };
     }
   }
@@ -361,7 +361,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to change post status",
+        error: error instanceof Error ? error.message : "Không thể thay đổi trạng thái bài viết",
       };
     }
   }
@@ -380,7 +380,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update post",
+        error: error instanceof Error ? error.message : "Không thể cập nhật bài viết",
       };
     }
   }
@@ -413,7 +413,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update post",
+        error: error instanceof Error ? error.message : "Không thể cập nhật bài viết",
       };
     }
   }
@@ -426,7 +426,7 @@ export class PostManager implements BaseManager<Post> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete post",
+        error: error instanceof Error ? error.message : "Không thể xóa bài viết",
       };
     }
   }

@@ -5,13 +5,8 @@
  */
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
-import type {
-  ApiResponse,
-  BaseManager,
-  PaginatedResponse,
-  PaginationParams,
-  User,
-} from "@/interfaces";
+import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
+import type { User } from "@/interfaces/schema.types";
 
 /**
  * Notification type based on backend schema
@@ -50,7 +45,7 @@ export class NotificationManager implements BaseManager<Notification> {
     // Note: This endpoint requires userId in path
     return {
       success: false,
-      error: "Use getByUserId method instead",
+      error: "Vui lòng dùng phương thức getByUserId",
     };
   }
 
@@ -69,7 +64,7 @@ export class NotificationManager implements BaseManager<Notification> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch notifications",
+        error: error instanceof Error ? error.message : "Không thể tải thông báo",
       };
     }
   }
@@ -83,7 +78,7 @@ export class NotificationManager implements BaseManager<Notification> {
 
     return {
       success: false,
-      error: "Single notification fetch not supported by API",
+      error: "API không hỗ trợ lấy từng thông báo theo ID",
     };
   }
 
@@ -112,7 +107,7 @@ export class NotificationManager implements BaseManager<Notification> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create notification",
+        error: error instanceof Error ? error.message : "Không thể tạo thông báo",
       };
     }
   }
@@ -132,7 +127,7 @@ export class NotificationManager implements BaseManager<Notification> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to mark notification as read",
+        error: error instanceof Error ? error.message : "Không thể đánh dấu thông báo đã đọc",
       };
     }
   }
@@ -150,7 +145,7 @@ export class NotificationManager implements BaseManager<Notification> {
 
     return {
       success: false,
-      error: "Update operation not supported for notifications",
+      error: "Không hỗ trợ cập nhật thông báo",
     };
   }
 
@@ -162,7 +157,7 @@ export class NotificationManager implements BaseManager<Notification> {
 
     return {
       success: false,
-      error: "Delete operation not supported for notifications",
+      error: "Không hỗ trợ xóa thông báo",
     };
   }
 }

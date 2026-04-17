@@ -80,7 +80,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch users",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách người dùng",
       };
     }
   }
@@ -100,7 +100,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch user",
+        error: error instanceof Error ? error.message : "Không thể tải người dùng",
       };
     }
   }
@@ -118,13 +118,13 @@ export class UsersAdminManager implements BaseManager<User> {
       if (!_data.name || !_data.name.trim()) {
         return {
           success: false,
-          error: "Name is required to create a user",
+          error: "Tên là bắt buộc để tạo người dùng",
         };
       }
       if (!_data.email || !_data.email.trim()) {
         return {
           success: false,
-          error: "Email is required to create a user",
+          error: "Email là bắt buộc để tạo người dùng",
         };
       }
 
@@ -189,7 +189,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create user",
+        error: error instanceof Error ? error.message : "Không thể tạo người dùng",
       };
     }
   }
@@ -282,7 +282,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update user",
+        error: error instanceof Error ? error.message : "Không thể cập nhật người dùng",
       };
     }
   }
@@ -311,10 +311,12 @@ export class UsersAdminManager implements BaseManager<User> {
         if (fetchResult.success && fetchResult.data) {
           currentUserData = fetchResult.data;
         } else {
-          // Failed to fetch user data - cannot proceed with toggle
+          // Không thể tải user data - cannot proceed with toggle
           return {
             success: false,
-            error: fetchResult.error || "Failed to fetch user data for toggle operation",
+            error:
+              fetchResult.error ||
+              "Không thể tải dữ liệu người dùng cho thao tác chuyển trạng thái",
           };
         }
       }
@@ -363,7 +365,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to toggle user status",
+        error: error instanceof Error ? error.message : "Không thể chuyển trạng thái người dùng",
       };
     }
   }
@@ -414,7 +416,7 @@ export class UsersAdminManager implements BaseManager<User> {
       if (userId === null || userId === undefined) {
         return {
           success: false,
-          error: "User ID is required to upload CV",
+          error: "User ID là bắt buộc để Upload CV",
         };
       }
 
@@ -445,7 +447,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to upload CV",
+        error: error instanceof Error ? error.message : "Không thể Upload CV",
       };
     }
   }

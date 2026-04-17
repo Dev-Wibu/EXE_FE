@@ -108,7 +108,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch practice sets",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách bộ ôn tập",
       };
     }
   }
@@ -128,7 +128,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch practice set",
+        error: error instanceof Error ? error.message : "Không thể tải bộ ôn tập",
       };
     }
   }
@@ -148,7 +148,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch practice sets by level",
+        error: error instanceof Error ? error.message : "Không thể tải bộ ôn tập theo cấp độ",
       };
     }
   }
@@ -177,7 +177,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create practice set",
+        error: error instanceof Error ? error.message : "Không thể tạo bộ ôn tập",
       };
     }
   }
@@ -197,7 +197,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update practice set",
+        error: error instanceof Error ? error.message : "Không thể cập nhật bộ ôn tập",
       };
     }
   }
@@ -218,7 +218,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete practice set",
+        error: error instanceof Error ? error.message : "Không thể xóa bộ ôn tập",
       };
     }
   }
@@ -240,7 +240,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch full practice set",
+        error: error instanceof Error ? error.message : "Không thể tải bộ ôn tập đầy đủ",
       };
     }
   }
@@ -332,7 +332,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create full practice set",
+        error: error instanceof Error ? error.message : "Không thể tạo bộ ôn tập đầy đủ",
       };
     }
   }

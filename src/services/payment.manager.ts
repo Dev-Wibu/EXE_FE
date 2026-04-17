@@ -103,7 +103,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tai danh sach payment."),
+        error: getErrorMessage(error, "Không thể tải danh sách thanh toán."),
       };
     }
   }
@@ -119,7 +119,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tai chi tiet payment."),
+        error: getErrorMessage(error, "Không thể tải chi tiết thanh toán."),
       };
     }
   }
@@ -133,7 +133,7 @@ export class PaymentManager {
       if (!item) {
         return {
           success: false,
-          error: "Khong tim thay payment theo transactionCode.",
+          error: "Không tìm thấy thanh toán theo transactionCode.",
         };
       }
 
@@ -144,7 +144,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tai payment theo transaction code."),
+        error: getErrorMessage(error, "Không thể tải thanh toán theo transaction code."),
       };
     }
   }
@@ -160,7 +160,7 @@ export class PaymentManager {
     if (normalizedAmount <= 0) {
       return {
         success: false,
-        error: "So tien thanh toan khong hop le.",
+        error: "Số tiền thanh toán không hợp lệ.",
       };
     }
 
@@ -183,12 +183,12 @@ export class PaymentManager {
 
       return {
         success: false,
-        error: "Backend khong tra ve link thanh toan hop le.",
+        error: "Backend không trả về link thanh toán hợp lệ.",
       };
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the tao payment moi."),
+        error: getErrorMessage(error, "Không thể tạo thanh toán mới."),
       };
     }
   }
@@ -208,7 +208,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Khong the huy payment."),
+        error: getErrorMessage(error, "Không thể hủy thanh toán."),
       };
     }
   }

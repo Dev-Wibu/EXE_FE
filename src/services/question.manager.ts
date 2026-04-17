@@ -40,7 +40,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch questions",
+        error: error instanceof Error ? error.message : "Không thể tải câu hỏi",
       };
     }
   }
@@ -59,7 +59,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch question",
+        error: error instanceof Error ? error.message : "Không thể tải câu hỏi",
       };
     }
   }
@@ -84,7 +84,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create question",
+        error: error instanceof Error ? error.message : "Không thể tạo câu hỏi",
       };
     }
   }
@@ -113,7 +113,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update question",
+        error: error instanceof Error ? error.message : "Không thể cập nhật câu hỏi",
       };
     }
   }
@@ -132,7 +132,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete question",
+        error: error instanceof Error ? error.message : "Không thể xóa câu hỏi",
       };
     }
   }
@@ -155,7 +155,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to search questions",
+        error: error instanceof Error ? error.message : "Không thể tìm kiếm câu hỏi",
       };
     }
   }
@@ -172,7 +172,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch random questions",
+        error: error instanceof Error ? error.message : "Không thể tải câu hỏi ngẫu nhiên",
       };
     }
   }
@@ -194,9 +194,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
       return {
         success: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch questions by category and level",
+          error instanceof Error ? error.message : "Không thể tải câu hỏi theo danh mục và cấp độ",
       };
     }
   }
@@ -213,7 +211,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to save questions",
+        error: error instanceof Error ? error.message : "Không thể lưu câu hỏi",
       };
     }
   }

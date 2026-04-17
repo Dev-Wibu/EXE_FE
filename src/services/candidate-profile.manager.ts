@@ -27,7 +27,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch candidate profiles",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách hồ sơ ứng viên",
       };
     }
   }
@@ -44,7 +44,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch candidate profile",
+        error: error instanceof Error ? error.message : "Không thể tải hồ sơ ứng viên",
       };
     }
   }
@@ -60,7 +60,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create candidate profile",
+        error: error instanceof Error ? error.message : "Không thể tạo hồ sơ ứng viên",
       };
     }
   }
@@ -80,7 +80,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update candidate profile",
+        error: error instanceof Error ? error.message : "Không thể cập nhật hồ sơ ứng viên",
       };
     }
   }
@@ -101,7 +101,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
 
     return {
       success: false,
-      error: "Delete operation not supported for candidate profiles",
+      error: "Không hỗ trợ xóa hồ sơ ứng viên",
     };
   }
 }

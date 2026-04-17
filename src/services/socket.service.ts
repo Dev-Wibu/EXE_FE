@@ -143,7 +143,7 @@ class SocketService {
       });
       return true;
     } catch (error) {
-      console.error("Failed to publish message", error);
+      console.error("Không thể gửi tin nhắn", error);
       this.setConnectionState("disconnected");
       return false;
     }

@@ -78,7 +78,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentor reviews",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách đánh giá mentor",
       };
     }
   }
@@ -112,7 +112,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
           ? apiMessage
           : error instanceof Error
             ? error.message
-            : "Failed to fetch mentor review";
+            : "Không thể tải đánh giá mentor";
 
       return {
         success: false,
@@ -139,7 +139,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create mentor review",
+        error: error instanceof Error ? error.message : "Không thể tạo đánh giá mentor",
       };
     }
   }
@@ -165,7 +165,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to update mentor review",
+        error: error instanceof Error ? error.message : "Không thể cập nhật đánh giá mentor",
       };
     }
   }
@@ -178,7 +178,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
 
     return {
       success: false,
-      error: "Delete operation not supported for mentor reviews",
+      error: "Không hỗ trợ xóa đánh giá mentor",
     };
   }
 }

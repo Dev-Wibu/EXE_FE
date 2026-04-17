@@ -115,7 +115,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch chat sessions",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách phiên trò chuyện",
       };
     }
   }
@@ -134,7 +134,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch session",
+        error: error instanceof Error ? error.message : "Không thể tải phiên",
       };
     }
   }
@@ -165,7 +165,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch messages",
+        error: error instanceof Error ? error.message : "Không thể tải tin nhắn",
       };
     }
   }
@@ -191,7 +191,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch chat history",
+        error: error instanceof Error ? error.message : "Không thể tải lịch sử trò chuyện",
       };
     }
   }
@@ -212,7 +212,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch contacts",
+        error: error instanceof Error ? error.message : "Không thể tải danh bạ liên hệ",
       };
     }
   }
@@ -231,7 +231,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentors",
+        error: error instanceof Error ? error.message : "Không thể tải danh sách mentor",
       };
     }
   }
@@ -251,7 +251,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch mentor details",
+        error: error instanceof Error ? error.message : "Không thể tải thông tin mentor",
       };
     }
   }
@@ -271,7 +271,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch user details",
+        error: error instanceof Error ? error.message : "Không thể tải thông tin người dùng",
       };
     }
   }
@@ -290,7 +290,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to send message",
+        error: error instanceof Error ? error.message : "Không thể gửi tin nhắn",
       };
     }
   }
@@ -309,7 +309,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get AI response",
+        error: error instanceof Error ? error.message : "Không thể nhận phản hồi AI",
       };
     }
   }
@@ -327,7 +327,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create session",
+        error: error instanceof Error ? error.message : "Không thể tạo phiên",
       };
     }
   }
@@ -345,7 +345,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to delete session",
+        error: error instanceof Error ? error.message : "Không thể xóa phiên",
       };
     }
   }
