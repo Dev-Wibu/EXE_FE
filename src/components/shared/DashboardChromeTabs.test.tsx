@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { DashboardChromeTabs } from "./DashboardChromeTabs";
@@ -73,5 +73,25 @@ describe("DashboardChromeTabs", () => {
     fireEvent.click(screen.getByRole("button", { name: "Đóng tất cả tab" }));
 
     expect(onCloseAllTabs).not.toHaveBeenCalled();
+  });
+
+  it("đặt nút dấu cộng trong cùng luồng tab ở full mode và tab có width co giãn", () => {
+    render(
+      <DashboardChromeTabs
+        {...baseProps}
+        tabs={[
+          { id: "dashboard-1", type: "dashboard", title: "Dashboard" },
+          { id: "users-1", type: "users", title: "Quản lý người dùng" },
+        ]}
+        activeTabId="dashboard-1"
+      />
+    );
+
+    const strip = screen.getByTestId("chrome-tabs-full-strip");
+    const plusButton = within(strip).getByRole("button", { name: "Mở menu tab" });
+    expect(plusButton).toBeTruthy();
+
+    const dashboardTab = screen.getByText("Dashboard").closest("div");
+    expect(dashboardTab?.getAttribute("style") || "").toContain("clamp(");
   });
 });

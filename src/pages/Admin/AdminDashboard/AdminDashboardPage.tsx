@@ -326,9 +326,9 @@ export function AdminDashboardPage() {
   });
   const contentRef = useRef<HTMLDivElement>(null);
 
-  useDashboardScrollRestoration(contentRef);
-
   const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
+
+  useDashboardScrollRestoration(contentRef, { scopeKey: typedActiveTab });
 
   const chromeTabsData = useMemo(() => {
     return openTabs

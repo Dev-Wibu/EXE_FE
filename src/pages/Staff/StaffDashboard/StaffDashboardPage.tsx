@@ -147,9 +147,9 @@ export function StaffDashboardPage() {
   ]);
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
 
-  useDashboardScrollRestoration(contentRef);
-
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
+
+  useDashboardScrollRestoration(contentRef, { scopeKey: activeTabId });
 
   const handleTabSelect = useCallback((tabId: string) => {
     setActiveTabId(tabId);
