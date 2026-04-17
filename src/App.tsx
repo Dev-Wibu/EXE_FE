@@ -39,6 +39,7 @@ import {
   WriteFeedbackPage,
 } from "@/pages/Mentor";
 import { PaymentCancelPage, PaymentSuccessPage } from "@/pages/Payment";
+import { MediaToolkitPlaygroundPage } from "@/pages/Shared/MediaToolkitPlaygroundPage";
 import {
   FeedbackModerationPage,
   MentorApplicationsPage,
@@ -106,6 +107,10 @@ function App() {
             {/* Resources pages (public) */}
             <Route path="/resources/faq" element={<FAQPage />} />
             <Route path="/resources/blog" element={<BlogPage />} />
+            <Route
+              path="/dev/media-toolkit"
+              element={import.meta.env.DEV ? <MediaToolkitPlaygroundPage /> : <NotFoundPage />}
+            />
 
             {/* Auth routes with AuthLayout — redirect to dashboard if already logged in */}
             <Route element={<PublicOnlyRoute />}>
