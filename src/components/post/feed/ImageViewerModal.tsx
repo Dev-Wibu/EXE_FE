@@ -22,6 +22,10 @@ export function ImageViewerModal({ src, alt, open, onClose }: ImageViewerModalPr
           className="fixed top-1/2 left-1/2 z-80 w-[95vw] max-w-6xl -translate-x-1/2 -translate-y-1/2 outline-none"
           onOpenAutoFocus={(event) => event.preventDefault()}
           aria-label={alt ?? "Xem ảnh"}>
+          <DialogPrimitive.Title className="sr-only">{alt ?? "Xem ảnh"}</DialogPrimitive.Title>
+          <DialogPrimitive.Description className="sr-only">
+            Trình xem ảnh phóng to toàn màn hình
+          </DialogPrimitive.Description>
           <DialogPrimitive.Close
             className="absolute top-4 right-4 z-10 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
             aria-label="Đóng ảnh">

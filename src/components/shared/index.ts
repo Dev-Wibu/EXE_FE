@@ -18,6 +18,13 @@ export type {
 } from "./DashboardSidebar";
 export { Filter } from "./Filter";
 export type { FilterCriteria, FilterGroup, FilterOption, FilterProps } from "./Filter";
+export {
+  ImageZoomPreview,
+  MediaLightboxDialog,
+  PdfPreviewViewer,
+  UniversalMediaUploader,
+} from "./media";
+export type { MediaViewerItem, UploadTransportMode, UploadedMediaFile } from "./media";
 export { MessageBubble } from "./MessageBubble";
 export type { MessageDeliveryStatus } from "./MessageBubble";
 export { PaginationControl } from "./PaginationControl";
