@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import { SpinnerInline } from "@/components/ui/spinner";
 import {
+  buildExternalDocumentViewerUrl,
+  canEmbedExternalDocument,
   downloadFromUrl,
+  type ExternalDocumentViewerProvider,
   inferFileKind,
   openUrlInNewTab,
   revokeObjectUrlSafe,
@@ -32,7 +35,7 @@ import type { MediaViewerItem } from "./types";
 
 export interface MediaLightboxDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   items: MediaViewerItem[];
   initialIndex?: number;
 }
@@ -48,6 +51,8 @@ export function MediaLightboxDialog({
   initialIndex = 0,
 }: MediaLightboxDialogProps) {
   const [manualIndex, setManualIndex] = useState<number | null>(null);
+  const [documentViewerProvider, setDocumentViewerProvider] =
+    useState<ExternalDocumentViewerProvider>("office");
   const [imageTransform, setImageTransform] = useState<{
     index: number;
     scale: number;
@@ -95,9 +100,41 @@ export function MediaLightboxDialog({
     };
   }, [imageObjectUrl]);
 
+  const documentObjectUrl = useMemo(() => {
+    if (!open || currentKind !== "document" || !currentItem?.file) {
+      return null;
+    }
+
+    return URL.createObjectURL(currentItem.file);
+  }, [currentItem, currentKind, open]);
+
+  useEffect(() => {
+    return () => {
+      revokeObjectUrlSafe(documentObjectUrl);
+    };
+  }, [documentObjectUrl]);
+
   const imageUrl =
     currentKind === "image"
       ? ((currentItem?.file ? imageObjectUrl : currentItem?.src) ?? null)
+      : null;
+
+  const documentUrl =
+    currentKind === "document"
+      ? ((currentItem?.file ? documentObjectUrl : currentItem?.src) ?? null)
+      : null;
+
+  const documentRequireAuth = currentItem?.requireAuth ?? true;
+  const canEmbedDocument =
+    currentKind === "document" &&
+    canEmbedExternalDocument({
+      sourceUrl: documentUrl,
+      requireAuth: documentRequireAuth,
+    });
+
+  const documentViewerUrl =
+    canEmbedDocument && documentUrl
+      ? buildExternalDocumentViewerUrl(documentUrl, documentViewerProvider)
       : null;
 
   const imageScale = imageTransform.index === activeIndex ? imageTransform.scale : 1;
@@ -131,6 +168,7 @@ export function MediaLightboxDialog({
     (nextOpen: boolean) => {
       if (!nextOpen) {
         setManualIndex(null);
+        setDocumentViewerProvider("office");
         setImageTransform({
           index: -1,
           scale: 1,
@@ -189,6 +227,22 @@ export function MediaLightboxDialog({
     openUrlInNewTab(imageUrl);
   };
 
+  const handleDownloadCurrentDocument = () => {
+    if (!documentUrl || !currentItem) {
+      return;
+    }
+
+    downloadFromUrl(documentUrl, currentItem.name || "tai-lieu");
+  };
+
+  const handleOpenCurrentDocument = () => {
+    if (!documentUrl) {
+      return;
+    }
+
+    openUrlInNewTab(documentUrl);
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent
@@ -199,7 +253,7 @@ export function MediaLightboxDialog({
             <div>
               <DialogTitle className="text-base">{currentItem?.name ?? "Xem media"}</DialogTitle>
               <DialogDescription className="text-xs">
-                Trình xem toàn màn hình cho ảnh và PDF ({currentPositionLabel})
+                Trình xem toàn màn hình cho ảnh, PDF và tài liệu ({currentPositionLabel})
               </DialogDescription>
             </div>
 
@@ -313,6 +367,47 @@ export function MediaLightboxDialog({
                 </>
               )}
 
+              {currentKind === "document" && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={documentViewerProvider === "office" ? "default" : "ghost"}
+                    onClick={() => setDocumentViewerProvider("office")}
+                    disabled={!canEmbedDocument}
+                    aria-label="Xem tài liệu bằng Office Viewer">
+                    Office
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={documentViewerProvider === "google" ? "default" : "ghost"}
+                    onClick={() => setDocumentViewerProvider("google")}
+                    disabled={!canEmbedDocument}
+                    aria-label="Xem tài liệu bằng Google Viewer">
+                    Google
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleOpenCurrentDocument}
+                    disabled={!documentUrl}
+                    aria-label="Mở tài liệu ở tab mới">
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleDownloadCurrentDocument}
+                    disabled={!documentUrl}
+                    aria-label="Tải tài liệu xuống">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+
               <Button
                 type="button"
                 size="icon"
@@ -343,7 +438,7 @@ export function MediaLightboxDialog({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden bg-black/90 p-3">
+        <div className="min-h-0 flex-1 overflow-hidden bg-black/90 p-3">
           {!currentItem ? (
             <div className="flex h-full items-center justify-center text-sm text-slate-200">
               Không có media để hiển thị.
@@ -370,8 +465,37 @@ export function MediaLightboxDialog({
               source={currentItem.file ?? currentItem.src ?? null}
               fileName={currentItem.file?.name ?? currentItem.name}
               requireAuth={currentItem.requireAuth ?? true}
+              fitContainer
               className="h-full border-slate-800"
             />
+          ) : currentKind === "document" ? (
+            documentViewerUrl ? (
+              <div className="flex h-full min-h-0 flex-col gap-3">
+                <iframe
+                  key={`${currentItem.id}-${documentViewerProvider}`}
+                  src={documentViewerUrl}
+                  title={`Xem tài liệu ${currentItem.name}`}
+                  className="h-full w-full rounded-lg border border-slate-700 bg-white"
+                />
+                <p className="text-center text-xs text-slate-300">
+                  Nếu không xem được, dùng nút Mở ở tab mới hoặc Tải xuống.
+                </p>
+              </div>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-slate-200">
+                <p className="max-w-lg text-sm">
+                  Tài liệu này chưa thể nhúng trực tiếp do giới hạn quyền truy cập hoặc định dạng.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" variant="outline" onClick={handleOpenCurrentDocument}>
+                    Mở ở tab mới
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleDownloadCurrentDocument}>
+                    Tải xuống
+                  </Button>
+                </div>
+              </div>
+            )
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-slate-200">
               Định dạng này chưa hỗ trợ xem trực tiếp.

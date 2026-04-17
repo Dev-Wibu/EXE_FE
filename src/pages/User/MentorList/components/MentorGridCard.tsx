@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 import {
   ArrowUpRight,
   Briefcase,
@@ -88,7 +89,11 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
                 variant="outline"
                 size="icon"
                 className="h-9 w-9 rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                onClick={() => window.open(mentor.linkedInUrl, "_blank")}>
+                onClick={() => {
+                  if (mentor.linkedInUrl) {
+                    openUrlInNewTab(mentor.linkedInUrl);
+                  }
+                }}>
                 <Linkedin className="h-4 w-4" />
               </Button>
             )}

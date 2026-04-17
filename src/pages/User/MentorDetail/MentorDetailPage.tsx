@@ -1,8 +1,10 @@
+import { MediaLightboxDialog, type MediaViewerItem } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
 import { formatCurrency } from "@/lib/formatting";
+import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import { chatManager } from "@/services/chat.manager";
 import { ArrowLeft, ExternalLink, FileText, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -123,6 +125,8 @@ export function MentorDetailPage() {
 
   const [mentor, setMentor] = useState<SchemaMentorResponse | null>(null);
   const [allMentors, setAllMentors] = useState<SchemaMentorResponse[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerItems, setViewerItems] = useState<MediaViewerItem[]>([]);
   const [mentorUnavailableReason, setMentorUnavailableReason] = useState<
     "inactive" | "not-found" | null
   >(null);
@@ -276,6 +280,25 @@ export function MentorDetailPage() {
     navigate(`/user/mentors/${targetMentor.id}`);
   };
 
+  const handleOpenMentorDocument = (doc: MentorDocumentItem) => {
+    const docKind = inferFileKind({ fileName: doc.url });
+    if (docKind === "other") {
+      openUrlInNewTab(doc.url);
+      return;
+    }
+
+    setViewerItems([
+      {
+        id: `mentor-detail-doc-${doc.label}`,
+        name: doc.label,
+        src: doc.url,
+        kind: docKind,
+        requireAuth: true,
+      },
+    ]);
+    setViewerOpen(true);
+  };
+
   if (!isMentorIdValid) {
     return (
       <section className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
@@ -371,18 +394,17 @@ export function MentorDetailPage() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {docs.map((doc) => (
-                    <a
+                    <button
+                      type="button"
                       key={doc.label}
-                      href={doc.url || "#"}
-                      target="_blank"
-                      rel="noreferrer"
+                      onClick={() => handleOpenMentorDocument(doc)}
                       className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 transition-colors hover:border-cyan-300/50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:bg-slate-800">
                       <span className="flex items-center">
                         <FileText className="mr-2 h-4 w-4 text-cyan-600 dark:text-cyan-200" />
                         {doc.label}
                       </span>
                       <ExternalLink className="h-4 w-4 text-slate-400" />
-                    </a>
+                    </button>
                   ))}
                 </div>
               )}
@@ -398,6 +420,13 @@ export function MentorDetailPage() {
           />
         </div>
       </div>
+
+      <MediaLightboxDialog
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        items={viewerItems}
+        initialIndex={0}
+      />
     </section>
   );
 }

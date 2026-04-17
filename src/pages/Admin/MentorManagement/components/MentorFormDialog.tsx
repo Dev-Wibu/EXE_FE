@@ -1,6 +1,7 @@
 import { ExternalLink, Eye, EyeOff, FileText, ImageIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { MediaLightboxDialog, type MediaViewerItem } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 
 import type { Mentor, MentorFormData } from "../types";
 
@@ -72,11 +74,20 @@ interface FilePreviewProps {
   previewUrl: string | null;
   isNew: boolean;
   onClear: () => void;
+  onOpen: () => void;
   label: string;
   fileName?: string;
 }
 
-function FilePreview({ url, previewUrl, isNew, onClear, label, fileName }: FilePreviewProps) {
+function FilePreview({
+  url,
+  previewUrl,
+  isNew,
+  onClear,
+  onOpen,
+  label,
+  fileName,
+}: FilePreviewProps) {
   if (!url) return null;
   // Check if the URL points to an image, using fileName for blob URLs
   const isImage =
@@ -119,14 +130,13 @@ function FilePreview({ url, previewUrl, isNew, onClear, label, fileName }: FileP
             </Button>
           </>
         ) : (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="flex items-center gap-1 bg-transparent p-0 text-xs text-blue-600 hover:underline dark:text-blue-400">
             <span>Xem</span>
             <ExternalLink className="h-2.5 w-2.5" />
-          </a>
+          </button>
         )}
       </div>
     </div>
@@ -151,6 +161,8 @@ export function MentorFormDialog({
   const [identityPreview, setIdentityPreview] = useState<string | null>(null);
   const [degreePreview, setDegreePreview] = useState<string | null>(null);
   const [otherPreview, setOtherPreview] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerItems, setViewerItems] = useState<MediaViewerItem[]>([]);
 
   // Clean up blob URLs when component unmounts
   useEffect(() => {
@@ -170,6 +182,8 @@ export function MentorFormDialog({
       setIdentityPreview(null);
       setDegreePreview(null);
       setOtherPreview(null);
+      setViewerOpen(false);
+      setViewerItems([]);
     }
     onOpenChange(open);
   };
@@ -241,6 +255,42 @@ export function MentorFormDialog({
   const displayIdentityUrl = identityPreview || selectedMentor?.identityImg;
   const displayDegreeUrl = degreePreview || selectedMentor?.degreeImg;
   const displayOtherUrl = otherPreview || selectedMentor?.otherFile;
+
+  const handleOpenFilePreview = ({
+    label,
+    url,
+    file,
+  }: {
+    label: string;
+    url?: string | null;
+    file?: File;
+  }) => {
+    if (!url && !file) {
+      return;
+    }
+
+    const fileKind = inferFileKind({
+      fileName: file?.name || url || "",
+      mimeType: file?.type,
+    });
+
+    if (fileKind === "other" && url) {
+      openUrlInNewTab(url);
+      return;
+    }
+
+    setViewerItems([
+      {
+        id: `mentor-form-${label}`,
+        name: label,
+        src: url ?? undefined,
+        file,
+        kind: fileKind,
+        requireAuth: Boolean(url && !url.startsWith("blob:")),
+      },
+    ]);
+    setViewerOpen(true);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -374,6 +424,13 @@ export function MentorFormDialog({
                   previewUrl={avatarPreview}
                   isNew={!!avatarPreview}
                   onClear={handleClearAvatar}
+                  onOpen={() =>
+                    handleOpenFilePreview({
+                      label: "Ảnh đại diện",
+                      url: displayAvatarUrl,
+                      file: formData.avatar,
+                    })
+                  }
                   label="Avatar"
                   fileName={formData.avatar?.name}
                 />
@@ -400,6 +457,13 @@ export function MentorFormDialog({
                   previewUrl={identityPreview}
                   isNew={!!identityPreview}
                   onClear={handleClearIdentity}
+                  onOpen={() =>
+                    handleOpenFilePreview({
+                      label: "Giấy tờ tùy thân",
+                      url: displayIdentityUrl,
+                      file: formData.identityFile,
+                    })
+                  }
                   label="Identity"
                   fileName={formData.identityFile?.name}
                 />
@@ -426,6 +490,13 @@ export function MentorFormDialog({
                   previewUrl={degreePreview}
                   isNew={!!degreePreview}
                   onClear={handleClearDegree}
+                  onOpen={() =>
+                    handleOpenFilePreview({
+                      label: "Bằng cấp/Chứng chỉ",
+                      url: displayDegreeUrl,
+                      file: formData.degreeFile,
+                    })
+                  }
                   label="Degree"
                   fileName={formData.degreeFile?.name}
                 />
@@ -452,6 +523,13 @@ export function MentorFormDialog({
                   previewUrl={otherPreview}
                   isNew={!!otherPreview}
                   onClear={handleClearOther}
+                  onOpen={() =>
+                    handleOpenFilePreview({
+                      label: "Tài liệu khác",
+                      url: displayOtherUrl,
+                      file: formData.otherFile,
+                    })
+                  }
                   label="Other"
                   fileName={formData.otherFile?.name}
                 />
@@ -479,6 +557,13 @@ export function MentorFormDialog({
           <Button onClick={onSubmit}>{submitLabel}</Button>
         </DialogFooter>
       </DialogContent>
+
+      <MediaLightboxDialog
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        items={viewerItems}
+        initialIndex={0}
+      />
     </Dialog>
   );
 }

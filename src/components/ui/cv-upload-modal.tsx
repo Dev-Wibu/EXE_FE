@@ -1,6 +1,7 @@
-import { ExternalLink, FileText, Upload, X } from "lucide-react";
+import { FileText, Upload, X } from "lucide-react";
 import * as React from "react";
 
+import { MediaLightboxDialog, PdfPreviewViewer, type MediaViewerItem } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import { cn } from "@/lib/utils";
 
 export interface CVUploadModalProps {
@@ -57,31 +59,19 @@ export function CVUploadModal({
   description = "Chọn file CV của bạn (chỉ chấp nhận file PDF)",
 }: CVUploadModalProps) {
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = React.useState(false);
+  const [viewerItems, setViewerItems] = React.useState<MediaViewerItem[]>([]);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Clear selected file function
   const clearState = React.useCallback(() => {
-    if (previewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
     setSelectedFile(null);
     setError(null);
     if (inputRef.current) {
       inputRef.current.value = "";
     }
-  }, [previewUrl]);
-
-  // Clean up blob URL when component unmounts or when file changes
-  React.useEffect(() => {
-    return () => {
-      if (previewUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
+  }, []);
 
   // Reset state when modal closes
   React.useEffect(() => {
@@ -109,15 +99,6 @@ export function CVUploadModal({
       setError("File quá lớn. Kích thước tối đa là 10MB.");
       return;
     }
-
-    // Clean up old preview
-    if (previewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    // Create preview URL for PDF
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
     setSelectedFile(file);
   };
 
@@ -141,10 +122,28 @@ export function CVUploadModal({
 
   // Handle view current CV
   const handleViewCurrent = () => {
-    if (currentCvUrl) {
-      window.open(currentCvUrl, "_blank", "noopener,noreferrer");
-      onViewCurrent?.();
+    if (!currentCvUrl) {
+      return;
     }
+
+    const currentKind = inferFileKind({ fileName: currentCvUrl });
+    if (currentKind === "other") {
+      openUrlInNewTab(currentCvUrl);
+      onViewCurrent?.();
+      return;
+    }
+
+    setViewerItems([
+      {
+        id: "current-cv-preview",
+        name: currentCvName || "CV hiện tại",
+        src: currentCvUrl,
+        kind: currentKind,
+        requireAuth: true,
+      },
+    ]);
+    setViewerOpen(true);
+    onViewCurrent?.();
   };
 
   return (
@@ -173,7 +172,6 @@ export function CVUploadModal({
                   </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleViewCurrent}>
-                  <ExternalLink className="mr-1 h-4 w-4" />
                   Xem CV
                 </Button>
               </div>
@@ -207,17 +205,14 @@ export function CVUploadModal({
                 </div>
               </div>
 
-              {/* PDF Preview iframe */}
-              {previewUrl && (
-                <div className="mt-3 overflow-hidden rounded-md border">
-                  <iframe
-                    src={previewUrl}
-                    title="Xem trước CV"
-                    className="h-64 w-full"
-                    style={{ border: "none" }}
-                  />
-                </div>
-              )}
+              <div className="mt-3">
+                <PdfPreviewViewer
+                  source={selectedFile}
+                  fileName={selectedFile.name}
+                  requireAuth={false}
+                  className="max-h-[360px]"
+                />
+              </div>
             </div>
           )}
 
@@ -279,6 +274,13 @@ export function CVUploadModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <MediaLightboxDialog
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        items={viewerItems}
+        initialIndex={0}
+      />
     </Dialog>
   );
 }

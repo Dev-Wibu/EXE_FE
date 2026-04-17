@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 import { getSessionStatusBadge } from "@/lib/status-utils";
 
 import type { Session } from "../types";
@@ -168,8 +169,11 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
                 {session.roomUrl ? (
                   <a
                     href={session.roomUrl}
-                    target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      openUrlInNewTab(session.roomUrl || "");
+                    }}
                     className="text-sm text-blue-600 hover:underline">
                     {session.roomUrl}
                   </a>
@@ -182,8 +186,11 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
                 {session.recordUrl ? (
                   <a
                     href={session.recordUrl}
-                    target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      openUrlInNewTab(session.recordUrl || "");
+                    }}
                     className="text-sm text-blue-600 hover:underline">
                     {session.recordUrl}
                   </a>

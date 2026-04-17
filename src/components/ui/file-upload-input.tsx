@@ -3,6 +3,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { openUrlInNewTab } from "@/lib/media-file-utils";
 import { cn } from "@/lib/utils";
 
 export interface FileUploadInputProps {
@@ -215,8 +216,11 @@ export function FileUploadInput({
             ) : currentFileUrl ? (
               <a
                 href={currentFileUrl}
-                target="_blank"
                 rel="noopener noreferrer"
+                onClick={(event) => {
+                  event.preventDefault();
+                  openUrlInNewTab(currentFileUrl);
+                }}
                 className="flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400">
                 <span>Xem file</span>
                 <ExternalLink className="h-3 w-3" />

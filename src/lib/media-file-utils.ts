@@ -1,4 +1,5 @@
-export type MediaFileKind = "image" | "pdf" | "other";
+export type MediaFileKind = "image" | "pdf" | "document" | "other";
+export type ExternalDocumentViewerProvider = "office" | "google";
 
 const IMAGE_EXTENSIONS = [
   ".png",
@@ -14,6 +15,23 @@ const IMAGE_EXTENSIONS = [
 ] as const;
 
 const PDF_EXTENSIONS = [".pdf"] as const;
+
+const DOCUMENT_EXTENSIONS = [
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".txt",
+  ".csv",
+  ".rtf",
+  ".odt",
+  ".ods",
+  ".odp",
+] as const;
+
+const PUBLIC_EMBED_HOST_HINTS = ["res.cloudinary.com"] as const;
 
 export interface ResolveBlobSourceOptions {
   token?: string | null;
@@ -56,6 +74,58 @@ function parseContentDispositionFileName(contentDisposition: string | null): str
   return simpleMatch[1].trim();
 }
 
+function isDocumentMimeType(mimeType: string): boolean {
+  const normalized = mimeType.toLowerCase();
+
+  if (normalized === "text/plain" || normalized === "text/csv") {
+    return true;
+  }
+
+  if (normalized.includes("rtf")) {
+    return true;
+  }
+
+  if (normalized.includes("msword") || normalized.includes("officedocument")) {
+    return true;
+  }
+
+  if (
+    normalized.includes("spreadsheet") ||
+    normalized.includes("excel") ||
+    normalized.includes("powerpoint") ||
+    normalized.includes("presentation")
+  ) {
+    return true;
+  }
+
+  if (normalized.includes("opendocument")) {
+    return true;
+  }
+
+  return false;
+}
+
+function isHttpUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function hasPublicEmbedHostHint(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+
+    return PUBLIC_EMBED_HOST_HINTS.some(
+      (host) => parsedUrl.hostname === host || parsedUrl.hostname.endsWith(`.${host}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getFileExtension(nameOrUrl: string): string {
   const cleanInput = nameOrUrl.split("?")[0]?.split("#")[0] ?? "";
   const lastDot = cleanInput.lastIndexOf(".");
@@ -78,6 +148,10 @@ export function inferFileKindFromName(nameOrUrl: string): MediaFileKind {
     return "pdf";
   }
 
+  if (DOCUMENT_EXTENSIONS.includes(extension as (typeof DOCUMENT_EXTENSIONS)[number])) {
+    return "document";
+  }
+
   return "other";
 }
 
@@ -92,6 +166,10 @@ export function inferFileKindFromMimeType(mimeType: string | null | undefined): 
 
   if (mimeType.includes("pdf")) {
     return "pdf";
+  }
+
+  if (isDocumentMimeType(mimeType)) {
+    return "document";
   }
 
   return "other";
@@ -126,6 +204,44 @@ export function extractFileNameFromUrl(url: string): string {
   } catch {
     return lastSegment;
   }
+}
+
+export function buildExternalDocumentViewerUrl(
+  sourceUrl: string,
+  provider: ExternalDocumentViewerProvider
+): string | null {
+  if (!isHttpUrl(sourceUrl)) {
+    return null;
+  }
+
+  const encodedSourceUrl = encodeURIComponent(sourceUrl);
+
+  if (provider === "office") {
+    return `https://view.officeapps.live.com/op/embed.aspx?src=${encodedSourceUrl}`;
+  }
+
+  return `https://docs.google.com/gview?embedded=1&url=${encodedSourceUrl}`;
+}
+
+export function canEmbedExternalDocument(params: {
+  sourceUrl?: string | null;
+  requireAuth?: boolean;
+}): boolean {
+  const { sourceUrl, requireAuth } = params;
+
+  if (!sourceUrl || !isHttpUrl(sourceUrl)) {
+    return false;
+  }
+
+  if (requireAuth === false) {
+    return true;
+  }
+
+  if (requireAuth === true) {
+    return hasPublicEmbedHostHint(sourceUrl);
+  }
+
+  return true;
 }
 
 export function revokeObjectUrlSafe(objectUrl: string | null | undefined): void {
@@ -186,19 +302,26 @@ export async function resolveSourceToBlobUrl(
 }
 
 export function openUrlInNewTab(url: string): void {
-  window.open(url, "_blank", "noopener,noreferrer");
+  const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+  if (openedWindow) {
+    openedWindow.opener = null;
+  }
 }
 
 export function downloadFromUrl(url: string, fileName: string): void {
+  const normalizedFileName = fileName.trim() || "tai-xuong";
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = fileName;
+  anchor.download = normalizedFileName;
   anchor.rel = "noopener noreferrer";
   anchor.style.display = "none";
 
   document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
+  try {
+    anchor.click();
+  } finally {
+    anchor.remove();
+  }
 }
 
 export function normalizeRelativeAssetPath(path: string): string {
