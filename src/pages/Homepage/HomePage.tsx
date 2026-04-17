@@ -98,7 +98,7 @@ export function HomePage() {
                   asChild>
                   <Link to={ctaPath}>
                     <Play className="mr-2 h-5 w-5" />
-                    {isLoggedIn ? "Vào Dashboard" : "Thử phỏng vấn miễn phí"}
+                    {isLoggedIn ? "Mở Dashboard" : "Thử phỏng vấn miễn phí"}
                   </Link>
                 </Button>
                 {!isLoggedIn && (

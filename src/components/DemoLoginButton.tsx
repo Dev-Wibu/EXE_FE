@@ -99,7 +99,6 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={() => setIsOpen(false)}>
-          {/* Modal Content */}
           <div
             className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}>
@@ -132,7 +131,7 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
             <div className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
               <p>
                 <strong>Lưu ý:</strong> Đây là tài khoản ảo dùng để thử nghiệm chức năng. Click vào
-                tài khoản để tự động điền thông tin đăng nhập.
+                thẻ để tự động điền thông tin.
               </p>
               <p className="mt-1 text-xs text-amber-700">
                 Hệ thống đang chạy API-only nên danh sách demo chỉ giữ các tài khoản backend đang hỗ
@@ -178,7 +177,7 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
                             handleCopy(account.email, `email-${index}`);
                           }}
                           className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
-                          title="Copy email">
+                          title="Sao chép email">
                           {copiedField === `email-${index}` ? (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -218,7 +217,7 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
                             handleCopy(account.password, `password-${index}`);
                           }}
                           className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
-                          title="Copy password">
+                          title="Sao chép mật khẩu">
                           {copiedField === `password-${index}` ? (
                             <svg
                               xmlns="http://www.w3.org/2000/svg"

@@ -688,7 +688,7 @@ export function OverviewPage() {
         <CardContent className="flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
-              Dashboard Người dùng
+              Dashboard người dùng
             </p>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Tổng quan phỏng vấn

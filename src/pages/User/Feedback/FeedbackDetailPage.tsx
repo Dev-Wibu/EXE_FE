@@ -161,7 +161,7 @@ export function FeedbackDetailPage() {
             </div>
             <div>
               <p className="text-sm text-slate-500">Trạng thái</p>
-              <p className="font-medium">{review.session?.status || "N/A"}</p>
+              <p className="font-medium">{review.session?.status || "Không có dữ liệu"}</p>
             </div>
           </div>
         </CardContent>

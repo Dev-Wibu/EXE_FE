@@ -169,7 +169,7 @@ export function CVUploadModal({
                     <p className="max-w-[200px] truncate text-sm font-medium">
                       {currentCvName || "CV.pdf"}
                     </p>
-                    <p className="text-xs text-gray-500">PDF Document</p>
+                    <p className="text-xs text-gray-500">Tài liệu PDF</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleViewCurrent}>
@@ -212,7 +212,7 @@ export function CVUploadModal({
                 <div className="mt-3 overflow-hidden rounded-md border">
                   <iframe
                     src={previewUrl}
-                    title="CV Preview"
+                    title="Xem trước CV"
                     className="h-64 w-full"
                     style={{ border: "none" }}
                   />
@@ -268,7 +268,7 @@ export function CVUploadModal({
             {isUploading ? (
               <>
                 <Spinner size="sm" tone="white" className="mr-2" />
-                Đang upload...
+                Đang Upload...
               </>
             ) : (
               <>

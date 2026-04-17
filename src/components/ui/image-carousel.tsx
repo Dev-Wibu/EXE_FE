@@ -76,13 +76,13 @@ export function ImageCarousel({
           <button
             onClick={prevSlide}
             className="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg transition-all hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800"
-            aria-label="Previous slide">
+            aria-label="Ảnh trước">
             <ChevronLeft className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
           </button>
           <button
             onClick={nextSlide}
             className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg transition-all hover:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800"
-            aria-label="Next slide">
+            aria-label="Ảnh sau">
             <ChevronRight className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
           </button>
         </>
@@ -99,7 +99,7 @@ export function ImageCarousel({
                 "h-2 rounded-full transition-all",
                 index === currentIndex ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/75"
               )}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Đi đến ảnh ${index + 1}`}
             />
           ))}
         </div>

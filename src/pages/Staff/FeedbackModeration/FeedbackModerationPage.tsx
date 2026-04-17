@@ -85,10 +85,10 @@ export function FeedbackModerationPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-          Kiểm Duyệt Phản Hồi
+          Kiểm duyệt phản hồi ứng viên gửi
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
-          Xem xét và kiểm duyệt các phản hồi từ ứng viên cho mentor, đặc biệt là phản hồi thấp
+          Xem xét và kiểm duyệt các phản hồi ứng viên gửi cho mentor, đặc biệt là phản hồi thấp
         </p>
       </div>
 
@@ -231,10 +231,12 @@ export function FeedbackModerationPage() {
                           <AvatarImage src={feedback.mentor?.avatarUrl} />
                           <AvatarFallback>{feedback.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{feedback.mentor?.name || "N/A"}</span>
+                        <span className="font-medium">
+                          {feedback.mentor?.name || "Không có dữ liệu"}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell>{feedback.user?.name || "N/A"}</TableCell>
+                    <TableCell>{feedback.user?.name || "Không có dữ liệu"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <StarRating value={feedback.rating || 0} readOnly size="sm" />
@@ -272,7 +274,9 @@ export function FeedbackModerationPage() {
               Chi Tiết Phản Hồi #{selectedFeedback?.id}
             </DialogTitle>
             <DialogDescription>
-              Từ {selectedFeedback?.user?.name} cho {selectedFeedback?.mentor?.name}
+              Phản hồi từ ứng viên {selectedFeedback?.user?.name}
+              {" -> "}
+              mentor {selectedFeedback?.mentor?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedFeedback && (
@@ -297,7 +301,7 @@ export function FeedbackModerationPage() {
               {/* Comment */}
               <div>
                 <h4 className="mb-2 font-medium text-slate-700 dark:text-slate-300">
-                  Nhận xét của Ứng viên
+                  Nhận xét của ứng viên
                 </h4>
                 <div
                   className={`rounded-lg p-4 ${
@@ -319,7 +323,9 @@ export function FeedbackModerationPage() {
                 </div>
                 <div>
                   <span className="text-slate-500">Tên phòng:</span>{" "}
-                  <span className="font-medium">{selectedFeedback.session?.roomName || "N/A"}</span>
+                  <span className="font-medium">
+                    {selectedFeedback.session?.roomName || "Không có dữ liệu"}
+                  </span>
                 </div>
               </div>
 

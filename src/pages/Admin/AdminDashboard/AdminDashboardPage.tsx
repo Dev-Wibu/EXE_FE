@@ -59,17 +59,17 @@ type TabType =
 
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "dashboard", label: "Dashboard" },
-  { type: "users", label: "User Management" },
-  { type: "mentors", label: "Mentor Management" },
-  { type: "sessions", label: "Session Management" },
-  { type: "reviews", label: "Mentor Review Management" },
-  { type: "feedback", label: "Candidate Feedback Management" },
-  { type: "notifications", label: "Notification Management" },
-  { type: "questionCategories", label: "Question Categories" },
-  { type: "questionMajors", label: "Question Majors" },
-  { type: "practiceSets", label: "Practice Sets" },
-  { type: "practiceQuestions", label: "Practice Questions" },
-  { type: "quizSets", label: "Quiz Sets" },
+  { type: "users", label: "Quản lý người dùng" },
+  { type: "mentors", label: "Quản lý mentor" },
+  { type: "sessions", label: "Quản lý phiên phỏng vấn" },
+  { type: "reviews", label: "Quản lý đánh giá mentor gửi" },
+  { type: "feedback", label: "Quản lý phản hồi ứng viên gửi" },
+  { type: "notifications", label: "Quản lý thông báo" },
+  { type: "questionCategories", label: "Danh mục câu hỏi" },
+  { type: "questionMajors", label: "Chuyên ngành câu hỏi" },
+  { type: "practiceSets", label: "Bộ ôn tập" },
+  { type: "practiceQuestions", label: "Câu hỏi ôn tập" },
+  { type: "quizSets", label: "Bộ trắc nghiệm" },
   { type: "posts", label: "Bài viết & Cộng đồng" },
   { type: "candidateProfiles", label: "Hồ sơ ứng viên" },
   { type: "membershipPlans", label: "Gói thành viên" },
@@ -131,28 +131,43 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
   },
   {
     items: [
-      { type: "users", label: "User Management", icon: Users, iconColor: "text-blue-600" },
-      { type: "mentors", label: "Mentor Management", icon: UserCog, iconColor: "text-orange-600" },
-      { type: "sessions", label: "Session Management", icon: Video, iconColor: "text-green-600" },
+      {
+        type: "users",
+        label: "Quản lý người dùng",
+        icon: Users,
+        iconColor: "text-blue-600",
+      },
+      {
+        type: "mentors",
+        label: "Quản lý mentor",
+        icon: UserCog,
+        iconColor: "text-orange-600",
+      },
+      {
+        type: "sessions",
+        label: "Quản lý phiên phỏng vấn",
+        icon: Video,
+        iconColor: "text-green-600",
+      },
     ],
   },
   {
     items: [
       {
         type: "reviews",
-        label: "Mentor Review Management",
+        label: "Quản lý đánh giá mentor gửi",
         icon: Star,
         iconColor: "text-yellow-600",
       },
       {
         type: "feedback",
-        label: "Candidate Feedback Management",
+        label: "Quản lý phản hồi ứng viên gửi",
         icon: MessageSquare,
         iconColor: "text-cyan-600",
       },
       {
         type: "notifications",
-        label: "Notification Management",
+        label: "Quản lý thông báo",
         icon: Bell,
         iconColor: "text-red-600",
       },
@@ -162,17 +177,17 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
     items: [
       {
         type: "questionCategories",
-        label: "Question Categories",
+        label: "Danh mục câu hỏi",
         icon: FolderOpen,
         iconColor: "text-purple-600",
       },
       {
         type: "questionMajors",
-        label: "Question Majors",
+        label: "Chuyên ngành câu hỏi",
         icon: GraduationCap,
         iconColor: "text-pink-600",
       },
-      { type: "practiceSets", label: "Practice Sets", icon: BookOpen, iconColor: "text-teal-600" },
+      { type: "practiceSets", label: "Bộ ôn tập", icon: BookOpen, iconColor: "text-teal-600" },
     ],
   },
   {
@@ -207,7 +222,7 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
 
 const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
-    label: "Management",
+    label: "Quản trị",
     items: [
       { type: "dashboard", icon: LayoutDashboard, label: "Dashboard", color: "text-indigo-600" },
       { type: "users", icon: Users, label: "Người dùng", color: "text-blue-600" },
@@ -218,18 +233,18 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
     label: "Đánh giá & phản hồi",
     items: [
-      { type: "reviews", icon: Star, label: "Đánh giá của mentor", color: "text-yellow-600" },
+      { type: "reviews", icon: Star, label: "Đánh giá từ mentor", color: "text-yellow-600" },
       {
         type: "feedback",
         icon: MessageSquare,
-        label: "Phản hồi từ ứng viên",
+        label: "Phản hồi của ứng viên",
         color: "text-cyan-600",
       },
       { type: "notifications", icon: Bell, label: "Thông báo", color: "text-red-600" },
     ],
   },
   {
-    label: "Questions",
+    label: "Ngân hàng câu hỏi",
     items: [
       { type: "questionCategories", icon: FolderOpen, label: "Bài học", color: "text-purple-600" },
       {
@@ -249,7 +264,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
     ],
   },
   {
-    label: "Content",
+    label: "Nội dung",
     items: [
       {
         type: "posts",
@@ -285,8 +300,8 @@ const ADMIN_SIDEBAR_LOGO = (
       <LayoutDashboard className="h-6 w-6 text-white" />
     </div>
     <div>
-      <h1 className="font-semibold text-gray-900 dark:text-white">Admin Panel</h1>
-      <p className="text-xs text-gray-500 dark:text-slate-400">Administration</p>
+      <h1 className="font-semibold text-gray-900 dark:text-white">Bảng điều phối quản trị</h1>
+      <p className="text-xs text-gray-500 dark:text-slate-400">Quản trị hệ thống</p>
     </div>
   </>
 );
@@ -395,7 +410,7 @@ export function AdminDashboardPage() {
         logo={ADMIN_SIDEBAR_LOGO}
         collapsedLogo={ADMIN_SIDEBAR_LOGO_COLLAPSED}
         showSettings
-        settingsLabel="Settings"
+        settingsLabel="Cài đặt"
         theme={{
           wrapper: "h-full border-r bg-white",
           expandedWidth: "w-64",
@@ -418,13 +433,13 @@ export function AdminDashboardPage() {
           footerBorder: "border-t",
           footerExpandedPadding: "p-4",
           footerCollapsedPadding: "p-2",
-          themeToggleLabel: "Theme",
+          themeToggleLabel: "Giao diện",
           logoutExpandedBtn:
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
           logoutCollapsedBtn:
             "flex items-center justify-center rounded-lg p-2 text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
           logoutIcon: "",
-          logoutLabel: "Logout",
+          logoutLabel: "Đăng xuất",
         }}
       />
 

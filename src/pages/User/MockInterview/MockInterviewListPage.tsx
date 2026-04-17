@@ -40,12 +40,12 @@ export function MockInterviewListPage() {
         return {
           id: session.id,
           title: session.roomName || `Phiên #${session.id}`,
-          mentorName: `Mentor #${session.userId2 || "N/A"}`,
+          mentorName: `Mentor #${session.userId2 || "Không có dữ liệu"}`,
           date: session.joinTime
             ? new Date(session.joinTime).toLocaleDateString("vi-VN")
             : session.startTime1
               ? new Date(session.startTime1).toLocaleDateString("vi-VN")
-              : "N/A",
+              : "Không có dữ liệu",
           time: session.joinTime
             ? new Date(session.joinTime).toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
@@ -53,7 +53,7 @@ export function MockInterviewListPage() {
               })
             : session.startTime1
               ? new Date(session.startTime1).toLocaleTimeString("vi-VN")
-              : "N/A",
+              : "Không có dữ liệu",
           joinTime: session.joinTime,
           status:
             session.status === "ONGOING"

@@ -274,7 +274,7 @@ export function SessionHistoryPage() {
         sessionId: session.id,
         checkoutUrl: normalizedCheckoutUrl,
         status: "CREATED",
-        note: "Da tao checkoutUrl thanh toan phien phong van.",
+        note: "Đã tạo checkoutUrl thanh toán phiên phỏng vấn.",
       });
 
       addPaymentSupportLog({
@@ -287,7 +287,7 @@ export function SessionHistoryPage() {
         paymentPurpose: "MENTOR_INTERVIEW",
         sessionId: session.id,
         status: "CREATED",
-        message: "Da tao checkoutUrl thanh cong cho thanh toan phien phong van.",
+        message: "Đã tạo checkoutUrl thành công cho thanh toán phiên phỏng vấn.",
       });
 
       const redirectedRecovery = upsertPaymentRecoveryContext({
@@ -301,7 +301,7 @@ export function SessionHistoryPage() {
         sessionId: session.id,
         checkoutUrl: normalizedCheckoutUrl,
         status: "REDIRECTED",
-        note: "Da redirect sang trang thanh toan phien phong van.",
+        note: "Đã redirect sang trang thanh toán phiên phỏng vấn.",
       });
 
       if (!transactionCode) {
@@ -315,7 +315,7 @@ export function SessionHistoryPage() {
           sessionId: session.id,
           status: "UNMAPPED_ORDER",
           message:
-            "Checkout URL phien phong van chua co transactionCode, se fallback orderCode co guard khi callback huy.",
+            "Checkout URL phiên phỏng vấn chưa có transactionCode, sẽ fallback orderCode có guard khi callback hủy.",
           payload: {
             orderCode: orderCode || null,
             checkoutToken: checkoutToken || null,
@@ -340,7 +340,7 @@ export function SessionHistoryPage() {
         paymentPurpose: "MENTOR_INTERVIEW",
         sessionId: session.id,
         status: "CREATE_FAILED",
-        message: "Tao link thanh toan phien phong van that bai.",
+        message: "Tạo link thanh toán phiên phỏng vấn thất bại.",
         payload: {
           error: error instanceof Error ? error.message : "unknown",
         },
@@ -402,7 +402,7 @@ export function SessionHistoryPage() {
           paymentPurpose: "MENTOR_INTERVIEW",
           sessionId: session.id,
           status: "CREATE_FAILED",
-          message: "Thanh toan vi that bai do so du khong du tu trang lich su phien.",
+          message: "Thanh toán ví thất bại do số dư không đủ từ trang lịch sử phiên.",
           payload: {
             walletBalance: freshWalletBalance,
           },
@@ -417,7 +417,7 @@ export function SessionHistoryPage() {
         paymentPurpose: "MENTOR_INTERVIEW",
         sessionId: session.id,
         status: "CREATED",
-        message: "Bat dau thanh toan bang vi cho phien phong van tu trang lich su.",
+        message: "Bắt đầu thanh toán bằng ví cho phiên phỏng vấn từ trang lịch sử.",
       });
 
       const transferOutResult = await transactionManager.transferOut(
@@ -433,7 +433,7 @@ export function SessionHistoryPage() {
           paymentPurpose: "MENTOR_INTERVIEW",
           sessionId: session.id,
           status: "CREATE_FAILED",
-          message: "Thanh toan vi that bai tu trang lich su phien.",
+          message: "Thanh toán ví thất bại từ trang lịch sử phiên.",
           payload: {
             error: transferOutResult.error || null,
           },
@@ -487,7 +487,7 @@ export function SessionHistoryPage() {
           sessionId: session.id,
           checkoutUrl: normalizedCheckoutUrl,
           status: "REDIRECTED",
-          note: "Da redirect sang checkoutUrl duoc tra ve tu transfer-out.",
+          note: "Đã redirect sang checkoutUrl được trả về từ transfer-out.",
         });
 
         savePendingSessionPaymentContext({
@@ -507,7 +507,7 @@ export function SessionHistoryPage() {
         paymentPurpose: "MENTOR_INTERVIEW",
         sessionId: session.id,
         status: "CALLBACK_SUCCESS",
-        note: transferData.message || "Thanh toan bang vi thanh cong.",
+        note: transferData.message || "Thanh toán bằng ví thành công.",
       });
 
       addPaymentSupportLog({
@@ -518,7 +518,7 @@ export function SessionHistoryPage() {
         paymentPurpose: "MENTOR_INTERVIEW",
         sessionId: session.id,
         status: "CALLBACK_SUCCESS",
-        message: transferData.message || "Thanh toan bang vi thanh cong.",
+        message: transferData.message || "Thanh toán bằng ví thành công.",
         payload: {
           currentBalance: transferData.currentBalance,
           status: transferData.status,
@@ -535,7 +535,7 @@ export function SessionHistoryPage() {
         paymentPurpose: "MENTOR_INTERVIEW",
         sessionId: session.id,
         status: "CREATE_FAILED",
-        message: "Exception khi thanh toan bang vi tu trang lich su phien.",
+        message: "Exception khi thanh toán bằng ví từ trang lịch sử phiên.",
         payload: {
           error: error instanceof Error ? error.message : "unknown",
         },

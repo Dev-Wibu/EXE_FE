@@ -203,7 +203,7 @@ export function PaymentSuccessPage() {
           transactionCode: queryTransactionCode || undefined,
           checkoutToken: callbackCheckoutToken || undefined,
           status: "UNMAPPED_ORDER",
-          message: "Khong tim thay user session khi vao callback success.",
+          message: "Không tìm thấy user session khi vào callback success.",
           payload: {
             source,
             status,
@@ -228,7 +228,7 @@ export function PaymentSuccessPage() {
         addPaymentSupportLog({
           userId: currentUserId,
           status: "UNMAPPED_ORDER",
-          message: "Callback success khong co du dinh danh de map giao dich.",
+          message: "Callback success không có đủ định danh để map giao dịch.",
           payload: {
             source,
             status,
@@ -317,7 +317,7 @@ export function PaymentSuccessPage() {
           checkoutToken: callbackCheckoutToken || undefined,
           userId: currentUserId,
           status: "UNMAPPED_ORDER",
-          message: "Khong tim thay recovery context cho callback success.",
+          message: "Không tìm thấy recovery context cho callback success.",
           payload: {
             source,
             status,
@@ -349,7 +349,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: nextContext.paymentPurpose,
           sessionId: nextContext.sessionId,
           status: "UNMAPPED_ORDER",
-          message: "Dinh danh callback success khong khop recovery context.",
+          message: "Định danh callback success không khớp recovery context.",
           payload: {
             recoverySource,
             mismatchedKeys: identifierMismatch.mismatchedKeys,
@@ -379,7 +379,7 @@ export function PaymentSuccessPage() {
           sessionId: nextContext.sessionId,
           status: "UNMAPPED_ORDER",
           message:
-            "Callback success chi map duoc qua latest-user fallback, tam dung de tranh map sai.",
+            "Callback success chỉ map được qua latest-user fallback, tạm dừng để tránh map sai.",
           payload: {
             recoverySource,
             source,
@@ -403,7 +403,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: nextContext.paymentPurpose,
           sessionId: nextContext.sessionId,
           status: "UNMAPPED_ORDER",
-          message: "Giao dich callback khong thuoc user hien tai.",
+          message: "Giao dịch callback không thuộc user hiện tại.",
           payload: {
             expectedUserId: nextContext.userId,
             actualUserId: currentUserId,
@@ -449,7 +449,7 @@ export function PaymentSuccessPage() {
         sessionId: resolvedSessionId,
         checkoutUrl: nextContext.checkoutUrl,
         status: callbackStatus,
-        note: paid ? "Callback success hop le." : "Callback tra ve status thanh toan khong hop le.",
+        note: paid ? "Callback success hợp lệ." : "Callback trả về status thanh toán không hợp lệ.",
       });
 
       addPaymentSupportLog({
@@ -465,8 +465,8 @@ export function PaymentSuccessPage() {
         sessionId: updatedContext.sessionId,
         status: callbackStatus,
         message: paid
-          ? "Da xac nhan callback thanh cong."
-          : "Callback co du lieu giao dich nhung status thanh toan khong hop le.",
+          ? "Đã xác nhận callback thành công."
+          : "Callback có dữ liệu giao dịch nhưng status thanh toán không hợp lệ.",
         payload: {
           source,
           status,
@@ -609,7 +609,7 @@ export function PaymentSuccessPage() {
           sessionId: recoveryContext.sessionId,
           checkoutUrl: recoveryContext.checkoutUrl,
           status: "SUBSCRIBE_SUCCESS",
-          note: "Goi da duoc kich hoat truoc do.",
+          note: "Gói đã được kích hoạt trước đó.",
         });
 
         addPaymentSupportLog({
@@ -624,7 +624,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: updatedContext.paymentPurpose,
           sessionId: updatedContext.sessionId,
           status: "SUBSCRIBE_SUCCESS",
-          message: "Backend bao goi da kich hoat truoc do.",
+          message: "Backend báo gói đã kích hoạt trước đó.",
           payload: {
             duplicateSubscribe: true,
             error: subscribeResult.error || null,
@@ -656,7 +656,7 @@ export function PaymentSuccessPage() {
         sessionId: recoveryContext.sessionId,
         checkoutUrl: recoveryContext.checkoutUrl,
         status: "SUBSCRIBE_FAILED",
-        note: subscribeResult.error || "Subscribe that bai.",
+        note: subscribeResult.error || "Subscribe thất bại.",
       });
 
       addPaymentSupportLog({
@@ -671,7 +671,7 @@ export function PaymentSuccessPage() {
         paymentPurpose: updatedContext.paymentPurpose,
         sessionId: updatedContext.sessionId,
         status: "SUBSCRIBE_FAILED",
-        message: "He thong kich hoat goi tu dong that bai do backend tra ve loi.",
+        message: "Hệ thống kích hoạt gói tự động thất bại do backend trả về lỗi.",
         payload: {
           error: subscribeResult.error || null,
         },
@@ -714,7 +714,7 @@ export function PaymentSuccessPage() {
       paymentPurpose: updatedContext.paymentPurpose,
       sessionId: updatedContext.sessionId,
       status: "SUBSCRIBE_SUCCESS",
-      message: "He thong da kich hoat goi thanh cong sau callback.",
+      message: "Hệ thống đã kích hoạt gói thành công sau callback.",
       payload: {
         subscriptionSnapshot: latestSubscription,
       },

@@ -371,7 +371,7 @@ export function AccountPage() {
           amount,
           paymentPurpose: "TOP_UP_WALLET",
           status: "CREATE_FAILED",
-          message: "Tao link nap tien vi that bai.",
+          message: "Tạo link nạp tiền ví thất bại.",
           payload: {
             error: response.error || null,
           },
@@ -394,7 +394,7 @@ export function AccountPage() {
         paymentPurpose: "TOP_UP_WALLET",
         checkoutUrl: redirectUrl,
         status: "CREATED",
-        note: "Da tao checkoutUrl nap tien vi.",
+        note: "Đã tạo checkoutUrl nạp tiền ví.",
       });
 
       addPaymentSupportLog({
@@ -406,7 +406,7 @@ export function AccountPage() {
         amount: createdRecovery.amount,
         paymentPurpose: "TOP_UP_WALLET",
         status: "CREATED",
-        message: "Da tao checkoutUrl nap tien vi thanh cong.",
+        message: "Đã tạo checkoutUrl nạp tiền ví thành công.",
         payload: {
           checkoutUrl: redirectUrl,
         },
@@ -422,7 +422,7 @@ export function AccountPage() {
         paymentPurpose: "TOP_UP_WALLET",
         checkoutUrl: redirectUrl,
         status: "REDIRECTED",
-        note: "Da redirect sang trang thanh toan nap tien vi.",
+        note: "Đã redirect sang trang thanh toán nạp tiền ví.",
       });
 
       if (!transactionCode) {
@@ -435,7 +435,7 @@ export function AccountPage() {
           paymentPurpose: "TOP_UP_WALLET",
           status: "UNMAPPED_ORDER",
           message:
-            "Checkout URL nap vi chua co transactionCode, se fallback orderCode co guard khi callback huy.",
+            "Checkout URL nạp ví chưa có transactionCode, sẽ fallback orderCode có guard khi callback hủy.",
           payload: {
             orderCode: orderCode || null,
             checkoutToken: checkoutToken || null,
@@ -452,7 +452,7 @@ export function AccountPage() {
         amount,
         paymentPurpose: "TOP_UP_WALLET",
         status: "CREATE_FAILED",
-        message: "Exception khi tao link nap tien vi.",
+        message: "Exception khi tạo link nạp tiền ví.",
         payload: {
           error: error instanceof Error ? error.message : "unknown",
         },

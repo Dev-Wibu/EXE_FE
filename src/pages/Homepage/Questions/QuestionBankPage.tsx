@@ -260,7 +260,7 @@ export function QuestionBankPage() {
               variant="secondary"
               className="rounded-full bg-white text-[#0047AB] hover:bg-slate-100"
               asChild>
-              <Link to={ctaPath}>{isLoggedIn ? "Vào Dashboard" : "Đăng ký miễn phí"}</Link>
+              <Link to={ctaPath}>{isLoggedIn ? "Mở Dashboard" : "Đăng ký miễn phí"}</Link>
             </Button>
             {!isLoggedIn && (
               <Button

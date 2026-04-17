@@ -120,10 +120,10 @@ export function ReviewModerationPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-          Kiểm Duyệt Đánh Giá
+          Kiểm duyệt đánh giá mentor gửi
         </h1>
         <p className="text-slate-500 dark:text-slate-400">
-          Xem xét và kiểm duyệt các đánh giá từ mentor cho ứng viên, đặc biệt là đánh giá thấp
+          Xem xét và kiểm duyệt các đánh giá mentor gửi cho ứng viên, đặc biệt là đánh giá thấp
         </p>
       </div>
 
@@ -271,10 +271,12 @@ export function ReviewModerationPage() {
                             <AvatarImage src={review.mentor?.avatarUrl} />
                             <AvatarFallback>{review.mentor?.name?.charAt(0) || "M"}</AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">{review.mentor?.name || "N/A"}</span>
+                          <span className="font-medium">
+                            {review.mentor?.name || "Không có dữ liệu"}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell>{review.user?.name || "N/A"}</TableCell>
+                      <TableCell>{review.user?.name || "Không có dữ liệu"}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <StarRating value={review.rating || 0} readOnly size="sm" />
@@ -322,7 +324,9 @@ export function ReviewModerationPage() {
               Chi Tiết Đánh Giá #{selectedReview?.id}
             </DialogTitle>
             <DialogDescription>
-              Từ {selectedReview?.mentor?.name} cho {selectedReview?.user?.name}
+              Đánh giá từ mentor {selectedReview?.mentor?.name}
+              {" -> "}
+              ứng viên {selectedReview?.user?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedReview && (

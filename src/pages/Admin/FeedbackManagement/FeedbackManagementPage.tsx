@@ -137,7 +137,7 @@ export function FeedbackManagementPage() {
             Quản Lý Phản Hồi
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            Xem và kiểm duyệt các phản hồi từ ứng viên dành cho mentor
+            Xem và kiểm duyệt các phản hồi ứng viên gửi cho mentor
           </p>
         </div>
       </div>
@@ -271,7 +271,9 @@ export function FeedbackManagementPage() {
                               {feedback.mentor?.name?.charAt(0) || "M"}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">{feedback.mentor?.name || "N/A"}</span>
+                          <span className="font-medium">
+                            {feedback.mentor?.name || "Không có dữ liệu"}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -280,7 +282,7 @@ export function FeedbackManagementPage() {
                             <AvatarImage src={feedback.user?.avatarUrl} />
                             <AvatarFallback>{feedback.user?.name?.charAt(0) || "U"}</AvatarFallback>
                           </Avatar>
-                          <span>{feedback.user?.name || "N/A"}</span>
+                          <span>{feedback.user?.name || "Không có dữ liệu"}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -328,7 +330,9 @@ export function FeedbackManagementPage() {
           <DialogHeader>
             <DialogTitle>Chi Tiết Phản Hồi #{selectedFeedback?.id}</DialogTitle>
             <DialogDescription>
-              Phản hồi từ {selectedFeedback?.user?.name} cho {selectedFeedback?.mentor?.name}
+              Phản hồi từ ứng viên {selectedFeedback?.user?.name}
+              {" -> "}
+              mentor {selectedFeedback?.mentor?.name}
             </DialogDescription>
           </DialogHeader>
           {selectedFeedback && (
@@ -361,7 +365,7 @@ export function FeedbackManagementPage() {
                   <div>
                     <span className="text-slate-500">Tên phòng:</span>{" "}
                     <span className="font-medium">
-                      {selectedFeedback.session?.roomName || "N/A"}
+                      {selectedFeedback.session?.roomName || "Không có dữ liệu"}
                     </span>
                   </div>
                 </div>

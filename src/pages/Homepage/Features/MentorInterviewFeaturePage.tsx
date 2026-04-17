@@ -144,7 +144,7 @@ export function MentorInterviewFeaturePage() {
                   asChild>
                   <Link to={ctaPath}>
                     <Play className="mr-2 h-5 w-5" />
-                    {isLoggedIn ? "Vào Dashboard" : "Đặt lịch ngay"}
+                    {isLoggedIn ? "Mở Dashboard" : "Đặt lịch ngay"}
                   </Link>
                 </Button>
               </div>
@@ -326,7 +326,7 @@ export function MentorInterviewFeaturePage() {
               variant="secondary"
               className="rounded-full bg-white text-[#0047AB] hover:bg-slate-100"
               asChild>
-              <Link to={ctaPath}>{isLoggedIn ? "Vào Dashboard" : "Đăng ký miễn phí"}</Link>
+              <Link to={ctaPath}>{isLoggedIn ? "Mở Dashboard" : "Đăng ký miễn phí"}</Link>
             </Button>
             {!isLoggedIn && (
               <Button

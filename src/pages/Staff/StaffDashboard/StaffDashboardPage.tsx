@@ -32,9 +32,9 @@ const getTabTitle = (type: TabType): string => {
     case "sessions":
       return "Phiên Phỏng Vấn";
     case "reviewModeration":
-      return "Kiểm Duyệt Đánh Giá Mentor";
+      return "Kiểm duyệt đánh giá của mentor";
     case "feedbackModeration":
-      return "Kiểm Duyệt Phản Hồi Ứng Viên";
+      return "Kiểm duyệt phản hồi từ ứng viên";
     case "postModeration":
       return "Kiểm Duyệt Bài Viết";
     default:
@@ -53,13 +53,13 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
     items: [
       {
         type: "reviewModeration",
-        label: "Kiểm Duyệt Đánh Giá Mentor",
+        label: "Kiểm duyệt đánh giá của mentor",
         icon: Star,
         iconColor: "text-yellow-600",
       },
       {
         type: "feedbackModeration",
-        label: "Kiểm Duyệt Phản Hồi Ứng Viên",
+        label: "Kiểm duyệt phản hồi của ứng viên",
         icon: MessageSquare,
         iconColor: "text-cyan-600",
       },
@@ -99,16 +99,16 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       {
         type: "reviewModeration",
         icon: Star,
-        label: "Đánh Giá Mentor",
+        label: "Đánh giá của mentor",
         color: "text-yellow-600",
-        description: "Kiểm duyệt đánh giá mentor cho ứng viên",
+        description: "Kiểm duyệt đánh giá của mentor cho ứng viên",
       },
       {
         type: "feedbackModeration",
         icon: MessageSquare,
-        label: "Phản Hồi Ứng Viên",
+        label: "Phản hồi của ứng viên",
         color: "text-cyan-600",
-        description: "Kiểm duyệt phản hồi ứng viên cho mentor",
+        description: "Kiểm duyệt phản hồi của ứng viên cho mentor",
       },
       {
         type: "postModeration",

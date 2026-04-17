@@ -181,7 +181,7 @@ export function FileUploadInput({
             <div className="flex h-32 flex-col items-center justify-center">
               <FileText className="h-12 w-12 text-red-500" />
               <span className="mt-2 max-w-full truncate px-2 text-xs text-gray-500">
-                {displayFileName || "PDF Document"}
+                {displayFileName || "Tài liệu PDF"}
               </span>
             </div>
           )}
@@ -191,7 +191,7 @@ export function FileUploadInput({
             <div className="flex h-32 flex-col items-center justify-center">
               <FileText className="h-12 w-12 text-blue-500" />
               <span className="mt-2 max-w-full truncate px-2 text-xs text-gray-500">
-                {displayFileName || "File"}
+                {displayFileName || "Tệp"}
               </span>
             </div>
           )}

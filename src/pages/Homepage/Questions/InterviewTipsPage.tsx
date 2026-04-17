@@ -207,7 +207,7 @@ export function InterviewTipsPage() {
               variant="secondary"
               className="rounded-full bg-white text-[#0047AB] hover:bg-slate-100"
               asChild>
-              <Link to={ctaPath}>{isLoggedIn ? "Vào Dashboard" : "Bắt đầu luyện tập"}</Link>
+              <Link to={ctaPath}>{isLoggedIn ? "Mở Dashboard" : "Bắt đầu luyện tập"}</Link>
             </Button>
           </div>
         </div>

@@ -453,7 +453,7 @@ export function MembershipTab() {
           amount: paymentAmount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "CREATE_FAILED",
-          message: "Tao link thanh toan that bai tai MembershipTab.",
+          message: "Tạo link thanh toán thất bại tại MembershipTab.",
           payload: {
             error: paymentResult.error || null,
           },
@@ -478,7 +478,7 @@ export function MembershipTab() {
         paymentPurpose: "BUY_MEMBERSHIP",
         checkoutUrl: redirectUrl,
         status: "CREATED",
-        note: "Da tao checkoutUrl tu payment API.",
+        note: "Đã tạo checkoutUrl từ payment API.",
       });
 
       addPaymentSupportLog({
@@ -492,7 +492,7 @@ export function MembershipTab() {
         amount: createdRecovery.amount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "CREATED",
-        message: "Da tao checkoutUrl thanh cong.",
+        message: "Đã tạo checkoutUrl thành công.",
         payload: {
           checkoutUrl: redirectUrl,
           transactionCode: transactionCode || null,
@@ -511,7 +511,7 @@ export function MembershipTab() {
         paymentPurpose: "BUY_MEMBERSHIP",
         checkoutUrl: redirectUrl,
         status: "REDIRECTED",
-        note: "Da redirect sang trang thanh toan.",
+        note: "Đã redirect sang trang thanh toán.",
       });
 
       addPaymentSupportLog({
@@ -525,7 +525,7 @@ export function MembershipTab() {
         amount: redirectedRecovery.amount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "REDIRECTED",
-        message: "Frontend chuan bi redirect den checkoutUrl.",
+        message: "Frontend chuẩn bị redirect đến checkoutUrl.",
         payload: {
           transactionCode: transactionCode || null,
         },
@@ -543,7 +543,7 @@ export function MembershipTab() {
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "UNMAPPED_ORDER",
           message:
-            "Checkout URL membership chua co transactionCode, se fallback orderCode co guard khi callback huy.",
+            "Checkout URL membership chưa có transactionCode, sẽ fallback orderCode có guard khi callback hủy.",
           payload: {
             orderCode: orderCode || null,
             checkoutToken: checkoutToken || null,
@@ -562,7 +562,7 @@ export function MembershipTab() {
           amount: redirectedRecovery.amount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "UNMAPPED_ORDER",
-          message: "Khong trich xuat duoc orderCode tu checkoutUrl, se can callback map fallback.",
+          message: "Không trích xuất được orderCode từ checkoutUrl, sẽ cần callback map fallback.",
           payload: {
             checkoutUrl: redirectUrl,
             transactionCode: transactionCode || null,
@@ -580,7 +580,7 @@ export function MembershipTab() {
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "CREATE_FAILED",
-        message: "Exception khi tao link thanh toan o MembershipTab.",
+        message: "Exception khi tạo link thanh toán ở MembershipTab.",
       });
       toast.error("Không thể tạo link thanh toán.");
     } finally {
@@ -614,7 +614,7 @@ export function MembershipTab() {
           amount: paymentAmount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "CREATE_FAILED",
-          message: "Thanh toan vi cho goi membership that bai do so du khong du.",
+          message: "Thanh toán ví cho gói membership thất bại do số dư không đủ.",
           payload: {
             walletBalance: freshWalletBalance,
           },
@@ -630,7 +630,7 @@ export function MembershipTab() {
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "CREATED",
-        message: "Bat dau thanh toan bang vi cho goi membership.",
+        message: "Bắt đầu thanh toán bằng ví cho gói membership.",
       });
 
       const transferOutResult = await transactionManager.transferOut(
@@ -647,7 +647,7 @@ export function MembershipTab() {
           amount: paymentAmount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "CREATE_FAILED",
-          message: "Transfer-out that bai khi thanh toan membership bang vi.",
+          message: "Transfer-out thất bại khi thanh toán membership bằng ví.",
           payload: {
             error: transferOutResult.error || null,
           },
@@ -698,7 +698,7 @@ export function MembershipTab() {
           paymentPurpose: "BUY_MEMBERSHIP",
           checkoutUrl: redirectUrl,
           status: "REDIRECTED",
-          note: "Da redirect sang checkoutUrl duoc tra ve tu transfer-out.",
+          note: "Đã redirect sang checkoutUrl được trả về từ transfer-out.",
         });
 
         setIsPaymentMethodDialogOpen(false);
@@ -715,7 +715,7 @@ export function MembershipTab() {
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "CALLBACK_SUCCESS",
-        note: transferData.message || "Thanh toan bang vi thanh cong.",
+        note: transferData.message || "Thanh toán bằng ví thành công.",
       });
 
       addPaymentSupportLog({
@@ -727,7 +727,7 @@ export function MembershipTab() {
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "CALLBACK_SUCCESS",
-        message: transferData.message || "Thanh toan bang vi thanh cong.",
+        message: transferData.message || "Thanh toán bằng ví thành công.",
         payload: {
           currentBalance: transferData.currentBalance,
           status: transferData.status,
@@ -754,7 +754,7 @@ export function MembershipTab() {
           amount: paymentAmount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "SUBSCRIBE_FAILED",
-          note: "Thanh toan vi thanh cong nhung kich hoat goi that bai sau 3 lan retry.",
+          note: "Thanh toán ví thành công nhưng kích hoạt gói thất bại sau 3 lần retry.",
         });
 
         addPaymentSupportLog({
@@ -766,7 +766,7 @@ export function MembershipTab() {
           amount: paymentAmount,
           paymentPurpose: "BUY_MEMBERSHIP",
           status: "SUBSCRIBE_FAILED",
-          message: "Da tru vi nhung kich hoat goi that bai sau 3 lan retry.",
+          message: "Đã trừ ví nhưng kích hoạt gói thất bại sau 3 lần retry.",
           payload: {
             retryCount: subscribeAttempt,
             error: subscribeResult?.error || null,
@@ -787,7 +787,7 @@ export function MembershipTab() {
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "SUBSCRIBE_SUCCESS",
-        note: "Thanh toan vi va kich hoat goi thanh cong.",
+        note: "Thanh toán ví và kích hoạt gói thành công.",
       });
 
       addPaymentSupportLog({
@@ -799,7 +799,7 @@ export function MembershipTab() {
         amount: paymentAmount,
         paymentPurpose: "BUY_MEMBERSHIP",
         status: "SUBSCRIBE_SUCCESS",
-        message: "Thanh toan vi va kich hoat goi thanh cong.",
+        message: "Thanh toán ví và kích hoạt gói thành công.",
         payload: {
           retryCount: subscribeAttempt,
         },

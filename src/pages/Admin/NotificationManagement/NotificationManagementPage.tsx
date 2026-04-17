@@ -351,7 +351,7 @@ export function NotificationManagementPage() {
                               {notification.user?.name?.charAt(0) || "U"}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{notification.user?.name || "N/A"}</span>
+                          <span>{notification.user?.name || "Không có dữ liệu"}</span>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{notification.title}</TableCell>

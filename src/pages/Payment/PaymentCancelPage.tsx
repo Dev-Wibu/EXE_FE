@@ -215,7 +215,7 @@ export function PaymentCancelPage() {
           paymentPurpose: context.paymentPurpose,
           sessionId: context.sessionId,
           status: "UNMAPPED_ORDER",
-          message: "Retry callback-first: bo qua context cu va uu tien dinh danh callback.",
+          message: "Retry callback-first: bỏ qua context cũ và ưu tiên định danh callback.",
           payload: {
             recoverySource,
             retry: true,
@@ -237,7 +237,7 @@ export function PaymentCancelPage() {
           sessionId: context.sessionId,
           status: "UNMAPPED_ORDER",
           message:
-            "Bo qua recovery context co do tin cay thap de tranh map sai giao dich callback.",
+            "Bỏ qua recovery context có độ tin cậy thấp để tránh map sai giao dịch callback.",
           payload: {
             recoverySource,
           },
@@ -268,7 +268,7 @@ export function PaymentCancelPage() {
             sessionId: context?.sessionId,
             status: "UNMAPPED_ORDER",
             message:
-              "Callback co dinh danh hop le nhung context local lech, tiep tuc xu ly theo callback-first.",
+              "Callback có định danh hợp lệ nhưng context local lệch, tiếp tục xử lý theo callback-first.",
             payload: {
               recoverySource,
               mismatchedKeys: identifierMismatch.mismatchedKeys,
@@ -288,7 +288,7 @@ export function PaymentCancelPage() {
             paymentPurpose: context?.paymentPurpose,
             sessionId: context?.sessionId,
             status: "UNMAPPED_ORDER",
-            message: "Dinh danh callback khong khop voi recovery context, dung chain huy.",
+            message: "Định danh callback không khớp với recovery context, dừng chain hủy.",
             payload: {
               recoverySource,
               mismatchedKeys: identifierMismatch.mismatchedKeys,

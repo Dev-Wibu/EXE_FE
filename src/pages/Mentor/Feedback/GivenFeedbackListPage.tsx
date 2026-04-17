@@ -211,11 +211,15 @@ export function GivenFeedbackListPage() {
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                 <div>
                   <span className="text-slate-500">Mã phiên:</span>{" "}
-                  <span className="font-medium">#{selectedFeedback.session?.id || "N/A"}</span>
+                  <span className="font-medium">
+                    #{selectedFeedback.session?.id || "Không có dữ liệu"}
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-500">Tên phòng:</span>{" "}
-                  <span className="font-medium">{selectedFeedback.session?.roomName || "N/A"}</span>
+                  <span className="font-medium">
+                    {selectedFeedback.session?.roomName || "Không có dữ liệu"}
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-500">Học viên:</span>{" "}
@@ -223,12 +227,14 @@ export function GivenFeedbackListPage() {
                     {selectedFeedback.user?.name ||
                       (selectedFeedback.session?.userId
                         ? `Học viên #${selectedFeedback.session.userId}`
-                        : "N/A")}
+                        : "Không có dữ liệu")}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-500">Email học viên:</span>{" "}
-                  <span className="font-medium">{selectedFeedback.user?.email || "N/A"}</span>
+                  <span className="font-medium">
+                    {selectedFeedback.user?.email || "Không có dữ liệu"}
+                  </span>
                 </div>
               </div>
             </div>

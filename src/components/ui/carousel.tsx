@@ -180,7 +180,7 @@ function CarouselPrevious({
       onClick={scrollPrev}
       {...props}>
       <ArrowLeft />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only">Ảnh trước</span>
     </Button>
   );
 }
@@ -209,7 +209,7 @@ function CarouselNext({
       onClick={scrollNext}
       {...props}>
       <ArrowRight />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only">Ảnh sau</span>
     </Button>
   );
 }

@@ -25,8 +25,8 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
 }
 
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
+  title = "Bảng lệnh",
+  description = "Tìm lệnh để chạy...",
   children,
   className,
   showCloseButton = true,

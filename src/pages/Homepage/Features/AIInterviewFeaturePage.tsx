@@ -115,7 +115,7 @@ export function AIInterviewFeaturePage() {
                   asChild>
                   <Link to={ctaPath}>
                     <Play className="mr-2 h-5 w-5" />
-                    {isLoggedIn ? "Vào Dashboard" : "Thử ngay miễn phí"}
+                    {isLoggedIn ? "Mở Dashboard" : "Thử ngay miễn phí"}
                   </Link>
                 </Button>
               </div>
@@ -270,7 +270,7 @@ export function AIInterviewFeaturePage() {
             className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-8"
             asChild>
             <Link to={ctaPath}>
-              {isLoggedIn ? "Vào Dashboard" : "Đăng ký miễn phí"}
+              {isLoggedIn ? "Mở Dashboard" : "Đăng ký miễn phí"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
