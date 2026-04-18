@@ -24,6 +24,7 @@ type LoginAuthPayload = {
     email: string;
     role?: string;
     avatar?: string | null;
+    walletBalance?: number;
   };
   token?: string;
 };
@@ -52,6 +53,11 @@ export function LoginPage() {
         email: payload.user.email,
         role: payload.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR" | "STAFF",
         avatarUrl: payload.user.avatar || undefined,
+        walletBalance:
+          typeof payload.user.walletBalance === "number" &&
+          Number.isFinite(payload.user.walletBalance)
+            ? payload.user.walletBalance
+            : undefined,
       });
       setToken(payload.token ?? null);
       setIsLoggedIn(true);

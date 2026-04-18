@@ -49,8 +49,8 @@ export function PaymentMethodDialog({
   onConfirm,
 }: PaymentMethodDialogProps) {
   const hasWalletBalance = typeof walletBalance === "number" && Number.isFinite(walletBalance);
-  const normalizedWalletBalance = hasWalletBalance ? Math.max(walletBalance || 0, 0) : 0;
-  const isWalletAvailable = hasWalletBalance && normalizedWalletBalance >= amount;
+  const normalizedWalletBalance = hasWalletBalance ? Math.max(walletBalance || 0, 0) : undefined;
+  const isWalletAvailable = hasWalletBalance && (normalizedWalletBalance || 0) >= amount;
 
   const resolvedDefaultMethod = useMemo<PaymentMethod>(() => {
     if (defaultMethod === "wallet" && isWalletAvailable) {
@@ -121,11 +121,19 @@ export function PaymentMethodDialog({
                   Thanh toán bằng ví
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Số dư hiện tại: {formatCurrency(normalizedWalletBalance)}
+                  Số dư hiện tại:{" "}
+                  {hasWalletBalance
+                    ? formatCurrency(normalizedWalletBalance || 0)
+                    : "Đang đồng bộ..."}
                 </p>
-                {!isWalletAvailable && (
+                {hasWalletBalance && !isWalletAvailable && (
                   <p className="text-xs text-rose-600 dark:text-rose-400">
                     Số dư ví không đủ cho giao dịch này.
+                  </p>
+                )}
+                {!hasWalletBalance && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    Chưa đồng bộ được số dư ví. Vui lòng thử lại hoặc chọn PayOS.
                   </p>
                 )}
               </div>

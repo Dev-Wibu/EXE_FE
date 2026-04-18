@@ -14,6 +14,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeviceCheckDialog, VideoCallProvider, VideoCallRoom } from "@/components/video-call";
 import { useJoinSession, useSessionById } from "@/hooks/useSession";
+import {
+  canRetryPendingSessionPaidStatusSync,
+  clearPendingSessionPaidStatusSync,
+  getPendingSessionPaidStatusSync,
+  markPendingSessionPaidStatusSyncRetried,
+} from "@/lib";
+import { sessionManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 
 export function SessionRoomPage() {
@@ -24,9 +31,18 @@ export function SessionRoomPage() {
   const [isDeviceCheckOpen, setIsDeviceCheckOpen] = useState(true);
   const [hasConfirmedDevices, setHasConfirmedDevices] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [isRecoveringPaidStatus, setIsRecoveringPaidStatus] = useState(false);
 
-  const { data: session, isLoading, error } = useSessionById(Number(sessionId));
+  const {
+    data: session,
+    isLoading,
+    error,
+    refetch: refetchSession,
+  } = useSessionById(Number(sessionId));
   const joinSessionMutation = useJoinSession();
+
+  const pendingPaidSyncContext =
+    session?.id && user?.id ? getPendingSessionPaidStatusSync(session.id, Number(user.id)) : null;
 
   // Validate session and user
   const canJoin =
@@ -66,6 +82,57 @@ export function SessionRoomPage() {
       navigate("/user?tab=mockInterview");
     }
   }, [isLoading, session, navigate]);
+
+  useEffect(() => {
+    if (!session?.id || !user?.id) {
+      return;
+    }
+
+    if (session.status === "PAID") {
+      clearPendingSessionPaidStatusSync(session.id, Number(user.id));
+      return;
+    }
+
+    if (session.status !== "SCHEDULED") {
+      return;
+    }
+
+    const pendingSync = getPendingSessionPaidStatusSync(session.id, Number(user.id));
+    if (!pendingSync || !canRetryPendingSessionPaidStatusSync(pendingSync)) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const runSync = async () => {
+      setIsRecoveringPaidStatus(true);
+      markPendingSessionPaidStatusSyncRetried(session.id as number, Number(user.id));
+      const syncResult = await sessionManager.markSessionAsPaidWithRetry(
+        session.id as number,
+        pendingSync.transactionCode,
+        3
+      );
+
+      if (cancelled) {
+        return;
+      }
+
+      if (syncResult.success) {
+        clearPendingSessionPaidStatusSync(session.id as number, Number(user.id));
+        await refetchSession();
+      }
+
+      if (!cancelled) {
+        setIsRecoveringPaidStatus(false);
+      }
+    };
+
+    void runSync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refetchSession, session?.id, session?.status, user?.id]);
 
   if (isLoading) {
     return (
@@ -107,7 +174,9 @@ export function SessionRoomPage() {
             {session.status === "DRAFT" &&
               "Phiên phỏng vấn chưa được duyệt. Vui lòng chờ mentor hoặc Staff/Admin xét duyệt."}
             {session.status === "SCHEDULED" &&
-              "Phiên phỏng vấn chưa được thanh toán. Vui lòng thanh toán trước khi tham gia phòng."}
+              (isRecoveringPaidStatus || pendingPaidSyncContext
+                ? "Hệ thống đang đồng bộ trạng thái thanh toán phiên này. Vui lòng chờ trong giây lát rồi thử lại."
+                : "Phiên phỏng vấn chưa được thanh toán. Vui lòng thanh toán trước khi tham gia phòng.")}
             {session.status === "REJECTED" && "Phiên phỏng vấn này đã bị từ chối."}
             {session.status === "COMPLETED" && "Phiên phỏng vấn này đã kết thúc."}
             {session.status === "CANCELED" && "Phiên phỏng vấn này đã bị hủy."}

@@ -64,6 +64,30 @@ describe("AuthManager", () => {
       });
     });
 
+    it("should preserve wallet balance from backend user payload", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: {
+          token: "abc.def.ghi",
+          user: {
+            id: 8,
+            name: "Nguyen Van A",
+            email: "a@gmail.com",
+            role: "ROLE_USER",
+            walletBalance: 150000,
+          },
+        },
+        error: null,
+      });
+
+      const result = await authManager.login({
+        email: "a@gmail.com",
+        password: "12345",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data?.user.walletBalance).toBe(150000);
+    });
+
     it("should build user from JWT payload when API returns token string", async () => {
       const token = createJwt({
         sub: "12",

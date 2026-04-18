@@ -11,6 +11,7 @@ import {
   extractCheckoutTokenFromUrl,
   extractOrderCodeFromUrl,
   extractTransactionCodeFromUrl,
+  reconcileWalletBalance,
   upsertPaymentRecoveryContext,
 } from "@/lib";
 import { transactionManager, usersAdminManager } from "@/services";
@@ -50,6 +51,7 @@ const TOP_UP_PRESET_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000, 2_0
 
 export function AccountPage() {
   const { user: authUser, setUser } = useAuthStore();
+  const authUserId = authUser?.id;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
@@ -65,6 +67,7 @@ export function AccountPage() {
   const [isTopUpLoading, setIsTopUpLoading] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState<string>(String(TOP_UP_PRESET_AMOUNTS[1]));
   const topUpInFlightRef = useRef(false);
+  const hasLoadedUserDataRef = useRef(false);
 
   // Form state for editing
   const [formData, setFormData] = useState<Partial<UserProfileData>>({});
@@ -79,20 +82,25 @@ export function AccountPage() {
 
   // Fetch user data from backend
   const fetchUserData = useCallback(async () => {
-    if (!authUser?.id) {
+    const currentAuthUser = useAuthStore.getState().user;
+
+    if (!authUserId || !currentAuthUser) {
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    if (!hasLoadedUserDataRef.current) {
+      setIsLoading(true);
+    }
+
     try {
-      const response = await usersAdminManager.getById(authUser.id);
+      const response = await usersAdminManager.getById(authUserId);
       if (response.success && response.data) {
         const userData = response.data;
         setUserProfile({
-          id: String(userData.id || authUser.id),
-          name: userData.name || authUser.name || "",
-          email: userData.email || authUser.email || "",
+          id: String(userData.id || authUserId),
+          name: userData.name || currentAuthUser.name || "",
+          email: userData.email || currentAuthUser.email || "",
           avatar: userData.avatarUrl || null,
           public_id: userData.public_id || null,
           university: userData.university || "",
@@ -102,17 +110,45 @@ export function AccountPage() {
           createdAt: new Date().toISOString(), // Backend doesn't provide createdAt
         });
 
-        if (typeof userData.walletBalance === "number") {
-          setWalletBalance(userData.walletBalance || 0);
+        const transactionResponse = await transactionManager.getByUserId(Number(authUserId));
+        const walletResolution = reconcileWalletBalance({
+          userDetailBalance: userData.walletBalance,
+          transactions: transactionResponse.success ? transactionResponse.data : undefined,
+          authStoreBalance: currentAuthUser.walletBalance,
+        });
+
+        if (walletResolution.hasMismatch) {
+          console.warn("Wallet balance mismatch detected", {
+            userId: Number(authUserId),
+            userDetailBalance: walletResolution.userDetailBalance,
+            transactionBalance: walletResolution.transactionBalance,
+            authStoreBalance: walletResolution.authStoreBalance,
+          });
+        }
+
+        const nextWalletBalance =
+          typeof walletResolution.walletBalance === "number"
+            ? walletResolution.walletBalance
+            : typeof currentAuthUser.walletBalance === "number"
+              ? currentAuthUser.walletBalance
+              : 0;
+
+        setWalletBalance(nextWalletBalance);
+
+        if (currentAuthUser.walletBalance !== nextWalletBalance) {
+          setUser({
+            ...currentAuthUser,
+            walletBalance: nextWalletBalance,
+          });
         }
       } else {
         // Fallback to authUser data if API fails
         setUserProfile({
-          id: String(authUser.id),
-          name: authUser.name || "",
-          email: authUser.email || "",
-          avatar: authUser.avatarUrl || null,
-          public_id: authUser.public_id || null,
+          id: String(authUserId),
+          name: currentAuthUser.name || "",
+          email: currentAuthUser.email || "",
+          avatar: currentAuthUser.avatarUrl || null,
+          public_id: currentAuthUser.public_id || null,
           university: "",
           major: "",
           cvUrl: null,
@@ -124,13 +160,13 @@ export function AccountPage() {
     } catch (error) {
       console.error("Error fetching user data:", error);
       // Fallback to authUser data
-      if (authUser) {
+      if (currentAuthUser) {
         setUserProfile({
-          id: String(authUser.id),
-          name: authUser.name || "",
-          email: authUser.email || "",
-          avatar: authUser.avatarUrl || null,
-          public_id: authUser.public_id || null,
+          id: String(currentAuthUser.id),
+          name: currentAuthUser.name || "",
+          email: currentAuthUser.email || "",
+          avatar: currentAuthUser.avatarUrl || null,
+          public_id: currentAuthUser.public_id || null,
           university: "",
           major: "",
           cvUrl: null,
@@ -140,18 +176,19 @@ export function AccountPage() {
       }
     } finally {
       setIsLoading(false);
+      hasLoadedUserDataRef.current = true;
     }
-  }, [authUser]);
+  }, [authUserId, setUser]);
 
   const fetchUserTransactions = useCallback(async () => {
-    if (!authUser?.id) {
+    if (!authUserId) {
       setTransactions([]);
       return;
     }
 
     setIsWalletLoading(true);
     try {
-      const response = await transactionManager.getByUserId(Number(authUser.id));
+      const response = await transactionManager.getByUserId(Number(authUserId));
       if (response.success && response.data) {
         const visibleTransactions = response.data.filter(
           (transaction) => !shouldHideTransactionFromHistory(transaction)
@@ -168,7 +205,7 @@ export function AccountPage() {
     } finally {
       setIsWalletLoading(false);
     }
-  }, [authUser?.id]);
+  }, [authUserId]);
 
   // Load user data on mount
   useEffect(() => {

@@ -4,7 +4,7 @@
  */
 
 import { ArrowRight, Calendar, Clock, Star, User, Video } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PaymentMethodDialog } from "@/components/shared";
@@ -20,17 +20,23 @@ import { useMentorFeedbacksByUser } from "@/hooks/useMentorFeedback";
 import { usePagination } from "@/hooks/usePagination";
 import { useMakeSessionPayment, useUserSessions } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
+import { useWalletBalanceReconciliation } from "@/hooks/useWalletBalanceReconciliation";
 import type { Session } from "@/interfaces";
 import {
   addPaymentSupportLog,
+  canRetryPendingSessionPaidStatusSync,
+  clearPendingSessionPaidStatusSync,
   extractCheckoutTokenFromUrl,
   extractOrderCodeFromUrl,
   extractTransactionCodeFromUrl,
+  getPendingSessionPaidStatusSync,
+  markPendingSessionPaidStatusSyncRetried,
   savePendingSessionPaymentContext,
   upsertPaymentRecoveryContext,
+  upsertPendingSessionPaidStatusSync,
 } from "@/lib";
 import { formatCurrency } from "@/lib/formatting";
-import { transactionManager, usersAdminManager } from "@/services";
+import { sessionManager, transactionManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
@@ -200,8 +206,11 @@ export function SessionHistoryPage() {
   const setUser = useAuthStore((state) => state.setUser);
   const [pageSize, setPageSize] = useState(10);
   const [payingSessionId, setPayingSessionId] = useState<number | null>(null);
+  const [isPreparingPaymentDialog, setIsPreparingPaymentDialog] = useState(false);
   const [targetSessionForPayment, setTargetSessionForPayment] = useState<Session | null>(null);
   const walletPaymentInFlightRef = useRef(false);
+  const payosPaymentInFlightRef = useRef(false);
+  const paidStatusSyncInFlightRef = useRef(false);
   const {
     data: sessions = [],
     isLoading: sessionsLoading,
@@ -209,6 +218,7 @@ export function SessionHistoryPage() {
     refetch: refetchSessions,
   } = useUserSessions();
   const { mutateAsync: makeSessionPayment } = useMakeSessionPayment();
+  const { refreshWalletBalance } = useWalletBalanceReconciliation();
   const {
     data: feedbacks = [],
     isLoading: feedbacksLoading,
@@ -217,6 +227,46 @@ export function SessionHistoryPage() {
   } = useMentorFeedbacksByUser(user?.id || 0);
 
   const isLoading = sessionsLoading || feedbacksLoading;
+
+  const syncSessionPaidStatus = useCallback(
+    async (
+      session: Session,
+      transactionCode?: string,
+      options?: { silent?: boolean }
+    ): Promise<boolean> => {
+      if (!session.id || !user?.id || paidStatusSyncInFlightRef.current) {
+        return false;
+      }
+
+      paidStatusSyncInFlightRef.current = true;
+
+      try {
+        markPendingSessionPaidStatusSyncRetried(session.id, Number(user.id));
+
+        const syncResult = await sessionManager.markSessionAsPaidWithRetry(
+          session.id,
+          transactionCode,
+          3
+        );
+
+        if (!syncResult.success) {
+          return false;
+        }
+
+        clearPendingSessionPaidStatusSync(session.id, Number(user.id));
+        await refetchSessions();
+
+        if (!options?.silent) {
+          toast.success("Đã đồng bộ trạng thái phiên sang ĐÃ THANH TOÁN.");
+        }
+
+        return true;
+      } finally {
+        paidStatusSyncInFlightRef.current = false;
+      }
+    },
+    [refetchSessions, user?.id]
+  );
 
   // Get session IDs where user already submitted mentor feedback
   const feedbackSessionIds = new Set(
@@ -252,6 +302,12 @@ export function SessionHistoryPage() {
       return;
     }
 
+    if (payosPaymentInFlightRef.current) {
+      toast.info("Hệ thống đang tạo liên kết thanh toán. Vui lòng chờ trong giây lát.");
+      return;
+    }
+
+    payosPaymentInFlightRef.current = true;
     setPayingSessionId(session.id);
     try {
       const checkoutUrl = await makeSessionPayment(session.id);
@@ -347,30 +403,30 @@ export function SessionHistoryPage() {
       });
       // Error toast is handled inside useMakeSessionPayment hook.
     } finally {
+      payosPaymentInFlightRef.current = false;
       setPayingSessionId(null);
     }
   };
 
-  const refreshWalletBalance = async (): Promise<number | undefined> => {
-    if (!user?.id) {
-      return undefined;
+  const handleOpenPaymentMethodDialog = async (session: Session) => {
+    if (!session.id || !user?.id || isPreparingPaymentDialog || !!targetSessionForPayment) {
+      return;
     }
 
-    const response = await usersAdminManager.getById(Number(user.id));
-    if (!response.success || !response.data) {
-      return typeof user.walletBalance === "number" ? user.walletBalance : undefined;
+    setIsPreparingPaymentDialog(true);
+    try {
+      const walletRefresh = await refreshWalletBalance(Number(user.id));
+      if (walletRefresh.source === "unavailable") {
+        toast.info("Chưa đồng bộ được số dư ví. Bạn vẫn có thể chọn PayOS để thanh toán.");
+      }
+    } catch (error) {
+      console.warn("Không thể đồng bộ số dư ví trước khi mở phương thức thanh toán", error);
+      toast.info("Không thể đồng bộ số dư ví. Bạn vẫn có thể chọn PayOS để thanh toán.");
+    } finally {
+      setIsPreparingPaymentDialog(false);
     }
 
-    setUser({
-      ...user,
-      ...response.data,
-    });
-
-    return typeof response.data.walletBalance === "number"
-      ? response.data.walletBalance
-      : typeof user.walletBalance === "number"
-        ? user.walletBalance
-        : undefined;
+    setTargetSessionForPayment(session);
   };
 
   const handlePaySessionWithWallet = async (session: Session) => {
@@ -394,8 +450,15 @@ export function SessionHistoryPage() {
     setPayingSessionId(session.id);
 
     try {
-      const freshWalletBalance = await refreshWalletBalance();
-      if (typeof freshWalletBalance === "number" && freshWalletBalance < paymentAmount) {
+      const walletRefresh = await refreshWalletBalance(Number(user.id));
+      const freshWalletBalance = walletRefresh.walletBalance;
+
+      if (typeof freshWalletBalance !== "number") {
+        toast.error("Không thể đồng bộ số dư ví. Vui lòng thử lại hoặc chọn PayOS.");
+        return;
+      }
+
+      if (freshWalletBalance < paymentAmount) {
         addPaymentSupportLog({
           userId: Number(user.id),
           amount: paymentAmount,
@@ -525,8 +588,24 @@ export function SessionHistoryPage() {
         },
       });
 
+      upsertPendingSessionPaidStatusSync({
+        sessionId: session.id,
+        userId: Number(user.id),
+        transactionCode: transferData.transactionCode,
+      });
+
+      const synced = await syncSessionPaidStatus(session, transferData.transactionCode, {
+        silent: true,
+      });
+
       setTargetSessionForPayment(null);
-      toast.success("Thanh toán bằng ví thành công. Đang cập nhật trạng thái phiên.");
+
+      if (synced) {
+        toast.success("Thanh toán bằng ví thành công. Trạng thái phiên đã được cập nhật.");
+        return;
+      }
+
+      toast.info("Đã trừ ví thành công. Hệ thống đang tiếp tục đồng bộ trạng thái phiên.");
       navigate(`/user/mock-interview/history/${session.id}?payment=success`);
     } catch (error) {
       addPaymentSupportLog({
@@ -560,6 +639,45 @@ export function SessionHistoryPage() {
     setTargetSessionForPayment(null);
     await handlePaySessionWithPayOS(targetSessionForPayment);
   };
+
+  useEffect(() => {
+    if (!user?.id || sessions.length === 0) {
+      return;
+    }
+
+    for (const currentSession of sessions) {
+      if (!currentSession.id) {
+        continue;
+      }
+
+      if (currentSession.status === "PAID") {
+        clearPendingSessionPaidStatusSync(currentSession.id, Number(user.id));
+      }
+    }
+
+    const scheduledWithPending = sessions.find((currentSession) => {
+      if (!currentSession.id || currentSession.status !== "SCHEDULED") {
+        return false;
+      }
+
+      const pendingSync = getPendingSessionPaidStatusSync(currentSession.id, Number(user.id));
+      return !!pendingSync && canRetryPendingSessionPaidStatusSync(pendingSync);
+    });
+
+    if (!scheduledWithPending) {
+      return;
+    }
+
+    const pendingSync = getPendingSessionPaidStatusSync(
+      scheduledWithPending.id as number,
+      Number(user.id)
+    );
+    if (!pendingSync) {
+      return;
+    }
+
+    void syncSessionPaidStatus(scheduledWithPending, pendingSync.transactionCode, { silent: true });
+  }, [sessions, syncSessionPaidStatus, user?.id]);
 
   // Stats — DRAFT is counted separately
   const draftCount = sessions.filter((s) => s.status === "DRAFT").length;
@@ -678,7 +796,7 @@ export function SessionHistoryPage() {
                 isPaying={payingSessionId === session.id}
                 onViewDetails={() => handleViewDetails(session)}
                 onWriteFeedback={() => handleWriteFeedback(session)}
-                onPaySession={() => setTargetSessionForPayment(session)}
+                onPaySession={() => void handleOpenPaymentMethodDialog(session)}
               />
             ))}
           </div>
@@ -707,7 +825,9 @@ export function SessionHistoryPage() {
             }
             walletBalance={typeof user?.walletBalance === "number" ? user.walletBalance : undefined}
             isSubmitting={
-              targetSessionForPayment?.id != null && payingSessionId === targetSessionForPayment.id
+              isPreparingPaymentDialog ||
+              (targetSessionForPayment?.id != null &&
+                payingSessionId === targetSessionForPayment.id)
             }
             onConfirm={handleConfirmPaymentMethod}
           />

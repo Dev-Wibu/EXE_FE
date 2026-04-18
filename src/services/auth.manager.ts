@@ -26,6 +26,7 @@ type AuthUser = {
   fullName: string;
   role: AuthRole;
   avatar?: string | null;
+  walletBalance?: number;
   bio?: string;
 };
 
@@ -54,6 +55,21 @@ const asNonEmptyString = (value: unknown): string | undefined => {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const asFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
 };
 
 const extractFieldErrors = (payload: unknown): Record<string, string> | undefined => {
@@ -267,6 +283,7 @@ export class AuthManager {
       fullName,
       role,
       avatar: asNonEmptyString(claims.avatarUrl) || asNonEmptyString(claims.avatar),
+      walletBalance: asFiniteNumber(claims.walletBalance) || asFiniteNumber(claims.balance),
     };
   }
 
@@ -292,6 +309,7 @@ export class AuthManager {
       fullName,
       role: this.mapBackendRoleToFrontend(asNonEmptyString(value.role) || roleFallback),
       avatar: asNonEmptyString(value.avatarUrl) || asNonEmptyString(value.avatar),
+      walletBalance: asFiniteNumber(value.walletBalance) || asFiniteNumber(value.balance),
     };
   }
 

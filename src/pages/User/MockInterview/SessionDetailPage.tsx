@@ -13,7 +13,7 @@ import {
   User,
   Video,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { FeedbackCard } from "@/components/feedback";
@@ -27,16 +27,22 @@ import { useMentorById } from "@/hooks/useMentor";
 import { useMentorFeedbackBySession } from "@/hooks/useMentorFeedback";
 import { useMentorReviewBySession } from "@/hooks/useMentorReview";
 import { useMakeSessionPayment, useSessionById } from "@/hooks/useSession";
+import { useWalletBalanceReconciliation } from "@/hooks/useWalletBalanceReconciliation";
 import {
   addPaymentSupportLog,
+  canRetryPendingSessionPaidStatusSync,
+  clearPendingSessionPaidStatusSync,
   extractCheckoutTokenFromUrl,
   extractOrderCodeFromUrl,
   extractTransactionCodeFromUrl,
+  getPendingSessionPaidStatusSync,
+  markPendingSessionPaidStatusSyncRetried,
   savePendingSessionPaymentContext,
   upsertPaymentRecoveryContext,
+  upsertPendingSessionPaidStatusSync,
 } from "@/lib";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
-import { transactionManager, usersAdminManager } from "@/services";
+import { sessionManager, transactionManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
@@ -83,10 +89,14 @@ export function SessionDetailPage() {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [isPreparingPaymentDialog, setIsPreparingPaymentDialog] = useState(false);
   const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const [isPollingPayment, setIsPollingPayment] = useState(false);
+  const [isRecoveringPaidStatus, setIsRecoveringPaidStatus] = useState(false);
   const pollingAttemptsRef = useRef(0);
   const walletPaymentInFlightRef = useRef(false);
+  const payosPaymentInFlightRef = useRef(false);
+  const paidStatusSyncInFlightRef = useRef(false);
   const hasHandledCancelledParamRef = useRef(false);
 
   const paymentQuery = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -100,6 +110,7 @@ export function SessionDetailPage() {
   const mentorId = session?.userId2 || 0;
   const { data: mentorInfo } = useMentorById(mentorId);
   const { mutateAsync: makeSessionPayment } = useMakeSessionPayment();
+  const { refreshWalletBalance } = useWalletBalanceReconciliation();
   const { data: myFeedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
     Number(sessionId)
   );
@@ -110,11 +121,59 @@ export function SessionDetailPage() {
   const isLoading = sessionLoading;
   const isCompleted = session?.status === "COMPLETED";
 
+  const syncSessionPaidStatus = useCallback(
+    async (
+      targetSessionId: number,
+      transactionCode?: string,
+      options?: { silent?: boolean }
+    ): Promise<boolean> => {
+      if (!user?.id || paidStatusSyncInFlightRef.current) {
+        return false;
+      }
+
+      paidStatusSyncInFlightRef.current = true;
+      setIsRecoveringPaidStatus(true);
+
+      try {
+        markPendingSessionPaidStatusSyncRetried(targetSessionId, Number(user.id));
+
+        const syncResult = await sessionManager.markSessionAsPaidWithRetry(
+          targetSessionId,
+          transactionCode,
+          3
+        );
+
+        if (!syncResult.success) {
+          return false;
+        }
+
+        clearPendingSessionPaidStatusSync(targetSessionId, Number(user.id));
+        await refetchSession();
+
+        if (!options?.silent) {
+          toast.success("Đã đồng bộ trạng thái phiên sang ĐÃ THANH TOÁN.");
+        }
+
+        return true;
+      } finally {
+        paidStatusSyncInFlightRef.current = false;
+        setIsRecoveringPaidStatus(false);
+      }
+    },
+    [refetchSession, user?.id]
+  );
+
   const handlePaySessionWithPayOS = async () => {
     if (!session?.id || !user?.id) {
       return;
     }
 
+    if (payosPaymentInFlightRef.current) {
+      toast.info("Hệ thống đang tạo liên kết thanh toán. Vui lòng chờ trong giây lát.");
+      return;
+    }
+
+    payosPaymentInFlightRef.current = true;
     setIsCreatingPayment(true);
     try {
       const checkoutUrl = await makeSessionPayment(session.id);
@@ -210,30 +269,37 @@ export function SessionDetailPage() {
       });
       // Error toast is handled inside useMakeSessionPayment hook.
     } finally {
+      payosPaymentInFlightRef.current = false;
       setIsCreatingPayment(false);
     }
   };
 
-  const refreshWalletBalance = async (): Promise<number | undefined> => {
-    if (!user?.id) {
-      return undefined;
+  const handleOpenPaymentMethodDialog = async () => {
+    if (
+      !session?.id ||
+      !user?.id ||
+      isCreatingPayment ||
+      isPollingPayment ||
+      isPreparingPaymentDialog ||
+      isPaymentMethodDialogOpen
+    ) {
+      return;
     }
 
-    const response = await usersAdminManager.getById(Number(user.id));
-    if (!response.success || !response.data) {
-      return typeof user.walletBalance === "number" ? user.walletBalance : undefined;
+    setIsPreparingPaymentDialog(true);
+    try {
+      const walletRefresh = await refreshWalletBalance(Number(user.id));
+      if (walletRefresh.source === "unavailable") {
+        toast.info("Chưa đồng bộ được số dư ví. Bạn vẫn có thể chọn PayOS để thanh toán.");
+      }
+    } catch (error) {
+      console.warn("Không thể đồng bộ số dư ví trước khi mở phương thức thanh toán", error);
+      toast.info("Không thể đồng bộ số dư ví. Bạn vẫn có thể chọn PayOS để thanh toán.");
+    } finally {
+      setIsPreparingPaymentDialog(false);
     }
 
-    setUser({
-      ...user,
-      ...response.data,
-    });
-
-    return typeof response.data.walletBalance === "number"
-      ? response.data.walletBalance
-      : typeof user.walletBalance === "number"
-        ? user.walletBalance
-        : undefined;
+    setIsPaymentMethodDialogOpen(true);
   };
 
   const handlePaySessionWithWallet = async () => {
@@ -256,8 +322,15 @@ export function SessionDetailPage() {
     walletPaymentInFlightRef.current = true;
     setIsCreatingPayment(true);
     try {
-      const freshWalletBalance = await refreshWalletBalance();
-      if (typeof freshWalletBalance === "number" && freshWalletBalance < paymentAmount) {
+      const walletRefresh = await refreshWalletBalance(Number(user.id));
+      const freshWalletBalance = walletRefresh.walletBalance;
+
+      if (typeof freshWalletBalance !== "number") {
+        toast.error("Không thể đồng bộ số dư ví. Vui lòng thử lại hoặc chọn PayOS.");
+        return;
+      }
+
+      if (freshWalletBalance < paymentAmount) {
         toast.error("Số dư ví không đủ. Vui lòng nạp thêm tiền hoặc chọn PayOS.");
         addPaymentSupportLog({
           userId: Number(user.id),
@@ -387,8 +460,25 @@ export function SessionDetailPage() {
         },
       });
 
+      upsertPendingSessionPaidStatusSync({
+        sessionId: session.id,
+        userId: Number(user.id),
+        transactionCode: transferData.transactionCode,
+      });
+
+      const synced = await syncSessionPaidStatus(session.id, transferData.transactionCode, {
+        silent: true,
+      });
+
       setIsPaymentMethodDialogOpen(false);
-      toast.success("Thanh toán bằng ví thành công. Đang cập nhật trạng thái phiên.");
+
+      if (synced) {
+        toast.success("Thanh toán bằng ví thành công. Trạng thái phiên đã được cập nhật.");
+        navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+        return;
+      }
+
+      toast.info("Đã trừ ví thành công. Hệ thống đang tiếp tục đồng bộ trạng thái phiên.");
       navigate(`/user/mock-interview/history/${session.id}?payment=success`, { replace: true });
     } catch (error) {
       addPaymentSupportLog({
@@ -420,7 +510,39 @@ export function SessionDetailPage() {
   };
 
   useEffect(() => {
-    if (!session?.id || !paymentState) {
+    if (!session?.id || !user?.id) {
+      return;
+    }
+
+    const currentSessionId = session.id;
+    if (!currentSessionId) {
+      return;
+    }
+
+    if (session.status === "PAID") {
+      clearPendingSessionPaidStatusSync(currentSessionId, Number(user.id));
+      return;
+    }
+
+    if (session.status !== "SCHEDULED") {
+      return;
+    }
+
+    const pendingSync = getPendingSessionPaidStatusSync(currentSessionId, Number(user.id));
+    if (!pendingSync || !canRetryPendingSessionPaidStatusSync(pendingSync)) {
+      return;
+    }
+
+    void syncSessionPaidStatus(currentSessionId, pendingSync.transactionCode, { silent: true });
+  }, [session?.id, session?.status, syncSessionPaidStatus, user?.id]);
+
+  useEffect(() => {
+    if (!session?.id || !paymentState || !user?.id) {
+      return;
+    }
+
+    const currentSessionId = session.id;
+    if (!currentSessionId) {
       return;
     }
 
@@ -438,7 +560,7 @@ export function SessionDetailPage() {
 
     if (session.status === "PAID") {
       toast.success("Phiên phỏng vấn đã được xác nhận thanh toán.");
-      navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+      navigate(`/user/mock-interview/history/${currentSessionId}`, { replace: true });
       return;
     }
 
@@ -448,6 +570,25 @@ export function SessionDetailPage() {
 
     const pollStatus = async () => {
       pollingAttemptsRef.current += 1;
+
+      const pendingSync = getPendingSessionPaidStatusSync(currentSessionId, Number(user.id));
+      if (pendingSync && canRetryPendingSessionPaidStatusSync(pendingSync)) {
+        const synced = await syncSessionPaidStatus(currentSessionId, pendingSync.transactionCode, {
+          silent: true,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        if (synced) {
+          setIsPollingPayment(false);
+          toast.success("Phiên phỏng vấn đã được xác nhận thanh toán.");
+          navigate(`/user/mock-interview/history/${currentSessionId}`, { replace: true });
+          return;
+        }
+      }
+
       const result = await refetchSession();
       if (cancelled) {
         return;
@@ -456,14 +597,14 @@ export function SessionDetailPage() {
       if (result.data?.status === "PAID") {
         setIsPollingPayment(false);
         toast.success("Phiên phỏng vấn đã được xác nhận thanh toán.");
-        navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+        navigate(`/user/mock-interview/history/${currentSessionId}`, { replace: true });
         return;
       }
 
       if (pollingAttemptsRef.current >= 12) {
         setIsPollingPayment(false);
         toast.info("Hệ thống đang cập nhật thanh toán. Vui lòng tải lại sau ít phút.");
-        navigate(`/user/mock-interview/history/${session.id}`, { replace: true });
+        navigate(`/user/mock-interview/history/${currentSessionId}`, { replace: true });
       }
     };
 
@@ -477,7 +618,15 @@ export function SessionDetailPage() {
       setIsPollingPayment(false);
       window.clearInterval(intervalId);
     };
-  }, [navigate, paymentState, refetchSession, session?.id, session?.status]);
+  }, [
+    navigate,
+    paymentState,
+    refetchSession,
+    session?.id,
+    session?.status,
+    syncSessionPaidStatus,
+    user?.id,
+  ]);
 
   if (isLoading) {
     return (
@@ -515,7 +664,7 @@ export function SessionDetailPage() {
         <Button
           variant="outline"
           className="w-fit"
-          onClick={() => navigate("/user?tab=interviewHistory")}>
+          onClick={() => navigate("/user?tab=mockInterview")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại lịch sử
         </Button>
@@ -544,7 +693,7 @@ export function SessionDetailPage() {
       <Button
         variant="outline"
         className="w-fit"
-        onClick={() => navigate("/user?tab=interviewHistory")}>
+        onClick={() => navigate("/user?tab=mockInterview")}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Quay lại lịch sử
       </Button>
@@ -648,11 +797,22 @@ export function SessionDetailPage() {
 
               {canPaySession && (
                 <Button
-                  onClick={() => setIsPaymentMethodDialogOpen(true)}
-                  disabled={isCreatingPayment || isPollingPayment}
+                  onClick={handleOpenPaymentMethodDialog}
+                  disabled={
+                    isCreatingPayment ||
+                    isPollingPayment ||
+                    isPreparingPaymentDialog ||
+                    isRecoveringPaidStatus
+                  }
                   className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                   <CreditCard className="h-4 w-4" />
-                  {isCreatingPayment ? "Đang xử lý thanh toán..." : "Thanh toán phiên phỏng vấn"}
+                  {isRecoveringPaidStatus
+                    ? "Đang đồng bộ trạng thái thanh toán..."
+                    : isPreparingPaymentDialog
+                      ? "Đang đồng bộ số dư ví..."
+                      : isCreatingPayment
+                        ? "Đang xử lý thanh toán..."
+                        : "Thanh toán phiên phỏng vấn"}
                 </Button>
               )}
 
@@ -679,6 +839,12 @@ export function SessionDetailPage() {
             {isPollingPayment && (
               <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
                 Hệ thống đang đối soát thanh toán. Trạng thái sẽ được cập nhật tự động.
+              </div>
+            )}
+
+            {isRecoveringPaidStatus && (
+              <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                Hệ thống đang đồng bộ trạng thái thanh toán ví cho phiên này.
               </div>
             )}
           </div>

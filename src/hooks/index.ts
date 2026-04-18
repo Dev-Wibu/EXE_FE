@@ -15,3 +15,4 @@ export * from "./useSortable";
 export * from "./useSpeechRecognition";
 export * from "./useSpeechSynthesis";
 export * from "./useTabsState";
+export * from "./useWalletBalanceReconciliation";

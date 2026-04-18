@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { PaymentMethodDialog } from "@/components/shared";
 import { Spinner } from "@/components/ui/spinner";
+import { useWalletBalanceReconciliation } from "@/hooks";
 import type { UserSubscriptionResponse } from "@/interfaces";
 import {
   addPaymentSupportLog,
@@ -23,12 +24,7 @@ import {
   upsertPaymentRecoveryContext,
 } from "@/lib";
 import { formatCurrency } from "@/lib/formatting";
-import {
-  memberShipPlanManager,
-  transactionManager,
-  userManager,
-  usersAdminManager,
-} from "@/services";
+import { memberShipPlanManager, transactionManager, userManager } from "@/services";
 import type { MemberShipPlan } from "@/services/membership-plan.manager";
 import { paymentManager } from "@/services/payment.manager";
 import { useAuthStore } from "@/stores/authStore";
@@ -309,9 +305,12 @@ export function MembershipTab() {
   const [selectedPlan, setSelectedPlan] = useState<PlanName | null>(null);
   const [copied, setCopied] = useState<"account" | "content" | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isSyncingWalletBalance, setIsSyncingWalletBalance] = useState(false);
   const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const paymentRef = useRef<HTMLDivElement>(null);
   const walletPaymentInFlightRef = useRef(false);
+  const payosPaymentInFlightRef = useRef(false);
+  const { refreshWalletBalance } = useWalletBalanceReconciliation();
 
   useEffect(() => {
     if (user?.id == null) {
@@ -408,26 +407,25 @@ export function MembershipTab() {
     };
   };
 
-  const refreshWalletBalance = async (): Promise<number | undefined> => {
-    if (!user?.id) {
-      return undefined;
+  const handleOpenPaymentMethodDialog = async () => {
+    if (!selectedPlan || isConfirming || isSyncingWalletBalance || isPaymentMethodDialogOpen) {
+      return;
     }
 
-    const response = await usersAdminManager.getById(Number(user.id));
-    if (!response.success || !response.data) {
-      return typeof user.walletBalance === "number" ? user.walletBalance : undefined;
+    setIsSyncingWalletBalance(true);
+    try {
+      const walletRefresh = await refreshWalletBalance(Number(user?.id));
+      if (walletRefresh.source === "unavailable") {
+        toast.info("Chưa đồng bộ được số dư ví. Bạn vẫn có thể thanh toán qua PayOS.");
+      }
+    } catch (error) {
+      console.warn("Không thể đồng bộ số dư ví trước khi mở phương thức thanh toán", error);
+      toast.info("Không thể đồng bộ số dư ví. Bạn vẫn có thể thanh toán qua PayOS.");
+    } finally {
+      setIsSyncingWalletBalance(false);
     }
 
-    setUser({
-      ...user,
-      ...response.data,
-    });
-
-    return typeof response.data.walletBalance === "number"
-      ? response.data.walletBalance
-      : typeof user.walletBalance === "number"
-        ? user.walletBalance
-        : undefined;
+    setIsPaymentMethodDialogOpen(true);
   };
 
   const handlePayWithPayOS = async () => {
@@ -436,8 +434,14 @@ export function MembershipTab() {
       return;
     }
 
+    if (payosPaymentInFlightRef.current) {
+      toast.info("Hệ thống đang tạo liên kết thanh toán. Vui lòng chờ trong giây lát.");
+      return;
+    }
+
     const { userId, selectedPlanId, selectedPlanName, paymentAmount } = paymentTarget;
 
+    payosPaymentInFlightRef.current = true;
     setIsConfirming(true);
 
     try {
@@ -584,6 +588,7 @@ export function MembershipTab() {
       });
       toast.error("Không thể tạo link thanh toán.");
     } finally {
+      payosPaymentInFlightRef.current = false;
       setIsConfirming(false);
     }
   };
@@ -605,8 +610,15 @@ export function MembershipTab() {
     setIsConfirming(true);
 
     try {
-      const freshWalletBalance = await refreshWalletBalance();
-      if (typeof freshWalletBalance === "number" && freshWalletBalance < paymentAmount) {
+      const walletRefresh = await refreshWalletBalance(userId);
+      const freshWalletBalance = walletRefresh.walletBalance;
+
+      if (typeof freshWalletBalance !== "number") {
+        toast.error("Không thể đồng bộ số dư ví. Vui lòng thử lại hoặc chọn PayOS.");
+        return;
+      }
+
+      if (freshWalletBalance < paymentAmount) {
         addPaymentSupportLog({
           userId,
           planId: selectedPlanId,
@@ -813,7 +825,7 @@ export function MembershipTab() {
         }
       }
 
-      await refreshWalletBalance();
+      await refreshWalletBalance(userId);
       setIsPaymentMethodDialogOpen(false);
       toast.success("Thanh toán bằng ví thành công. Gói thành viên đã được kích hoạt.");
     } catch {
@@ -1058,10 +1070,15 @@ export function MembershipTab() {
                 </div>
 
                 <button
-                  onClick={() => setIsPaymentMethodDialogOpen(true)}
-                  disabled={!selectedPlan || isConfirming}
+                  onClick={handleOpenPaymentMethodDialog}
+                  disabled={!selectedPlan || isConfirming || isSyncingWalletBalance}
                   className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0047AB] px-4 py-3 font-['Inter'] text-sm font-semibold text-white transition-all duration-150 hover:bg-[#003d99] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
-                  {isConfirming ? (
+                  {isSyncingWalletBalance ? (
+                    <>
+                      <Spinner size="sm" tone="white" />
+                      Đang đồng bộ số dư ví...
+                    </>
+                  ) : isConfirming ? (
                     <>
                       <Spinner size="sm" tone="white" />
                       Đang tạo liên kết thanh toán...

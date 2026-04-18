@@ -48,6 +48,21 @@ const toRecordingMode = (value: unknown): string => {
   return value === "local" || value === "cloud" ? value : "cloud";
 };
 
+const asNonEmptyString = (value: unknown): string | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const sleep = (ms: number): Promise<void> => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
+
 const normalizeDailyCoCreationRequest = (
   request?: SessionCreationRequest["dailyCoCreationRequest"]
 ): NonNullable<SessionCreationRequest["dailyCoCreationRequest"]> => {
@@ -109,6 +124,29 @@ export interface JoinSessionRequest {
 
 export class SessionManager implements BaseManager<Session> {
   private api = createApiInstance();
+
+  private buildPaidUpdatePayload(sessionData: Session, transactionCode?: string): Session | null {
+    const userId = toPositiveInteger(sessionData.userId);
+    const mentorId = toPositiveInteger(sessionData.userId2);
+    const sessionId = toPositiveInteger(sessionData.id);
+
+    if (!userId || !mentorId || !sessionId) {
+      return null;
+    }
+
+    return {
+      id: sessionId,
+      userId,
+      userId2: mentorId,
+      status: "PAID",
+      joinTime: asNonEmptyString(sessionData.joinTime) || formatToVietnamISOString(new Date()),
+      roomName: asNonEmptyString(sessionData.roomName) || `session-${sessionId}`,
+      roomUrl: asNonEmptyString(sessionData.roomUrl) || "",
+      totalPrice: toFiniteInteger(sessionData.totalPrice) ?? 0,
+      transactionCode:
+        asNonEmptyString(transactionCode) || asNonEmptyString(sessionData.transactionCode),
+    };
+  }
 
   /**
    * Get all sessions
@@ -371,6 +409,82 @@ export class SessionManager implements BaseManager<Session> {
         error: error instanceof Error ? error.message : "Không thể tạo thanh toán phiên",
       };
     }
+  }
+
+  /**
+   * Force sync a session to PAID after wallet transfer succeeds.
+   * This is a temporary FE-side resilience path while backend has no dedicated confirm-payment endpoint.
+   */
+  async markSessionAsPaid(
+    sessionId: number,
+    transactionCode?: string
+  ): Promise<ApiResponse<Session>> {
+    const sessionResult = await this.getById(sessionId);
+    if (!sessionResult.success || !sessionResult.data) {
+      return {
+        success: false,
+        error: sessionResult.error || "Không thể tải phiên để đồng bộ trạng thái thanh toán.",
+      };
+    }
+
+    if (sessionResult.data.status === "PAID") {
+      return {
+        success: true,
+        data: sessionResult.data,
+      };
+    }
+
+    const payload = this.buildPaidUpdatePayload(sessionResult.data, transactionCode);
+    if (!payload) {
+      return {
+        success: false,
+        error: "Không đủ dữ liệu phiên để cập nhật trạng thái thanh toán.",
+      };
+    }
+
+    try {
+      const response = await this.api.put(API_ENDPOINTS.SESSIONS.UPDATE, payload);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Không thể đồng bộ trạng thái phiên sang PAID.",
+      };
+    }
+  }
+
+  /**
+   * Retry helper for transient failures when syncing PAID status after wallet transfer.
+   */
+  async markSessionAsPaidWithRetry(
+    sessionId: number,
+    transactionCode?: string,
+    maxAttempts = 3
+  ): Promise<ApiResponse<Session>> {
+    const attempts = Math.max(Math.trunc(maxAttempts), 1);
+    let lastError = "Không thể đồng bộ trạng thái phiên sang PAID.";
+
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      const result = await this.markSessionAsPaid(sessionId, transactionCode);
+      if (result.success) {
+        return result;
+      }
+
+      lastError = result.error || lastError;
+
+      if (attempt < attempts) {
+        await sleep(attempt * 500);
+      }
+    }
+
+    return {
+      success: false,
+      error: lastError,
+    };
   }
 }
 

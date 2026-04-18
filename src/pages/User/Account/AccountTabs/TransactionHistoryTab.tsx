@@ -1,5 +1,6 @@
 import { AlertCircle, ArrowDownLeft, ArrowUpRight, Hash } from "lucide-react";
 
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Spinner } from "@/components/ui/spinner";
 import type { TransactionEntity } from "@/interfaces";
 import {
@@ -8,6 +9,7 @@ import {
   getTransactionStatusLabel,
   getTransactionTypeLabel,
 } from "@/lib/formatting";
+import { getTransactionPurposeBadge } from "@/lib/status-utils";
 
 import { mapTransactionToAccountTransaction } from "../wallet-mapping";
 
@@ -65,6 +67,10 @@ export function TransactionHistoryTab({ transactions, isLoading }: TransactionHi
         <div className="flex flex-col gap-4">
           {transactions.map((transaction) => {
             const item = mapTransactionToAccountTransaction(transaction);
+            const purposeBadge = item.hasClassifiedPurpose
+              ? getTransactionPurposeBadge(item.purpose)
+              : null;
+
             return (
               <div
                 key={`${item.id}-${item.transactionCode}-${item.date}`}
@@ -82,8 +88,6 @@ export function TransactionHistoryTab({ transactions, isLoading }: TransactionHi
                           <>
                             <span>•</span>
                             <span>{getTransactionTypeLabel(item.type)}</span>
-                            <span>•</span>
-                            <span>{item.purposeLabel}</span>
                           </>
                         )}
                       </div>
@@ -111,16 +115,26 @@ export function TransactionHistoryTab({ transactions, isLoading }: TransactionHi
                       {item.amount >= 0 ? "+" : ""}
                       {new Intl.NumberFormat("vi-VN").format(item.amount)} đ
                     </p>
-                    {item.status && (
-                      <span
-                        className={`inline-block rounded-full px-2 py-1 font-['Inter'] text-xs font-medium ${
-                          item.status === "completed"
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                        }`}>
-                        {getTransactionStatusLabel(item.status)}
-                      </span>
-                    )}
+                    <div className="mt-1 flex flex-wrap gap-2 sm:justify-end">
+                      {item.status && (
+                        <StatusBadge
+                          label={getTransactionStatusLabel(item.status)}
+                          variant="default"
+                          className={
+                            item.status === "completed"
+                              ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400"
+                              : "bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400"
+                          }
+                        />
+                      )}
+                      {purposeBadge && (
+                        <StatusBadge
+                          label={purposeBadge.label}
+                          variant={purposeBadge.variant}
+                          className={purposeBadge.className}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

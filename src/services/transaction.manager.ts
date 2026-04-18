@@ -53,7 +53,7 @@ const extractCurrentBalanceFromMessage = (value: string): number | undefined => 
 
 const isInsufficientBalanceError = (statusCode: unknown, message?: string): boolean => {
   const status = asFiniteNumber(statusCode);
-  if (status === 402) {
+  if (status === 400 || status === 402) {
     return true;
   }
 

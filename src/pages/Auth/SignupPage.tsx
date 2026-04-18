@@ -26,6 +26,7 @@ type SignupAuthPayload = {
     email: string;
     role?: string;
     avatar?: string | null;
+    walletBalance?: number;
   };
   token?: string;
 };
@@ -61,6 +62,11 @@ export function SignupPage() {
         email: payload.user.email,
         role: payload.user.role?.toUpperCase() as "USER" | "ADMIN" | "MENTOR" | "STAFF",
         avatarUrl: payload.user.avatar || undefined,
+        walletBalance:
+          typeof payload.user.walletBalance === "number" &&
+          Number.isFinite(payload.user.walletBalance)
+            ? payload.user.walletBalance
+            : undefined,
       });
       setToken(payload.token ?? null);
       setIsLoggedIn(true);
@@ -148,6 +154,11 @@ export function SignupPage() {
           name: result.data.user.fullName,
           email: result.data.user.email,
           role: "USER",
+          walletBalance:
+            typeof result.data.user.walletBalance === "number" &&
+            Number.isFinite(result.data.user.walletBalance)
+              ? result.data.user.walletBalance
+              : undefined,
         });
         setToken(token);
         setIsLoggedIn(true);

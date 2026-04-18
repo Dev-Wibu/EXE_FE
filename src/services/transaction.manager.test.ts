@@ -58,7 +58,7 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferIn(0, 303);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("So tien");
+    expect(result.error).toContain("Số tiền nạp ví không hợp lệ");
   });
 
   it("returns error when transfer-out response has no redirect url", async () => {
@@ -72,7 +72,7 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferOut(25000, 404);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("hop le");
+    expect(result.error).toContain("kết quả hợp lệ");
     expect(mockApi.post).toHaveBeenCalledWith(
       "/api/transactions/transfer-out",
       null,
@@ -117,6 +117,20 @@ describe("TransactionManager API mode", () => {
         data: {
           error: "Insufficient balance",
         },
+      },
+    });
+
+    const manager = new TransactionManager();
+    const result = await manager.transferOut(999999, 55, "MENTOR_INTERVIEW");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Số dư ví không đủ");
+  });
+
+  it("maps insufficient-balance when backend returns only status 400", async () => {
+    mockApi.post.mockRejectedValueOnce({
+      response: {
+        status: 400,
       },
     });
 

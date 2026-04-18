@@ -1,6 +1,7 @@
 import type { VariantProps } from "class-variance-authority";
 
 import { badgeVariants } from "@/components/ui/badge";
+import type { PaymentPurpose } from "@/interfaces";
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
 
@@ -134,5 +135,41 @@ export function getMockInterviewStatusBadge(status?: string): StatusBadgeConfig 
       };
     default:
       return { label: status || "Không rõ", variant: "outline" };
+  }
+}
+
+export function getTransactionPurposeBadge(
+  purpose?: PaymentPurpose | "UNKNOWN"
+): StatusBadgeConfig {
+  switch (purpose) {
+    case "TOP_UP_WALLET":
+      return {
+        label: "Nạp ví",
+        variant: "default",
+        className: "bg-emerald-600 text-white hover:bg-emerald-600",
+      };
+    case "WITHDRAW_FROM_WALLET":
+      return {
+        label: "Rút ví",
+        variant: "default",
+        className: "bg-rose-600 text-white hover:bg-rose-600",
+      };
+    case "BUY_MEMBERSHIP":
+      return {
+        label: "Mua gói",
+        variant: "default",
+        className: "bg-violet-600 text-white hover:bg-violet-600",
+      };
+    case "MENTOR_INTERVIEW":
+      return {
+        label: "Phiên mentor",
+        variant: "default",
+        className: "bg-sky-600 text-white hover:bg-sky-600",
+      };
+    default:
+      return {
+        label: "Chưa phân loại",
+        variant: "outline",
+      };
   }
 }
