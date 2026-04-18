@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useMentorReviewsByUser, type MentorReview } from "@/hooks/useMentorReview";
 import { usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
+import { toTimestamp } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 
 type SortableReview = MentorReview & {
@@ -22,12 +23,7 @@ type SortableReview = MentorReview & {
 };
 
 const toSessionTimestamp = (value?: string) => {
-  if (!value) {
-    return 0;
-  }
-
-  const parsed = new Date(value).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
+  return toTimestamp(value) ?? 0;
 };
 
 const getReviewNewestSortValue = (review: MentorReview) => {

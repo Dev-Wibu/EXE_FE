@@ -20,15 +20,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingCardList } from "@/components/ui/loading-card";
 import { StarRating } from "@/components/ui/star-rating";
 import { useMentorFeedbacksByMentor, type MentorFeedback } from "@/hooks/useMentorFeedback";
+import { toTimestamp } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 
 const toSessionTimestamp = (value?: string) => {
-  if (!value) {
-    return 0;
-  }
-
-  const parsed = new Date(value).getTime();
-  return Number.isFinite(parsed) ? parsed : 0;
+  return toTimestamp(value) ?? 0;
 };
 
 const getFeedbackNewestSortValue = (feedback: MentorFeedback) => {

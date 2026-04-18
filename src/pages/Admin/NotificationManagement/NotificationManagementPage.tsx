@@ -43,6 +43,7 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { useCreateNotification, type Notification } from "@/hooks/useNotification";
 import { usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
+import { toVietnamDateKey } from "@/lib/formatting";
 import { notificationManager } from "@/services/notification.manager";
 import { usersAdminManager } from "@/services/users-admin.manager";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -158,9 +159,8 @@ export function NotificationManagementPage() {
   const unreadNotifications = allNotifications.filter((n: Notification) => !n.isRead).length;
   const todayNotifications = allNotifications.filter((n: Notification) => {
     if (!n.createAt) return false;
-    const today = new Date();
-    const notifDate = new Date(n.createAt);
-    return notifDate.toDateString() === today.toDateString();
+    const todayKey = toVietnamDateKey(new Date());
+    return !!todayKey && toVietnamDateKey(n.createAt) === todayKey;
   }).length;
 
   const handleViewDetail = (notification: Notification) => {
@@ -364,7 +364,11 @@ export function NotificationManagementPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <TimeAgo date={notification.createAt || new Date()} />
+                        {notification.createAt ? (
+                          <TimeAgo date={notification.createAt} />
+                        ) : (
+                          <span className="text-sm text-slate-500">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -434,7 +438,11 @@ export function NotificationManagementPage() {
                 <div>
                   <Label className="text-slate-500">Thời gian</Label>
                   <p>
-                    <TimeAgo date={selectedNotification.createAt || new Date()} />
+                    {selectedNotification.createAt ? (
+                      <TimeAgo date={selectedNotification.createAt} />
+                    ) : (
+                      <span className="text-sm text-slate-500">—</span>
+                    )}
                   </p>
                 </div>
               </div>

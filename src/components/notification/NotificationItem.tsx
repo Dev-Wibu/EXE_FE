@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Bell, Calendar, CheckCircle, MessageSquare, Star, User, XCircle } from "lucide-react";
 
+import { formatDateTime, parseBackendDate } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/services/notification.manager";
 
@@ -70,6 +71,7 @@ export function NotificationItem({
 }: NotificationItemProps) {
   const iconColor = getIconColor(notification.title);
   const isUnread = !notification.isRead;
+  const parsedCreatedAt = parseBackendDate(notification.createAt);
 
   const handleClick = () => {
     if (onMarkRead && isUnread) {
@@ -78,12 +80,14 @@ export function NotificationItem({
     onClick?.();
   };
 
-  const timeAgo = notification.createAt
-    ? formatDistanceToNow(new Date(notification.createAt), {
+  const timeAgo = parsedCreatedAt
+    ? formatDistanceToNow(parsedCreatedAt, {
         addSuffix: true,
         locale: vi,
       })
     : "";
+
+  const absoluteTime = parsedCreatedAt ? formatDateTime(parsedCreatedAt) : "";
 
   // Helper function to render the appropriate icon
   const renderIcon = () => {
@@ -131,7 +135,11 @@ export function NotificationItem({
           )}>
           {notification.message}
         </p>
-        {timeAgo && <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">{timeAgo}</p>}
+        {timeAgo && (
+          <p title={absoluteTime} className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+            {timeAgo}
+          </p>
+        )}
       </div>
     </div>
   );

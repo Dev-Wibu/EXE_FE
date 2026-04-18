@@ -22,6 +22,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { useSessions } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
+import { toTimestamp, treatZuluAsVietnamLocal } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 
 interface StudentInfo {
@@ -99,9 +100,12 @@ export function StudentsListPage() {
     student.sessionCount += 1;
 
     // Track last session
+    const sessionEndTimestamp = toTimestamp(treatZuluAsVietnamLocal(session.endTime1));
+    const lastSessionTimestamp = toTimestamp(treatZuluAsVietnamLocal(student.lastSessionDate));
+
     if (
-      !student.lastSessionDate ||
-      (session.endTime1 && session.endTime1 > student.lastSessionDate)
+      sessionEndTimestamp &&
+      (!lastSessionTimestamp || sessionEndTimestamp > lastSessionTimestamp)
     ) {
       student.lastSessionDate = session.endTime1;
     }

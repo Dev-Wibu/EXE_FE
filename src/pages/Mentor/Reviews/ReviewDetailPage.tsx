@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StarRating } from "@/components/ui/star-rating";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { useMentorReviewById } from "@/hooks/useMentorReview";
+import { treatZuluAsVietnamLocal } from "@/lib/formatting";
 import { chatManager } from "@/services/chat.manager";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -104,6 +105,10 @@ export function ReviewDetailPage() {
       </div>
     );
   }
+
+  const reviewEndedAt = review.session?.endTime1
+    ? treatZuluAsVietnamLocal(review.session.endTime1)
+    : null;
 
   return (
     <div className="space-y-6">
@@ -191,9 +196,11 @@ export function ReviewDetailPage() {
                 <Star className="h-5 w-5 text-[#FFD700]" />
                 Đánh Giá Tổng Quan
               </CardTitle>
-              <CardDescription>
-                <TimeAgo date={review.session?.endTime1 || new Date()} />
-              </CardDescription>
+              {reviewEndedAt ? (
+                <CardDescription>
+                  <TimeAgo date={String(reviewEndedAt)} />
+                </CardDescription>
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold text-[#FFD700]">{review.rating || 0}</span>
