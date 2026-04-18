@@ -11,6 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
+import {
+  formatDayMonth,
+  formatTime,
+  parseBackendDate,
+  toTimestamp,
+  toVietnamDateKey,
+} from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { chatManager, type ChatHistoryMessage } from "@/services/chat.manager";
 import {
@@ -140,26 +147,21 @@ const getPinnedStorageKey = (
 };
 
 const getTimestampValue = (timestamp: string): number => {
-  const parsed = new Date(timestamp).getTime();
-  return Number.isNaN(parsed) ? 0 : parsed;
+  return toTimestamp(timestamp) ?? 0;
 };
 
 const getDayKey = (timestamp: string): string => {
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) {
-    return "unknown";
-  }
-
-  return `${parsed.getFullYear()}-${parsed.getMonth()}-${parsed.getDate()}`;
+  return toVietnamDateKey(timestamp) || "unknown";
 };
 
 const formatDayLabel = (timestamp: string): string => {
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseBackendDate(timestamp);
+  if (!parsed) {
     return "Hôm nay";
   }
 
   return parsed.toLocaleDateString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
@@ -168,28 +170,18 @@ const formatDayLabel = (timestamp: string): string => {
 };
 
 const formatConversationTime = (timestamp: string): string => {
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseBackendDate(timestamp);
+  if (!parsed) {
     return "";
   }
 
-  const now = new Date();
-  const sameDay =
-    parsed.getDate() === now.getDate() &&
-    parsed.getMonth() === now.getMonth() &&
-    parsed.getFullYear() === now.getFullYear();
+  const sameDay = toVietnamDateKey(parsed) === toVietnamDateKey(new Date());
 
   if (sameDay) {
-    return parsed.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatTime(parsed, "");
   }
 
-  return parsed.toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-  });
+  return formatDayMonth(parsed, "");
 };
 
 const buildTimelineItems = (messages: MessengerMessage[]): TimelineItem[] => {
@@ -613,12 +605,7 @@ export function MessengerPage() {
         setDraftLastSavedAt(null);
       } else {
         localStorage.setItem(draftKey, messageInput);
-        setDraftLastSavedAt(
-          new Date().toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        );
+        setDraftLastSavedAt(formatTime(new Date(), ""));
       }
     } catch {
       // Ignore draft persistence errors to keep chat usable.

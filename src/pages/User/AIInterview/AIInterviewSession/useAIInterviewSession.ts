@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useSpeechRecognition, useSpeechSynthesis } from "@/hooks";
 import { $api } from "@/lib/api";
+import { formatTime } from "@/lib/formatting";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -14,16 +15,8 @@ const normalizeServerTimestamp = (value?: string): string | null => {
     return null;
   }
 
-  const normalized = value.endsWith("Z") ? value : `${value}Z`;
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-
-  return parsed.toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const normalized = formatTime(value, "");
+  return normalized || null;
 };
 
 const normalizeMessageContent = (value: string): string => {
@@ -296,14 +289,7 @@ export function useAIInterviewSession() {
   // sessionId từ cache Redis (dbId) — dùng để navigate đến trang kết quả
   const sessionId = cacheData?.dbId;
 
-  const getNow = useCallback(
-    () =>
-      new Date().toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    []
-  );
+  const getNow = useCallback(() => formatTime(new Date()), []);
 
   // Lưu sessionId vào localStorage làm fallback (phòng khi cache đã hết hạn lúc navigate)
   useEffect(() => {

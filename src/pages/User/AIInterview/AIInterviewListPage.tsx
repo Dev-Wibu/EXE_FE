@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/c
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { $api } from "@/lib/api";
-import { formatDateTime } from "@/lib/formatting";
+import { formatDateTime, toTimestamp } from "@/lib/formatting";
 import { useAuthStore } from "@/stores/authStore";
 
 // Map interview mode enum → label tiếng Việt
@@ -68,16 +68,13 @@ const RESULT_LABELS: Record<string, string> = {
   REJECT: "Không đạt",
 };
 
-// Backend timestamps không có suffix timezone — cần append "Z" để parse đúng UTC
-const normalizeTs = (dateStr: string) =>
-  dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + "Z";
-
 // SessionKey hết hạn sau 1 giờ kể từ lúc tạo (backend chỉ cập nhật status CANCELLED lazily)
 const SESSION_EXPIRY_MS = 60 * 60 * 1000;
 
 const isSessionExpired = (createdAt?: string) => {
-  if (!createdAt) return true;
-  return Date.now() - new Date(normalizeTs(createdAt)).getTime() >= SESSION_EXPIRY_MS;
+  const createdTimestamp = toTimestamp(createdAt);
+  if (!createdTimestamp) return true;
+  return Date.now() - createdTimestamp >= SESSION_EXPIRY_MS;
 };
 
 export function AIInterviewListPage() {
@@ -101,7 +98,7 @@ export function AIInterviewListPage() {
   const allSessions = useMemo(
     () =>
       [...(Array.isArray(sessions) ? sessions : [])].sort(
-        (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+        (a, b) => (toTimestamp(b.createdAt) ?? 0) - (toTimestamp(a.createdAt) ?? 0)
       ),
     [sessions]
   );
@@ -139,7 +136,7 @@ export function AIInterviewListPage() {
   return (
     <div className="bg-background min-h-screen p-8">
       {/* Top Banner */}
-      <Card className="mb-8 overflow-hidden border-0 bg-gradient-to-r from-[#0047AB] via-[#005B9A] to-[#007BFF] py-0">
+      <Card className="mb-8 overflow-hidden border-0 bg-linear-to-r from-[#0047AB] via-[#005B9A] to-[#007BFF] py-0">
         <CardContent className="flex items-center justify-between p-8">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
@@ -498,7 +495,7 @@ export function AIInterviewListPage() {
               )}
 
               {/* CTA Card */}
-              <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#0047AB] to-[#007BFF]">
+              <Card className="overflow-hidden border-0 bg-linear-to-br from-[#0047AB] to-[#007BFF]">
                 <CardContent className="flex flex-col items-center gap-4 p-10 text-center">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20">
                     <Plus className="h-10 w-10 text-white" />

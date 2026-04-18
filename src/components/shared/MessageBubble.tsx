@@ -21,6 +21,7 @@ import {
 import { Fragment, type ReactNode } from "react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { formatDateTime, parseBackendDate } from "@/lib/formatting";
 
 export type MessageDeliveryStatus = "queued" | "sending" | "retrying" | "sent" | "failed";
 
@@ -67,8 +68,8 @@ const highlightContent = (content: string, searchQuery: string): ReactNode => {
 };
 
 const getRelativeTime = (timestamp: string): string => {
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseBackendDate(timestamp);
+  if (!parsed) {
     return "Vừa xong";
   }
 
@@ -76,19 +77,12 @@ const getRelativeTime = (timestamp: string): string => {
 };
 
 const getReadableTimestamp = (timestamp: string): string => {
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) {
+  const parsed = parseBackendDate(timestamp);
+  if (!parsed) {
     return timestamp;
   }
 
-  return parsed.toLocaleString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return formatDateTime(parsed, timestamp);
 };
 
 const STATUS_LABELS: Record<MessageDeliveryStatus, string> = {

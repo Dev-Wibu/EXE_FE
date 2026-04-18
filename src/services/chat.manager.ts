@@ -7,6 +7,7 @@ import type { ApiResponse, PaginatedResponse, PaginationParams } from "@/interfa
 import type { components } from "../../schema-from-be";
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import { formatTime } from "@/lib/formatting";
 
 export interface ChatSession {
   id: number;
@@ -44,23 +45,10 @@ const mapBackendSenderToUi = (senderType?: string): "ai" | "user" => {
 
 const formatTimeForUi = (timestamp?: string): string => {
   if (!timestamp) {
-    return new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return formatTime(new Date());
   }
 
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) {
-    return timestamp;
-  }
-
-  return parsed.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return formatTime(timestamp, timestamp);
 };
 
 export class ChatManager {
