@@ -6,7 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { ChatBubble, EvaluatingIndicator, TypingIndicator } from "./ChatBubble";
+import { FacePreviewWidget } from "./FacePreviewWidget";
 import type { ChatMessage } from "./types";
+import type { CameraPermissionState } from "./useFaceCameraCapture";
 
 // ============================================================================
 // ChatInput (local component)
@@ -179,6 +181,14 @@ export function ChatPanel({
   onChatInputChange,
   onStartListening,
   onStopListening,
+  faceBehaviorEnabled,
+  faceBehaviorModeLabel,
+  facePermissionState,
+  facePermissionMessage,
+  faceIsMonitoring,
+  faceWarningText,
+  faceVideoRef,
+  faceCanvasRef,
 }: {
   messages: ChatMessage[];
   userAvatarUrl?: string;
@@ -202,6 +212,14 @@ export function ChatPanel({
   onChatInputChange: (_val: string) => void;
   onStartListening: () => void;
   onStopListening: () => void;
+  faceBehaviorEnabled: boolean;
+  faceBehaviorModeLabel: string;
+  facePermissionState: CameraPermissionState;
+  facePermissionMessage?: string | null;
+  faceIsMonitoring: boolean;
+  faceWarningText?: string | null;
+  faceVideoRef: React.RefObject<HTMLVideoElement | null>;
+  faceCanvasRef: React.RefObject<HTMLCanvasElement | null>;
 }) {
   const inputDisabled = isSubmitting || isEvaluating || !hasStarted;
   const inputPlaceholder = isEvaluating
@@ -291,18 +309,30 @@ export function ChatPanel({
           )}
         </div>
       ) : (
-        <ChatInput
-          onSend={onSendAnswer}
-          disabled={inputDisabled}
-          placeholder={inputPlaceholder}
-          isListening={isListening}
-          interimTranscript={interimTranscript}
-          isSpeechSupported={isSpeechSupported}
-          value={chatInputValue}
-          onValueChange={onChatInputChange}
-          onStartListening={onStartListening}
-          onStopListening={onStopListening}
-        />
+        <>
+          <FacePreviewWidget
+            enabled={faceBehaviorEnabled}
+            modeLabel={faceBehaviorModeLabel}
+            permissionState={facePermissionState}
+            permissionMessage={facePermissionMessage}
+            isMonitoring={faceIsMonitoring}
+            warningText={faceWarningText}
+            videoRef={faceVideoRef}
+            canvasRef={faceCanvasRef}
+          />
+          <ChatInput
+            onSend={onSendAnswer}
+            disabled={inputDisabled}
+            placeholder={inputPlaceholder}
+            isListening={isListening}
+            interimTranscript={interimTranscript}
+            isSpeechSupported={isSpeechSupported}
+            value={chatInputValue}
+            onValueChange={onChatInputChange}
+            onStartListening={onStartListening}
+            onStopListening={onStopListening}
+          />
+        </>
       )}
     </>
   );

@@ -355,6 +355,7 @@ export const API_ENDPOINTS = {
   INTERVIEW_V1: {
     START: "/api/v1/interview/start/:sessionKey",
     SUBMIT: "/api/v1/interview/submit",
+    PROCTORING_TRACK: "/api/v1/proctoring/track",
   },
 } as const;
 

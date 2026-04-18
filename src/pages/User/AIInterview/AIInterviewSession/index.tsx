@@ -99,6 +99,10 @@ export function AIInterviewSessionPage() {
         isMuted={session.isMuted}
         onToggleMute={session.toggleMute}
         onBack={session.handleNavigateBack}
+        faceBehaviorEnabled={session.faceBehaviorEnabled}
+        faceStatusLabel={session.faceBehaviorStatusLabel}
+        faceStatusWarning={session.faceBehaviorHasWarning}
+        faceWarningCount={session.faceBehaviorWarningCount}
       />
       <ChatPanel
         messages={session.messages}
@@ -123,6 +127,14 @@ export function AIInterviewSessionPage() {
         onChatInputChange={session.setChatInputValue}
         onStartListening={session.startListening}
         onStopListening={session.stopListening}
+        faceBehaviorEnabled={session.faceBehaviorEnabled}
+        faceBehaviorModeLabel={session.faceBehaviorModeLabel}
+        facePermissionState={session.faceBehaviorPermissionState}
+        facePermissionMessage={session.faceBehaviorPermissionMessage}
+        faceIsMonitoring={session.faceBehaviorMonitoring}
+        faceWarningText={session.faceBehaviorWarningText}
+        faceVideoRef={session.faceBehaviorVideoRef}
+        faceCanvasRef={session.faceBehaviorCanvasRef}
       />
     </div>
   );

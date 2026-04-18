@@ -7,6 +7,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/stores/authStore";
 
 import type { ChatMessage } from "./types";
+import { useFaceBehaviorAnalysis } from "./useFaceBehaviorAnalysis";
 
 const normalizeServerTimestamp = (value?: string): string | null => {
   if (!value) {
@@ -258,6 +259,15 @@ export function useAIInterviewSession() {
   const [totalQuestions, setTotalQuestions] = useState(0);
   // hasStarted = true ngay nếu phiên đã hoàn thành — lịch sử chat luôn lấy từ /cache
   const [hasStarted, setHasStarted] = useState<boolean>(isAlreadyFinished);
+
+  const faceBehavior = useFaceBehaviorAnalysis({
+    sessionKey,
+    questionOrder: currentQuestionIndex,
+    isListening,
+    isSubmitting,
+    isEvaluating,
+    interviewFinished,
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const msgIdCounter = useRef(1);
@@ -651,5 +661,16 @@ export function useAIInterviewSession() {
     handleViewResults,
     handleNavigateBack,
     messagesEndRef,
+    faceBehaviorEnabled: faceBehavior.featureEnabled,
+    faceBehaviorModeLabel: faceBehavior.modeLabel,
+    faceBehaviorPermissionState: faceBehavior.permissionState,
+    faceBehaviorPermissionMessage: faceBehavior.permissionMessage,
+    faceBehaviorMonitoring: faceBehavior.isMonitoring,
+    faceBehaviorStatusLabel: faceBehavior.statusLabel,
+    faceBehaviorHasWarning: faceBehavior.hasWarning,
+    faceBehaviorWarningText: faceBehavior.latestWarningText,
+    faceBehaviorWarningCount: faceBehavior.warningCount,
+    faceBehaviorVideoRef: faceBehavior.videoRef,
+    faceBehaviorCanvasRef: faceBehavior.canvasRef,
   };
 }

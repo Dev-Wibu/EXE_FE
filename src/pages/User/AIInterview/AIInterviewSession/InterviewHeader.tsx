@@ -1,9 +1,18 @@
-import { ArrowLeft, CheckCircle2, MessageSquare, Volume2, VolumeOff } from "lucide-react";
+import {
+  ArrowLeft,
+  Camera,
+  CheckCircle2,
+  MessageSquare,
+  TriangleAlert,
+  Volume2,
+  VolumeOff,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export function InterviewHeader({
   phaseName,
@@ -14,6 +23,10 @@ export function InterviewHeader({
   isMuted,
   onToggleMute,
   onBack,
+  faceBehaviorEnabled,
+  faceStatusLabel,
+  faceStatusWarning,
+  faceWarningCount,
 }: {
   phaseName: string;
   questionIndex: number;
@@ -23,6 +36,10 @@ export function InterviewHeader({
   isMuted: boolean;
   onToggleMute: () => void;
   onBack: () => void;
+  faceBehaviorEnabled: boolean;
+  faceStatusLabel: string;
+  faceStatusWarning: boolean;
+  faceWarningCount: number;
 }) {
   const progress = totalQuestions > 0 ? (questionIndex / totalQuestions) * 100 : 0;
   const safeProgress = Math.max(0, Math.min(progress, 100));
@@ -76,6 +93,25 @@ export function InterviewHeader({
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             Đang phỏng vấn trực tiếp
           </div>
+        )}
+
+        {!finished && faceBehaviorEnabled && (
+          <Badge
+            variant="outline"
+            className={cn(
+              "hidden items-center gap-1.5 rounded-full text-[11px] md:inline-flex",
+              faceStatusWarning
+                ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+                : "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300"
+            )}>
+            {faceStatusWarning ? (
+              <TriangleAlert className="h-3 w-3" />
+            ) : (
+              <Camera className="h-3 w-3" />
+            )}
+            <span>{faceStatusLabel}</span>
+            {faceWarningCount > 0 && <span>({faceWarningCount})</span>}
+          </Badge>
         )}
 
         {isTTSSupported && (
