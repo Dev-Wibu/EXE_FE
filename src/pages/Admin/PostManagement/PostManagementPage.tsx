@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/table";
 import { usePagination } from "@/hooks/usePagination";
 import type { Post, PostCommentResponse, PostLikeResponse, PostStatus } from "@/interfaces";
-import { formatDate } from "@/lib/formatting";
+import { formatDate, toTimestamp } from "@/lib/formatting";
 import { queryClient } from "@/lib/queryClient";
 import { getPostStatusBadge } from "@/lib/status-utils";
 import { extractDataArray } from "@/lib/utils";
@@ -179,8 +179,8 @@ export function PostManagementPage() {
         return fields.some((field) => field?.toLowerCase().includes(keyword));
       })
       .sort((a, b) => {
-        const timeA = a.creationDate ? new Date(a.creationDate).getTime() : 0;
-        const timeB = b.creationDate ? new Date(b.creationDate).getTime() : 0;
+        const timeA = toTimestamp(a.creationDate) ?? 0;
+        const timeB = toTimestamp(b.creationDate) ?? 0;
         return timeB - timeA;
       });
   }, [posts, searchQuery, statusFilter, majorFilter, tagFilter]);

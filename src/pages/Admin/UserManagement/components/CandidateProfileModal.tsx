@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import type { CandidateProfile } from "@/interfaces/schema.types";
+import { formatDate } from "@/lib/formatting";
 
 interface CandidateProfileModalProps {
   profile: CandidateProfile | null;
@@ -311,12 +312,8 @@ export function CandidateProfileModal({ profile, open, onOpenChange }: Candidate
             <>
               <Separator />
               <div className="flex gap-6 text-xs text-gray-400 dark:text-slate-500">
-                {profile.createdAt && (
-                  <span>Tạo: {new Date(profile.createdAt).toLocaleDateString("vi-VN")}</span>
-                )}
-                {profile.updatedAt && (
-                  <span>Cập nhật: {new Date(profile.updatedAt).toLocaleDateString("vi-VN")}</span>
-                )}
+                {profile.createdAt && <span>Tạo: {formatDate(profile.createdAt)}</span>}
+                {profile.updatedAt && <span>Cập nhật: {formatDate(profile.updatedAt)}</span>}
               </div>
             </>
           )}

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
+import { formatDate } from "@/lib/formatting";
 import { quizSetManager } from "@/services";
 import type { QuizItem, QuizSet } from "@/services/quiz-set.manager";
 import { toast } from "sonner";
@@ -212,11 +213,7 @@ export function QuizSetManagementPage() {
                       <TableCell className="font-medium">{quizSet.quizName}</TableCell>
                       <TableCell>{quizSet.score !== undefined ? quizSet.score : "—"}</TableCell>
                       <TableCell>{quizSet.practiceSet?.practiceSetName || "—"}</TableCell>
-                      <TableCell>
-                        {quizSet.createdAt
-                          ? new Date(quizSet.createdAt).toLocaleDateString("vi-VN")
-                          : "—"}
-                      </TableCell>
+                      <TableCell>{formatDate(quizSet.createdAt)}</TableCell>
                       <TableCell>
                         <Badge variant={quizSet.submitted ? "default" : "secondary"}>
                           {quizSet.submitted ? "Đã nộp" : "Chưa nộp"}

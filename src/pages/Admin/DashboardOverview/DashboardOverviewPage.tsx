@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { addDays, endOfDay, format, startOfDay, subDays } from "date-fns";
+import { format, startOfDay, subDays } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
   Activity,
@@ -33,7 +33,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import type { PaymentEntity, TransactionEntity } from "@/interfaces";
-import { formatCurrency } from "@/lib/formatting";
+import {
+  formatCurrency,
+  formatDayMonth,
+  formatTimeDayMonth,
+  toTimestamp,
+  toVietnamDateKey,
+} from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { dashboardAdminManager } from "@/services";
 
@@ -51,6 +57,13 @@ type RecentRecord =
   | (PaymentEntity & { source: "INCOME" })
   | (TransactionEntity & { source: "WALLET" });
 
+type EffectiveRange = {
+  from: Date;
+  to: Date;
+  fromKey: string;
+  toKey: string;
+};
+
 const DEFAULT_RANGE_DAYS = 30;
 
 const RANGE_OPTIONS: Array<{ label: string; value: Exclude<RangeMode, "custom"> }> = [
@@ -66,44 +79,94 @@ const isSuccessPayment = (status?: PaymentEntity["status"]) => {
 };
 
 const toMillis = (value?: string) => {
-  if (!value) return 0;
-  const normalizedValue =
-    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
-  const timestamp = new Date(normalizedValue).getTime();
-  return Number.isNaN(timestamp) ? 0 : timestamp;
+  return toTimestamp(value) ?? 0;
 };
 
-const isWithinDateRange = (value: string | undefined, from: Date, to: Date) => {
-  const timestamp = toMillis(value);
-  if (!timestamp) return false;
-  return timestamp >= from.getTime() && timestamp <= to.getTime();
+const parseVietnamDateKey = (dateKey: string) => {
+  const [yearRaw, monthRaw, dayRaw] = dateKey.split("-");
+  const year = Number.parseInt(yearRaw, 10);
+  const month = Number.parseInt(monthRaw, 10);
+  const day = Number.parseInt(dayRaw, 10);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
+
+  return { year, month, day };
+};
+
+const shiftVietnamDateKey = (dateKey: string, days: number): string | null => {
+  const parsed = parseVietnamDateKey(dateKey);
+  if (!parsed) {
+    return null;
+  }
+
+  const utcDate = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day));
+  utcDate.setUTCDate(utcDate.getUTCDate() + days);
+
+  return toVietnamDateKey(utcDate);
+};
+
+const buildVietnamBoundaryDate = (dateKey: string, isEndOfDay: boolean): Date | null => {
+  const parsed = parseVietnamDateKey(dateKey);
+  if (!parsed) {
+    return null;
+  }
+
+  return new Date(
+    Date.UTC(
+      parsed.year,
+      parsed.month - 1,
+      parsed.day,
+      (isEndOfDay ? 23 : 0) - 7,
+      isEndOfDay ? 59 : 0,
+      isEndOfDay ? 59 : 0,
+      isEndOfDay ? 999 : 0
+    )
+  );
+};
+
+const getSafeVietnamDateKey = (value: Date): string => {
+  return toVietnamDateKey(value) || format(value, "yyyy-MM-dd");
+};
+
+const isWithinDateRange = (value: string | undefined, fromKey: string, toKey: string) => {
+  const dateKey = toVietnamDateKey(value);
+  if (!dateKey) {
+    return false;
+  }
+
+  return dateKey >= fromKey && dateKey <= toKey;
 };
 
 const buildTrendData = (
   records: Array<{ createdAt?: string; amount?: number }>,
-  from: Date,
-  to: Date
+  fromKey: string,
+  toKey: string
 ) => {
   const pointMap: Record<string, TrendPoint> = {};
   const points: TrendPoint[] = [];
 
-  for (let cursor = new Date(from); cursor <= to; cursor = addDays(cursor, 1)) {
-    const dateKey = format(cursor, "yyyy-MM-dd");
+  let cursorKey: string | null = fromKey;
+  while (cursorKey && cursorKey <= toKey) {
     const point = {
-      key: dateKey,
-      date: format(cursor, "dd/MM"),
+      key: cursorKey,
+      date: formatDayMonth(cursorKey, ""),
       amount: 0,
     };
-    pointMap[dateKey] = point;
+    pointMap[cursorKey] = point;
     points.push(point);
+
+    cursorKey = shiftVietnamDateKey(cursorKey, 1);
   }
 
   records.forEach((record) => {
     if (!record.createdAt) return;
-    const timestamp = toMillis(record.createdAt);
-    if (!timestamp) return;
+    const dateKey = toVietnamDateKey(record.createdAt);
+    if (!dateKey) {
+      return;
+    }
 
-    const dateKey = format(new Date(timestamp), "yyyy-MM-dd");
     if (pointMap[dateKey]) {
       pointMap[dateKey].amount += record.amount || 0;
     }
@@ -126,9 +189,8 @@ const getPaymentStatusLabel = (status?: PaymentEntity["status"]) => {
 };
 
 const formatTransactionTime = (value?: string) => {
-  const timestamp = toMillis(value);
-  if (!timestamp) return "Không có thời gian";
-  return format(new Date(timestamp), "HH:mm, dd/MM", { locale: vi });
+  if (!value) return "Không có thời gian";
+  return formatTimeDayMonth(value, "Không có thời gian");
 };
 
 type MembershipPieLabelProps = {
@@ -193,18 +255,53 @@ export function DashboardOverviewPage() {
     }
   };
 
-  const effectiveRange = useMemo(() => {
+  const effectiveRange = useMemo<EffectiveRange>(() => {
     if (rangeMode === "custom" && customFrom && customTo && customFrom <= customTo) {
+      const customFromKey = getSafeVietnamDateKey(customFrom);
+      const customToKey = getSafeVietnamDateKey(customTo);
+      const fromKey = customFromKey <= customToKey ? customFromKey : customToKey;
+      const toKey = customFromKey <= customToKey ? customToKey : customFromKey;
+      const from = buildVietnamBoundaryDate(fromKey, false);
+      const to = buildVietnamBoundaryDate(toKey, true);
+
+      if (from && to) {
+        return {
+          from,
+          to,
+          fromKey,
+          toKey,
+        };
+      }
+
       return {
         from: startOfDay(customFrom),
-        to: endOfDay(customTo),
+        to: new Date(customTo),
+        fromKey,
+        toKey,
       };
     }
 
     const days = rangeMode === "custom" ? DEFAULT_RANGE_DAYS : Number(rangeMode);
+    const todayKey = getSafeVietnamDateKey(new Date());
+    const fromKey = shiftVietnamDateKey(todayKey, -(days - 1)) || todayKey;
+
+    const from = buildVietnamBoundaryDate(fromKey, false);
+    const to = buildVietnamBoundaryDate(todayKey, true);
+
+    if (from && to) {
+      return {
+        from,
+        to,
+        fromKey,
+        toKey: todayKey,
+      };
+    }
+
     return {
       from: startOfDay(subDays(new Date(), days - 1)),
-      to: endOfDay(new Date()),
+      to: new Date(),
+      fromKey: fromKey,
+      toKey: todayKey,
     };
   }, [customFrom, customTo, rangeMode]);
 
@@ -245,7 +342,7 @@ export function DashboardOverviewPage() {
   const filteredIncomeRecords = useMemo(
     () =>
       incomeRecords.filter((record) =>
-        isWithinDateRange(record.createdAt, effectiveRange.from, effectiveRange.to)
+        isWithinDateRange(record.createdAt, effectiveRange.fromKey, effectiveRange.toKey)
       ),
     [effectiveRange, incomeRecords]
   );
@@ -253,7 +350,7 @@ export function DashboardOverviewPage() {
   const filteredWalletRecords = useMemo(
     () =>
       walletRecords.filter((record) =>
-        isWithinDateRange(record.createdAt, effectiveRange.from, effectiveRange.to)
+        isWithinDateRange(record.createdAt, effectiveRange.fromKey, effectiveRange.toKey)
       ),
     [effectiveRange, walletRecords]
   );
@@ -261,7 +358,7 @@ export function DashboardOverviewPage() {
   const filteredUsageLogs = useMemo(
     () =>
       usageLogs.filter((log) =>
-        isWithinDateRange(log.useAt, effectiveRange.from, effectiveRange.to)
+        isWithinDateRange(log.useAt, effectiveRange.fromKey, effectiveRange.toKey)
       ),
     [effectiveRange, usageLogs]
   );
@@ -286,11 +383,11 @@ export function DashboardOverviewPage() {
     const successfulIncome = filteredIncomeRecords.filter((payment) =>
       isSuccessPayment(payment.status)
     );
-    return buildTrendData(successfulIncome, effectiveRange.from, effectiveRange.to);
+    return buildTrendData(successfulIncome, effectiveRange.fromKey, effectiveRange.toKey);
   }, [effectiveRange, filteredIncomeRecords]);
 
   const walletTrendData = useMemo(
-    () => buildTrendData(filteredWalletRecords, effectiveRange.from, effectiveRange.to),
+    () => buildTrendData(filteredWalletRecords, effectiveRange.fromKey, effectiveRange.toKey),
     [effectiveRange, filteredWalletRecords]
   );
 

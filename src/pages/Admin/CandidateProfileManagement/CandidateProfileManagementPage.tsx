@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { CandidateProfile } from "@/interfaces/schema.types";
+import { formatDate } from "@/lib/formatting";
 import { useCandidateProfiles } from "@/services/candidate-profile.manager";
 
 import { CandidateProfileModal } from "../UserManagement/components/CandidateProfileModal";
@@ -121,11 +122,7 @@ export function CandidateProfileManagementPage() {
                         "—"
                       )}
                     </TableCell>
-                    <TableCell>
-                      {profile.createdAt
-                        ? new Date(profile.createdAt).toLocaleDateString("vi-VN")
-                        : "—"}
-                    </TableCell>
+                    <TableCell>{formatDate(profile.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => setSelectedProfile(profile)}>
                         <Eye className="mr-1 h-4 w-4" />
