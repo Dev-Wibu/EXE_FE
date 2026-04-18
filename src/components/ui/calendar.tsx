@@ -32,7 +32,11 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date) =>
+          date.toLocaleString("vi-VN", {
+            month: "short",
+            timeZone: "Asia/Ho_Chi_Minh",
+          }),
         ...formatters,
       }}
       classNames={{
@@ -157,7 +161,7 @@ function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
+      data-day={day.date.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

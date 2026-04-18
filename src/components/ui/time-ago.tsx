@@ -6,6 +6,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 
+import { formatDateTime, parseBackendDate } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 
 interface TimeAgoProps {
@@ -15,12 +16,23 @@ interface TimeAgoProps {
 }
 
 export function TimeAgo({ date, className, prefix = true }: TimeAgoProps) {
-  const timeAgo = formatDistanceToNow(new Date(date), {
+  const parsedDate = parseBackendDate(date);
+
+  if (!parsedDate) {
+    return <span className={cn("text-sm text-slate-500 dark:text-slate-400", className)}>—</span>;
+  }
+
+  const timeAgo = formatDistanceToNow(parsedDate, {
     addSuffix: prefix,
     locale: vi,
   });
+  const absoluteTime = formatDateTime(parsedDate);
 
   return (
-    <span className={cn("text-sm text-slate-500 dark:text-slate-400", className)}>{timeAgo}</span>
+    <span
+      title={absoluteTime}
+      className={cn("text-sm text-slate-500 dark:text-slate-400", className)}>
+      {timeAgo}
+    </span>
   );
 }
