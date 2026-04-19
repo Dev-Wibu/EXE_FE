@@ -191,6 +191,9 @@ importers:
       recharts:
         specifier: ^3.5.1
         version: 3.5.1(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0)(redux@5.0.1)
+      responsivevoice:
+        specifier: ^0.4.1
+        version: 0.4.1
       sockjs-client:
         specifier: ^1.6.1
         version: 1.6.1
@@ -4171,6 +4174,10 @@ packages:
   resolve@2.0.0-next.5:
     resolution: {integrity: sha512-U7WjGVG9sH8tvjW5SmGbQuui75FiyjAX72HX15DwBBwF9dNiQZRQAg9nnPhYy+TUnE0+VcrttuvNI8oSxZcocA==}
     hasBin: true
+
+  responsivevoice@0.4.1:
+    resolution: {integrity: sha512-OQZ4vxfqwiYKdIKCA3TW+F6wY9cJDZJpUU+RKBzL1iAuJEp4KSJ+pyrKXajI62UThfGH95Gj4dA+wh4jDYlISw==}
+    engines: {node: '>=8.1.0'}
 
   restore-cursor@3.1.0:
     resolution: {integrity: sha512-l+sSefzHpj5qimhFSE5a8nufZYAM3sBSVMAPtYkmC+4EH2anSGaEMXSD0izRQbu9nfyQ9y5JrVmp7E8oZrUjvA==}
@@ -8809,6 +8816,8 @@ snapshots:
       is-core-module: 2.16.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+
+  responsivevoice@0.4.1: {}
 
   restore-cursor@3.1.0:
     dependencies:

@@ -17,7 +17,8 @@ export function AIInterviewSessionPage() {
   const session = useAIInterviewSession();
   const [isDeviceCheckOpen, setIsDeviceCheckOpen] = useState(true);
   const [hasConfirmedDevices, setHasConfirmedDevices] = useState(false);
-  const cameraPreview = useUserCameraPreview(hasConfirmedDevices);
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState<string | null>(null);
+  const cameraPreview = useUserCameraPreview(hasConfirmedDevices, selectedVideoDeviceId);
 
   // ---- Error state: missing session key ----
   if (!session.sessionKey) {
@@ -117,9 +118,10 @@ export function AIInterviewSessionPage() {
         isOpen={isDeviceCheckOpen}
         onOpenChange={setIsDeviceCheckOpen}
         showDisplayName={false}
-        onConfirm={() => {
+        onConfirm={(selection) => {
           setIsDeviceCheckOpen(false);
           setHasConfirmedDevices(true);
+          setSelectedVideoDeviceId(selection.videoDeviceId);
           session.handleDeviceCheckConfirmed();
         }}
       />

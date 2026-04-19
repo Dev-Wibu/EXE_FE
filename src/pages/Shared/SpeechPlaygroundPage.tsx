@@ -1,5 +1,5 @@
-import { AlertTriangle, Square, Volume2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, LoaderCircle, Square, Volume2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Footer, Header } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
@@ -8,15 +8,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { selectBestSpeechVoice } from "@/hooks/speech-synthesis.utils";
+import {
+  buildGoogleTranslateTtsUrl,
+  loadResponsiveVoice,
+  resolveResponsiveVoiceName,
+  stopGoogleAudioPlayback,
+  stopResponsiveVoicePlayback,
+} from "@/lib/tts-playground";
 
-const TEST_PHRASE_BY_LANG: Record<"vi-VN" | "en-US", string> = {
-  "vi-VN": "Xin chao, day la bai kiem tra giong noi tieng Viet trong AI Interview.",
+type PlaygroundLanguage = "vi-VN" | "en-US";
+type SpeechEngine = "web-speech" | "responsive-voice" | "google-translate";
+
+const ENGINE_LABELS: Record<SpeechEngine, string> = {
+  "web-speech": "Web Speech API",
+  "responsive-voice": "ResponsiveVoice.js",
+  "google-translate": "Google Translate trick",
+};
+
+const TEST_PHRASE_BY_LANG: Record<PlaygroundLanguage, string> = {
+  "vi-VN": "Xin chào, đây là bài kiểm tra giọng nói tiếng Việt trong AI Interview.",
   "en-US": "Hello, this is a speech synthesis test for AI Interview.",
 };
 
 function formatDateTime(date: Date | null): string {
   if (!date) {
-    return "Chua co";
+    return "Chưa có";
   }
 
   return `${date.toLocaleDateString("vi-VN")} ${date.toLocaleTimeString("vi-VN")}`;
@@ -24,7 +40,7 @@ function formatDateTime(date: Date | null): string {
 
 function detectBrowserLabel(): string {
   if (typeof navigator === "undefined") {
-    return "Khong xac dinh";
+    return "Không xác định";
   }
 
   const ua = navigator.userAgent.toLowerCase();
@@ -32,11 +48,12 @@ function detectBrowserLabel(): string {
   if (ua.includes("chrome/")) return "Google Chrome";
   if (ua.includes("firefox/")) return "Mozilla Firefox";
   if (ua.includes("safari/") && !ua.includes("chrome/")) return "Safari";
-  return "Trinh duyet khac";
+  return "Trình duyệt khác";
 }
 
 export function SpeechPlaygroundPage() {
-  const [language, setLanguage] = useState<"vi-VN" | "en-US">("vi-VN");
+  const [language, setLanguage] = useState<PlaygroundLanguage>("vi-VN");
+  const [engine, setEngine] = useState<SpeechEngine>("web-speech");
   const [text, setText] = useState(TEST_PHRASE_BY_LANG["vi-VN"]);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceUri, setSelectedVoiceUri] = useState("");
@@ -44,17 +61,24 @@ export function SpeechPlaygroundPage() {
   const [pitch, setPitch] = useState(1);
   const [volume, setVolume] = useState(1);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isEngineLoading, setIsEngineLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voicesLoadedAt, setVoicesLoadedAt] = useState<Date | null>(null);
   const [voicesChangedCount, setVoicesChangedCount] = useState(0);
-  const [lastSelectedVoice, setLastSelectedVoice] = useState<string>("Chua phat");
+  const [lastSelectedVoice, setLastSelectedVoice] = useState<string>("Chưa phát");
   const [lastSpeakAt, setLastSpeakAt] = useState<Date | null>(null);
+  const [lastEngineUsed, setLastEngineUsed] = useState<string>("Chưa phát");
+  const [lastSpeakLatencyMs, setLastSpeakLatencyMs] = useState<number | null>(null);
+  const [lastGoogleTtsUrl, setLastGoogleTtsUrl] = useState("");
 
-  const isSupported =
+  const googleAudioRef = useRef<HTMLAudioElement | null>(null);
+  const speakRequestIdRef = useRef(0);
+
+  const isWebSpeechSupported =
     typeof window !== "undefined" && "speechSynthesis" in window && !!window.speechSynthesis;
 
   useEffect(() => {
-    if (!isSupported) {
+    if (!isWebSpeechSupported) {
       return;
     }
 
@@ -91,7 +115,23 @@ export function SpeechPlaygroundPage() {
       window.clearInterval(pollIntervalId);
       window.clearTimeout(stopPollingTimeoutId);
     };
-  }, [isSupported]);
+  }, [isWebSpeechSupported]);
+
+  const stopAllPlayback = useCallback(() => {
+    if (isWebSpeechSupported) {
+      window.speechSynthesis.cancel();
+    }
+    stopResponsiveVoicePlayback();
+    stopGoogleAudioPlayback(googleAudioRef.current);
+    googleAudioRef.current = null;
+  }, [isWebSpeechSupported]);
+
+  useEffect(() => {
+    return () => {
+      speakRequestIdRef.current += 1;
+      stopAllPlayback();
+    };
+  }, [stopAllPlayback]);
 
   const languagePrefix = language.split("-")[0];
 
@@ -117,67 +157,186 @@ export function SpeechPlaygroundPage() {
     setText(TEST_PHRASE_BY_LANG[language]);
   };
 
-  const handleSpeak = () => {
-    if (!isSupported) {
-      setError("Trinh duyet hien tai khong ho tro SpeechSynthesis.");
-      return;
-    }
+  const handleStop = useCallback(() => {
+    speakRequestIdRef.current += 1;
+    stopAllPlayback();
+    setIsEngineLoading(false);
+    setIsSpeaking(false);
+  }, [stopAllPlayback]);
 
-    const synth = window.speechSynthesis;
+  const handleSpeak = useCallback(async () => {
     const trimmedText = text.trim();
-
     if (!trimmedText) {
-      setError("Vui long nhap noi dung de thu doc.");
+      setError("Vui lòng nhập nội dung để thử đọc.");
       return;
     }
+
+    const requestId = ++speakRequestIdRef.current;
+    const startedAt = performance.now();
 
     setError(null);
-    synth.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(trimmedText);
-    utterance.lang = language;
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    utterance.volume = volume;
-
-    const selectedVoice =
-      voices.find((voice) => voice.voiceURI === selectedVoiceUri) ??
-      selectBestSpeechVoice(voices, language);
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-      setLastSelectedVoice(`${selectedVoice.name} (${selectedVoice.lang})`);
-    } else {
-      setLastSelectedVoice("Mac dinh he thong");
+    setIsSpeaking(false);
+    setIsEngineLoading(engine === "responsive-voice");
+    if (engine !== "google-translate") {
+      setLastGoogleTtsUrl("");
     }
+    stopAllPlayback();
 
-    utterance.onstart = () => {
+    const markStarted = (engineLabel: string, voiceLabel: string) => {
+      if (requestId !== speakRequestIdRef.current) {
+        return;
+      }
+
       setIsSpeaking(true);
       setLastSpeakAt(new Date());
+      setLastEngineUsed(engineLabel);
+      setLastSelectedVoice(voiceLabel);
+      setLastSpeakLatencyMs(Math.max(0, Math.round(performance.now() - startedAt)));
     };
 
-    utterance.onend = () => {
+    const markEnded = () => {
+      if (requestId !== speakRequestIdRef.current) {
+        return;
+      }
+
+      setIsEngineLoading(false);
       setIsSpeaking(false);
     };
 
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      setError("Co loi khi phat am. Vui long thu lai voi voice khac.");
-    };
+    if (engine === "web-speech") {
+      if (!isWebSpeechSupported) {
+        setIsEngineLoading(false);
+        setError("Trình duyệt hiện tại không hỗ trợ Web Speech API.");
+        return;
+      }
 
-    synth.speak(utterance);
-  };
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(trimmedText);
+      utterance.lang = language;
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+      utterance.volume = volume;
 
-  const handleStop = () => {
-    if (!isSupported) {
+      const selectedVoice =
+        voices.find((voice) => voice.voiceURI === selectedVoiceUri) ??
+        selectBestSpeechVoice(voices, language);
+
+      const selectedVoiceLabel = selectedVoice
+        ? `${selectedVoice.name} (${selectedVoice.lang})`
+        : "Mac dinh he thong";
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      utterance.onstart = () => {
+        markStarted(ENGINE_LABELS["web-speech"], selectedVoiceLabel);
+      };
+
+      utterance.onend = () => {
+        markEnded();
+      };
+
+      utterance.onerror = () => {
+        if (requestId !== speakRequestIdRef.current) {
+          return;
+        }
+        markEnded();
+        setError("Có lỗi khi phát âm Web Speech. Vui lòng thử lại với voice khác.");
+      };
+
+      setIsEngineLoading(false);
+      synth.speak(utterance);
       return;
     }
 
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  };
+    if (engine === "responsive-voice") {
+      try {
+        const responsiveVoice = await loadResponsiveVoice();
+        if (requestId !== speakRequestIdRef.current) {
+          return;
+        }
+
+        const responsiveVoiceName = resolveResponsiveVoiceName(language);
+
+        responsiveVoice.speak(trimmedText, responsiveVoiceName, {
+          rate,
+          pitch,
+          volume,
+          onstart: () => {
+            markStarted(ENGINE_LABELS["responsive-voice"], responsiveVoiceName);
+          },
+          onend: () => {
+            markEnded();
+          },
+          onerror: () => {
+            if (requestId !== speakRequestIdRef.current) {
+              return;
+            }
+            markEnded();
+            setError("ResponsiveVoice lỗi trong quá trình phát. Vui lòng thử lại.");
+          },
+        });
+
+        setIsEngineLoading(false);
+      } catch {
+        if (requestId !== speakRequestIdRef.current) {
+          return;
+        }
+        setIsEngineLoading(false);
+        setIsSpeaking(false);
+        setError("Không thể tải ResponsiveVoice.js. Vui lòng thử lại sau.");
+      }
+      return;
+    }
+
+    const googleUrl = buildGoogleTranslateTtsUrl(trimmedText, language);
+    setLastGoogleTtsUrl(googleUrl);
+
+    const audio = new Audio(googleUrl);
+    audio.preload = "auto";
+    googleAudioRef.current = audio;
+
+    audio.onplay = () => {
+      markStarted(ENGINE_LABELS["google-translate"], `Google Translate (${language})`);
+    };
+
+    audio.onended = () => {
+      markEnded();
+    };
+
+    audio.onerror = () => {
+      if (requestId !== speakRequestIdRef.current) {
+        return;
+      }
+      markEnded();
+      setError("Không thể phát audio từ Google Translate trick. Thử lại sau.");
+    };
+
+    try {
+      await audio.play();
+    } catch {
+      if (requestId !== speakRequestIdRef.current) {
+        return;
+      }
+      markEnded();
+      setError("Trình duyệt chặn autoplay. Hãy bấm phát thử lại một lần nữa.");
+    }
+  }, [
+    engine,
+    isWebSpeechSupported,
+    language,
+    pitch,
+    rate,
+    selectedVoiceUri,
+    stopAllPlayback,
+    text,
+    voices,
+    volume,
+  ]);
 
   const browserLabel = detectBrowserLabel();
+  const isPlayDisabled = isEngineLoading || (engine === "web-speech" && !isWebSpeechSupported);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 dark:bg-slate-950">
@@ -189,16 +348,17 @@ export function SpeechPlaygroundPage() {
             <CardHeader>
               <CardTitle className="text-2xl">Speech Playground (DEV)</CardTitle>
               <CardDescription>
-                Khu thu nghiem giong noi cho AI Interview de kiem tra kha nang doc tieng Viet tren
-                Chrome Windows.
+                Khu thử nghiệm giọng nói cho AI Interview để benchmark Web Speech, ResponsiveVoice
+                và Google Translate trick.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline">Trinh duyet: {browserLabel}</Badge>
-                <Badge variant="outline">Tong so voice: {voices.length}</Badge>
-                <Badge variant="outline">Voices loaded luc: {formatDateTime(voicesLoadedAt)}</Badge>
+                <Badge variant="outline">Trình duyệt: {browserLabel}</Badge>
+                <Badge variant="outline">Tổng số voice: {voices.length}</Badge>
+                <Badge variant="outline">Voices loaded lúc: {formatDateTime(voicesLoadedAt)}</Badge>
                 <Badge variant="outline">voiceschanged: {voicesChangedCount}</Badge>
+                <Badge variant="outline">Engine đang chọn: {ENGINE_LABELS[engine]}</Badge>
               </div>
 
               {!hasVietnameseVoice && (
@@ -206,8 +366,8 @@ export function SpeechPlaygroundPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                     <p>
-                      Thiet bi hien tai chua tim thay voice tieng Viet. Khi test co the se fallback
-                      sang giong mac dinh (thuong la English).
+                      Thiết bị hiện tại chưa tìm thấy voice tiếng Việt trong Web Speech. Bạn có thể
+                      đổi sang ResponsiveVoice hoặc Google Translate trick để so sánh.
                     </p>
                   </div>
                 </div>
@@ -217,37 +377,67 @@ export function SpeechPlaygroundPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Bang dieu khien test TTS</CardTitle>
+              <CardTitle>Bảng điều khiển test TTS</CardTitle>
               <CardDescription>
-                Chon ngon ngu, voice, thong so phat am va thu lap lai nhieu lan de so sanh ket qua.
+                Chọn engine, ngôn ngữ và thông số phát âm. Có thể lặp lại nhiều lần để so sánh.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="speech-language">Ngon ngu</Label>
+                  <Label htmlFor="speech-engine">Engine test</Label>
                   <select
-                    id="speech-language"
-                    value={language}
-                    onChange={(event) => {
-                      const nextLanguage = event.target.value as "vi-VN" | "en-US";
-                      setLanguage(nextLanguage);
-                      setSelectedVoiceUri("");
-                    }}
+                    id="speech-engine"
+                    value={engine}
+                    onChange={(event) => setEngine(event.target.value as SpeechEngine)}
                     className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-                    <option value="vi-VN">Tieng Viet (vi-VN)</option>
-                    <option value="en-US">English (en-US)</option>
+                    <option value="web-speech">Web Speech API</option>
+                    <option value="responsive-voice">ResponsiveVoice.js fallback</option>
+                    <option value="google-translate">Google Translate trick (dev only)</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="speech-voice">Voice</Label>
+                  <Label htmlFor="speech-language">Ngôn ngữ</Label>
+                  <select
+                    id="speech-language"
+                    value={language}
+                    onChange={(event) => {
+                      const nextLanguage = event.target.value as PlaygroundLanguage;
+                      setLanguage(nextLanguage);
+                      setSelectedVoiceUri("");
+                    }}
+                    className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+                    <option value="vi-VN">Tiếng Việt (vi-VN)</option>
+                    <option value="en-US">English (en-US)</option>
+                  </select>
+                </div>
+              </div>
+
+              {engine === "responsive-voice" && (
+                <div className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-700 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-300">
+                  ResponsiveVoice được bật để fallback benchmark. Đây là công cụ test, cần review
+                  license và quota trước khi đưa vào production.
+                </div>
+              )}
+
+              {engine === "google-translate" && (
+                <div className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-700 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-300">
+                  Mẹo gọi thẳng Google Translate TTS chỉ dùng để test local. Endpoint này không
+                  chính thức và có thể bị giới hạn bất kỳ lúc nào.
+                </div>
+              )}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="speech-voice">Voice (chỉ áp dụng cho Web Speech)</Label>
                   <select
                     id="speech-voice"
+                    disabled={engine !== "web-speech"}
                     value={selectedVoiceUri}
                     onChange={(event) => setSelectedVoiceUri(event.target.value)}
-                    className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-                    <option value="">Tu dong chon voice tot nhat</option>
+                    className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900">
+                    <option value="">Tự động chọn voice tốt nhất</option>
                     {filteredVoices.map((voice) => (
                       <option key={voice.voiceURI} value={voice.voiceURI}>
                         {voice.name} ({voice.lang}) {voice.localService ? "- local" : "- cloud"}
@@ -255,11 +445,22 @@ export function SpeechPlaygroundPage() {
                     ))}
                   </select>
                 </div>
+
+                {engine === "google-translate" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="google-tts-url">Google Translate URL (lan gan nhat)</Label>
+                    <Input
+                      id="google-tts-url"
+                      readOnly
+                      value={lastGoogleTtsUrl || "Chưa tạo URL. Bấm 'Phát thử' để sinh URL."}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="speech-rate">Toc do: {rate.toFixed(2)}</Label>
+                  <Label htmlFor="speech-rate">Tốc độ: {rate.toFixed(2)}</Label>
                   <Input
                     id="speech-rate"
                     type="range"
@@ -272,7 +473,7 @@ export function SpeechPlaygroundPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="speech-pitch">Do cao: {pitch.toFixed(2)}</Label>
+                  <Label htmlFor="speech-pitch">Độ cao: {pitch.toFixed(2)}</Label>
                   <Input
                     id="speech-pitch"
                     type="range"
@@ -285,7 +486,7 @@ export function SpeechPlaygroundPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="speech-volume">Am luong: {volume.toFixed(2)}</Label>
+                  <Label htmlFor="speech-volume">Âm lượng: {volume.toFixed(2)}</Label>
                   <Input
                     id="speech-volume"
                     type="range"
@@ -299,7 +500,7 @@ export function SpeechPlaygroundPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="speech-text">Noi dung test</Label>
+                <Label htmlFor="speech-text">Nội dung test</Label>
                 <textarea
                   id="speech-text"
                   value={text}
@@ -307,20 +508,25 @@ export function SpeechPlaygroundPage() {
                   className="min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
                 />
                 <Button variant="outline" onClick={handleUsePreset}>
-                  Dung cau mau theo ngon ngu da chon
+                  Dùng câu mẫu theo ngôn ngữ đã chọn
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  onClick={handleSpeak}
+                  onClick={() => void handleSpeak()}
+                  disabled={isPlayDisabled}
                   className="gap-2 bg-cyan-600 text-white hover:bg-cyan-700">
-                  <Volume2 className="h-4 w-4" />
-                  Phat thu
+                  {isEngineLoading ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                  {isEngineLoading ? "Đang tải engine..." : "Phát thử"}
                 </Button>
                 <Button variant="outline" onClick={handleStop} className="gap-2">
                   <Square className="h-4 w-4" />
-                  Dung phat
+                  Dừng phát
                 </Button>
                 <Button
                   variant="outline"
@@ -329,7 +535,7 @@ export function SpeechPlaygroundPage() {
                     setPitch(1);
                     setVolume(1);
                   }}>
-                  Reset thong so
+                  Reset thông số
                 </Button>
               </div>
 
@@ -341,18 +547,25 @@ export function SpeechPlaygroundPage() {
 
               <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900/60">
                 <p>
-                  <span className="font-semibold">Trang thai:</span>{" "}
-                  {isSpeaking ? "Dang phat" : "Da dung"}
+                  <span className="font-semibold">Trạng thái:</span>{" "}
+                  {isSpeaking ? "Đang phát" : "Đã dừng"}
                 </p>
                 <p>
-                  <span className="font-semibold">Voice da chon:</span> {lastSelectedVoice}
+                  <span className="font-semibold">Engine đã phát:</span> {lastEngineUsed}
                 </p>
                 <p>
-                  <span className="font-semibold">Lan phat gan nhat:</span>{" "}
+                  <span className="font-semibold">Voice đã chọn:</span> {lastSelectedVoice}
+                </p>
+                <p>
+                  <span className="font-semibold">Lần phát gần nhất:</span>{" "}
                   {formatDateTime(lastSpeakAt)}
                 </p>
                 <p>
-                  <span className="font-semibold">Voice phu hop voi {language}:</span>{" "}
+                  <span className="font-semibold">Độ trễ bắt đầu phát:</span>{" "}
+                  {lastSpeakLatencyMs === null ? "Chưa có" : `${lastSpeakLatencyMs} ms`}
+                </p>
+                <p>
+                  <span className="font-semibold">Voice phù hợp với {language}:</span>{" "}
                   {filteredVoices.length}
                 </p>
               </div>
@@ -361,9 +574,9 @@ export function SpeechPlaygroundPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Danh sach voice hien co</CardTitle>
+              <CardTitle>Danh sách voice hiện có</CardTitle>
               <CardDescription>
-                Dung bang nay de xac dinh xem may co voice tieng Viet that hay khong.
+                Dùng bảng này để xác định xem máy có voice tiếng Việt thật hay không.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -386,14 +599,14 @@ export function SpeechPlaygroundPage() {
                         <td className="px-3 py-2 font-medium">{voice.name}</td>
                         <td className="px-3 py-2">{voice.lang}</td>
                         <td className="px-3 py-2">{voice.localService ? "Local" : "Cloud"}</td>
-                        <td className="px-3 py-2">{voice.default ? "Co" : "Khong"}</td>
+                        <td className="px-3 py-2">{voice.default ? "Có" : "Không"}</td>
                         <td className="px-3 py-2 text-xs opacity-80">{voice.voiceURI}</td>
                       </tr>
                     ))}
                     {voices.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
-                          Chua tai duoc danh sach voice. Thu refresh trang hoac cho them vai giay.
+                          Chưa tải được danh sách voice. Thử refresh trang hoặc chờ thêm vài giây.
                         </td>
                       </tr>
                     )}
@@ -405,14 +618,14 @@ export function SpeechPlaygroundPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Checklist test khuyen nghi</CardTitle>
+              <CardTitle>Checklist test khuyến nghị</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <p>1. Chon Tieng Viet, de auto voice va phat thu 3 lan lien tiep.</p>
-              <p>2. Thu tung voice vi-VN trong danh sach, ghi nhan voice nao doc tu nhien nhat.</p>
-              <p>3. Thu rate 0.9, pitch 1.05 va so sanh voi rate 1.0, pitch 1.0.</p>
-              <p>4. Doi qua EN roi quay lai VI de kiem tra fallback voice co doi dung khong.</p>
-              <p>5. Lap lai sau khi reload trang de kiem tra tinh on dinh cua voiceschanged.</p>
+              <p>1. Chọn Tiếng Việt, test lại cùng 1 câu với 3 engine Web/Responsive/Google.</p>
+              <p>2. Kiểm tra độ trễ bắt đầu phát và ghi lại engine đọc rõ tiếng Việt hơn.</p>
+              <p>3. Thử rate 0.9, pitch 1.05 và so sánh với rate 1.0, pitch 1.0.</p>
+              <p>4. Đổi qua EN rồi quay lại VI để kiểm tra fallback và quality.</p>
+              <p>5. Reload trang và lặp lại để kiểm tra khả năng phục hồi engine.</p>
             </CardContent>
           </Card>
         </div>

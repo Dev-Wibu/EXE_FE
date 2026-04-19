@@ -29,10 +29,17 @@ interface DeviceCheckDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   /** Called when user confirms devices are ready and wants to join */
-  onConfirm?: () => void;
+  onConfirm?: (_selection: DeviceCheckSelection) => void;
   displayName?: string;
   onDisplayNameChange?: (value: string) => void;
   showDisplayName?: boolean;
+}
+
+export interface DeviceCheckSelection {
+  audioDeviceId: string | null;
+  videoDeviceId: string | null;
+  isMicOn: boolean;
+  isCameraOn: boolean;
 }
 
 export function DeviceCheckDialog({
@@ -375,7 +382,12 @@ export function DeviceCheckDialog({
             <Button
               onClick={() => {
                 stopStream();
-                onConfirm();
+                onConfirm({
+                  audioDeviceId: selectedAudioId || null,
+                  videoDeviceId: selectedVideoId || null,
+                  isMicOn,
+                  isCameraOn,
+                });
               }}
               className="gap-2 bg-green-600 hover:bg-green-700">
               <Check className="h-4 w-4" />

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export type CameraPreviewState =
   | "idle"
@@ -36,9 +37,23 @@ const resolveCameraError = (error: unknown): { state: CameraPreviewState; messag
   };
 };
 
-export function useUserCameraPreview(autoStart = true) {
+const DEFAULT_VIDEO_CONSTRAINTS: MediaTrackConstraints = {
+  facingMode: "user",
+  width: { ideal: 640 },
+  height: { ideal: 360 },
+};
+
+const FALLBACK_CAMERA_MESSAGE =
+  "Không mở được camera đã chọn, hệ thống đã chuyển sang camera mặc định.";
+
+export function useUserCameraPreview(
+  autoStart = true,
+  preferredVideoDeviceId: string | null = null
+) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const requestIdRef = useRef(0);
+  const fallbackToastDeviceIdRef = useRef<string | null>(null);
 
   const isSupported = useMemo(
     () => typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia,
@@ -51,6 +66,8 @@ export function useUserCameraPreview(autoStart = true) {
   );
 
   const stopCamera = useCallback(() => {
+    requestIdRef.current += 1;
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -74,6 +91,10 @@ export function useUserCameraPreview(autoStart = true) {
     });
   }, []);
 
+  useEffect(() => {
+    fallbackToastDeviceIdRef.current = null;
+  }, [preferredVideoDeviceId]);
+
   const startCamera = useCallback(async () => {
     if (!isSupported) {
       setState("unsupported");
@@ -87,18 +108,15 @@ export function useUserCameraPreview(autoStart = true) {
       return true;
     }
 
+    const requestId = ++requestIdRef.current;
     setState("requesting");
     setMessage(null);
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 640 },
-          height: { ideal: 360 },
-        },
-        audio: false,
-      });
+    const attachStream = async (stream: MediaStream) => {
+      if (requestId !== requestIdRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return false;
+      }
 
       streamRef.current = stream;
 
@@ -108,16 +126,68 @@ export function useUserCameraPreview(autoStart = true) {
       }
 
       setState("granted");
+      return true;
+    };
+
+    const preferredConstraints: MediaTrackConstraints = preferredVideoDeviceId
+      ? {
+          deviceId: { exact: preferredVideoDeviceId },
+          width: { ideal: 640 },
+          height: { ideal: 360 },
+        }
+      : DEFAULT_VIDEO_CONSTRAINTS;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: preferredConstraints,
+        audio: false,
+      });
+
+      const attached = await attachStream(stream);
+      if (!attached) {
+        return false;
+      }
+
+      setState("granted");
       setMessage(null);
       return true;
     } catch (error) {
-      stopCamera();
       const resolved = resolveCameraError(error);
-      setState(resolved.state);
-      setMessage(resolved.message);
-      return false;
+      const canFallbackToDefault = !!preferredVideoDeviceId && resolved.state === "error";
+
+      if (!canFallbackToDefault) {
+        stopCamera();
+        setState(resolved.state);
+        setMessage(resolved.message);
+        return false;
+      }
+
+      try {
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({
+          video: DEFAULT_VIDEO_CONSTRAINTS,
+          audio: false,
+        });
+
+        const attached = await attachStream(fallbackStream);
+        if (!attached) {
+          return false;
+        }
+
+        setMessage(FALLBACK_CAMERA_MESSAGE);
+        if (fallbackToastDeviceIdRef.current !== preferredVideoDeviceId) {
+          fallbackToastDeviceIdRef.current = preferredVideoDeviceId;
+          toast.warning(FALLBACK_CAMERA_MESSAGE);
+        }
+        return true;
+      } catch (fallbackError) {
+        stopCamera();
+        const fallbackResolved = resolveCameraError(fallbackError);
+        setState(fallbackResolved.state);
+        setMessage(fallbackResolved.message);
+        return false;
+      }
     }
-  }, [isSupported, stopCamera]);
+  }, [isSupported, preferredVideoDeviceId, stopCamera]);
 
   const toggleCamera = useCallback(() => {
     if (streamRef.current) {
@@ -144,6 +214,25 @@ export function useUserCameraPreview(autoStart = true) {
       stopCamera();
     };
   }, [autoStart, startCamera, stopCamera]);
+
+  useEffect(() => {
+    if (state !== "granted") {
+      return;
+    }
+
+    const videoElement = videoRef.current;
+    const stream = streamRef.current;
+
+    if (!videoElement || !stream) {
+      return;
+    }
+
+    if (videoElement.srcObject !== stream) {
+      videoElement.srcObject = stream;
+    }
+
+    void videoElement.play().catch(() => undefined);
+  }, [state]);
 
   return {
     videoRef,

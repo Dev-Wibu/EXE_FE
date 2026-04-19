@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import { useSpeechRecognition, useSpeechSynthesis } from "@/hooks";
 import { $api } from "@/lib/api";
@@ -197,6 +198,13 @@ export function useAIInterviewSession() {
   // chatInputValue là state được lift lên từ ChatInput để callback STT có thể cập nhật trực tiếp
   const [chatInputValue, setChatInputValue] = useState("");
 
+  const handleSpeechListeningReminder = useCallback((elapsedMs: number) => {
+    const elapsedMinutes = Math.max(1, Math.floor(elapsedMs / 60000));
+    toast.info(
+      `Ban da ghi am ${elapsedMinutes} phut. Bam nut mic o man hinh chinh de dung va gui cau tra loi.`
+    );
+  }, []);
+
   // Khởi tạo STT (Speech-to-Text) — onFinalTranscript gọi trực tiếp từ native event, không qua useEffect
   const {
     isListening,
@@ -204,9 +212,16 @@ export function useAIInterviewSession() {
     isSupported: isSpeechRecognitionSupported,
     startListening,
     stopListening,
-  } = useSpeechRecognition(speechLanguage, (finalText) => {
-    setChatInputValue((prev) => (prev.trim() ? prev.trim() + " " + finalText : finalText));
-  });
+  } = useSpeechRecognition(
+    speechLanguage,
+    (finalText) => {
+      setChatInputValue((prev) => (prev.trim() ? prev.trim() + " " + finalText : finalText));
+    },
+    {
+      reminderIntervalMs: 5 * 60 * 1000,
+      onReminder: handleSpeechListeningReminder,
+    }
+  );
 
   const {
     speakingId,

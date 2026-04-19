@@ -146,15 +146,17 @@ export function InterviewStage({
 
       <div className="absolute top-4 right-4 z-20 w-56 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/95 shadow-lg shadow-black/40 sm:w-64 md:w-[360px] lg:w-[420px]">
         <div className="relative aspect-video bg-slate-950">
-          {cameraState === "granted" ? (
-            <video
-              ref={cameraVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="h-full w-full object-cover"
-            />
-          ) : (
+          <video
+            ref={cameraVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className={cn(
+              "h-full w-full object-cover transition-opacity duration-200",
+              cameraState === "granted" ? "opacity-100" : "opacity-0"
+            )}
+          />
+          {cameraState !== "granted" && (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-300">
               {cameraState === "requesting" ? (
                 <LoaderCircle className="h-5 w-5 animate-spin" />

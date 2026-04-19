@@ -40,7 +40,7 @@ import {
 } from "@/pages/Mentor";
 import { PaymentCancelPage, PaymentSuccessPage } from "@/pages/Payment";
 import { MediaToolkitPlaygroundPage } from "@/pages/Shared/MediaToolkitPlaygroundPage";
-import { SpeechPlaygroundPage } from "@/pages/Shared/SpeechPlaygroundPage";
+import { SpeechPlaygroundPage } from "@/pages/Shared/SpeechPlaygroundPage.tsx";
 import {
   FeedbackModerationPage,
   MentorApplicationsPage,
