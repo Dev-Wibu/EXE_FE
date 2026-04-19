@@ -1,9 +1,8 @@
 import {
   ArrowLeft,
-  Camera,
   CheckCircle2,
+  Languages,
   MessageSquare,
-  TriangleAlert,
   Volume2,
   VolumeOff,
 } from "lucide-react";
@@ -14,6 +13,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+import type { SpeechLanguageCode } from "./types";
+
 export function InterviewHeader({
   phaseName,
   questionIndex,
@@ -21,12 +22,12 @@ export function InterviewHeader({
   finished,
   isTTSSupported,
   isMuted,
+  speechLanguage,
+  speechLanguageLabel,
+  canSwitchSpeechLanguage,
+  onSpeechLanguageChange,
   onToggleMute,
   onBack,
-  faceBehaviorEnabled,
-  faceStatusLabel,
-  faceStatusWarning,
-  faceWarningCount,
 }: {
   phaseName: string;
   questionIndex: number;
@@ -34,12 +35,12 @@ export function InterviewHeader({
   finished: boolean;
   isTTSSupported: boolean;
   isMuted: boolean;
+  speechLanguage: SpeechLanguageCode;
+  speechLanguageLabel: string;
+  canSwitchSpeechLanguage: boolean;
+  onSpeechLanguageChange: (_language: SpeechLanguageCode) => void;
   onToggleMute: () => void;
   onBack: () => void;
-  faceBehaviorEnabled: boolean;
-  faceStatusLabel: string;
-  faceStatusWarning: boolean;
-  faceWarningCount: number;
 }) {
   const progress = totalQuestions > 0 ? (questionIndex / totalQuestions) * 100 : 0;
   const safeProgress = Math.max(0, Math.min(progress, 100));
@@ -95,23 +96,40 @@ export function InterviewHeader({
           </div>
         )}
 
-        {!finished && faceBehaviorEnabled && (
-          <Badge
-            variant="outline"
-            className={cn(
-              "hidden items-center gap-1.5 rounded-full text-[11px] md:inline-flex",
-              faceStatusWarning
-                ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
-                : "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-300"
-            )}>
-            {faceStatusWarning ? (
-              <TriangleAlert className="h-3 w-3" />
-            ) : (
-              <Camera className="h-3 w-3" />
-            )}
-            <span>{faceStatusLabel}</span>
-            {faceWarningCount > 0 && <span>({faceWarningCount})</span>}
-          </Badge>
+        {!finished && (
+          <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-2.5 py-1 text-[11px] md:inline-flex dark:border-slate-700 dark:bg-slate-800/70">
+            <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-200">
+              <Languages className="h-3.5 w-3.5" />
+              Giọng nói
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={!canSwitchSpeechLanguage}
+                onClick={() => onSpeechLanguageChange("vi-VN")}
+                className={cn(
+                  "rounded-full px-2 py-0.5 font-semibold transition-colors",
+                  speechLanguage === "vi-VN"
+                    ? "bg-cyan-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                )}>
+                VI
+              </button>
+              <button
+                type="button"
+                disabled={!canSwitchSpeechLanguage}
+                onClick={() => onSpeechLanguageChange("en-US")}
+                className={cn(
+                  "rounded-full px-2 py-0.5 font-semibold transition-colors",
+                  speechLanguage === "en-US"
+                    ? "bg-cyan-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                )}>
+                EN
+              </button>
+            </div>
+            <span className="text-slate-500 dark:text-slate-400">{speechLanguageLabel}</span>
+          </div>
         )}
 
         {isTTSSupported && (

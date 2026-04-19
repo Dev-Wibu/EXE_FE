@@ -112,7 +112,6 @@ export const API_ENDPOINTS = {
     CREATE: "/api/ai-interviews",
     RESULT: "/api/ai-interviews/:id/result",
     PAYMENT: "/api/ai-interviews/payment",
-    FACE_ANALYSIS: "/api/interview-analysis/face-behavior",
   },
 
   // Mock Interview endpoints
@@ -355,7 +354,6 @@ export const API_ENDPOINTS = {
   INTERVIEW_V1: {
     START: "/api/v1/interview/start/:sessionKey",
     SUBMIT: "/api/v1/interview/submit",
-    PROCTORING_TRACK: "/api/v1/proctoring/track",
   },
 } as const;
 

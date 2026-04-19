@@ -7,10 +7,13 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { ChatPanel } from "./ChatPanel";
 import { InterviewHeader } from "./InterviewHeader";
+import { InterviewStage } from "./InterviewStage";
 import { useAIInterviewSession } from "./useAIInterviewSession";
+import { useUserCameraPreview } from "./useUserCameraPreview";
 
 export function AIInterviewSessionPage() {
   const session = useAIInterviewSession();
+  const cameraPreview = useUserCameraPreview();
 
   // ---- Error state: missing session key ----
   if (!session.sessionKey) {
@@ -89,7 +92,7 @@ export function AIInterviewSessionPage() {
 
   // ---- Main chat UI ----
   return (
-    <div className="flex h-[calc(100vh-64px)] flex-col">
+    <div className="flex h-[calc(100vh-64px)] flex-col bg-slate-950">
       <InterviewHeader
         phaseName={session.currentPhase}
         questionIndex={session.currentQuestionIndex}
@@ -97,45 +100,57 @@ export function AIInterviewSessionPage() {
         finished={session.interviewFinished}
         isTTSSupported={session.isTTSSupported}
         isMuted={session.isMuted}
+        speechLanguage={session.speechLanguage}
+        speechLanguageLabel={session.speechLanguageLabel}
+        canSwitchSpeechLanguage={session.canSwitchSpeechLanguage}
+        onSpeechLanguageChange={session.handleSpeechLanguageChange}
         onToggleMute={session.toggleMute}
         onBack={session.handleNavigateBack}
-        faceBehaviorEnabled={session.faceBehaviorEnabled}
-        faceStatusLabel={session.faceBehaviorStatusLabel}
-        faceStatusWarning={session.faceBehaviorHasWarning}
-        faceWarningCount={session.faceBehaviorWarningCount}
       />
-      <ChatPanel
-        messages={session.messages}
-        userAvatarUrl={session.user?.avatarUrl ?? undefined}
-        isTTSSupported={session.isTTSSupported}
-        onToggleSpeak={session.handleToggleSpeak}
-        speakingId={session.speakingId}
-        isEvaluating={session.isEvaluating}
-        isSubmitting={session.isSubmitting}
-        hasStarted={session.hasStarted}
-        messagesEndRef={session.messagesEndRef}
-        interviewFinished={session.interviewFinished}
-        sessionExpiredMidway={session.sessionExpiredMidway}
-        onNavigateToList={session.handleNavigateBack}
-        onNavigateToSetup={() => session.navigate("/user/ai-interview/setup")}
-        onViewResults={session.handleViewResults}
-        onSendAnswer={session.handleSendAnswer}
-        isListening={session.isListening}
-        interimTranscript={session.interimTranscript}
-        isSpeechSupported={session.isSpeechRecognitionSupported}
-        chatInputValue={session.chatInputValue}
-        onChatInputChange={session.setChatInputValue}
-        onStartListening={session.startListening}
-        onStopListening={session.stopListening}
-        faceBehaviorEnabled={session.faceBehaviorEnabled}
-        faceBehaviorModeLabel={session.faceBehaviorModeLabel}
-        facePermissionState={session.faceBehaviorPermissionState}
-        facePermissionMessage={session.faceBehaviorPermissionMessage}
-        faceIsMonitoring={session.faceBehaviorMonitoring}
-        faceWarningText={session.faceBehaviorWarningText}
-        faceVideoRef={session.faceBehaviorVideoRef}
-        faceCanvasRef={session.faceBehaviorCanvasRef}
-      />
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <InterviewStage
+          phaseName={session.currentPhase}
+          questionIndex={session.currentQuestionIndex}
+          totalQuestions={session.totalQuestions}
+          interviewFinished={session.interviewFinished}
+          sessionExpiredMidway={session.sessionExpiredMidway}
+          isListening={session.isListening}
+          isSubmitting={session.isSubmitting}
+          isEvaluating={session.isEvaluating}
+          cameraState={cameraPreview.state}
+          cameraMessage={cameraPreview.message}
+          cameraVideoRef={cameraPreview.videoRef}
+          onToggleCamera={cameraPreview.toggleCamera}
+        />
+
+        <div className="h-[52vh] min-h-0 md:h-auto md:w-[430px] lg:w-[470px]">
+          <ChatPanel
+            messages={session.messages}
+            userAvatarUrl={session.user?.avatarUrl ?? undefined}
+            isTTSSupported={session.isTTSSupported}
+            onToggleSpeak={session.handleToggleSpeak}
+            speakingId={session.speakingId}
+            isEvaluating={session.isEvaluating}
+            isSubmitting={session.isSubmitting}
+            hasStarted={session.hasStarted}
+            messagesEndRef={session.messagesEndRef}
+            interviewFinished={session.interviewFinished}
+            sessionExpiredMidway={session.sessionExpiredMidway}
+            onNavigateToList={session.handleNavigateBack}
+            onNavigateToSetup={() => session.navigate("/user/ai-interview/setup")}
+            onViewResults={session.handleViewResults}
+            onSendAnswer={session.handleSendFromComposer}
+            isListening={session.isListening}
+            interimTranscript={session.interimTranscript}
+            isSpeechSupported={session.isSpeechRecognitionSupported}
+            canUseSpeechInput={session.canUseSpeechInput}
+            speechLanguageLabel={session.speechLanguageLabel}
+            chatInputValue={session.chatInputValue}
+            onChatInputChange={session.setChatInputValue}
+            onToggleListening={session.handleToggleListening}
+          />
+        </div>
+      </div>
     </div>
   );
 }
