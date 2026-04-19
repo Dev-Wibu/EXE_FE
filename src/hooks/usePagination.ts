@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export interface PaginationConfig {
@@ -31,6 +31,56 @@ export interface PaginationActions {
 }
 
 export interface UsePaginationReturn extends PaginationState, PaginationActions {}
+
+export interface HybridPageSizeConfig {
+  key: string;
+  defaultPageSize: number;
+  allowedPageSizes?: number[];
+}
+
+const PAGE_SIZE_STORAGE_KEY_PREFIX = "pagination_page_size_";
+const PAGE_SIZE_QUERY_PARAM_PREFIX = "ps_";
+const DEFAULT_PAGE_SIZE = 10;
+
+const sanitizePersistenceKey = (rawKey: string): string => {
+  const sanitized = rawKey
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return sanitized || "default";
+};
+
+const parsePositiveInteger = (value: string | null): number | null => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+};
+
+const normalizeAllowedPageSizes = (allowedPageSizes?: number[]): number[] | null => {
+  if (!allowedPageSizes || allowedPageSizes.length === 0) {
+    return null;
+  }
+
+  const uniquePositiveNumbers = Array.from(
+    new Set(allowedPageSizes.filter((size) => Number.isInteger(size) && size > 0))
+  );
+
+  return uniquePositiveNumbers.length > 0 ? uniquePositiveNumbers : null;
+};
+
+export const createPaginationListKey = (...segments: Array<string | number>): string => {
+  const combined = segments.map(String).join("_");
+  return sanitizePersistenceKey(combined);
+};
 
 export const usePagination = ({
   initialPage = 1,
@@ -169,6 +219,155 @@ export const usePagination = ({
     goToLastPage,
     reset,
   };
+};
+
+export const useHybridPageSize = ({
+  key,
+  defaultPageSize,
+  allowedPageSizes,
+}: HybridPageSizeConfig) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const listKey = useMemo(() => sanitizePersistenceKey(key), [key]);
+  const pageSizeQueryParam = useMemo(() => `${PAGE_SIZE_QUERY_PARAM_PREFIX}${listKey}`, [listKey]);
+  const pageSizeStorageKey = useMemo(() => `${PAGE_SIZE_STORAGE_KEY_PREFIX}${listKey}`, [listKey]);
+
+  const normalizedAllowedPageSizes = useMemo(
+    () => normalizeAllowedPageSizes(allowedPageSizes),
+    [allowedPageSizes]
+  );
+
+  const normalizedDefaultPageSize = useMemo(() => {
+    if (
+      Number.isInteger(defaultPageSize) &&
+      defaultPageSize > 0 &&
+      (!normalizedAllowedPageSizes || normalizedAllowedPageSizes.includes(defaultPageSize))
+    ) {
+      return defaultPageSize;
+    }
+
+    return normalizedAllowedPageSizes?.[0] ?? DEFAULT_PAGE_SIZE;
+  }, [defaultPageSize, normalizedAllowedPageSizes]);
+
+  const isAllowedPageSize = useCallback(
+    (value: number): boolean => {
+      if (!Number.isInteger(value) || value <= 0) {
+        return false;
+      }
+
+      return !normalizedAllowedPageSizes || normalizedAllowedPageSizes.includes(value);
+    },
+    [normalizedAllowedPageSizes]
+  );
+
+  const readPageSizeFromUrl = useCallback(
+    (params: URLSearchParams): number | null => {
+      const parsed = parsePositiveInteger(params.get(pageSizeQueryParam));
+      if (parsed === null || !isAllowedPageSize(parsed)) {
+        return null;
+      }
+
+      return parsed;
+    },
+    [isAllowedPageSize, pageSizeQueryParam]
+  );
+
+  const readPageSizeFromStorage = useCallback((): number | null => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    try {
+      const parsed = parsePositiveInteger(window.localStorage.getItem(pageSizeStorageKey));
+      if (parsed === null || !isAllowedPageSize(parsed)) {
+        return null;
+      }
+
+      return parsed;
+    } catch {
+      return null;
+    }
+  }, [isAllowedPageSize, pageSizeStorageKey]);
+
+  const pageSizeFromUrl = readPageSizeFromUrl(searchParams);
+  const pageSizeFromStorage = readPageSizeFromStorage();
+  const pageSize = pageSizeFromUrl ?? pageSizeFromStorage ?? normalizedDefaultPageSize;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(pageSizeStorageKey, String(pageSize));
+    } catch {
+      // Ignore storage write failures (private mode/quota exceeded)
+    }
+  }, [pageSize, pageSizeStorageKey]);
+
+  useEffect(() => {
+    const expectedUrlValue = pageSize === normalizedDefaultPageSize ? null : String(pageSize);
+    const currentUrlValue = searchParams.get(pageSizeQueryParam);
+
+    if (currentUrlValue === expectedUrlValue) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    if (expectedUrlValue === null) {
+      nextSearchParams.delete(pageSizeQueryParam);
+    } else {
+      nextSearchParams.set(pageSizeQueryParam, expectedUrlValue);
+    }
+
+    if (nextSearchParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [normalizedDefaultPageSize, pageSize, pageSizeQueryParam, searchParams, setSearchParams]);
+
+  const setHybridPageSize = useCallback(
+    (nextPageSize: number) => {
+      if (!isAllowedPageSize(nextPageSize)) {
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem(pageSizeStorageKey, String(nextPageSize));
+        } catch {
+          // Ignore storage write failures (private mode/quota exceeded)
+        }
+      }
+
+      const expectedUrlValue =
+        nextPageSize === normalizedDefaultPageSize ? null : String(nextPageSize);
+      const currentUrlValue = searchParams.get(pageSizeQueryParam);
+      if (currentUrlValue === expectedUrlValue) {
+        return;
+      }
+
+      const nextSearchParams = new URLSearchParams(searchParams);
+      if (expectedUrlValue === null) {
+        nextSearchParams.delete(pageSizeQueryParam);
+      } else {
+        nextSearchParams.set(pageSizeQueryParam, expectedUrlValue);
+      }
+
+      if (nextSearchParams.toString() !== searchParams.toString()) {
+        setSearchParams(nextSearchParams, { replace: true });
+      }
+    },
+    [
+      isAllowedPageSize,
+      normalizedDefaultPageSize,
+      pageSizeQueryParam,
+      pageSizeStorageKey,
+      searchParams,
+      setSearchParams,
+    ]
+  );
+
+  return [pageSize, setHybridPageSize] as const;
 };
 
 // Utility function for generating page info text

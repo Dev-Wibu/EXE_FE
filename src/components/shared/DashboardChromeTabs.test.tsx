@@ -75,7 +75,7 @@ describe("DashboardChromeTabs", () => {
     expect(onCloseAllTabs).not.toHaveBeenCalled();
   });
 
-  it("đặt nút dấu cộng trong cùng luồng tab ở full mode và tab có width co giãn", () => {
+  it("đặt nút dấu cộng trong cùng luồng tab ở full mode và menu vẫn neo theo viewport", () => {
     render(
       <DashboardChromeTabs
         {...baseProps}
@@ -90,6 +90,12 @@ describe("DashboardChromeTabs", () => {
     const strip = screen.getByTestId("chrome-tabs-full-strip");
     const plusButton = within(strip).getByRole("button", { name: "Mở menu tab" });
     expect(plusButton).toBeTruthy();
+
+    fireEvent.click(plusButton);
+    const menuContainer = screen
+      .getByRole("button", { name: "Quản lý người dùng" })
+      .closest(".fixed");
+    expect(menuContainer).toBeTruthy();
 
     const dashboardTab = screen.getByText("Dashboard").closest("div");
     expect(dashboardTab?.getAttribute("style") || "").toContain("clamp(");

@@ -1,5 +1,5 @@
 import { Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -69,6 +69,12 @@ export function DashboardChromeTabs({
   theme,
 }: DashboardChromeTabsProps) {
   const [showNewTabMenu, setShowNewTabMenu] = useState(false);
+  const [newTabMenuPosition, setNewTabMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const newTabButtonRef = useRef<HTMLButtonElement>(null);
+  const newTabMenuRef = useRef<HTMLDivElement>(null);
   const tabCount = Math.max(tabs.length, 1);
   const tabGapPx = 4;
   const addButtonReservedWidthPx = 40;
@@ -76,13 +82,91 @@ export function DashboardChromeTabs({
     addButtonReservedWidthPx + (tabCount - 1) * tabGapPx
   }px) / ${tabCount}), 220px)`;
 
+  const updateNewTabMenuPosition = useCallback(() => {
+    if (!showNewTabMenu || !newTabButtonRef.current || !newTabMenuRef.current) {
+      return;
+    }
+
+    const buttonRect = newTabButtonRef.current.getBoundingClientRect();
+    const menuRect = newTabMenuRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const safeMargin = 8;
+    const menuGap = 6;
+
+    const canOpenRight = buttonRect.left + menuRect.width <= viewportWidth - safeMargin;
+    const canOpenLeft = buttonRect.right - menuRect.width >= safeMargin;
+
+    let left = buttonRect.left;
+    if (!canOpenRight && canOpenLeft) {
+      left = buttonRect.right - menuRect.width;
+    }
+    left = Math.max(safeMargin, Math.min(left, viewportWidth - menuRect.width - safeMargin));
+
+    let top = buttonRect.bottom + menuGap;
+    if (top + menuRect.height > viewportHeight - safeMargin) {
+      const aboveTop = buttonRect.top - menuRect.height - menuGap;
+      if (aboveTop >= safeMargin) {
+        top = aboveTop;
+      } else {
+        top = Math.max(safeMargin, viewportHeight - menuRect.height - safeMargin);
+      }
+    }
+
+    setNewTabMenuPosition({ top, left });
+  }, [showNewTabMenu]);
+
+  const closeNewTabMenu = useCallback(() => {
+    setShowNewTabMenu(false);
+    setNewTabMenuPosition(null);
+  }, []);
+
+  useEffect(() => {
+    if (!showNewTabMenu) {
+      return;
+    }
+
+    updateNewTabMenuPosition();
+
+    const repositionMenu = () => updateNewTabMenuPosition();
+    window.addEventListener("resize", repositionMenu);
+    window.addEventListener("scroll", repositionMenu, true);
+
+    return () => {
+      window.removeEventListener("resize", repositionMenu);
+      window.removeEventListener("scroll", repositionMenu, true);
+    };
+  }, [showNewTabMenu, updateNewTabMenuPosition]);
+
+  useEffect(() => {
+    if (!showNewTabMenu) {
+      return;
+    }
+
+    const closeByEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeNewTabMenu();
+      }
+    };
+
+    window.addEventListener("keydown", closeByEscape);
+    return () => {
+      window.removeEventListener("keydown", closeByEscape);
+    };
+  }, [closeNewTabMenu, showNewTabMenu]);
+
   const newTabButton = (
-    <div
-      data-testid="chrome-tabs-new-tab"
-      className={cn("relative shrink-0", showNewTabMenu && "z-20")}>
+    <div data-testid="chrome-tabs-new-tab" className={cn("shrink-0", showNewTabMenu && "z-40")}>
       <button
+        ref={newTabButtonRef}
         type="button"
-        onClick={() => setShowNewTabMenu(!showNewTabMenu)}
+        onClick={() => {
+          if (showNewTabMenu) {
+            closeNewTabMenu();
+            return;
+          }
+          setShowNewTabMenu(true);
+        }}
         aria-label="Mở menu tab"
         className={cn(
           "flex h-8 w-8 items-center justify-center rounded-xl border border-transparent transition-colors dark:bg-slate-700 dark:hover:bg-slate-600",
@@ -94,10 +178,16 @@ export function DashboardChromeTabs({
 
       {showNewTabMenu && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setShowNewTabMenu(false)} />
+          <div className="fixed inset-0 z-30" onClick={closeNewTabMenu} />
           <div
+            ref={newTabMenuRef}
+            style={{
+              top: newTabMenuPosition?.top ?? 0,
+              left: newTabMenuPosition?.left ?? 0,
+              visibility: newTabMenuPosition ? "visible" : "hidden",
+            }}
             className={cn(
-              "absolute top-full right-0 z-20 mt-1 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "fixed z-40 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
               theme.menuWidth || "w-48"
             )}>
             {menuGroups.map((group, groupIdx) => (
@@ -109,7 +199,7 @@ export function DashboardChromeTabs({
                     key={item.type}
                     onClick={() => {
                       onNewTab(item.type);
-                      setShowNewTabMenu(false);
+                      closeNewTabMenu();
                     }}
                     className={cn(
                       "flex w-full items-center gap-2 px-3 py-2 text-sm dark:text-slate-200 dark:hover:bg-slate-700",
@@ -136,7 +226,7 @@ export function DashboardChromeTabs({
                           return;
                         }
                         action.onSelect();
-                        setShowNewTabMenu(false);
+                        closeNewTabMenu();
                       }}
                       disabled={action.disabled}
                       className={cn(
@@ -216,7 +306,7 @@ export function DashboardChromeTabs({
       {/* Tab List */}
       <div
         data-testid="chrome-tabs-full-strip"
-        className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-visible px-2 pt-2">
+        className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-visible px-2 pt-2 pb-1">
         {tabs.map((tab) => {
           const Icon = tabIcons?.[tab.type];
           const isActive = tab.id === activeTabId;
