@@ -29,8 +29,8 @@ export function BookingSuccessPage() {
           </div>
           <CardTitle className="text-2xl">Yêu cầu đã được gửi!</CardTitle>
           <CardDescription className="text-base">
-            Phiên phỏng vấn của bạn đang chờ Staff/Admin xét duyệt. Bạn sẽ có thể vào phòng sau khi
-            được duyệt.
+            Phiên phỏng vấn của bạn đang chờ Mentor xét duyệt. Bạn sẽ có thể vào phòng sau khi được
+            duyệt.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
