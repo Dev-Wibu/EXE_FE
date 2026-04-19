@@ -3,7 +3,8 @@
  * Displays mentor's interview sessions with option to join video call or write reviews
  */
 
-import { Calendar, Check, Clock, LogIn, MessageSquare, User, Video, X } from "lucide-react";
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
+import { Calendar, Check, Clock, LogIn, MessageSquare, Search, User, Video, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,10 +15,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
 import { LoadingCardList } from "@/components/ui/loading-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMentorReviews } from "@/hooks/useMentorReview";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSessions, useUpdateSessionStatus } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
@@ -42,6 +52,53 @@ const statusMap: Record<
   COMPLETED: { label: "Hoàn thành", variant: "outline", color: "bg-slate-100 text-slate-600" },
   REJECTED: { label: "Bị từ chối", variant: "destructive", color: "bg-red-100 text-red-600" },
   CANCELED: { label: "Đã hủy", variant: "destructive", color: "bg-red-100 text-red-600" },
+};
+
+type SessionListTab = "draft" | "others";
+type DraftTimeFilter = "all" | "hasJoinTime" | "noJoinTime";
+type OtherStatusFilter =
+  | "all"
+  | "SCHEDULED"
+  | "PAID"
+  | "ONGOING"
+  | "COMPLETED"
+  | "REJECTED"
+  | "CANCELED";
+
+type SortableSession = Session & {
+  sessionSortValue: number;
+};
+
+const getSessionSortValue = (session: Session): number => {
+  const joinTimeSort = toTimestamp(session.joinTime);
+  if (typeof joinTimeSort === "number") {
+    return joinTimeSort;
+  }
+
+  const startTimeSort = toTimestamp(session.startTime1);
+  if (typeof startTimeSort === "number") {
+    return startTimeSort;
+  }
+
+  return typeof session.id === "number" ? session.id : 0;
+};
+
+const matchesSessionSearch = (session: Session, query: string): boolean => {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const roomNameMatch = session.roomName?.toLowerCase().includes(normalizedQuery) ?? false;
+  const roomUrlMatch = session.roomUrl?.toLowerCase().includes(normalizedQuery) ?? false;
+
+  return (
+    session.id?.toString().includes(normalizedQuery) ||
+    session.userId?.toString().includes(normalizedQuery) ||
+    session.userId2?.toString().includes(normalizedQuery) ||
+    roomNameMatch ||
+    roomUrlMatch
+  );
 };
 
 interface SessionCardProps {
@@ -248,7 +305,11 @@ function SessionCard({
 export function MentorSessionsPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const [pageSize, setPageSize] = useState(10);
+  const [activeTab, setActiveTab] = useState<SessionListTab>("draft");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [draftTimeFilter, setDraftTimeFilter] = useState<DraftTimeFilter>("all");
+  const [otherStatusFilter, setOtherStatusFilter] = useState<OtherStatusFilter>("all");
+
   const {
     data: allSessions = [],
     isLoading: sessionsLoading,
@@ -272,22 +333,102 @@ export function MentorSessionsPage() {
 
   const isLoading = sessionsLoading || reviewsLoading;
 
-  // Filter sessions where current user is the mentor (userId2)
-  const mentorSessions = allSessions.filter((session: Session) => session.userId2 === user?.id);
+  // Keep source data deterministic so default sort always yields newest-first consistently.
+  const mentorSessions = useMemo(
+    () =>
+      [...allSessions]
+        .filter((session: Session) => session.userId2 === user?.id)
+        .sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
+    [allSessions, user?.id]
+  );
 
   // Get session IDs that already have mentor reviews
-  const reviewBySessionId = new Map<number, number>();
-  reviews.forEach((review) => {
-    if (typeof review.session?.id === "number" && typeof review.id === "number") {
-      reviewBySessionId.set(review.session.id, review.id);
-    }
-  });
-  const reviewSessionIds = new Set(reviewBySessionId.keys());
+  const reviewBySessionId = useMemo(() => {
+    const reviewMap = new Map<number, number>();
+    reviews.forEach((review) => {
+      if (typeof review.session?.id === "number" && typeof review.id === "number") {
+        reviewMap.set(review.session.id, review.id);
+      }
+    });
+
+    return reviewMap;
+  }, [reviews]);
+
+  const reviewSessionIds = useMemo(() => new Set(reviewBySessionId.keys()), [reviewBySessionId]);
+
+  const draftSessions = useMemo(
+    () => mentorSessions.filter((session) => session.status === "DRAFT"),
+    [mentorSessions]
+  );
+  const otherSessions = useMemo(
+    () => mentorSessions.filter((session) => session.status !== "DRAFT"),
+    [mentorSessions]
+  );
+
+  const filteredDraftSessions = useMemo(
+    () =>
+      draftSessions.filter((session) => {
+        if (!matchesSessionSearch(session, searchQuery)) {
+          return false;
+        }
+
+        if (draftTimeFilter === "hasJoinTime") {
+          return !!session.joinTime;
+        }
+
+        if (draftTimeFilter === "noJoinTime") {
+          return !session.joinTime;
+        }
+
+        return true;
+      }),
+    [draftSessions, draftTimeFilter, searchQuery]
+  );
+
+  const filteredOtherSessions = useMemo(
+    () =>
+      otherSessions.filter((session) => {
+        if (!matchesSessionSearch(session, searchQuery)) {
+          return false;
+        }
+
+        if (otherStatusFilter !== "all") {
+          return session.status === otherStatusFilter;
+        }
+
+        return true;
+      }),
+    [otherSessions, otherStatusFilter, searchQuery]
+  );
+
+  const sortableDraftSessions = useMemo<SortableSession[]>(
+    () =>
+      filteredDraftSessions.map((session) => ({
+        ...session,
+        sessionSortValue: getSessionSortValue(session),
+      })),
+    [filteredDraftSessions]
+  );
+
+  const sortableOtherSessions = useMemo<SortableSession[]>(
+    () =>
+      filteredOtherSessions.map((session) => ({
+        ...session,
+        sessionSortValue: getSessionSortValue(session),
+      })),
+    [filteredOtherSessions]
+  );
+
+  const activeSessions = activeTab === "draft" ? sortableDraftSessions : sortableOtherSessions;
 
   // Apply sorting
-  const { sortedData, getSortProps } = useSortable(mentorSessions);
+  const { sortedData, getSortProps } = useSortable(activeSessions);
 
   // Apply pagination
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_mentor_sessions_mentorsessionspage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -417,56 +558,155 @@ export function MentorSessionsPage() {
         />
       ) : (
         <>
-          {/* Sort Controls */}
+          {/* Controls */}
           <Card className="border-emerald-100 p-4 dark:border-slate-800">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Sắp xếp theo:
-              </span>
-              <SortButton {...getSortProps("id")}>ID</SortButton>
-              <SortButton {...getSortProps("status")}>Trạng thái</SortButton>
+            <div className="space-y-4">
+              <Tabs
+                value={activeTab}
+                onValueChange={(tab) => {
+                  setActiveTab(tab as SessionListTab);
+                  pagination.goToFirstPage();
+                }}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="draft">Chờ duyệt ({draftSessions.length})</TabsTrigger>
+                  <TabsTrigger value="others">
+                    Các phiên còn lại ({otherSessions.length})
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div className="relative">
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      pagination.goToFirstPage();
+                    }}
+                    placeholder="Tìm theo ID phiên, học viên, phòng..."
+                    className="pl-9"
+                  />
+                </div>
+                {activeTab === "draft" ? (
+                  <Select
+                    value={draftTimeFilter}
+                    onValueChange={(value) => {
+                      setDraftTimeFilter(value as DraftTimeFilter);
+                      pagination.goToFirstPage();
+                    }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Lọc theo thông tin lịch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tất cả phiên chờ duyệt</SelectItem>
+                      <SelectItem value="hasJoinTime">Đã có giờ họp</SelectItem>
+                      <SelectItem value="noJoinTime">Chưa có giờ họp</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select
+                    value={otherStatusFilter}
+                    onValueChange={(value) => {
+                      setOtherStatusFilter(value as OtherStatusFilter);
+                      pagination.goToFirstPage();
+                    }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Lọc theo trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                      <SelectItem value="SCHEDULED">Sắp diễn ra</SelectItem>
+                      <SelectItem value="PAID">Đã thanh toán</SelectItem>
+                      <SelectItem value="ONGOING">Đang diễn ra</SelectItem>
+                      <SelectItem value="COMPLETED">Hoàn thành</SelectItem>
+                      <SelectItem value="REJECTED">Bị từ chối</SelectItem>
+                      <SelectItem value="CANCELED">Đã hủy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Sắp xếp theo:
+                </span>
+                <SortButton {...getSortProps("id")}>ID</SortButton>
+                <SortButton {...getSortProps("sessionSortValue")}>Thời gian</SortButton>
+                <SortButton {...getSortProps("status")}>Trạng thái</SortButton>
+                {(searchQuery || draftTimeFilter !== "all" || otherStatusFilter !== "all") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setDraftTimeFilter("all");
+                      setOtherStatusFilter("all");
+                      pagination.goToFirstPage();
+                    }}>
+                    Xóa bộ lọc
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {pageData.map((session) => (
-              // Prefer opening existing review detail when available.
-              <SessionCard
-                key={session.id}
-                session={session}
-                hasReview={typeof session.id === "number" && reviewSessionIds.has(session.id)}
-                reviewId={
-                  typeof session.id === "number" ? reviewBySessionId.get(session.id) : undefined
-                }
-                now={now}
-                onViewDetails={() => handleViewDetails(session)}
-                onJoinSession={() => handleJoinSession(session)}
-                onWriteReview={() => handleWriteReview(session)}
-                onViewReview={() => {
-                  if (typeof session.id !== "number") return;
-                  const reviewId = reviewBySessionId.get(session.id);
-                  if (reviewId) {
-                    handleViewReview(reviewId);
-                  }
-                }}
-                onEditReview={() => {
-                  if (typeof session.id === "number") {
-                    handleEditReview(session.id);
-                  }
-                }}
-                onAcceptSession={() => handleAcceptSession(session)}
-                onRejectSession={() => handleRejectSession(session)}
-                isUpdatingStatus={updateStatusMutation.isPending}
-              />
-            ))}
-          </div>
+          {sortedData.length === 0 ? (
+            <EmptyState
+              icon={Video}
+              title={
+                activeTab === "draft"
+                  ? "Không có phiên chờ duyệt phù hợp"
+                  : "Không có phiên phỏng vấn phù hợp"
+              }
+              description="Hãy thử đổi từ khóa tìm kiếm hoặc bộ lọc."
+            />
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {pageData.map((session) => (
+                  // Prefer opening existing review detail when available.
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    hasReview={typeof session.id === "number" && reviewSessionIds.has(session.id)}
+                    reviewId={
+                      typeof session.id === "number" ? reviewBySessionId.get(session.id) : undefined
+                    }
+                    now={now}
+                    onViewDetails={() => handleViewDetails(session)}
+                    onJoinSession={() => handleJoinSession(session)}
+                    onWriteReview={() => handleWriteReview(session)}
+                    onViewReview={() => {
+                      if (typeof session.id !== "number") return;
+                      const reviewId = reviewBySessionId.get(session.id);
+                      if (reviewId) {
+                        handleViewReview(reviewId);
+                      }
+                    }}
+                    onEditReview={() => {
+                      if (typeof session.id === "number") {
+                        handleEditReview(session.id);
+                      }
+                    }}
+                    onAcceptSession={() => handleAcceptSession(session)}
+                    onRejectSession={() => handleRejectSession(session)}
+                    isUpdatingStatus={updateStatusMutation.isPending}
+                  />
+                ))}
+              </div>
 
-          {/* Pagination */}
-          <PaginationControl
-            pagination={pagination}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[5, 10, 20, 50]}
-          />
+              {/* Pagination */}
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  pagination.goToFirstPage();
+                }}
+                pageSizeOptions={[5, 10, 20, 50]}
+              />
+            </>
+          )}
         </>
       )}
     </div>

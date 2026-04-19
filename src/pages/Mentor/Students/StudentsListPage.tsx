@@ -3,7 +3,8 @@
  * Displays list of students who had sessions with this mentor
  */
 
-import { Calendar, MessageSquare, Star, Users } from "lucide-react";
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
+import { Calendar, MessageSquare, Search, Star, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,13 +13,22 @@ import { ReloadButton } from "@/components/shared/ReloadButton";
 import { SortButton } from "@/components/shared/SortButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
 import { LoadingCardList } from "@/components/ui/loading-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StarRating } from "@/components/ui/star-rating";
 import { useMentorFeedbacksByMentor } from "@/hooks/useMentorFeedback";
 import { useMentorReviewsByMentor } from "@/hooks/useMentorReview";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSessions } from "@/hooks/useSession";
 import { useSortable } from "@/hooks/useSortable";
 import type { Session } from "@/interfaces";
@@ -38,10 +48,13 @@ interface StudentInfo {
   lastSessionDate?: string;
 }
 
+type StudentFilter = "all" | "reviewed" | "feedbacked" | "noReview";
+
 export function StudentsListPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [studentFilter, setStudentFilter] = useState<StudentFilter>("all");
 
   const {
     data: allSessions = [],
@@ -141,12 +154,57 @@ export function StudentsListPage() {
     }
   });
 
-  const students = Array.from(studentsMap.values());
+  const students = Array.from(studentsMap.values()).sort((a, b) => {
+    const aTimestamp = toTimestamp(treatZuluAsVietnamLocal(a.lastSessionDate)) ?? 0;
+    const bTimestamp = toTimestamp(treatZuluAsVietnamLocal(b.lastSessionDate)) ?? 0;
+
+    if (aTimestamp !== bTimestamp) {
+      return aTimestamp - bTimestamp;
+    }
+
+    return a.id - b.id;
+  });
+
+  const filteredStudents = useMemo(
+    () =>
+      students.filter((student) => {
+        const normalizedSearch = searchQuery.trim().toLowerCase();
+        const matchesSearch =
+          normalizedSearch.length === 0 ||
+          student.id.toString().includes(normalizedSearch) ||
+          student.name?.toLowerCase().includes(normalizedSearch) ||
+          student.email?.toLowerCase().includes(normalizedSearch) ||
+          student.university?.toLowerCase().includes(normalizedSearch);
+
+        if (!matchesSearch) {
+          return false;
+        }
+
+        if (studentFilter === "reviewed") {
+          return student.reviewCount > 0;
+        }
+
+        if (studentFilter === "feedbacked") {
+          return student.feedbackCount > 0;
+        }
+
+        if (studentFilter === "noReview") {
+          return student.reviewCount === 0;
+        }
+
+        return true;
+      }),
+    [searchQuery, studentFilter, students]
+  );
 
   // Apply sorting
-  const { sortedData, getSortProps } = useSortable(students);
+  const { sortedData, getSortProps } = useSortable(filteredStudents);
 
   // Apply pagination
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_mentor_students_studentslistpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -236,6 +294,37 @@ export function StudentsListPage() {
             />
           ) : (
             <>
+              <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="relative">
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      pagination.goToFirstPage();
+                    }}
+                    className="pl-9"
+                    placeholder="Tìm theo ID, tên, email, trường..."
+                  />
+                </div>
+                <Select
+                  value={studentFilter}
+                  onValueChange={(value) => {
+                    setStudentFilter(value as StudentFilter);
+                    pagination.goToFirstPage();
+                  }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Lọc theo tương tác" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả học viên</SelectItem>
+                    <SelectItem value="reviewed">Đã được đánh giá</SelectItem>
+                    <SelectItem value="feedbacked">Đã gửi phản hồi</SelectItem>
+                    <SelectItem value="noReview">Chưa có đánh giá</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Sort Controls */}
               <div className="mb-4 flex items-center gap-4 border-b pb-3">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -244,65 +333,92 @@ export function StudentsListPage() {
                 <SortButton {...getSortProps("sessionCount")}>Số phiên</SortButton>
                 <SortButton {...getSortProps("avgRating")}>Đánh giá</SortButton>
                 <SortButton {...getSortProps("name")}>Tên</SortButton>
+                {(searchQuery || studentFilter !== "all") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStudentFilter("all");
+                      pagination.goToFirstPage();
+                    }}>
+                    Xóa bộ lọc
+                  </Button>
+                )}
               </div>
 
-              <div className="space-y-4">
-                {pageData.map((student) => (
-                  <div
-                    key={student.id}
-                    className="flex cursor-pointer items-center justify-between rounded-lg border border-emerald-100 p-4 transition-colors hover:bg-emerald-50/50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-                    onClick={() => navigate(`/mentor/students/${student.id}`)}>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={student.avatarUrl} alt={student.name} />
-                        <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                          {student.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold">
-                          {student.name || `Học viên #${student.id}`}
-                        </h3>
-                        <p className="text-sm text-slate-500">
-                          {student.email || student.university}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <p className="text-slate-500">Phiên</p>
-                        <p className="font-semibold">{student.sessionCount}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-slate-500">Phản hồi</p>
-                        <Badge variant={student.feedbackCount > 0 ? "default" : "secondary"}>
-                          {student.feedbackCount}
-                        </Badge>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-slate-500">Đánh giá</p>
-                        {student.reviewCount > 0 ? (
-                          <div className="flex items-center gap-1">
-                            <StarRating value={student.avgRating} readOnly size="sm" />
-                            <span className="text-xs text-slate-500">({student.reviewCount})</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              <div className="mt-4">
-                <PaginationControl
-                  pagination={pagination}
-                  onPageSizeChange={setPageSize}
-                  pageSizeOptions={[5, 10, 20, 50]}
+              {pageData.length === 0 ? (
+                <EmptyState
+                  icon={Search}
+                  title="Không tìm thấy học viên phù hợp"
+                  description="Hãy thử từ khóa khác hoặc đổi bộ lọc."
                 />
-              </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {pageData.map((student) => (
+                      <div
+                        key={student.id}
+                        className="flex cursor-pointer items-center justify-between rounded-lg border border-emerald-100 p-4 transition-colors hover:bg-emerald-50/50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                        onClick={() => navigate(`/mentor/students/${student.id}`)}>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={student.avatarUrl} alt={student.name} />
+                            <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                              {student.name?.charAt(0) || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold">
+                              {student.name || `Học viên #${student.id}`}
+                            </h3>
+                            <p className="text-sm text-slate-500">
+                              {student.email || student.university}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6 text-sm">
+                          <div className="text-center">
+                            <p className="text-slate-500">Phiên</p>
+                            <p className="font-semibold">{student.sessionCount}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-slate-500">Phản hồi</p>
+                            <Badge variant={student.feedbackCount > 0 ? "default" : "secondary"}>
+                              {student.feedbackCount}
+                            </Badge>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-slate-500">Đánh giá</p>
+                            {student.reviewCount > 0 ? (
+                              <div className="flex items-center gap-1">
+                                <StarRating value={student.avgRating} readOnly size="sm" />
+                                <span className="text-xs text-slate-500">
+                                  ({student.reviewCount})
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="mt-4">
+                    <PaginationControl
+                      pagination={pagination}
+                      onPageSizeChange={(size) => {
+                        setPageSize(size);
+                        pagination.goToFirstPage();
+                      }}
+                      pageSizeOptions={[5, 10, 20, 50]}
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
         </CardContent>
