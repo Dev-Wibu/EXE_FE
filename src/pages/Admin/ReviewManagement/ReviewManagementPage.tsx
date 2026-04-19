@@ -3,6 +3,7 @@
  * Allows admin to view and moderate all mentor reviews for candidates
  */
 
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Eye, Search, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -41,7 +42,7 @@ import {
 } from "@/components/ui/table";
 import type { MentorReview } from "@/hooks/useMentorReview";
 import { useDeleteMentorReview, useMentorReviews } from "@/hooks/useMentorReview";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 import { toast } from "sonner";
 
@@ -80,11 +81,17 @@ export function ReviewManagementPage() {
     });
   }, [reviews, searchQuery, numericRatingFilter]);
 
+  const hasActiveFilters = searchQuery.trim().length > 0 || ratingFilter !== "all";
+
   // Sorting
   const { sortedData, getSortProps } = useSortable(filteredReviews);
 
   // Pagination
-  const [pageSize, setPageSize] = useState(10);
+
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_reviewmanagement_reviewmanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -124,21 +131,30 @@ export function ReviewManagementPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-6 py-8">
+    <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            Quản Lý Đánh Giá
+          <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
+            Đánh Giá Từ Mentor
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">
-            Xem và kiểm duyệt các đánh giá mentor gửi cho ứng viên
+          <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
+            Xem danh sách đánh giá mentor gửi cho ứng viên
           </p>
         </div>
+        <ReloadButton
+          onReload={async () => {
+            await refetch();
+          }}
+          isLoading={isRefetching}
+          tooltip="Tải lại danh sách đánh giá"
+          showLabel
+          hideTooltip
+        />
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Tổng đánh giá</CardDescription>
@@ -170,37 +186,34 @@ export function ReviewManagementPage() {
       </div>
 
       {/* Stats Chart */}
-      {reviews.length > 0 && <ReviewStats reviews={reviews} />}
+      {reviews.length > 0 && <ReviewStats reviews={reviews} className="mb-6" />}
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3">
-            <CardTitle>Bộ lọc</CardTitle>
-            <ReloadButton
-              onReload={async () => {
-                await refetch();
-              }}
-              isLoading={isRefetching}
-              tooltip="Tải lại danh sách đánh giá"
-              showLabel
-              hideTooltip
-            />
-          </div>
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Bộ lọc</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="relative min-w-[200px] flex-1">
+        <CardContent className="pt-0">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+            <div className="relative w-full min-w-0">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Tìm theo tên mentor, ứng viên, phiên..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  pagination.goToFirstPage();
+                }}
                 className="pl-9"
               />
             </div>
-            <Select value={ratingFilter} onValueChange={setRatingFilter}>
-              <SelectTrigger className="w-[150px]">
+            <Select
+              value={ratingFilter}
+              onValueChange={(value) => {
+                setRatingFilter(value);
+                pagination.goToFirstPage();
+              }}>
+              <SelectTrigger className="w-full lg:w-[170px]">
                 <SelectValue placeholder="Số sao" />
               </SelectTrigger>
               <SelectContent>
@@ -212,6 +225,20 @@ export function ReviewManagementPage() {
                 <SelectItem value="1">1 sao</SelectItem>
               </SelectContent>
             </Select>
+
+            {hasActiveFilters && (
+              <div className="flex items-center justify-start lg:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setRatingFilter("all");
+                    pagination.goToFirstPage();
+                  }}>
+                  Xóa bộ lọc
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -221,7 +248,7 @@ export function ReviewManagementPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-[#FFD700]" />
-            <CardTitle>Danh Sách Đánh Giá</CardTitle>
+            <CardTitle>Danh sách đánh giá</CardTitle>
           </div>
           <CardDescription>
             Hiển thị {filteredReviews.length} / {reviews.length} đánh giá
@@ -306,7 +333,13 @@ export function ReviewManagementPage() {
 
               {/* Pagination */}
               {sortedData.length > 0 && (
-                <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+                <PaginationControl
+                  pagination={pagination}
+                  onPageSizeChange={(nextPageSize) => {
+                    setPageSize(nextPageSize);
+                    pagination.goToFirstPage();
+                  }}
+                />
               )}
             </>
           )}

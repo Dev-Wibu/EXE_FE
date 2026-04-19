@@ -1,10 +1,13 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Plus, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ReloadButton } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SpinnerBlock } from "@/components/ui/spinner";
+
+import { useSortable } from "@/hooks/useSortable";
 import { extractDataArray } from "@/lib/utils";
 import { questionCategoryManager } from "@/services";
 import { toast } from "sonner";
@@ -16,11 +19,18 @@ import {
 } from "./components";
 import type { QuestionCategory, QuestionCategoryFormData } from "./types";
 
+type SortableQuestionCategory = QuestionCategory & {
+  idSortValue: number;
+  nameSortValue: string;
+  descriptionSortValue: string;
+};
+
 export function QuestionCategoryManagementPage() {
   const [categories, setCategories] = useState<QuestionCategory[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isReloading, setIsReloading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -59,14 +69,50 @@ export function QuestionCategoryManagementPage() {
   }, [loadCategories]);
 
   // Filter categories based on search query
-  const filteredCategories = categories.filter((category) => {
-    if (!searchQuery) return true;
-    const lowerQuery = searchQuery.toLowerCase();
-    return (
-      category.categoryName?.toLowerCase().includes(lowerQuery) ||
-      category.description?.toLowerCase().includes(lowerQuery)
-    );
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) => {
+      if (!searchQuery) return true;
+      const lowerQuery = searchQuery.toLowerCase();
+      return (
+        category.categoryName?.toLowerCase().includes(lowerQuery) ||
+        category.description?.toLowerCase().includes(lowerQuery)
+      );
+    });
+  }, [categories, searchQuery]);
+
+  const sortableCategories = useMemo<SortableQuestionCategory[]>(() => {
+    return filteredCategories.map((category) => ({
+      ...category,
+      idSortValue: typeof category.id === "number" ? category.id : 0,
+      nameSortValue: category.categoryName?.toLowerCase() || "",
+      descriptionSortValue: category.description?.toLowerCase() || "",
+    }));
+  }, [filteredCategories]);
+
+  const { sortedData, getSortProps } = useSortable(sortableCategories, {
+    defaultSort: {
+      key: "idSortValue",
+      direction: "desc",
+    },
+    noSortBehavior: "preserve",
+    tieBreaker: {
+      key: "idSortValue",
+      direction: "desc",
+    },
   });
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_questioncategorymanagement_questioncategorymanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  const pageData = useMemo(
+    () => sortedData.slice(pagination.startIndex, pagination.endIndex + 1),
+    [pagination.endIndex, pagination.startIndex, sortedData]
+  );
 
   const handleCreate = () => {
     setFormData({});
@@ -153,20 +199,33 @@ export function QuestionCategoryManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 grid gap-3 xl:grid-cols-[1fr_auto]">
         {/* Search Input */}
-        <div className="relative w-96">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
             placeholder="Tìm kiếm theo tên hoặc mô tả..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              pagination.goToFirstPage();
+            }}
             className="pl-10"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {searchQuery && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          )}
           <ReloadButton
             onReload={() => loadCategories(true)}
             isLoading={isReloading}
@@ -188,15 +247,31 @@ export function QuestionCategoryManagementPage() {
         ) : (
           <>
             <QuestionCategoryTable
-              categories={filteredCategories.slice().reverse()}
+              categories={pageData}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              getSortProps={getSortProps}
             />
 
+            {sortedData.length > 0 && (
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  pagination.goToFirstPage();
+                }}
+              />
+            )}
+
             {/* Empty State with Clear Search */}
-            {filteredCategories.length === 0 && searchQuery && (
+            {sortedData.length === 0 && searchQuery && (
               <div className="flex justify-center pb-4">
-                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    pagination.goToFirstPage();
+                  }}>
                   Xóa bộ lọc
                 </Button>
               </div>

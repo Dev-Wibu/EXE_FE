@@ -1,3 +1,4 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -44,7 +45,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { usePagination } from "@/hooks/usePagination";
+
 import type { Post, PostCommentResponse, PostLikeResponse, PostStatus } from "@/interfaces";
 import { formatDate, toTimestamp } from "@/lib/formatting";
 import { queryClient } from "@/lib/queryClient";
@@ -87,7 +88,6 @@ export function PostManagementPage() {
   const [majorFilter, setMajorFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
   const [layout, setLayout] = useState<ListLayout>("table");
-  const [pageSize, setPageSize] = useState(10);
 
   const [likesOpen, setLikesOpen] = useState(false);
   const [commentToDeleteId, setCommentToDeleteId] = useState<number | null>(null);
@@ -184,6 +184,10 @@ export function PostManagementPage() {
         return timeB - timeA;
       });
   }, [posts, searchQuery, statusFilter, majorFilter, tagFilter]);
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_postmanagement_postmanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
 
   const pagination = usePagination({ totalCount: filteredPosts.length, pageSize });
   const pageItems = useMemo(
@@ -199,6 +203,12 @@ export function PostManagementPage() {
       archived: posts.filter((post) => post.status === "ARCHIVED").length,
     };
   }, [posts]);
+
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 ||
+    statusFilter !== "all" ||
+    majorFilter !== "all" ||
+    tagFilter !== "all";
 
   const detailPost = detailData?.post;
   const detailLikes = detailData?.postLikes ?? [];
@@ -534,14 +544,20 @@ export function PostManagementPage() {
               <Input
                 placeholder="Tìm theo tiêu đề, nội dung, tác giả, thẻ..."
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  pagination.goToFirstPage();
+                }}
                 className="pl-9"
               />
             </div>
 
             <Select
               value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+              onValueChange={(value) => {
+                setStatusFilter(value as StatusFilter);
+                pagination.goToFirstPage();
+              }}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
@@ -553,7 +569,12 @@ export function PostManagementPage() {
               </SelectContent>
             </Select>
 
-            <Select value={majorFilter} onValueChange={setMajorFilter}>
+            <Select
+              value={majorFilter}
+              onValueChange={(value) => {
+                setMajorFilter(value);
+                pagination.goToFirstPage();
+              }}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Chuyên ngành" />
               </SelectTrigger>
@@ -567,7 +588,12 @@ export function PostManagementPage() {
               </SelectContent>
             </Select>
 
-            <Select value={tagFilter} onValueChange={setTagFilter}>
+            <Select
+              value={tagFilter}
+              onValueChange={(value) => {
+                setTagFilter(value);
+                pagination.goToFirstPage();
+              }}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Thẻ" />
               </SelectTrigger>
@@ -581,7 +607,7 @@ export function PostManagementPage() {
               </SelectContent>
             </Select>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex flex-wrap items-center gap-2">
               <Button
                 variant={layout === "table" ? "default" : "outline"}
                 size="sm"
@@ -596,6 +622,20 @@ export function PostManagementPage() {
                 <LayoutGrid className="mr-1 h-4 w-4" />
                 Lưới
               </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("all");
+                    setMajorFilter("all");
+                    setTagFilter("all");
+                    pagination.goToFirstPage();
+                  }}>
+                  Xóa bộ lọc
+                </Button>
+              )}
             </div>
           </div>
 
@@ -785,7 +825,10 @@ export function PostManagementPage() {
 
           <PaginationControl
             pagination={pagination}
-            onPageSizeChange={setPageSize}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              pagination.goToFirstPage();
+            }}
             pageSizeOptions={[6, 9, 10, 20]}
           />
         </CardContent>

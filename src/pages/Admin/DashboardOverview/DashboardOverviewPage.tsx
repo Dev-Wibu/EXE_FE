@@ -506,16 +506,18 @@ export function DashboardOverviewPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {RANGE_OPTIONS.map((option) => (
-                <Button
-                  key={option.value}
-                  size="sm"
-                  variant={rangeMode === option.value ? "default" : "outline"}
-                  onClick={() => setRangeMode(option.value)}>
-                  {option.label}
-                </Button>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center rounded-lg border border-slate-200 p-1 dark:border-slate-700">
+                {RANGE_OPTIONS.map((option) => (
+                  <Button
+                    key={option.value}
+                    size="sm"
+                    variant={rangeMode === option.value ? "default" : "ghost"}
+                    onClick={() => setRangeMode(option.value)}>
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
 
               <Button
                 size="sm"
@@ -527,7 +529,7 @@ export function DashboardOverviewPage() {
           </div>
 
           {rangeMode === "custom" && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="grid gap-2 sm:grid-cols-[repeat(2,minmax(180px,auto))_auto] sm:items-center">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -573,6 +575,17 @@ export function DashboardOverviewPage() {
                   />
                 </PopoverContent>
               </Popover>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="justify-self-start"
+                onClick={() => {
+                  setCustomFrom(undefined);
+                  setCustomTo(undefined);
+                }}>
+                Xóa ngày tùy chỉnh
+              </Button>
             </div>
           )}
 

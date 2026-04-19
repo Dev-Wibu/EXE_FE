@@ -17,7 +17,7 @@ import {
   Video,
   Wallet,
 } from "lucide-react";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type {
   ChromeTabMenuAction,
@@ -183,17 +183,24 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
     items: [
       {
         type: "questionCategories",
-        label: "Danh mục câu hỏi",
+        label: "Bài học",
         icon: FolderOpen,
         iconColor: "text-purple-600",
       },
       {
         type: "questionMajors",
-        label: "Chuyên ngành câu hỏi",
+        label: "Chuyên ngành",
         icon: GraduationCap,
         iconColor: "text-pink-600",
       },
       { type: "practiceSets", label: "Bộ ôn tập", icon: BookOpen, iconColor: "text-teal-600" },
+      {
+        type: "practiceQuestions",
+        label: "Câu hỏi ôn tập",
+        icon: FileQuestion,
+        iconColor: "text-emerald-600",
+      },
+      { type: "quizSets", label: "Bộ trắc nghiệm", icon: Trophy, iconColor: "text-amber-600" },
     ],
   },
   {
@@ -306,7 +313,7 @@ const ADMIN_SIDEBAR_LOGO = (
       <LayoutDashboard className="h-6 w-6 text-white" />
     </div>
     <div>
-      <h1 className="font-semibold text-gray-900 dark:text-white">Bảng điều phối quản trị</h1>
+      <h1 className="font-semibold text-gray-900 dark:text-white">ADMINISTRATOR</h1>
       <p className="text-xs text-gray-500 dark:text-slate-400">Quản trị hệ thống</p>
     </div>
   </>
@@ -318,6 +325,20 @@ const ADMIN_SIDEBAR_LOGO_COLLAPSED = (
   </div>
 );
 
+const validateChromeTabsMenuConfiguration = () => {
+  const availableTabTypes = new Set(AVAILABLE_TABS.map((tab) => tab.type));
+  const menuTabTypes = new Set(
+    CHROME_TABS_MENU_GROUPS.flatMap((group) => group.items.map((item) => item.type as TabType))
+  );
+
+  const missingInMenu = AVAILABLE_TABS.filter((tab) => !menuTabTypes.has(tab.type)).map(
+    (tab) => tab.type
+  );
+  const invalidInMenu = Array.from(menuTabTypes).filter((type) => !availableTabTypes.has(type));
+
+  return { missingInMenu, invalidInMenu };
+};
+
 export function AdminDashboardPage() {
   const { activeTab, openTabs, setActiveTab, openTab, closeTab, resetTabsTo } = useTabsState({
     storageKey: "admin",
@@ -327,6 +348,22 @@ export function AdminDashboardPage() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    const { missingInMenu, invalidInMenu } = validateChromeTabsMenuConfiguration();
+    if (missingInMenu.length === 0 && invalidInMenu.length === 0) {
+      return;
+    }
+
+    console.warn("[AdminDashboardPage] Cấu hình menu tab dấu cộng chưa đồng bộ", {
+      missingInMenu,
+      invalidInMenu,
+    });
+  }, []);
 
   useDashboardScrollRestoration(contentRef, { scopeKey: typedActiveTab });
 
@@ -472,7 +509,7 @@ export function AdminDashboardPage() {
         }}
       />
 
-      <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
+      <div className="relative z-0 flex flex-1 flex-col overflow-x-hidden">
         <DashboardChromeTabs
           tabs={chromeTabsData}
           activeTabId={activeTabId}
@@ -496,7 +533,7 @@ export function AdminDashboardPage() {
           }}
         />
 
-        <div ref={contentRef} className="flex-1 overflow-auto">
+        <div ref={contentRef} className="flex-1 overflow-auto pt-2">
           {renderContent()}
         </div>
       </div>

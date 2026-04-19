@@ -1,5 +1,6 @@
 import { Edit, ExternalLink, Power, Search } from "lucide-react";
 
+import { SortButton, type SortDirection } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,10 +14,18 @@ import { openUrlInNewTab } from "@/lib/media-file-utils";
 
 import type { QuestionCategory } from "../types";
 
+type QuestionCategorySortKey = "idSortValue" | "nameSortValue" | "descriptionSortValue";
+
+interface SortProps {
+  direction: SortDirection;
+  onChange: (direction: SortDirection) => void;
+}
+
 interface QuestionCategoryTableProps {
   categories: QuestionCategory[];
   onEdit: (category: QuestionCategory) => void;
   onDelete: (category: QuestionCategory) => void;
+  getSortProps?: (key: QuestionCategorySortKey) => SortProps;
 }
 
 /**
@@ -35,6 +44,7 @@ export function QuestionCategoryTable({
   categories,
   onEdit,
   onDelete,
+  getSortProps,
 }: QuestionCategoryTableProps) {
   if (categories.length === 0) {
     return (
@@ -49,9 +59,23 @@ export function QuestionCategoryTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-16">ID</TableHead>
-          <TableHead>Tên danh mục</TableHead>
-          <TableHead>Mô tả</TableHead>
+          <TableHead className="w-16">
+            {getSortProps ? <SortButton {...getSortProps("idSortValue")}>ID</SortButton> : "ID"}
+          </TableHead>
+          <TableHead>
+            {getSortProps ? (
+              <SortButton {...getSortProps("nameSortValue")}>Tên danh mục</SortButton>
+            ) : (
+              "Tên danh mục"
+            )}
+          </TableHead>
+          <TableHead>
+            {getSortProps ? (
+              <SortButton {...getSortProps("descriptionSortValue")}>Mô tả</SortButton>
+            ) : (
+              "Mô tả"
+            )}
+          </TableHead>
           <TableHead>URL Hướng dẫn</TableHead>
           <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>

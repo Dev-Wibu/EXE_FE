@@ -1,10 +1,13 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Plus, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ReloadButton } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SpinnerBlock } from "@/components/ui/spinner";
+
+import { useSortable } from "@/hooks/useSortable";
 import { extractDataArray } from "@/lib/utils";
 import { memberShipPlanManager } from "@/services";
 import { toast } from "sonner";
@@ -16,11 +19,19 @@ import {
 } from "./components";
 import type { MemberShipPlan, MemberShipPlanFormData } from "./types";
 
+type SortableMembershipPlan = MemberShipPlan & {
+  idSortValue: number;
+  nameSortValue: string;
+  priceSortValue: number;
+  durationSortValue: number;
+};
+
 export function MembershipPlanManagementPage() {
   const [plans, setPlans] = useState<MemberShipPlan[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isReloading, setIsReloading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -57,11 +68,48 @@ export function MembershipPlanManagementPage() {
     void loadPlans();
   }, [loadPlans]);
 
-  const filteredPlans = plans.filter((plan) => {
-    if (!searchQuery) return true;
-    const lowerQuery = searchQuery.toLowerCase();
-    return plan.name?.toLowerCase().includes(lowerQuery);
+  const filteredPlans = useMemo(() => {
+    return plans.filter((plan) => {
+      if (!searchQuery) return true;
+      const lowerQuery = searchQuery.toLowerCase();
+      return plan.name?.toLowerCase().includes(lowerQuery);
+    });
+  }, [plans, searchQuery]);
+
+  const sortablePlans = useMemo<SortableMembershipPlan[]>(() => {
+    return filteredPlans.map((plan) => ({
+      ...plan,
+      idSortValue: typeof plan.id === "number" ? plan.id : 0,
+      nameSortValue: plan.name?.toLowerCase() || "",
+      priceSortValue: plan.price || 0,
+      durationSortValue: plan.durationDays || 0,
+    }));
+  }, [filteredPlans]);
+
+  const { sortedData, getSortProps } = useSortable(sortablePlans, {
+    defaultSort: {
+      key: "idSortValue",
+      direction: "desc",
+    },
+    noSortBehavior: "preserve",
+    tieBreaker: {
+      key: "idSortValue",
+      direction: "desc",
+    },
   });
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_membershipplanmanagement_membershipplanmanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  const pageData = useMemo(
+    () => sortedData.slice(pagination.startIndex, pagination.endIndex + 1),
+    [pagination.endIndex, pagination.startIndex, sortedData]
+  );
 
   const handleCreate = () => {
     setFormData({});
@@ -151,19 +199,32 @@ export function MembershipPlanManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="relative w-96">
+      <div className="mb-6 grid gap-3 xl:grid-cols-[1fr_auto]">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
             placeholder="Tìm kiếm theo tên gói..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              pagination.goToFirstPage();
+            }}
             className="pl-10"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {searchQuery && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          )}
           <ReloadButton
             onReload={() => loadPlans(true)}
             isLoading={isReloading}
@@ -185,14 +246,30 @@ export function MembershipPlanManagementPage() {
         ) : (
           <>
             <MembershipPlanTable
-              plans={filteredPlans.slice().reverse()}
+              plans={pageData}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              getSortProps={getSortProps}
             />
 
-            {filteredPlans.length === 0 && searchQuery && (
+            {sortedData.length > 0 && (
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  pagination.goToFirstPage();
+                }}
+              />
+            )}
+
+            {sortedData.length === 0 && searchQuery && (
               <div className="flex justify-center pb-4">
-                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    pagination.goToFirstPage();
+                  }}>
                   Xóa bộ lọc
                 </Button>
               </div>

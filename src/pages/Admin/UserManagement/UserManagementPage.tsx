@@ -1,3 +1,4 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -13,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SpinnerBlock } from "@/components/ui/spinner";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 import type { CandidateProfile } from "@/interfaces/schema.types";
 import { candidateProfileManager, usersAdminManager } from "@/services";
@@ -108,7 +109,11 @@ export function UserManagementPage() {
   const { sortedData, getSortProps } = useSortable(filteredUsers);
 
   // Pagination
-  const [pageSize, setPageSize] = useState(10);
+
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_usermanagement_usermanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -261,23 +266,31 @@ export function UserManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="mb-6 grid gap-3 xl:grid-cols-[1fr_auto]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {/* Search Input */}
-          <div className="relative w-96">
+          <div className="relative w-full sm:max-w-md">
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
               placeholder="Tìm kiếm theo tên, email, trường đại học..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                pagination.goToFirstPage();
+              }}
               className="pl-10"
             />
           </div>
 
           {/* Status Filter - Default shows active users only */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value);
+              pagination.goToFirstPage();
+            }}>
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
             <SelectContent>
@@ -288,7 +301,18 @@ export function UserManagementPage() {
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {(searchQuery || statusFilter !== "active") && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setStatusFilter("active");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          )}
           <ReloadButton
             onReload={() => loadUsers(true)}
             isLoading={isReloading}
@@ -320,7 +344,13 @@ export function UserManagementPage() {
 
             {/* Pagination */}
             {sortedData.length > 0 && (
-              <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  pagination.goToFirstPage();
+                }}
+              />
             )}
 
             {/* Empty State with Clear Filters */}
@@ -331,6 +361,7 @@ export function UserManagementPage() {
                   onClick={() => {
                     setSearchQuery("");
                     setStatusFilter("active");
+                    pagination.goToFirstPage();
                   }}>
                   Xóa bộ lọc
                 </Button>

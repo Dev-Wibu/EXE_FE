@@ -1,3 +1,4 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Eye, Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -22,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 import { formatDate } from "@/lib/formatting";
 import { quizSetManager } from "@/services";
@@ -86,7 +87,11 @@ export function QuizSetManagementPage() {
   const { sortedData, toggleSort } = useSortable(filteredQuizSets);
 
   // Pagination
-  const [pageSize, setPageSize] = useState(10);
+
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_quizsetmanagement_quizsetmanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -151,24 +156,39 @@ export function QuizSetManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="relative w-96">
+      <div className="mb-6 grid gap-3 xl:grid-cols-[1fr_auto]">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
             placeholder="Tìm kiếm theo tên quiz hoặc bộ luyện tập..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              pagination.goToFirstPage();
+            }}
             className="pl-10"
           />
         </div>
-        <ReloadButton
-          onReload={() => loadData(true)}
-          isLoading={isReloading}
-          tooltip="Tải lại danh sách quiz"
-          showLabel
-          hideTooltip
-        />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {searchQuery && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          )}
+          <ReloadButton
+            onReload={() => loadData(true)}
+            isLoading={isReloading}
+            tooltip="Tải lại danh sách quiz"
+            showLabel
+            hideTooltip
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -245,12 +265,23 @@ export function QuizSetManagementPage() {
             </Table>
 
             {sortedData.length > 0 && (
-              <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  pagination.goToFirstPage();
+                }}
+              />
             )}
 
             {sortedData.length === 0 && searchQuery && (
               <div className="flex justify-center pb-4">
-                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    pagination.goToFirstPage();
+                  }}>
                   Xóa bộ lọc
                 </Button>
               </div>

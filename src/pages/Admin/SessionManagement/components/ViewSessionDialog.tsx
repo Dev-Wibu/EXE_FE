@@ -17,7 +17,7 @@ import type { Session } from "../types";
 
 interface ViewSessionDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   session: Session | null;
 }
 

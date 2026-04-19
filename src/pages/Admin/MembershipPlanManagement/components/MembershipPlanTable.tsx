@@ -1,5 +1,6 @@
 import { Edit, Power, Search } from "lucide-react";
 
+import { SortButton, type SortDirection } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +14,22 @@ import {
 
 import type { MemberShipPlan } from "../types";
 
+type MembershipPlanSortKey =
+  | "idSortValue"
+  | "nameSortValue"
+  | "priceSortValue"
+  | "durationSortValue";
+
+interface SortProps {
+  direction: SortDirection;
+  onChange: (direction: SortDirection) => void;
+}
+
 interface MembershipPlanTableProps {
   plans: MemberShipPlan[];
   onEdit: (plan: MemberShipPlan) => void;
   onDelete: (plan: MemberShipPlan) => void;
+  getSortProps?: (key: MembershipPlanSortKey) => SortProps;
 }
 
 const PLAN_COLORS: Record<string, string> = {
@@ -32,7 +45,12 @@ function formatPrice(price?: number): string {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
 }
 
-export function MembershipPlanTable({ plans, onEdit, onDelete }: MembershipPlanTableProps) {
+export function MembershipPlanTable({
+  plans,
+  onEdit,
+  onDelete,
+  getSortProps,
+}: MembershipPlanTableProps) {
   if (plans.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -46,13 +64,33 @@ export function MembershipPlanTable({ plans, onEdit, onDelete }: MembershipPlanT
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-16">ID</TableHead>
-          <TableHead>Tên gói</TableHead>
-          <TableHead>Giá</TableHead>
+          <TableHead className="w-16">
+            {getSortProps ? <SortButton {...getSortProps("idSortValue")}>ID</SortButton> : "ID"}
+          </TableHead>
+          <TableHead>
+            {getSortProps ? (
+              <SortButton {...getSortProps("nameSortValue")}>Tên gói</SortButton>
+            ) : (
+              "Tên gói"
+            )}
+          </TableHead>
+          <TableHead>
+            {getSortProps ? (
+              <SortButton {...getSortProps("priceSortValue")}>Giá</SortButton>
+            ) : (
+              "Giá"
+            )}
+          </TableHead>
           <TableHead className="text-center">AI Interview</TableHead>
           <TableHead className="text-center">Practice Sets</TableHead>
           <TableHead className="text-center">Quiz Sets</TableHead>
-          <TableHead className="text-center">Thời hạn (ngày)</TableHead>
+          <TableHead className="text-center">
+            {getSortProps ? (
+              <SortButton {...getSortProps("durationSortValue")}>Thời hạn (ngày)</SortButton>
+            ) : (
+              "Thời hạn (ngày)"
+            )}
+          </TableHead>
           <TableHead className="w-24 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>

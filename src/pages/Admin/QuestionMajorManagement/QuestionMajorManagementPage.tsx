@@ -1,10 +1,13 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Plus, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ReloadButton } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SpinnerBlock } from "@/components/ui/spinner";
+
+import { useSortable } from "@/hooks/useSortable";
 import { extractDataArray } from "@/lib/utils";
 import { questionMajorManager } from "@/services";
 import { toast } from "sonner";
@@ -16,11 +19,18 @@ import {
 } from "./components";
 import type { Major, MajorFormData } from "./types";
 
+type SortableMajor = Major & {
+  idSortValue: number;
+  nameSortValue: string;
+  descriptionSortValue: string;
+};
+
 export function QuestionMajorManagementPage() {
   const [majors, setMajors] = useState<Major[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isReloading, setIsReloading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -59,14 +69,50 @@ export function QuestionMajorManagementPage() {
   }, [loadMajors]);
 
   // Filter majors based on search query
-  const filteredMajors = majors.filter((major) => {
-    if (!searchQuery) return true;
-    const lowerQuery = searchQuery.toLowerCase();
-    return (
-      major.majorName?.toLowerCase().includes(lowerQuery) ||
-      major.description?.toLowerCase().includes(lowerQuery)
-    );
+  const filteredMajors = useMemo(() => {
+    return majors.filter((major) => {
+      if (!searchQuery) return true;
+      const lowerQuery = searchQuery.toLowerCase();
+      return (
+        major.majorName?.toLowerCase().includes(lowerQuery) ||
+        major.description?.toLowerCase().includes(lowerQuery)
+      );
+    });
+  }, [majors, searchQuery]);
+
+  const sortableMajors = useMemo<SortableMajor[]>(() => {
+    return filteredMajors.map((major) => ({
+      ...major,
+      idSortValue: typeof major.id === "number" ? major.id : 0,
+      nameSortValue: major.majorName?.toLowerCase() || "",
+      descriptionSortValue: major.description?.toLowerCase() || "",
+    }));
+  }, [filteredMajors]);
+
+  const { sortedData, getSortProps } = useSortable(sortableMajors, {
+    defaultSort: {
+      key: "idSortValue",
+      direction: "desc",
+    },
+    noSortBehavior: "preserve",
+    tieBreaker: {
+      key: "idSortValue",
+      direction: "desc",
+    },
   });
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_questionmajormanagement_questionmajormanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  const pageData = useMemo(
+    () => sortedData.slice(pagination.startIndex, pagination.endIndex + 1),
+    [pagination.endIndex, pagination.startIndex, sortedData]
+  );
 
   const handleCreate = () => {
     setFormData({});
@@ -152,20 +198,33 @@ export function QuestionMajorManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 grid gap-3 xl:grid-cols-[1fr_auto]">
         {/* Search Input */}
-        <div className="relative w-96">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             type="text"
             placeholder="Tìm kiếm theo tên hoặc mô tả..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              pagination.goToFirstPage();
+            }}
             className="pl-10"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {searchQuery && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          )}
           <ReloadButton
             onReload={() => loadMajors(true)}
             isLoading={isReloading}
@@ -187,15 +246,31 @@ export function QuestionMajorManagementPage() {
         ) : (
           <>
             <QuestionMajorTable
-              majors={filteredMajors.slice().reverse()}
+              majors={pageData}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              getSortProps={getSortProps}
             />
 
+            {sortedData.length > 0 && (
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  pagination.goToFirstPage();
+                }}
+              />
+            )}
+
             {/* Empty State with Clear Search */}
-            {filteredMajors.length === 0 && searchQuery && (
+            {sortedData.length === 0 && searchQuery && (
               <div className="flex justify-center pb-4">
-                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    pagination.goToFirstPage();
+                  }}>
                   Xóa bộ lọc
                 </Button>
               </div>

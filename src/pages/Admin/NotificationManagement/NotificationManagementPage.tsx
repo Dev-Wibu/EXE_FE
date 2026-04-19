@@ -3,6 +3,7 @@
  * Allows admin to view all notifications and send system notifications
  */
 
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Bell, Eye, Plus, Search, Send, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -41,7 +42,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { useCreateNotification, type Notification } from "@/hooks/useNotification";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 import { toVietnamDateKey } from "@/lib/formatting";
 import { notificationManager } from "@/services/notification.manager";
@@ -139,11 +140,17 @@ export function NotificationManagementPage() {
     });
   }, [allNotifications, searchQuery, statusFilter]);
 
+  const hasActiveFilters = searchQuery.trim().length > 0 || statusFilter !== "all";
+
   // Sorting
   const { sortedData, getSortProps } = useSortable(filteredNotifications);
 
   // Pagination
-  const [pageSize, setPageSize] = useState(10);
+
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_notificationmanagement_notificationmanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -211,18 +218,18 @@ export function NotificationManagementPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-6 py-8">
+    <div className="min-h-screen bg-white p-8 dark:bg-slate-950">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="mb-2 font-['Inter'] text-3xl font-bold text-zinc-800 dark:text-white">
             Quản Lý Thông Báo
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">
+          <p className="font-['Inter'] text-base text-gray-600 dark:text-slate-400">
             Xem tất cả thông báo và gửi thông báo hệ thống
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ReloadButton
             onReload={handleReload}
             isLoading={isReloading}
@@ -238,7 +245,7 @@ export function NotificationManagementPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Tổng thông báo</CardDescription>
@@ -268,23 +275,31 @@ export function NotificationManagementPage() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Bộ lọc</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="relative min-w-[200px] flex-1">
+        <CardContent className="pt-0">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+            <div className="relative w-full min-w-0">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 placeholder="Tìm theo tiêu đề, nội dung, người nhận..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  pagination.goToFirstPage();
+                }}
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                pagination.goToFirstPage();
+              }}>
+              <SelectTrigger className="w-full lg:w-[170px]">
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
@@ -293,6 +308,20 @@ export function NotificationManagementPage() {
                 <SelectItem value="read">Đã đọc</SelectItem>
               </SelectContent>
             </Select>
+
+            {hasActiveFilters && (
+              <div className="flex items-center justify-start lg:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("all");
+                    pagination.goToFirstPage();
+                  }}>
+                  Xóa bộ lọc
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -302,7 +331,7 @@ export function NotificationManagementPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-emerald-600" />
-            <CardTitle>Danh Sách Thông Báo</CardTitle>
+            <CardTitle>Danh sách thông báo</CardTitle>
           </div>
           <CardDescription>
             Hiển thị {filteredNotifications.length} / {allNotifications.length} thông báo
@@ -316,6 +345,19 @@ export function NotificationManagementPage() {
               icon={Bell}
               title="Không có thông báo"
               description="Không tìm thấy thông báo nào phù hợp với bộ lọc."
+              action={
+                hasActiveFilters ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStatusFilter("all");
+                      pagination.goToFirstPage();
+                    }}>
+                    Xóa bộ lọc
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <>
@@ -393,7 +435,13 @@ export function NotificationManagementPage() {
 
               {/* Pagination */}
               {sortedData.length > 0 && (
-                <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+                <PaginationControl
+                  pagination={pagination}
+                  onPageSizeChange={(nextPageSize) => {
+                    setPageSize(nextPageSize);
+                    pagination.goToFirstPage();
+                  }}
+                />
               )}
             </>
           )}

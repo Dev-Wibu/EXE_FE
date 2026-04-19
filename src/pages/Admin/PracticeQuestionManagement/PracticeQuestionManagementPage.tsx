@@ -1,3 +1,4 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Plus, Search, Trash2, Upload } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -31,7 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 import { questionManager } from "@/services";
 import {
@@ -140,7 +141,11 @@ export function PracticeQuestionManagementPage() {
   const { sortedData, toggleSort } = useSortable(filteredQuestions);
 
   // Pagination
-  const [pageSize, setPageSize] = useState(10);
+
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_admin_practicequestionmanagement_practicequestionmanagementpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,
@@ -270,21 +275,29 @@ export function PracticeQuestionManagementPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="relative w-96">
+      <div className="mb-6 grid gap-3 xl:grid-cols-[1fr_auto]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:max-w-md">
             <Search className="absolute top-3 left-3 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               type="text"
               placeholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                pagination.goToFirstPage();
+              }}
               className="pl-10"
             />
           </div>
 
-          <Select value={levelFilter} onValueChange={setLevelFilter}>
-            <SelectTrigger className="w-40">
+          <Select
+            value={levelFilter}
+            onValueChange={(value) => {
+              setLevelFilter(value);
+              pagination.goToFirstPage();
+            }}>
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Lọc theo cấp độ" />
             </SelectTrigger>
             <SelectContent>
@@ -296,7 +309,18 @@ export function PracticeQuestionManagementPage() {
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {(searchQuery || levelFilter !== "all") && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setLevelFilter("all");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          )}
           <ReloadButton
             onReload={() => loadData(true)}
             isLoading={isReloading}
@@ -379,7 +403,13 @@ export function PracticeQuestionManagementPage() {
             </Table>
 
             {sortedData.length > 0 && (
-              <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  pagination.goToFirstPage();
+                }}
+              />
             )}
 
             {sortedData.length === 0 && (searchQuery || levelFilter !== "all") && (
@@ -389,6 +419,7 @@ export function PracticeQuestionManagementPage() {
                   onClick={() => {
                     setSearchQuery("");
                     setLevelFilter("all");
+                    pagination.goToFirstPage();
                   }}>
                   Xóa bộ lọc
                 </Button>
