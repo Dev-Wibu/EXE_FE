@@ -1,7 +1,8 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { Calendar, Check, Clock, Eye, Search, Video, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
-import { PaginationControl } from "@/components/shared";
+import { PaginationControl, SortButton } from "@/components/shared";
 import { ReloadButton } from "@/components/shared/ReloadButton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -31,19 +32,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSessions, useUpdateSessionStatus } from "@/hooks/useSession";
+import { useSortable } from "@/hooks/useSortable";
 import type { Session, SessionStatus } from "@/interfaces";
-import { formatDateTime, treatZuluAsVietnamLocal } from "@/lib/formatting";
+import { formatDateTime, toTimestamp } from "@/lib/formatting";
 import { openUrlInNewTab } from "@/lib/media-file-utils";
 import { getSessionStatusBadge } from "@/lib/status-utils";
 
 type StatusFilter = SessionStatus | "all";
+type SortableSession = Session & {
+  idSortValue: number;
+  joinTimeSortValue: number;
+  statusSortValue: string;
+};
 
 export function SessionProcessingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [pageSize, setPageSize] = useState(10);
 
   // View dialog
   const [viewSession, setViewSession] = useState<Session | null>(null);
@@ -80,15 +86,40 @@ export function SessionProcessingPage() {
     });
   }, [sessions, searchQuery, statusFilter]);
 
+  const sortableSessions = useMemo<SortableSession[]>(() => {
+    return filteredSessions.map((session) => ({
+      ...session,
+      idSortValue: typeof session.id === "number" ? session.id : 0,
+      joinTimeSortValue: toTimestamp(session.joinTime) ?? 0,
+      statusSortValue: session.status || "",
+    }));
+  }, [filteredSessions]);
+
+  const { sortedData, getSortProps } = useSortable(sortableSessions, {
+    defaultSort: {
+      key: "idSortValue",
+      direction: "desc",
+    },
+    noSortBehavior: "preserve",
+    tieBreaker: {
+      key: "idSortValue",
+      direction: "desc",
+    },
+  });
+
   // Pagination
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_staff_sessionprocessing_sessionprocessingpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
-    totalCount: filteredSessions.length,
+    totalCount: sortedData.length,
     pageSize,
   });
 
   const pageData = useMemo(() => {
-    return filteredSessions.slice(pagination.startIndex, pagination.endIndex + 1);
-  }, [filteredSessions, pagination.startIndex, pagination.endIndex]);
+    return sortedData.slice(pagination.startIndex, pagination.endIndex + 1);
+  }, [pagination.endIndex, pagination.startIndex, sortedData]);
 
   // Stats from real data
   const stats = useMemo(() => {
@@ -156,7 +187,10 @@ export function SessionProcessingPage() {
               type="text"
               placeholder="Tìm kiếm theo ID, tên phòng, ID người dùng..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                pagination.goToFirstPage();
+              }}
               className="pl-10"
             />
           </div>
@@ -164,7 +198,10 @@ export function SessionProcessingPage() {
           {/* Status Filter */}
           <Select
             value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+            onValueChange={(value) => {
+              setStatusFilter(value as StatusFilter);
+              pagination.goToFirstPage();
+            }}>
             <SelectTrigger className="w-44">
               <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
@@ -218,12 +255,18 @@ export function SessionProcessingPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-16">ID</TableHead>
+              <TableHead className="w-16">
+                <SortButton {...getSortProps("idSortValue")}>ID</SortButton>
+              </TableHead>
               <TableHead>Tên phòng</TableHead>
               <TableHead>Người dùng (ID)</TableHead>
               <TableHead>Mentor (ID)</TableHead>
-              <TableHead>Thời gian tham gia</TableHead>
-              <TableHead>Trạng thái</TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("joinTimeSortValue")}>Thời gian tham gia</SortButton>
+              </TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("statusSortValue")}>Trạng thái</SortButton>
+              </TableHead>
               <TableHead className="text-right">Hành động</TableHead>
             </TableRow>
           </TableHeader>
@@ -236,7 +279,7 @@ export function SessionProcessingPage() {
                 </TableCell>
                 <TableCell>{session.userId ?? "-"}</TableCell>
                 <TableCell>{session.userId2 ?? "-"}</TableCell>
-                <TableCell>{formatDateTime(treatZuluAsVietnamLocal(session.joinTime))}</TableCell>
+                <TableCell>{formatDateTime(session.joinTime)}</TableCell>
                 <TableCell>
                   <StatusBadge {...getSessionStatusBadge(session.status)} />
                 </TableCell>
@@ -304,18 +347,25 @@ export function SessionProcessingPage() {
         </Table>
 
         {/* Pagination */}
-        {filteredSessions.length > 0 && (
-          <PaginationControl pagination={pagination} onPageSizeChange={setPageSize} />
+        {sortedData.length > 0 && (
+          <PaginationControl
+            pagination={pagination}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              pagination.goToFirstPage();
+            }}
+          />
         )}
 
         {/* Clear Filters */}
-        {filteredSessions.length === 0 && (searchQuery || statusFilter !== "all") && (
+        {sortedData.length === 0 && (searchQuery || statusFilter !== "all") && (
           <div className="flex justify-center pb-4">
             <Button
               variant="outline"
               onClick={() => {
                 setSearchQuery("");
                 setStatusFilter("all");
+                pagination.goToFirstPage();
               }}>
               Xóa bộ lọc
             </Button>
@@ -350,7 +400,7 @@ export function SessionProcessingPage() {
               </div>
               <div className="grid grid-cols-[140px_1fr] gap-2">
                 <span className="font-medium text-gray-600">Thời gian tham gia:</span>
-                <span>{formatDateTime(treatZuluAsVietnamLocal(viewSession.joinTime))}</span>
+                <span>{formatDateTime(viewSession.joinTime)}</span>
               </div>
               <div className="grid grid-cols-[140px_1fr] gap-2">
                 <span className="font-medium text-gray-600">URL phòng:</span>

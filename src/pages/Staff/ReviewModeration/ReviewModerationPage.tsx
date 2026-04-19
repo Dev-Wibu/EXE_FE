@@ -3,6 +3,7 @@
  * Allows staff to moderate reviews (focus on low ratings)
  */
 
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -52,7 +53,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useMentorReviews, type MentorReview } from "@/hooks/useMentorReview";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 
 // Rating thresholds for moderation
@@ -64,7 +65,7 @@ export function ReviewModerationPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("low"); // Default to low ratings
-  const [pageSize, setPageSize] = useState(10);
+
   const [selectedReview, setSelectedReview] = useState<MentorReview | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -95,6 +96,10 @@ export function ReviewModerationPage() {
   const { sortedData, getSortProps } = useSortable(filteredReviews);
 
   // Apply pagination
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_staff_reviewmoderation_reviewmoderationpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,

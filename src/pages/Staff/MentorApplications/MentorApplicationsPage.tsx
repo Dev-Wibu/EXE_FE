@@ -1,3 +1,4 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { CheckCircle, Search, UserCheck, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -24,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { usePagination } from "@/hooks/usePagination";
+
 import { useSortable } from "@/hooks/useSortable";
 import type { Mentor } from "@/interfaces";
 import { getMentorApplicationBadge } from "@/lib/status-utils";
@@ -43,7 +44,7 @@ const getApplicationStatus = (mentor: Mentor): "pending" | "approved" => {
 export function MentorApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus>("pending");
-  const [pageSize, setPageSize] = useState(10);
+
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
@@ -97,6 +98,10 @@ export function MentorApplicationsPage() {
   const { sortedData, getSortProps } = useSortable(filteredMentors);
 
   // Apply pagination
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_staff_mentorapplications_mentorapplicationspage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
   const pagination = usePagination({
     totalCount: sortedData.length,
     pageSize,

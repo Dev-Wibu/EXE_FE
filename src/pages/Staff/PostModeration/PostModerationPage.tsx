@@ -1,9 +1,10 @@
+import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { CheckCircle, Eye, MessageSquare, Search, Trash2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { formatDate } from "@/lib/formatting";
+import { formatDate, toTimestamp } from "@/lib/formatting";
 
-import { ReloadButton } from "@/components/shared";
+import { PaginationControl, ReloadButton, SortButton } from "@/components/shared";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,12 +34,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+import { useSortable } from "@/hooks/useSortable";
 import type { Post, PostCommentResponse } from "@/interfaces";
 import { getPostStatusBadge } from "@/lib/status-utils";
 import { postManager } from "@/services/post.manager";
 import { toast } from "sonner";
 
 type ModerationFilter = "all" | "DRAFT" | "PUBLISHED" | "ARCHIVED";
+type SortablePost = Post & {
+  idSortValue: number;
+  titleSortValue: string;
+  authorSortValue: string;
+  createdAtSortValue: number;
+  statusSortValue: string;
+};
 
 export function PostModerationPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -89,6 +99,42 @@ export function PostModerationPage() {
       return true;
     });
   }, [posts, statusFilter, searchQuery]);
+
+  const sortablePosts = useMemo<SortablePost[]>(() => {
+    return filteredPosts.map((post) => ({
+      ...post,
+      idSortValue: typeof post.postId === "number" ? post.postId : 0,
+      titleSortValue: post.title?.toLowerCase() || "",
+      authorSortValue: post.author?.name?.toLowerCase() || "",
+      createdAtSortValue: toTimestamp(post.creationDate) ?? 0,
+      statusSortValue: post.status || "",
+    }));
+  }, [filteredPosts]);
+
+  const { sortedData, getSortProps } = useSortable(sortablePosts, {
+    defaultSort: {
+      key: "createdAtSortValue",
+      direction: "desc",
+    },
+    noSortBehavior: "preserve",
+    tieBreaker: {
+      key: "idSortValue",
+      direction: "desc",
+    },
+  });
+  const [pageSize, setPageSize] = useHybridPageSize({
+    key: "src_pages_staff_postmoderation_postmoderationpage_tsx_pagesize",
+    defaultPageSize: 10,
+  });
+  const pagination = usePagination({
+    totalCount: sortedData.length,
+    pageSize,
+  });
+
+  const pageData = useMemo(
+    () => sortedData.slice(pagination.startIndex, pagination.endIndex + 1),
+    [pagination.endIndex, pagination.startIndex, sortedData]
+  );
 
   const statusCounts = useMemo(() => {
     return {
@@ -222,7 +268,10 @@ export function PostModerationPage() {
               type="text"
               placeholder="Tìm kiếm theo tiêu đề..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                pagination.goToFirstPage();
+              }}
               className="pl-10"
             />
           </div>
@@ -230,7 +279,10 @@ export function PostModerationPage() {
           {/* Status Filter */}
           <Select
             value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as ModerationFilter)}>
+            onValueChange={(value) => {
+              setStatusFilter(value as ModerationFilter);
+              pagination.goToFirstPage();
+            }}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
@@ -262,16 +314,24 @@ export function PostModerationPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Tiêu đề</TableHead>
-              <TableHead>Tác giả</TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("titleSortValue")}>Tiêu đề</SortButton>
+              </TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("authorSortValue")}>Tác giả</SortButton>
+              </TableHead>
               <TableHead>Chuyên ngành</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-              <TableHead>Trạng thái</TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("createdAtSortValue")}>Ngày tạo</SortButton>
+              </TableHead>
+              <TableHead>
+                <SortButton {...getSortProps("statusSortValue")}>Trạng thái</SortButton>
+              </TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPosts.map((post) => (
+            {pageData.map((post) => (
               <TableRow key={post.postId}>
                 <TableCell className="max-w-[300px] truncate font-medium">
                   {post.title || "—"}
@@ -309,7 +369,7 @@ export function PostModerationPage() {
                 </TableCell>
               </TableRow>
             ))}
-            {filteredPosts.length === 0 && (
+            {pageData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center text-gray-500">
                   Không có bài viết nào
@@ -318,6 +378,30 @@ export function PostModerationPage() {
             )}
           </TableBody>
         </Table>
+
+        {sortedData.length > 0 && (
+          <PaginationControl
+            pagination={pagination}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              pagination.goToFirstPage();
+            }}
+          />
+        )}
+
+        {sortedData.length === 0 && (searchQuery || statusFilter !== "DRAFT") && (
+          <div className="flex justify-center pb-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setStatusFilter("DRAFT");
+                pagination.goToFirstPage();
+              }}>
+              Xóa bộ lọc
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Post Detail Dialog */}
