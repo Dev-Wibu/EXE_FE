@@ -212,6 +212,8 @@ export function useAIInterviewSession() {
     speakingId,
     isSupported: isTTSSupported,
     isMuted,
+    hasPreferredLanguageVoice,
+    activeVoiceName,
     speak,
     cancel: cancelSpeech,
     toggleMute,
@@ -248,6 +250,8 @@ export function useAIInterviewSession() {
   const [isEvaluating, setIsEvaluating] = useState(false);
   // Khôi phục trạng thái finished nếu phiên đã hoàn thành trước đó
   const [interviewFinished, setInterviewFinished] = useState(isAlreadyFinished);
+  const [shouldAutoStartMicAfterDeviceCheck, setShouldAutoStartMicAfterDeviceCheck] =
+    useState(false);
   const [currentPhase, setCurrentPhase] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
@@ -628,6 +632,38 @@ export function useAIInterviewSession() {
     startListening();
   }, [canUseSpeechInput, isListening, isSpeechRecognitionSupported, startListening, stopListening]);
 
+  const handleDeviceCheckConfirmed = useCallback(() => {
+    setShouldAutoStartMicAfterDeviceCheck(true);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoStartMicAfterDeviceCheck) {
+      return;
+    }
+
+    if (!isSpeechRecognitionSupported || interviewFinished || sessionExpiredMidway) {
+      setShouldAutoStartMicAfterDeviceCheck(false);
+      return;
+    }
+
+    if (isListening || !canUseSpeechInput) {
+      return;
+    }
+
+    setShouldAutoStartMicAfterDeviceCheck(false);
+    shouldAutoSendAfterStopRef.current = false;
+    pendingInterimForAutoSendRef.current = "";
+    startListening();
+  }, [
+    canUseSpeechInput,
+    interviewFinished,
+    isListening,
+    isSpeechRecognitionSupported,
+    sessionExpiredMidway,
+    shouldAutoStartMicAfterDeviceCheck,
+    startListening,
+  ]);
+
   useEffect(() => {
     if (isListening || !shouldAutoSendAfterStopRef.current) {
       return;
@@ -649,6 +685,8 @@ export function useAIInterviewSession() {
   }, [handleSendAnswer, isListening]);
 
   const canSwitchSpeechLanguage = !isListening && !isSubmitting && !isEvaluating;
+  const shouldWarnSpeechFallback =
+    speechLanguage === "vi-VN" && hasPreferredLanguageVoice === false;
 
   const handleSpeechLanguageChange = useCallback(
     (language: SpeechLanguageCode) => {
@@ -716,11 +754,15 @@ export function useAIInterviewSession() {
     isSpeechRecognitionSupported,
     canUseSpeechInput,
     handleToggleListening,
+    handleDeviceCheckConfirmed,
     isTTSSupported,
     isMuted,
     toggleMute,
     speechLanguage,
     speechLanguageLabel: SPEECH_LANGUAGE_LABELS[speechLanguage],
+    hasPreferredLanguageVoice,
+    activeVoiceName,
+    shouldWarnSpeechFallback,
     canSwitchSpeechLanguage,
     handleSpeechLanguageChange,
     handleToggleSpeak,

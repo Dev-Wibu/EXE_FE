@@ -24,6 +24,8 @@ export function InterviewHeader({
   isMuted,
   speechLanguage,
   speechLanguageLabel,
+  activeVoiceName,
+  shouldWarnSpeechFallback,
   canSwitchSpeechLanguage,
   onSpeechLanguageChange,
   onToggleMute,
@@ -37,6 +39,8 @@ export function InterviewHeader({
   isMuted: boolean;
   speechLanguage: SpeechLanguageCode;
   speechLanguageLabel: string;
+  activeVoiceName: string | null;
+  shouldWarnSpeechFallback: boolean;
   canSwitchSpeechLanguage: boolean;
   onSpeechLanguageChange: (_language: SpeechLanguageCode) => void;
   onToggleMute: () => void;
@@ -129,6 +133,17 @@ export function InterviewHeader({
               </button>
             </div>
             <span className="text-slate-500 dark:text-slate-400">{speechLanguageLabel}</span>
+          </div>
+        )}
+
+        {!finished && shouldWarnSpeechFallback && (
+          <div className="hidden rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] text-amber-700 lg:inline-flex dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+            Giọng Việt có thể không khả dụng, hệ thống có thể đọc bằng giọng mặc định
+            {activeVoiceName && (
+              <span className="ml-1 text-amber-600/80 dark:text-amber-200/80">
+                ({activeVoiceName})
+              </span>
+            )}
           </div>
         )}
 

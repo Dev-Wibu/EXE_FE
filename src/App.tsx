@@ -40,6 +40,7 @@ import {
 } from "@/pages/Mentor";
 import { PaymentCancelPage, PaymentSuccessPage } from "@/pages/Payment";
 import { MediaToolkitPlaygroundPage } from "@/pages/Shared/MediaToolkitPlaygroundPage";
+import { SpeechPlaygroundPage } from "@/pages/Shared/SpeechPlaygroundPage";
 import {
   FeedbackModerationPage,
   MentorApplicationsPage,
@@ -110,6 +111,10 @@ function App() {
             <Route
               path="/dev/media-toolkit"
               element={import.meta.env.DEV ? <MediaToolkitPlaygroundPage /> : <NotFoundPage />}
+            />
+            <Route
+              path="/dev/speech-playground"
+              element={import.meta.env.DEV ? <SpeechPlaygroundPage /> : <NotFoundPage />}
             />
 
             {/* Auth routes with AuthLayout — redirect to dashboard if already logged in */}

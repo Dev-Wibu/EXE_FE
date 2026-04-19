@@ -1,4 +1,4 @@
-import { Bot, Camera, CameraOff, LoaderCircle, Mic } from "lucide-react";
+import { Bot, Camera, CameraOff, LoaderCircle, Mic, MicOff } from "lucide-react";
 import type { RefObject } from "react";
 
 import logo from "@/assets/icon.svg";
@@ -24,11 +24,15 @@ interface InterviewStageProps {
   interviewFinished: boolean;
   sessionExpiredMidway: boolean;
   isListening: boolean;
+  isSpeechSupported: boolean;
+  canUseSpeechInput: boolean;
+  speechLanguageLabel: string;
   isSubmitting: boolean;
   isEvaluating: boolean;
   cameraState: CameraPreviewState;
   cameraMessage: string | null;
   cameraVideoRef: RefObject<HTMLVideoElement | null>;
+  onToggleListening: () => void;
   onToggleCamera: () => void;
 }
 
@@ -69,11 +73,15 @@ export function InterviewStage({
   interviewFinished,
   sessionExpiredMidway,
   isListening,
+  isSpeechSupported,
+  canUseSpeechInput,
+  speechLanguageLabel,
   isSubmitting,
   isEvaluating,
   cameraState,
   cameraMessage,
   cameraVideoRef,
+  onToggleListening,
   onToggleCamera,
 }: InterviewStageProps) {
   const stageStatus = resolveStageStatus({
@@ -85,6 +93,7 @@ export function InterviewStage({
   });
 
   const canShowPulse = !interviewFinished && (isListening || isSubmitting || isEvaluating);
+  const canToggleMic = isSpeechSupported && (isListening || canUseSpeechInput);
 
   return (
     <section className="relative flex min-h-80 flex-1 items-center justify-center overflow-hidden border-b border-slate-800 bg-slate-950 px-4 py-6 md:border-r md:border-b-0 md:px-6">
@@ -135,7 +144,7 @@ export function InterviewStage({
         )}
       </div>
 
-      <div className="absolute top-4 right-4 z-20 w-44 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/95 shadow-lg shadow-black/40 md:w-56">
+      <div className="absolute top-4 right-4 z-20 w-56 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/95 shadow-lg shadow-black/40 sm:w-64 md:w-[360px] lg:w-[420px]">
         <div className="relative aspect-video bg-slate-950">
           {cameraState === "granted" ? (
             <video
@@ -179,6 +188,31 @@ export function InterviewStage({
             <p className="text-[10px] leading-snug text-slate-400">{cameraMessage}</p>
           )}
         </div>
+      </div>
+
+      <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
+        <Button
+          type="button"
+          onClick={onToggleListening}
+          disabled={!canToggleMic}
+          className={cn(
+            "h-16 min-w-72 rounded-full px-6 text-base font-semibold shadow-[0_16px_40px_rgba(2,132,199,0.35)] transition-all",
+            isListening
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-cyan-600 text-white hover:bg-cyan-700",
+            !canToggleMic && "cursor-not-allowed opacity-60"
+          )}>
+          <span className="mr-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </span>
+          {isListening ? "Dừng ghi âm và gửi ngay" : `Bắt đầu nói (${speechLanguageLabel})`}
+        </Button>
+
+        {!isSpeechSupported && (
+          <p className="mt-2 text-center text-xs text-slate-300">
+            Trình duyệt hiện tại chưa hỗ trợ nhận diện giọng nói.
+          </p>
+        )}
       </div>
     </section>
   );

@@ -1,9 +1,11 @@
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Settings } from "lucide-react";
+import { useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { DeviceCheckDialog } from "@/components/video-call";
 
 import { ChatPanel } from "./ChatPanel";
 import { InterviewHeader } from "./InterviewHeader";
@@ -13,7 +15,9 @@ import { useUserCameraPreview } from "./useUserCameraPreview";
 
 export function AIInterviewSessionPage() {
   const session = useAIInterviewSession();
-  const cameraPreview = useUserCameraPreview();
+  const [isDeviceCheckOpen, setIsDeviceCheckOpen] = useState(true);
+  const [hasConfirmedDevices, setHasConfirmedDevices] = useState(false);
+  const cameraPreview = useUserCameraPreview(hasConfirmedDevices);
 
   // ---- Error state: missing session key ----
   if (!session.sessionKey) {
@@ -102,55 +106,83 @@ export function AIInterviewSessionPage() {
         isMuted={session.isMuted}
         speechLanguage={session.speechLanguage}
         speechLanguageLabel={session.speechLanguageLabel}
+        activeVoiceName={session.activeVoiceName}
+        shouldWarnSpeechFallback={session.shouldWarnSpeechFallback}
         canSwitchSpeechLanguage={session.canSwitchSpeechLanguage}
         onSpeechLanguageChange={session.handleSpeechLanguageChange}
         onToggleMute={session.toggleMute}
         onBack={session.handleNavigateBack}
       />
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <InterviewStage
-          phaseName={session.currentPhase}
-          questionIndex={session.currentQuestionIndex}
-          totalQuestions={session.totalQuestions}
-          interviewFinished={session.interviewFinished}
-          sessionExpiredMidway={session.sessionExpiredMidway}
-          isListening={session.isListening}
-          isSubmitting={session.isSubmitting}
-          isEvaluating={session.isEvaluating}
-          cameraState={cameraPreview.state}
-          cameraMessage={cameraPreview.message}
-          cameraVideoRef={cameraPreview.videoRef}
-          onToggleCamera={cameraPreview.toggleCamera}
-        />
+      <DeviceCheckDialog
+        isOpen={isDeviceCheckOpen}
+        onOpenChange={setIsDeviceCheckOpen}
+        showDisplayName={false}
+        onConfirm={() => {
+          setIsDeviceCheckOpen(false);
+          setHasConfirmedDevices(true);
+          session.handleDeviceCheckConfirmed();
+        }}
+      />
 
-        <div className="h-[52vh] min-h-0 md:h-auto md:w-[430px] lg:w-[470px]">
-          <ChatPanel
-            messages={session.messages}
-            userAvatarUrl={session.user?.avatarUrl ?? undefined}
-            isTTSSupported={session.isTTSSupported}
-            onToggleSpeak={session.handleToggleSpeak}
-            speakingId={session.speakingId}
-            isEvaluating={session.isEvaluating}
-            isSubmitting={session.isSubmitting}
-            hasStarted={session.hasStarted}
-            messagesEndRef={session.messagesEndRef}
+      {!hasConfirmedDevices ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
+          <Settings className="h-12 w-12 text-cyan-200" />
+          <p className="text-center text-lg font-semibold text-slate-100">
+            Vui lòng kiểm tra thiết bị trước khi vào phòng phỏng vấn
+          </p>
+          <Button
+            onClick={() => setIsDeviceCheckOpen(true)}
+            className="bg-cyan-600 text-white hover:bg-cyan-700">
+            Mở kiểm tra thiết bị
+          </Button>
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+          <InterviewStage
+            phaseName={session.currentPhase}
+            questionIndex={session.currentQuestionIndex}
+            totalQuestions={session.totalQuestions}
             interviewFinished={session.interviewFinished}
             sessionExpiredMidway={session.sessionExpiredMidway}
-            onNavigateToList={session.handleNavigateBack}
-            onNavigateToSetup={() => session.navigate("/user/ai-interview/setup")}
-            onViewResults={session.handleViewResults}
-            onSendAnswer={session.handleSendFromComposer}
             isListening={session.isListening}
-            interimTranscript={session.interimTranscript}
             isSpeechSupported={session.isSpeechRecognitionSupported}
             canUseSpeechInput={session.canUseSpeechInput}
             speechLanguageLabel={session.speechLanguageLabel}
-            chatInputValue={session.chatInputValue}
-            onChatInputChange={session.setChatInputValue}
+            isSubmitting={session.isSubmitting}
+            isEvaluating={session.isEvaluating}
+            cameraState={cameraPreview.state}
+            cameraMessage={cameraPreview.message}
+            cameraVideoRef={cameraPreview.videoRef}
             onToggleListening={session.handleToggleListening}
+            onToggleCamera={cameraPreview.toggleCamera}
           />
+
+          <div className="h-[52vh] min-h-0 md:h-auto md:w-[430px] lg:w-[470px]">
+            <ChatPanel
+              messages={session.messages}
+              userAvatarUrl={session.user?.avatarUrl ?? undefined}
+              isTTSSupported={session.isTTSSupported}
+              onToggleSpeak={session.handleToggleSpeak}
+              speakingId={session.speakingId}
+              isEvaluating={session.isEvaluating}
+              isSubmitting={session.isSubmitting}
+              hasStarted={session.hasStarted}
+              messagesEndRef={session.messagesEndRef}
+              interviewFinished={session.interviewFinished}
+              sessionExpiredMidway={session.sessionExpiredMidway}
+              onNavigateToList={session.handleNavigateBack}
+              onNavigateToSetup={() => session.navigate("/user/ai-interview/setup")}
+              onViewResults={session.handleViewResults}
+              onSendAnswer={session.handleSendFromComposer}
+              isListening={session.isListening}
+              interimTranscript={session.interimTranscript}
+              speechLanguageLabel={session.speechLanguageLabel}
+              chatInputValue={session.chatInputValue}
+              onChatInputChange={session.setChatInputValue}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

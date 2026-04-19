@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, MessageSquare, Mic, MicOff, Send } from "lucide-react";
+import { AlertCircle, CheckCircle2, MessageSquare, Send } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,24 +18,18 @@ function ChatInput({
   placeholder,
   isListening,
   interimTranscript,
-  isSpeechSupported,
-  canUseSpeechInput,
   speechLanguageLabel,
   value,
   onValueChange,
-  onToggleListening,
 }: {
   onSend: (_message: string) => void;
   disabled: boolean;
   placeholder?: string;
   isListening: boolean;
   interimTranscript: string;
-  isSpeechSupported: boolean;
-  canUseSpeechInput: boolean;
   speechLanguageLabel: string;
   value: string;
   onValueChange: (_val: string) => void;
-  onToggleListening: () => void;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -77,28 +71,10 @@ function ChatInput({
     isListening && interimTranscript ? (value ? value + " " : "") + interimTranscript : value;
   const characterCount = value.length;
   const canSend = value.trim().length > 0 && !disabled && !isListening;
-  const canToggleMic = isSpeechSupported && (isListening || canUseSpeechInput);
 
   return (
     <div className="border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
       <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        {isSpeechSupported && (
-          <Button
-            onClick={onToggleListening}
-            disabled={!canToggleMic}
-            size="icon"
-            title={
-              isListening ? "Dừng ghi âm và gửi ngay" : `Bắt đầu ghi âm (${speechLanguageLabel})`
-            }
-            className={cn(
-              "h-11 w-11 shrink-0 rounded-xl transition-all",
-              isListening
-                ? "animate-pulse bg-red-500 text-white hover:bg-red-600"
-                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            )}>
-            {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-          </Button>
-        )}
         <div className="flex-1">
           <textarea
             ref={inputRef}
@@ -109,7 +85,7 @@ function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder={
               isListening
-                ? "Đang lắng nghe... nhấn mic lần nữa để gửi ngay"
+                ? "Đang lắng nghe... dùng nút mic ở màn hình chính để dừng và gửi"
                 : (placeholder ?? "Nhập câu trả lời của bạn...")
             }
             disabled={disabled}
@@ -135,7 +111,7 @@ function ChatInput({
       <div className="mt-2 flex items-center justify-between px-1 text-[11px]">
         <p className="text-muted-foreground truncate pr-3">
           {isListening
-            ? "Nhấn mic lần nữa để dừng và gửi ngay transcript lên hệ thống"
+            ? "Mic đang ghi âm. Bấm nút mic ở giữa màn hình để dừng và gửi ngay."
             : `Nhận diện giọng nói hiện tại: ${speechLanguageLabel}`}
         </p>
         <span
@@ -150,13 +126,7 @@ function ChatInput({
       {isListening && (
         <p className="text-muted-foreground mt-2 text-center text-xs">
           <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
-          Đang nghe... Nhấn nút mic lần nữa để dừng và gửi
-        </p>
-      )}
-
-      {!isSpeechSupported && (
-        <p className="text-muted-foreground mt-2 text-center text-xs">
-          Trình duyệt hiện tại chưa hỗ trợ nhận diện giọng nói, bạn vẫn có thể nhập bằng bàn phím.
+          Đang nghe... Dùng nút mic trên màn hình chính để dừng và gửi
         </p>
       )}
     </div>
@@ -185,11 +155,8 @@ export function ChatPanel({
   onSendAnswer,
   isListening,
   interimTranscript,
-  isSpeechSupported,
   chatInputValue,
   onChatInputChange,
-  onToggleListening,
-  canUseSpeechInput,
   speechLanguageLabel,
 }: {
   messages: ChatMessage[];
@@ -209,11 +176,8 @@ export function ChatPanel({
   onSendAnswer: (_answer: string) => void;
   isListening: boolean;
   interimTranscript: string;
-  isSpeechSupported: boolean;
   chatInputValue: string;
   onChatInputChange: (_val: string) => void;
-  onToggleListening: () => void;
-  canUseSpeechInput: boolean;
   speechLanguageLabel: string;
 }) {
   const inputDisabled = isSubmitting || isEvaluating || !hasStarted;
@@ -339,12 +303,9 @@ export function ChatPanel({
           placeholder={inputPlaceholder}
           isListening={isListening}
           interimTranscript={interimTranscript}
-          isSpeechSupported={isSpeechSupported}
-          canUseSpeechInput={canUseSpeechInput}
           speechLanguageLabel={speechLanguageLabel}
           value={chatInputValue}
           onValueChange={onChatInputChange}
-          onToggleListening={onToggleListening}
         />
       )}
     </section>

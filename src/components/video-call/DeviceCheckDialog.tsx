@@ -32,6 +32,7 @@ interface DeviceCheckDialogProps {
   onConfirm?: () => void;
   displayName?: string;
   onDisplayNameChange?: (value: string) => void;
+  showDisplayName?: boolean;
 }
 
 export function DeviceCheckDialog({
@@ -40,9 +41,12 @@ export function DeviceCheckDialog({
   onConfirm,
   displayName,
   onDisplayNameChange,
+  showDisplayName = true,
 }: DeviceCheckDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const previewRequestIdRef = useRef(0);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioId, setSelectedAudioId] = useState<string>("");
@@ -54,11 +58,26 @@ export function DeviceCheckDialog({
   const [isStreaming, setIsStreaming] = useState(false);
   const animationRef = useRef<number>(0);
 
-  const stopStream = useCallback(() => {
+  const stopAudioMeter = useCallback(() => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = 0;
     }
+
+    const audioContext = audioContextRef.current;
+    audioContextRef.current = null;
+    if (audioContext) {
+      void audioContext.close().catch(() => undefined);
+    }
+
+    setMicLevel(0);
+  }, []);
+
+  const stopStream = useCallback(() => {
+    // Mỗi lần dừng stream sẽ tăng request id để vô hiệu hóa các startPreview cũ đang pending.
+    previewRequestIdRef.current += 1;
+    stopAudioMeter();
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -67,12 +86,12 @@ export function DeviceCheckDialog({
       videoRef.current.srcObject = null;
     }
     setIsStreaming(false);
-    setMicLevel(0);
-  }, []);
+  }, [stopAudioMeter]);
 
   const startPreview = useCallback(
     async (mic: boolean, camera: boolean, audioId?: string, videoId?: string) => {
       stopStream();
+      const requestId = previewRequestIdRef.current;
       setError(null);
 
       if (!mic && !camera) return;
@@ -84,6 +103,11 @@ export function DeviceCheckDialog({
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (requestId !== previewRequestIdRef.current) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
         streamRef.current = stream;
         setIsStreaming(true);
 
@@ -94,6 +118,7 @@ export function DeviceCheckDialog({
         // Mic level meter
         if (mic) {
           const audioContext = new AudioContext();
+          audioContextRef.current = audioContext;
           const source = audioContext.createMediaStreamSource(stream);
           const analyser = audioContext.createAnalyser();
           analyser.fftSize = 256;
@@ -101,6 +126,9 @@ export function DeviceCheckDialog({
           const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
           const updateLevel = () => {
+            if (requestId !== previewRequestIdRef.current) {
+              return;
+            }
             analyser.getByteFrequencyData(dataArray);
             const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
             setMicLevel(Math.min(100, Math.round((avg / 128) * 100)));
@@ -109,6 +137,10 @@ export function DeviceCheckDialog({
           updateLevel();
         }
       } catch {
+        if (requestId !== previewRequestIdRef.current) {
+          return;
+        }
+        stopStream();
         setError("Không thể truy cập thiết bị. Vui lòng kiểm tra quyền truy cập camera/mic.");
       }
     },
@@ -120,16 +152,33 @@ export function DeviceCheckDialog({
     if (!isOpen) return;
 
     let cancelled = false;
+    const resetTimerId = window.setTimeout(() => {
+      setError(null);
+      setIsCameraOn(true);
+      setIsMicOn(true);
+      setSelectedAudioId("");
+      setSelectedVideoId("");
+    }, 0);
+
+    const refreshDevices = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      if (cancelled) return;
+
+      const nextAudioDevices = devices.filter((d) => d.kind === "audioinput");
+      const nextVideoDevices = devices.filter((d) => d.kind === "videoinput");
+
+      setAudioDevices(nextAudioDevices);
+      setVideoDevices(nextVideoDevices);
+      setSelectedAudioId(nextAudioDevices[0]?.deviceId ?? "");
+      setSelectedVideoId(nextVideoDevices[0]?.deviceId ?? "");
+    };
 
     const init = async () => {
       try {
         const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         tempStream.getTracks().forEach((t) => t.stop());
 
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        if (cancelled) return;
-        setAudioDevices(devices.filter((d) => d.kind === "audioinput"));
-        setVideoDevices(devices.filter((d) => d.kind === "videoinput"));
+        await refreshDevices();
       } catch {
         if (!cancelled) {
           setError("Không thể liệt kê thiết bị. Vui lòng cấp quyền truy cập camera/mic.");
@@ -137,10 +186,17 @@ export function DeviceCheckDialog({
       }
     };
 
-    init();
+    const handleDeviceChange = () => {
+      void refreshDevices();
+    };
+
+    void init();
+    navigator.mediaDevices?.addEventListener?.("devicechange", handleDeviceChange);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(resetTimerId);
+      navigator.mediaDevices?.removeEventListener?.("devicechange", handleDeviceChange);
     };
   }, [isOpen]);
 
@@ -159,17 +215,17 @@ export function DeviceCheckDialog({
   const handleToggleMic = () => {
     const next = !isMicOn;
     setIsMicOn(next);
-    startPreview(next, isCameraOn, selectedAudioId, selectedVideoId);
+    void startPreview(next, isCameraOn, selectedAudioId, selectedVideoId);
   };
 
   const handleToggleCamera = () => {
     const next = !isCameraOn;
     setIsCameraOn(next);
-    startPreview(isMicOn, next, selectedAudioId, selectedVideoId);
+    void startPreview(isMicOn, next, selectedAudioId, selectedVideoId);
   };
 
   const handleRefresh = () => {
-    startPreview(isMicOn, isCameraOn, selectedAudioId, selectedVideoId);
+    void startPreview(isMicOn, isCameraOn, selectedAudioId, selectedVideoId);
   };
 
   return (
@@ -183,14 +239,16 @@ export function DeviceCheckDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-1">
-            <p className="text-xs text-slate-500">Tên hiển thị trong phòng họp:</p>
-            <Input
-              value={displayName ?? ""}
-              onChange={(e) => onDisplayNameChange?.(e.target.value)}
-              placeholder="Tên tài khoản"
-            />
-          </div>
+          {showDisplayName && (
+            <div className="space-y-1">
+              <p className="text-xs text-slate-500">Tên hiển thị trong phòng họp:</p>
+              <Input
+                value={displayName ?? ""}
+                onChange={(e) => onDisplayNameChange?.(e.target.value)}
+                placeholder="Tên tài khoản"
+              />
+            </div>
+          )}
 
           {error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/20 dark:text-red-400">
@@ -265,7 +323,9 @@ export function DeviceCheckDialog({
                 value={selectedVideoId}
                 onValueChange={(v) => {
                   setSelectedVideoId(v);
-                  if (isStreaming) startPreview(isMicOn, isCameraOn, selectedAudioId, v);
+                  if (isStreaming) {
+                    void startPreview(isMicOn, isCameraOn, selectedAudioId, v);
+                  }
                 }}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Chọn camera" />
@@ -288,7 +348,9 @@ export function DeviceCheckDialog({
                 value={selectedAudioId}
                 onValueChange={(v) => {
                   setSelectedAudioId(v);
-                  if (isStreaming) startPreview(isMicOn, isCameraOn, v, selectedVideoId);
+                  if (isStreaming) {
+                    void startPreview(isMicOn, isCameraOn, v, selectedVideoId);
+                  }
                 }}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Chọn microphone" />
