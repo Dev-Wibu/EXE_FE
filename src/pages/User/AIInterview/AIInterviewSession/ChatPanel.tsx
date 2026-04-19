@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Mic, MicOff, Send } from "lucide-react";
+import { AlertCircle, CheckCircle2, MessageSquare, Mic, MicOff, Send } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import { ChatBubble, EvaluatingIndicator, TypingIndicator } from "./ChatBubble";
-import { FacePreviewWidget } from "./FacePreviewWidget";
 import type { ChatMessage } from "./types";
-import type { CameraPermissionState } from "./useFaceCameraCapture";
 
 // ============================================================================
 // ChatInput (local component)
@@ -21,10 +19,11 @@ function ChatInput({
   isListening,
   interimTranscript,
   isSpeechSupported,
+  canUseSpeechInput,
+  speechLanguageLabel,
   value,
   onValueChange,
-  onStartListening,
-  onStopListening,
+  onToggleListening,
 }: {
   onSend: (_message: string) => void;
   disabled: boolean;
@@ -32,10 +31,11 @@ function ChatInput({
   isListening: boolean;
   interimTranscript: string;
   isSpeechSupported: boolean;
+  canUseSpeechInput: boolean;
+  speechLanguageLabel: string;
   value: string;
   onValueChange: (_val: string) => void;
-  onStartListening: () => void;
-  onStopListening: () => void;
+  onToggleListening: () => void;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -76,17 +76,20 @@ function ChatInput({
   const displayValue =
     isListening && interimTranscript ? (value ? value + " " : "") + interimTranscript : value;
   const characterCount = value.length;
-  const canSend = value.trim().length > 0 && !disabled;
+  const canSend = value.trim().length > 0 && !disabled && !isListening;
+  const canToggleMic = isSpeechSupported && (isListening || canUseSpeechInput);
 
   return (
-    <div className="border-t border-slate-200/80 bg-white/90 p-3 backdrop-blur-sm md:p-4 dark:border-slate-800 dark:bg-slate-900/90">
-      <div className="mx-auto flex max-w-5xl items-end gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:p-3 dark:border-slate-700 dark:bg-slate-900">
+    <div className="border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
+      <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         {isSpeechSupported && (
           <Button
-            onClick={() => (isListening ? onStopListening() : onStartListening())}
-            disabled={disabled}
+            onClick={onToggleListening}
+            disabled={!canToggleMic}
             size="icon"
-            title={isListening ? "Dừng nhận dạng giọng nói" : "Bắt đầu nói (vi-VN)"}
+            title={
+              isListening ? "Dừng ghi âm và gửi ngay" : `Bắt đầu ghi âm (${speechLanguageLabel})`
+            }
             className={cn(
               "h-11 w-11 shrink-0 rounded-xl transition-all",
               isListening
@@ -106,7 +109,7 @@ function ChatInput({
             onKeyDown={handleKeyDown}
             placeholder={
               isListening
-                ? "Đang lắng nghe... nói tiếng Việt rõ ràng"
+                ? "Đang lắng nghe... nhấn mic lần nữa để gửi ngay"
                 : (placeholder ?? "Nhập câu trả lời của bạn...")
             }
             disabled={disabled}
@@ -129,11 +132,11 @@ function ChatInput({
         </Button>
       </div>
 
-      <div className="mx-auto mt-2 flex max-w-5xl items-center justify-between px-1 text-[11px]">
+      <div className="mt-2 flex items-center justify-between px-1 text-[11px]">
         <p className="text-muted-foreground truncate pr-3">
           {isListening
-            ? "Mẹo: nói thành câu ngắn, rõ ý để nhận diện giọng nói chính xác hơn"
-            : "Mẹo: trả lời theo ngữ cảnh thực tế, nêu rõ vai trò và kết quả bạn đạt được"}
+            ? "Nhấn mic lần nữa để dừng và gửi ngay transcript lên hệ thống"
+            : `Nhận diện giọng nói hiện tại: ${speechLanguageLabel}`}
         </p>
         <span
           className={cn(
@@ -147,7 +150,13 @@ function ChatInput({
       {isListening && (
         <p className="text-muted-foreground mt-2 text-center text-xs">
           <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-red-500" />
-          Đang nghe... Nhấn nút mic lần nữa để dừng
+          Đang nghe... Nhấn nút mic lần nữa để dừng và gửi
+        </p>
+      )}
+
+      {!isSpeechSupported && (
+        <p className="text-muted-foreground mt-2 text-center text-xs">
+          Trình duyệt hiện tại chưa hỗ trợ nhận diện giọng nói, bạn vẫn có thể nhập bằng bàn phím.
         </p>
       )}
     </div>
@@ -179,16 +188,9 @@ export function ChatPanel({
   isSpeechSupported,
   chatInputValue,
   onChatInputChange,
-  onStartListening,
-  onStopListening,
-  faceBehaviorEnabled,
-  faceBehaviorModeLabel,
-  facePermissionState,
-  facePermissionMessage,
-  faceIsMonitoring,
-  faceWarningText,
-  faceVideoRef,
-  faceCanvasRef,
+  onToggleListening,
+  canUseSpeechInput,
+  speechLanguageLabel,
 }: {
   messages: ChatMessage[];
   userAvatarUrl?: string;
@@ -210,16 +212,9 @@ export function ChatPanel({
   isSpeechSupported: boolean;
   chatInputValue: string;
   onChatInputChange: (_val: string) => void;
-  onStartListening: () => void;
-  onStopListening: () => void;
-  faceBehaviorEnabled: boolean;
-  faceBehaviorModeLabel: string;
-  facePermissionState: CameraPermissionState;
-  facePermissionMessage?: string | null;
-  faceIsMonitoring: boolean;
-  faceWarningText?: string | null;
-  faceVideoRef: React.RefObject<HTMLVideoElement | null>;
-  faceCanvasRef: React.RefObject<HTMLCanvasElement | null>;
+  onToggleListening: () => void;
+  canUseSpeechInput: boolean;
+  speechLanguageLabel: string;
 }) {
   const inputDisabled = isSubmitting || isEvaluating || !hasStarted;
   const inputPlaceholder = isEvaluating
@@ -229,16 +224,38 @@ export function ChatPanel({
       : "Nhập câu trả lời của bạn... (Enter để gửi, Shift+Enter để xuống dòng)";
 
   return (
-    <>
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto bg-linear-to-b from-slate-100/50 via-white to-slate-100/60 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-        <div className="mx-auto max-w-5xl space-y-5 px-4 py-5 md:px-6 md:py-6">
+    <section className="flex h-full min-h-0 flex-col border-t border-slate-200/80 bg-white md:border-t-0 md:border-l dark:border-slate-800 dark:bg-slate-900">
+      <div className="border-b border-slate-200/80 bg-slate-50/90 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/70">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-200">
+              <MessageSquare className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Tin nhắn trong phiên
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {messages.length} nội dung trao đổi
+              </p>
+            </div>
+          </div>
+          {isListening && (
+            <span className="rounded-full bg-red-100 px-2 py-1 text-[10px] font-semibold text-red-600 dark:bg-red-900/40 dark:text-red-300">
+              Đang ghi âm
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-linear-to-b from-slate-100/40 via-white to-slate-100/60 p-4 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+        <div className="space-y-4">
           {!interviewFinished && (
             <div className="rounded-2xl border border-cyan-200/80 bg-linear-to-r from-cyan-50/90 via-blue-50/80 to-cyan-50/90 px-3.5 py-2.5 text-xs text-cyan-800 shadow-sm dark:border-cyan-900/70 dark:from-cyan-950/30 dark:via-blue-950/20 dark:to-cyan-950/30 dark:text-cyan-200">
-              <p className="font-semibold">Gợi ý nhanh để trả lời hiệu quả</p>
+              <p className="font-semibold">Gợi ý nhanh</p>
               <p className="mt-0.5 opacity-90">
-                Nên nêu bối cảnh thật, cách bạn xử lý vấn đề và kết quả đo lường được để AI đánh giá
-                sát thực tế hơn.
+                Trả lời theo bối cảnh thật, nêu hành động cụ thể và kết quả định lượng để AI đánh
+                giá sát hơn.
               </p>
             </div>
           )}
@@ -252,19 +269,26 @@ export function ChatPanel({
               speakingId={speakingId}
             />
           ))}
+
           {isEvaluating && <EvaluatingIndicator />}
           {isSubmitting && !isEvaluating && <TypingIndicator />}
+
+          {messages.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+              Cuộc trò chuyện sẽ hiển thị tại đây khi phiên bắt đầu.
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input or completion actions */}
       {interviewFinished ? (
-        <div className="border-t border-slate-200/80 bg-white/90 p-4 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/90">
+        <div className="border-t border-slate-200/80 bg-white/95 p-4 dark:border-slate-800 dark:bg-slate-900/95">
           {sessionExpiredMidway ? (
-            <Card className="mx-auto max-w-5xl border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30">
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
+            <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30">
+              <CardContent className="space-y-3 p-4">
+                <div className="flex items-center gap-2.5">
                   <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
                   <div>
                     <p className="font-semibold text-red-700 dark:text-red-300">Phiên đã hết hạn</p>
@@ -273,7 +297,7 @@ export function ChatPanel({
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={onNavigateToList}>
                     Quay lại danh sách
                   </Button>
@@ -286,9 +310,9 @@ export function ChatPanel({
               </CardContent>
             </Card>
           ) : (
-            <Card className="mx-auto max-w-5xl border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30">
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
+            <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30">
+              <CardContent className="space-y-3 p-4">
+                <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                   <div>
                     <p className="font-semibold text-emerald-700 dark:text-emerald-300">
@@ -301,7 +325,7 @@ export function ChatPanel({
                 </div>
                 <Button
                   onClick={onViewResults}
-                  className="bg-emerald-600 text-white hover:bg-emerald-700">
+                  className="w-full bg-emerald-600 text-white hover:bg-emerald-700">
                   Xem kết quả
                 </Button>
               </CardContent>
@@ -309,31 +333,20 @@ export function ChatPanel({
           )}
         </div>
       ) : (
-        <>
-          <FacePreviewWidget
-            enabled={faceBehaviorEnabled}
-            modeLabel={faceBehaviorModeLabel}
-            permissionState={facePermissionState}
-            permissionMessage={facePermissionMessage}
-            isMonitoring={faceIsMonitoring}
-            warningText={faceWarningText}
-            videoRef={faceVideoRef}
-            canvasRef={faceCanvasRef}
-          />
-          <ChatInput
-            onSend={onSendAnswer}
-            disabled={inputDisabled}
-            placeholder={inputPlaceholder}
-            isListening={isListening}
-            interimTranscript={interimTranscript}
-            isSpeechSupported={isSpeechSupported}
-            value={chatInputValue}
-            onValueChange={onChatInputChange}
-            onStartListening={onStartListening}
-            onStopListening={onStopListening}
-          />
-        </>
+        <ChatInput
+          onSend={onSendAnswer}
+          disabled={inputDisabled}
+          placeholder={inputPlaceholder}
+          isListening={isListening}
+          interimTranscript={interimTranscript}
+          isSpeechSupported={isSpeechSupported}
+          canUseSpeechInput={canUseSpeechInput}
+          speechLanguageLabel={speechLanguageLabel}
+          value={chatInputValue}
+          onValueChange={onChatInputChange}
+          onToggleListening={onToggleListening}
+        />
       )}
-    </>
+    </section>
   );
 }

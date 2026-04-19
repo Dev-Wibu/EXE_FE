@@ -7,8 +7,8 @@ import { formatTime, formatUtcNaiveTime } from "@/lib/formatting";
 import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/stores/authStore";
 
-import type { ChatMessage } from "./types";
-import { useFaceBehaviorAnalysis } from "./useFaceBehaviorAnalysis";
+import { resolveAutoSendDraft } from "./speech.utils";
+import { SPEECH_LANGUAGE_LABELS, type ChatMessage, type SpeechLanguageCode } from "./types";
 
 const normalizeServerTimestamp = (value?: string): string | null => {
   if (!value) {
@@ -192,6 +192,7 @@ const buildMessagesFromCache = (
 export function useAIInterviewSession() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const [speechLanguage, setSpeechLanguage] = useState<SpeechLanguageCode>("vi-VN");
 
   // chatInputValue là state được lift lên từ ChatInput để callback STT có thể cập nhật trực tiếp
   const [chatInputValue, setChatInputValue] = useState("");
@@ -203,7 +204,7 @@ export function useAIInterviewSession() {
     isSupported: isSpeechRecognitionSupported,
     startListening,
     stopListening,
-  } = useSpeechRecognition("vi-VN", (finalText) => {
+  } = useSpeechRecognition(speechLanguage, (finalText) => {
     setChatInputValue((prev) => (prev.trim() ? prev.trim() + " " + finalText : finalText));
   });
 
@@ -214,7 +215,7 @@ export function useAIInterviewSession() {
     speak,
     cancel: cancelSpeech,
     toggleMute,
-  } = useSpeechSynthesis("vi-VN");
+  } = useSpeechSynthesis(speechLanguage);
 
   // Toggle TTS cho một tin nhắn — nếu đang phát tin này thì dừng, ngược lại phát mới
   const handleToggleSpeak = useCallback(
@@ -253,21 +254,16 @@ export function useAIInterviewSession() {
   // hasStarted = true ngay nếu phiên đã hoàn thành — lịch sử chat luôn lấy từ /cache
   const [hasStarted, setHasStarted] = useState<boolean>(isAlreadyFinished);
 
-  const faceBehavior = useFaceBehaviorAnalysis({
-    sessionKey,
-    questionOrder: currentQuestionIndex,
-    isListening,
-    isSubmitting,
-    isEvaluating,
-    interviewFinished,
-  });
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const msgIdCounter = useRef(1);
   // Dùng ref thay vì state để guard khỏi StrictMode double-invocation
   const hasProcessedStartRef = useRef(false);
   // Ref đồng bộ với messages state để tránh stale closure trong các useEffect
   const messagesRef = useRef<ChatMessage[]>([]);
+  const chatInputValueRef = useRef(chatInputValue);
+  const interimTranscriptRef = useRef(interimTranscript);
+  const pendingInterimForAutoSendRef = useRef("");
+  const shouldAutoSendAfterStopRef = useRef(false);
 
   // Lấy trạng thái Redis của phiên đang chạy — nguồn dữ liệu duy nhất cho:
   // 1. Lấy dbId (numeric session ID) cho navigate đến trang kết quả
@@ -336,6 +332,15 @@ export function useAIInterviewSession() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  // Giữ ref đồng bộ với giá trị composer để xử lý gửi nhanh sau khi dừng mic
+  useEffect(() => {
+    chatInputValueRef.current = chatInputValue;
+  }, [chatInputValue]);
+
+  useEffect(() => {
+    interimTranscriptRef.current = interimTranscript;
+  }, [interimTranscript]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -427,7 +432,7 @@ export function useAIInterviewSession() {
         }
       }
     },
-    [isTTSSupported, isMuted, speak, cancelSpeech] // eslint-disable-line react-hooks/exhaustive-deps
+    [cancelSpeech, getNow, isMuted, isTTSSupported, sessionKey, speak]
   );
 
   // Start interview — GET /api/v1/interview/start/{sessionKey}
@@ -494,7 +499,7 @@ export function useAIInterviewSession() {
 
       // Kiểm tra nếu câu hỏi hiện tại đã là tin nhắn cuối cùng (tải lại trang giữa chừng)
       // Nếu trùng nội dung thì không thêm lại — tránh hiển thị câu hỏi trùng lặp
-      const lastMsg = messages[messages.length - 1];
+      const lastMsg = messagesRef.current[messagesRef.current.length - 1];
       if (lastMsg?.role === "ai" && lastMsg.content === startData.questionContent) {
         return;
       }
@@ -512,7 +517,7 @@ export function useAIInterviewSession() {
         addAIMessage(startData);
       }, 600);
     }
-  }, [startData, addAIMessage, cacheData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [addAIMessage, cacheData, getNow, sessionKey, startData]);
 
   // Handle send answer
   const handleSendAnswer = useCallback(
@@ -581,6 +586,81 @@ export function useAIInterviewSession() {
     [sessionKey, isSubmitting, interviewFinished, submitMutation, addAIMessage, getNow]
   );
 
+  const handleSendFromComposer = useCallback(
+    (answer: string) => {
+      const trimmedAnswer = answer.trim();
+      if (!trimmedAnswer) {
+        return;
+      }
+
+      setChatInputValue("");
+      void handleSendAnswer(trimmedAnswer);
+    },
+    [handleSendAnswer]
+  );
+
+  // Nhấn mic lần 2 sẽ dừng nhận dạng và tự gửi transcript
+  const canUseSpeechInput =
+    isSpeechRecognitionSupported &&
+    hasStarted &&
+    !isSubmitting &&
+    !isEvaluating &&
+    !interviewFinished;
+
+  const handleToggleListening = useCallback(() => {
+    if (!isSpeechRecognitionSupported) {
+      return;
+    }
+
+    if (isListening) {
+      pendingInterimForAutoSendRef.current = interimTranscriptRef.current;
+      shouldAutoSendAfterStopRef.current = true;
+      stopListening();
+      return;
+    }
+
+    if (!canUseSpeechInput) {
+      return;
+    }
+
+    shouldAutoSendAfterStopRef.current = false;
+    pendingInterimForAutoSendRef.current = "";
+    startListening();
+  }, [canUseSpeechInput, isListening, isSpeechRecognitionSupported, startListening, stopListening]);
+
+  useEffect(() => {
+    if (isListening || !shouldAutoSendAfterStopRef.current) {
+      return;
+    }
+
+    shouldAutoSendAfterStopRef.current = false;
+
+    const finalDraft = resolveAutoSendDraft(
+      chatInputValueRef.current,
+      pendingInterimForAutoSendRef.current
+    );
+    pendingInterimForAutoSendRef.current = "";
+    if (!finalDraft) {
+      return;
+    }
+
+    setChatInputValue("");
+    void handleSendAnswer(finalDraft);
+  }, [handleSendAnswer, isListening]);
+
+  const canSwitchSpeechLanguage = !isListening && !isSubmitting && !isEvaluating;
+
+  const handleSpeechLanguageChange = useCallback(
+    (language: SpeechLanguageCode) => {
+      if (!canSwitchSpeechLanguage || language === speechLanguage) {
+        return;
+      }
+
+      setSpeechLanguage(language);
+    },
+    [canSwitchSpeechLanguage, speechLanguage]
+  );
+
   // Dọn localStorage và chuyển đến trang kết quả
   const handleViewResults = useCallback(() => {
     if (sessionKey) {
@@ -634,29 +714,22 @@ export function useAIInterviewSession() {
     isListening,
     interimTranscript,
     isSpeechRecognitionSupported,
-    startListening,
-    stopListening,
+    canUseSpeechInput,
+    handleToggleListening,
     isTTSSupported,
     isMuted,
     toggleMute,
+    speechLanguage,
+    speechLanguageLabel: SPEECH_LANGUAGE_LABELS[speechLanguage],
+    canSwitchSpeechLanguage,
+    handleSpeechLanguageChange,
     handleToggleSpeak,
     speakingId,
     chatInputValue,
     setChatInputValue,
-    handleSendAnswer,
+    handleSendFromComposer,
     handleViewResults,
     handleNavigateBack,
     messagesEndRef,
-    faceBehaviorEnabled: faceBehavior.featureEnabled,
-    faceBehaviorModeLabel: faceBehavior.modeLabel,
-    faceBehaviorPermissionState: faceBehavior.permissionState,
-    faceBehaviorPermissionMessage: faceBehavior.permissionMessage,
-    faceBehaviorMonitoring: faceBehavior.isMonitoring,
-    faceBehaviorStatusLabel: faceBehavior.statusLabel,
-    faceBehaviorHasWarning: faceBehavior.hasWarning,
-    faceBehaviorWarningText: faceBehavior.latestWarningText,
-    faceBehaviorWarningCount: faceBehavior.warningCount,
-    faceBehaviorVideoRef: faceBehavior.videoRef,
-    faceBehaviorCanvasRef: faceBehavior.canvasRef,
   };
 }
