@@ -8,16 +8,17 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
 import { NotificationBell } from "@/components/notification";
 import type { SidebarMenuGroup } from "@/components/shared";
-import { DashboardSidebar } from "@/components/shared";
+import { DashboardBreadcrumb, DashboardSidebar } from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
+import { buildDashboardBreadcrumbItems } from "@/lib/dashboard-breadcrumb";
 
 import { MentorAccountPage } from "../Account";
 import { GivenFeedbackListPage } from "../Feedback";
@@ -133,6 +134,17 @@ export function MentorDashboardPage() {
       ? activeTab
       : DEFAULT_TAB;
 
+  const breadcrumbItems = useMemo(
+    () =>
+      buildDashboardBreadcrumbItems({
+        role: "mentor",
+        pathname: location.pathname,
+        activeTab: typedActiveTab,
+        availableTabs: AVAILABLE_TABS,
+      }),
+    [location.pathname, typedActiveTab]
+  );
+
   useDashboardScrollRestoration(contentRef, {
     enabled: typedActiveTab !== "messenger",
   });
@@ -184,14 +196,14 @@ export function MentorDashboardPage() {
         logo={MENTOR_SIDEBAR_LOGO}
         collapsedLogo={MENTOR_SIDEBAR_LOGO_COLLAPSED}
         theme={{
-          wrapper: "h-screen border-r border-emerald-100 bg-emerald-50/50",
-          expandedWidth: "w-72",
+          wrapper: "h-screen border-r border-emerald-200 bg-emerald-50/50",
+          expandedWidth: "w-64",
           toggleBtn:
-            "absolute top-20 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-emerald-200 bg-white shadow-sm transition-colors hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+            "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-emerald-200 bg-white shadow-sm transition-colors hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
           toggleIconColor: "text-emerald-600",
-          logoBorder: "border-b border-emerald-100",
-          logoExpandedPadding: "h-16 gap-2 px-6",
-          logoCollapsedPadding: "h-16 justify-center px-2",
+          logoBorder: "border-b border-emerald-200",
+          logoExpandedPadding: "h-14 gap-2 px-4",
+          logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex flex-1 flex-col gap-1 overflow-y-auto py-4",
           navExpandedPadding: "px-3",
           navCollapsedPadding: "px-2",
@@ -204,7 +216,7 @@ export function MentorDashboardPage() {
           inactiveItem:
             "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400",
           activeIconOverride: "text-emerald-600 dark:text-emerald-400",
-          footerBorder: "border-t border-emerald-100",
+          footerBorder: "border-t border-emerald-200",
           footerExpandedPadding: "p-3",
           footerCollapsedPadding: "p-2",
           themeToggleLabel: "Giao diện",
@@ -218,8 +230,11 @@ export function MentorDashboardPage() {
       />
 
       <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
-        <div className="flex h-12 items-center justify-end px-4">
-          <NotificationBell notificationsPath="/mentor?tab=notifications" />
+        <div className="flex h-14 items-center justify-between border-b border-emerald-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950">
+          <DashboardBreadcrumb items={breadcrumbItems} className="min-w-0 flex-1" />
+          <div className="shrink-0 pl-3">
+            <NotificationBell notificationsPath="/mentor?tab=notifications" />
+          </div>
         </div>
         <div
           ref={contentRef}

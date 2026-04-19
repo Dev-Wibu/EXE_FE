@@ -10,16 +10,17 @@ import {
   User as UserIcon,
   Users,
 } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
 import { NotificationBell } from "@/components/notification";
 import type { SidebarMenuGroup } from "@/components/shared";
-import { DashboardSidebar } from "@/components/shared";
+import { DashboardBreadcrumb, DashboardSidebar } from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
+import { buildDashboardBreadcrumbItems } from "@/lib/dashboard-breadcrumb";
 
 import { AccountPage } from "../Account";
 import { AIInterviewListPage } from "../AIInterview";
@@ -178,6 +179,17 @@ export function UserDashboardPage() {
       ? activeTab
       : DEFAULT_TAB;
 
+  const breadcrumbItems = useMemo(
+    () =>
+      buildDashboardBreadcrumbItems({
+        role: "user",
+        pathname: location.pathname,
+        activeTab: typedActiveTab,
+        availableTabs: AVAILABLE_TABS,
+      }),
+    [location.pathname, typedActiveTab]
+  );
+
   useDashboardScrollRestoration(contentRef, {
     enabled: typedActiveTab !== "messenger",
   });
@@ -235,14 +247,14 @@ export function UserDashboardPage() {
         logo={USER_SIDEBAR_LOGO}
         collapsedLogo={USER_SIDEBAR_LOGO_COLLAPSED}
         theme={{
-          wrapper: "sticky top-0 z-30 h-screen flex-shrink-0 border-r border-slate-100 bg-slate-50",
-          expandedWidth: "w-72",
+          wrapper: "h-screen flex-shrink-0 border-r border-slate-200 bg-slate-50",
+          expandedWidth: "w-64",
           toggleBtn:
-            "absolute top-20 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+            "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
           toggleIconColor: "text-slate-600",
-          logoBorder: "border-b border-slate-100",
-          logoExpandedPadding: "h-16 gap-2 px-6",
-          logoCollapsedPadding: "h-16 justify-center px-2",
+          logoBorder: "border-b border-slate-200",
+          logoExpandedPadding: "h-14 gap-2 px-4",
+          logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex flex-1 flex-col gap-1 py-4",
           navExpandedPadding: "px-3",
           navCollapsedPadding: "px-2",
@@ -260,7 +272,7 @@ export function UserDashboardPage() {
             "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800",
           flyoutActiveIcon: "text-[#0047AB] dark:text-[#66B2FF]",
           flyoutBorder: "border-slate-200",
-          footerBorder: "border-t border-slate-100",
+          footerBorder: "border-t border-slate-200",
           footerExpandedPadding: "p-3",
           footerCollapsedPadding: "p-2",
           themeToggleLabel: "Giao diện",
@@ -274,8 +286,11 @@ export function UserDashboardPage() {
       />
 
       <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
-        <div className="flex h-12 items-center justify-end px-4">
-          <NotificationBell notificationsPath="/user?tab=notifications" />
+        <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950">
+          <DashboardBreadcrumb items={breadcrumbItems} className="min-w-0 flex-1" />
+          <div className="shrink-0 pl-3">
+            <NotificationBell notificationsPath="/user?tab=notifications" />
+          </div>
         </div>
         <div
           ref={contentRef}

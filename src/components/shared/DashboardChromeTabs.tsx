@@ -42,9 +42,9 @@ export interface ChromeTabsTheme {
 export interface DashboardChromeTabsProps {
   tabs: Array<{ id: string; type: string; title: string }>;
   activeTabId: string;
-  onTabSelect: (tabId: string) => void;
-  onTabClose: (tabId: string) => void;
-  onNewTab: (type: string) => void;
+  onTabSelect: (_tabId: string) => void;
+  onTabClose: (_tabId: string) => void;
+  onNewTab: (_type: string) => void;
   rightSlot?: React.ReactNode;
   tabIcons?: Record<string, React.ElementType>;
   tabColors?: Record<string, string>;
@@ -254,7 +254,7 @@ export function DashboardChromeTabs({
     return (
       <div
         className={cn(
-          "flex h-11 items-center gap-1.5 border-b px-2 dark:border-slate-800 dark:bg-slate-900",
+          "flex h-14 items-end gap-1.5 border-b px-2 pb-0 dark:border-slate-800 dark:bg-slate-900",
           theme.bg
         )}>
         {tabs.map((tab) => (
@@ -262,7 +262,7 @@ export function DashboardChromeTabs({
             key={tab.id}
             onClick={() => onTabSelect(tab.id)}
             className={cn(
-              "group flex h-8 cursor-pointer items-center gap-2 rounded-t-xl border-x border-t px-3.5 text-sm transition-colors duration-200",
+              "group flex h-9 cursor-pointer items-center gap-2 rounded-t-xl border-x border-t px-3.5 text-sm transition-colors duration-200",
               tab.id === activeTabId
                 ? cn(
                     theme.tabActiveBorder,
@@ -302,11 +302,14 @@ export function DashboardChromeTabs({
 
   return (
     <div
-      className={cn("flex items-end border-b dark:border-slate-800 dark:bg-slate-900", theme.bg)}>
+      className={cn(
+        "flex h-14 items-end border-b dark:border-slate-800 dark:bg-slate-900",
+        theme.bg
+      )}>
       {/* Tab List */}
       <div
         data-testid="chrome-tabs-full-strip"
-        className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-visible px-2 pt-2 pb-1">
+        className="flex h-full min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-visible px-2 pb-0">
         {tabs.map((tab) => {
           const Icon = tabIcons?.[tab.type];
           const isActive = tab.id === activeTabId;
@@ -357,9 +360,7 @@ export function DashboardChromeTabs({
       </div>
 
       {/* Right slot (e.g. NotificationBell) */}
-      {rightSlot && (
-        <div className="flex shrink-0 items-center gap-2 self-end px-3 pb-2">{rightSlot}</div>
-      )}
+      {rightSlot && <div className="flex h-full shrink-0 items-center gap-2 px-3">{rightSlot}</div>}
     </div>
   );
 }

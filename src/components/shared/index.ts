@@ -1,6 +1,7 @@
 // Shared Components - Reusable UI components across the application
 
 export { ChatComposer } from "./ChatComposer";
+export { DashboardBreadcrumb } from "./DashboardBreadcrumb";
 export { DashboardChromeTabs } from "./DashboardChromeTabs";
 export type {
   ChromeTabMenuAction,

@@ -223,14 +223,14 @@ export function StaffDashboardPage() {
         showSettings
         settingsLabel="Cài đặt"
         theme={{
-          wrapper: "h-full border-r bg-white",
+          wrapper: "h-full border-r border-gray-200 bg-white",
           expandedWidth: "w-64",
           toggleBtn:
-            "absolute top-16 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-colors hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+            "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-colors hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
           toggleIconColor: "text-gray-600",
-          logoBorder: "border-b",
-          logoExpandedPadding: "gap-3 px-4 py-4",
-          logoCollapsedPadding: "justify-center px-2 py-4",
+          logoBorder: "border-b border-gray-200",
+          logoExpandedPadding: "h-14 gap-3 px-4",
+          logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex-1 space-y-1 overflow-y-auto",
           navExpandedPadding: "p-4",
           navCollapsedPadding: "p-2",
@@ -241,7 +241,7 @@ export function StaffDashboardPage() {
           activeItem: "bg-gray-100 text-gray-900 dark:bg-slate-800 dark:text-white",
           inactiveItem:
             "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
-          footerBorder: "border-t",
+          footerBorder: "border-t border-gray-200",
           footerExpandedPadding: "p-4",
           footerCollapsedPadding: "p-2",
           themeToggleLabel: "Giao diện",
