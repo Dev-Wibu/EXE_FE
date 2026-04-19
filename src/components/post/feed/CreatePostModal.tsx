@@ -111,7 +111,7 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
       });
 
       if (response.success) {
-        toast.success("Đăng bài thành công!");
+        toast.success("Đăng bài thành công.");
         invalidatePostFeedQueries();
         resetForm();
         onOpenChange(false);
@@ -144,7 +144,7 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
             <div>
               <p className="text-sm font-semibold">{authorName}</p>
               <Badge variant="secondary" className="mt-0.5 text-[10px]">
-                Công khai
+                Đã đăng
               </Badge>
             </div>
           </div>
