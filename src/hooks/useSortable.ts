@@ -1,6 +1,20 @@
 import * as React from "react";
 
 export type SortDirection = "asc" | "desc" | "none";
+type ActiveSortDirection = Exclude<SortDirection, "none">;
+type NoSortBehavior = "reverse" | "preserve";
+
+export interface UseSortableOptions<T> {
+  defaultSort?: {
+    key: keyof T;
+    direction?: ActiveSortDirection;
+  };
+  noSortBehavior?: NoSortBehavior;
+  tieBreaker?: {
+    key: keyof T;
+    direction?: ActiveSortDirection;
+  };
+}
 
 // Helper functions to reduce Cognitive Complexity
 const handleNullValues = (valueA: unknown, valueB: unknown, sortDirection: SortDirection) => {
@@ -29,6 +43,19 @@ const compareOtherTypes = (valueA: unknown, valueB: unknown, sortDirection: Sort
     return sortDirection === "asc" ? 1 : -1;
   }
   return 0;
+};
+
+const compareValues = (valueA: unknown, valueB: unknown, sortDirection: SortDirection) => {
+  const nullComparison = handleNullValues(valueA, valueB, sortDirection);
+  if (nullComparison !== null) {
+    return nullComparison;
+  }
+
+  if (typeof valueA === "string" && typeof valueB === "string") {
+    return compareStrings(valueA, valueB, sortDirection);
+  }
+
+  return compareOtherTypes(valueA, valueB, sortDirection);
 };
 
 // Helper functions return string instead of JSX
@@ -66,36 +93,46 @@ const getAriaLabel = (column: string, sortField: string | null, sortOrder: strin
  *   </Table>
  * );
  */
-export function useSortable<T>(initialData: T[]) {
-  const [sortKey, setSortKey] = React.useState<keyof T | null>(null);
-  const [sortDirection, setSortDirection] = React.useState<SortDirection>("none");
+export function useSortable<T>(initialData: T[], options?: UseSortableOptions<T>) {
+  const [sortKey, setSortKey] = React.useState<keyof T | null>(() => {
+    return options?.defaultSort?.key ?? null;
+  });
+  const [sortDirection, setSortDirection] = React.useState<SortDirection>(() => {
+    return options?.defaultSort?.direction ?? "none";
+  });
+
+  React.useEffect(() => {
+    setSortKey(options?.defaultSort?.key ?? null);
+    setSortDirection(options?.defaultSort?.direction ?? "none");
+  }, [options?.defaultSort?.direction, options?.defaultSort?.key]);
 
   // Sort the data based on current sort configuration
   // Default: reverse order (newest first) when no sort is applied
   const sortedData = React.useMemo(() => {
+    const noSortBehavior = options?.noSortBehavior ?? "reverse";
+
     if (sortDirection === "none" || !sortKey) {
-      return [...initialData].reverse();
+      return noSortBehavior === "reverse" ? [...initialData].reverse() : [...initialData];
     }
 
     return [...initialData].sort((a, b) => {
-      const valueA = a[sortKey];
-      const valueB = b[sortKey];
-
-      // Handle null/undefined values first
-      const nullComparison = handleNullValues(valueA, valueB, sortDirection);
-      if (nullComparison !== null) {
-        return nullComparison;
+      const primaryComparison = compareValues(a[sortKey], b[sortKey], sortDirection);
+      if (primaryComparison !== 0) {
+        return primaryComparison;
       }
 
-      // Handle different types
-      if (typeof valueA === "string" && typeof valueB === "string") {
-        return compareStrings(valueA, valueB, sortDirection);
+      if (options?.tieBreaker?.key) {
+        const tieBreakerDirection = options.tieBreaker.direction ?? "desc";
+        return compareValues(
+          a[options.tieBreaker.key],
+          b[options.tieBreaker.key],
+          tieBreakerDirection
+        );
       }
 
-      // Handle numbers and other comparable types
-      return compareOtherTypes(valueA, valueB, sortDirection);
+      return 0;
     });
-  }, [initialData, sortKey, sortDirection]);
+  }, [initialData, options, sortKey, sortDirection]);
 
   // Generate props for SortButton components
   const getSortProps = (key: keyof T) => ({

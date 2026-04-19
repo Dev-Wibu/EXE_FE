@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import type { UsePaginationReturn } from "@/hooks/usePagination";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 interface PaginationControlProps {
   pagination: UsePaginationReturn;
@@ -39,6 +41,42 @@ export function PaginationControl({
     pageSize,
   } = pagination;
 
+  const [jumpToPageInput, setJumpToPageInput] = useState(String(currentPage));
+
+  useEffect(() => {
+    setJumpToPageInput(String(currentPage));
+  }, [currentPage]);
+
+  const parsedJumpPage = useMemo(() => {
+    const parsed = Number.parseInt(jumpToPageInput, 10);
+    return Number.isInteger(parsed) ? parsed : null;
+  }, [jumpToPageInput]);
+
+  const isJumpTargetValid =
+    parsedJumpPage !== null && parsedJumpPage >= 1 && parsedJumpPage <= totalPages;
+
+  const handlePageSizeSelection = (value: string) => {
+    if (!onPageSizeChange) {
+      return;
+    }
+
+    const nextPageSize = Number(value);
+    if (!Number.isInteger(nextPageSize) || nextPageSize <= 0 || nextPageSize === pageSize) {
+      return;
+    }
+
+    onPageSizeChange(nextPageSize);
+    goToFirstPage();
+  };
+
+  const handleJumpToPage = () => {
+    if (!isJumpTargetValid || parsedJumpPage === null) {
+      return;
+    }
+
+    setPage(parsedJumpPage);
+  };
+
   // Don't render if no data
   if (totalCount === 0) {
     return null;
@@ -52,7 +90,7 @@ export function PaginationControl({
 
       <div className="flex items-center gap-2">
         {showPageSizeSelector && onPageSizeChange && (
-          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+          <Select value={String(pageSize)} onValueChange={handlePageSizeSelection}>
             <SelectTrigger className="w-20">
               <SelectValue />
             </SelectTrigger>
@@ -122,6 +160,34 @@ export function PaginationControl({
           <span className="text-muted-foreground text-sm">
             Trang {currentPage}/{totalPages}
           </span>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">Đến trang</span>
+            <Input
+              value={jumpToPageInput}
+              onChange={(event) => setJumpToPageInput(event.target.value.replace(/[^0-9]/g, ""))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleJumpToPage();
+                }
+              }}
+              inputMode="numeric"
+              aria-label="Nhập số trang"
+              placeholder="Số"
+              className="h-9 w-16 text-center"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleJumpToPage}
+              disabled={!isJumpTargetValid || parsedJumpPage === currentPage}>
+              Đi
+            </Button>
+          </div>
         )}
       </div>
     </div>
