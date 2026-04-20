@@ -42,14 +42,15 @@ export function NotificationBell({ notificationsPath, className }: NotificationB
           {/* Unread badge */}
           {unreadCount > 0 && (
             <span
+              aria-hidden="true"
               className={cn(
                 "absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white",
-                unreadCount > 99 ? "h-5 min-w-[20px] px-1" : "h-4 min-w-[16px] px-1"
+                unreadCount > 99 ? "h-5 min-w-5 px-1" : "h-4 min-w-4 px-1"
               )}>
               {badgeText}
             </span>
           )}
-          <span className="sr-only">
+          <span className="sr-only" aria-live="polite" aria-atomic="true">
             {unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : "Không có thông báo mới"}
           </span>
         </Button>

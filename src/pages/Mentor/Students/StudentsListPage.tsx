@@ -279,7 +279,7 @@ export function StudentsListPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-emerald-600" />
-            <CardTitle>Danh Sách Học Viên</CardTitle>
+            <CardTitle>Danh sách học viên</CardTitle>
           </div>
           <CardDescription>Học viên đã tham gia phỏng vấn với bạn</CardDescription>
         </CardHeader>

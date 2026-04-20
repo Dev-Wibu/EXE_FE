@@ -202,7 +202,7 @@ export function WriteReviewPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-[#FFD700]" />
-            <CardTitle>{isEdit ? "Chỉnh Sửa Phản Hồi" : "Viết Phản Hồi"}</CardTitle>
+            <CardTitle>{isEdit ? "Chỉnh sửa phản hồi" : "Viết phản hồi"}</CardTitle>
           </div>
           <CardDescription>
             {isEdit

@@ -12,6 +12,15 @@ import { notificationManager } from "@/services/notification.manager";
 import { useAuthStore } from "@/stores/authStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 
+const toTimestamp = (value: string | undefined): number => {
+  if (!value) {
+    return 0;
+  }
+
+  const parsedTime = new Date(value).getTime();
+  return Number.isFinite(parsedTime) ? parsedTime : 0;
+};
+
 // Query Keys
 export const NOTIFICATION_QUERY_KEYS = {
   all: ["notifications"] as const,
@@ -32,14 +41,20 @@ export const useNotifications = () => {
       if (!user?.id) return [];
       const response = await notificationManager.getByUserId(user.id);
       if (response.success && response.data) {
-        setNotifications(response.data);
-        return response.data;
+        const sortedNotifications = [...response.data].sort(
+          (left, right) => toTimestamp(right.createAt) - toTimestamp(left.createAt)
+        );
+
+        setNotifications(sortedNotifications);
+        return sortedNotifications;
       }
       return [];
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Poll every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
+    refetchInterval: 15000,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -63,8 +78,10 @@ export const useUnreadCount = () => {
       return 0;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Poll every 30 seconds
-    staleTime: 10000,
+    refetchInterval: 15000,
+    staleTime: 5000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -95,6 +112,58 @@ export const useMarkAsRead = () => {
         queryClient.invalidateQueries({
           queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(user.id),
         });
+      }
+    },
+  });
+};
+
+/**
+ * Hook to mark many notifications as read in parallel
+ */
+export const useMarkAllAsRead = () => {
+  const queryClient = useQueryClient();
+  const markAllAsRead = useNotificationStore((state) => state.markAllAsRead);
+  const user = useAuthStore((state) => state.user);
+
+  return useMutation({
+    mutationFn: async (notificationIds: number[]) => {
+      const settledResults = await Promise.allSettled(
+        notificationIds.map(async (notificationId) => {
+          const response = await notificationManager.markAsRead(notificationId);
+          if (!response.success) {
+            throw new Error(response.error || "Không thể đánh dấu đã đọc");
+          }
+
+          return notificationId;
+        })
+      );
+
+      return {
+        settledResults,
+        totalCount: notificationIds.length,
+      };
+    },
+    onMutate: () => {
+      markAllAsRead();
+    },
+    onSuccess: ({ settledResults, totalCount }) => {
+      const failedCount = settledResults.filter((result) => result.status === "rejected").length;
+
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEYS.byUser(user.id) });
+        queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(user.id) });
+      }
+
+      if (failedCount > 0) {
+        toast.warning(`Đã đánh dấu ${totalCount - failedCount}/${totalCount} thông báo.`);
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(getNormalizedErrorMessage(error, "Không thể đánh dấu tất cả thông báo đã đọc"));
+
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEYS.byUser(user.id) });
+        queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(user.id) });
       }
     },
   });

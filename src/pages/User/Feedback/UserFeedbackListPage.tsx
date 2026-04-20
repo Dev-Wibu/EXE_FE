@@ -194,7 +194,7 @@ export function UserFeedbackListPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-emerald-600" />
-            <CardTitle>Danh Sách Đánh Giá</CardTitle>
+            <CardTitle>Danh sách đánh giá</CardTitle>
           </div>
           <CardDescription>Các đánh giá mentor gửi cho bạn sau mỗi buổi phỏng vấn</CardDescription>
         </CardHeader>

@@ -62,15 +62,16 @@ export function NotificationList({
   return (
     <div className={cn("flex flex-col", className)}>
       {/* Notification items */}
-      <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
-        {displayedNotifications.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            onClick={() => onItemClick?.(notification)}
-            onMarkRead={() => notification.id && onMarkRead?.(notification.id)}
-            compact={compact}
-          />
+      <div role="list" className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+        {displayedNotifications.map((notification, index) => (
+          <div key={`${notification.id ?? "notification"}-${index}`} role="listitem">
+            <NotificationItem
+              notification={notification}
+              onClick={() => onItemClick?.(notification)}
+              onMarkRead={() => notification.id && onMarkRead?.(notification.id)}
+              compact={compact}
+            />
+          </div>
         ))}
       </div>
 

@@ -5,7 +5,8 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Bell, Calendar, CheckCircle, MessageSquare, Star, User, XCircle } from "lucide-react";
+
+import { getNotificationTypeConfigFromTitle } from "@/constants/notification-types";
 
 import { formatDateTime, parseBackendDate } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
@@ -18,60 +19,16 @@ interface NotificationItemProps {
   compact?: boolean;
 }
 
-// Get icon based on notification title/type
-const getNotificationIcon = (title?: string) => {
-  const lowerTitle = title?.toLowerCase() || "";
-
-  if (lowerTitle.includes("phỏng vấn") || lowerTitle.includes("session")) {
-    return Calendar;
-  }
-  if (lowerTitle.includes("phản hồi") || lowerTitle.includes("feedback")) {
-    return MessageSquare;
-  }
-  if (lowerTitle.includes("đánh giá") || lowerTitle.includes("review")) {
-    return Star;
-  }
-  if (lowerTitle.includes("mentor") || lowerTitle.includes("duyệt")) {
-    return User;
-  }
-  if (lowerTitle.includes("thành công") || lowerTitle.includes("success")) {
-    return CheckCircle;
-  }
-  if (lowerTitle.includes("thất bại") || lowerTitle.includes("từ chối")) {
-    return XCircle;
-  }
-  return Bell;
-};
-
-// Get icon color based on notification type
-const getIconColor = (title?: string) => {
-  const lowerTitle = title?.toLowerCase() || "";
-
-  if (
-    lowerTitle.includes("thành công") ||
-    lowerTitle.includes("success") ||
-    lowerTitle.includes("duyệt")
-  ) {
-    return "text-green-500";
-  }
-  if (lowerTitle.includes("thất bại") || lowerTitle.includes("từ chối")) {
-    return "text-red-500";
-  }
-  if (lowerTitle.includes("đánh giá") || lowerTitle.includes("review")) {
-    return "text-yellow-500";
-  }
-  return "text-[#0047AB]";
-};
-
 export function NotificationItem({
   notification,
   onClick,
   onMarkRead,
   compact = false,
 }: NotificationItemProps) {
-  const iconColor = getIconColor(notification.title);
+  const notificationType = getNotificationTypeConfigFromTitle(notification.title);
   const isUnread = !notification.isRead;
   const parsedCreatedAt = parseBackendDate(notification.createAt);
+  const notificationTitle = notification.title || "Thông báo";
 
   const handleClick = () => {
     if (onMarkRead && isUnread) {
@@ -89,17 +46,15 @@ export function NotificationItem({
 
   const absoluteTime = parsedCreatedAt ? formatDateTime(parsedCreatedAt) : "";
 
-  // Helper function to render the appropriate icon
-  const renderIcon = () => {
-    const IconComponent = getNotificationIcon(notification.title);
-    return <IconComponent className={cn("h-5 w-5", iconColor, compact && "h-4 w-4")} />;
-  };
+  const IconComponent = notificationType.icon;
 
   return (
-    <div
+    <button
+      type="button"
       onClick={handleClick}
+      aria-label={`Mở thông báo: ${notificationTitle}`}
       className={cn(
-        "flex cursor-pointer items-start gap-3 rounded-lg p-3 transition-colors",
+        "flex w-full cursor-pointer items-start gap-3 rounded-lg p-3 text-left transition-colors",
         isUnread
           ? "bg-[#0047AB]/5 hover:bg-[#0047AB]/10 dark:bg-[#0047AB]/10 dark:hover:bg-[#0047AB]/20"
           : "hover:bg-slate-50 dark:hover:bg-slate-800",
@@ -112,7 +67,9 @@ export function NotificationItem({
           isUnread ? "bg-[#0047AB]/10 dark:bg-[#0047AB]/20" : "bg-slate-100 dark:bg-slate-800",
           compact && "h-8 w-8"
         )}>
-        {renderIcon()}
+        <IconComponent
+          className={cn("h-5 w-5", notificationType.iconColorClassName, compact && "h-4 w-4")}
+        />
       </div>
 
       {/* Content */}
@@ -123,7 +80,7 @@ export function NotificationItem({
               "text-sm font-medium text-slate-900 dark:text-slate-100",
               isUnread && "font-semibold"
             )}>
-            {notification.title || "Thông báo"}
+            {notificationTitle}
           </p>
           {/* Unread indicator */}
           {isUnread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#0047AB]" />}
@@ -141,6 +98,6 @@ export function NotificationItem({
           </p>
         )}
       </div>
-    </div>
+    </button>
   );
 }

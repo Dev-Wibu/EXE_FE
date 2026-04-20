@@ -189,7 +189,7 @@ export function MentorReviewsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-[#FFD700]" />
-            <CardTitle>Danh Sách Đánh Giá</CardTitle>
+            <CardTitle>Danh sách đánh giá</CardTitle>
           </div>
           <CardDescription>Các đánh giá bạn đã gửi cho học viên</CardDescription>
         </CardHeader>

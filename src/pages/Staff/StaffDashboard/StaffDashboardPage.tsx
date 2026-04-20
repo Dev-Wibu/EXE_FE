@@ -34,25 +34,25 @@ const generateTabId = () => `tab-${Date.now()}-${Math.random().toString(36).slic
 const getTabTitle = (type: TabType): string => {
   switch (type) {
     case "mentorApplications":
-      return "Duyệt Mentor";
+      return "Duyệt mentor";
     case "sessions":
-      return "Phiên Phỏng Vấn";
+      return "Phiên phỏng vấn";
     case "reviewModeration":
       return "Kiểm duyệt đánh giá của mentor";
     case "feedbackModeration":
       return "Kiểm duyệt phản hồi từ ứng viên";
     case "postModeration":
-      return "Kiểm Duyệt Bài Viết";
+      return "Kiểm duyệt bài viết";
     default:
-      return "Tab Mới";
+      return "Tab mới";
   }
 };
 
 const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
   {
     items: [
-      { type: "mentorApplications", label: "Duyệt Mentor" },
-      { type: "sessions", label: "Phiên Phỏng Vấn" },
+      { type: "mentorApplications", label: "Duyệt mentor" },
+      { type: "sessions", label: "Phiên phỏng vấn" },
     ],
   },
   {
@@ -71,7 +71,7 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
       },
       {
         type: "postModeration",
-        label: "Kiểm Duyệt Bài Viết",
+        label: "Kiểm duyệt bài viết",
         icon: Newspaper,
         iconColor: "text-purple-600",
       },
@@ -81,26 +81,26 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
 
 const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
   {
-    label: "Nghiệp Vụ",
+    label: "Nghiệp vụ",
     items: [
       {
         type: "mentorApplications",
         icon: UserCheck,
-        label: "Duyệt Mentor",
+        label: "Duyệt mentor",
         color: "text-green-600",
         description: "Xử lý đăng ký mentor",
       },
       {
         type: "sessions",
         icon: Video,
-        label: "Phiên Phỏng Vấn",
+        label: "Phiên phỏng vấn",
         color: "text-blue-600",
         description: "Quản lý phiên phỏng vấn",
       },
     ],
   },
   {
-    label: "Kiểm Duyệt",
+    label: "Kiểm duyệt",
     items: [
       {
         type: "reviewModeration",
@@ -119,7 +119,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       {
         type: "postModeration",
         icon: Newspaper,
-        label: "Bài Viết",
+        label: "Bài viết",
         color: "text-purple-600",
         description: "Kiểm duyệt bài viết",
       },
@@ -151,7 +151,7 @@ export function StaffDashboardPage() {
     getInitialSidebarCollapsed("staff_sidebar_collapsed")
   );
   const [tabs, setTabs] = useState<Tab[]>([
-    { id: generateTabId(), type: "mentorApplications", title: "Duyệt Mentor" },
+    { id: generateTabId(), type: "mentorApplications", title: "Duyệt mentor" },
   ]);
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
 
