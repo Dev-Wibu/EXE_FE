@@ -10,14 +10,19 @@ import {
   User as UserIcon,
   Users,
 } from "lucide-react";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
 
 import { NotificationBell } from "@/components/notification";
 import type { SidebarMenuGroup } from "@/components/shared";
-import { DashboardBreadcrumb, DashboardSidebar } from "@/components/shared";
+import {
+  DashboardBreadcrumb,
+  DashboardSidebar,
+  DashboardSidebarToggle,
+  getInitialSidebarCollapsed,
+} from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
 import { buildDashboardBreadcrumbItems } from "@/lib/dashboard-breadcrumb";
@@ -164,6 +169,9 @@ export function UserDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    getInitialSidebarCollapsed("user_dashboard_sidebar_collapsed")
+  );
   const { activeTab, openTab } = useTabsState({
     storageKey: "user",
     defaultTab: DEFAULT_TAB,
@@ -244,14 +252,15 @@ export function UserDashboardPage() {
         activeTab={typedActiveTab}
         onNavigate={handleNavigate}
         storageKey="user_dashboard_sidebar_collapsed"
+        collapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
+        showDesktopToggle={false}
         logo={USER_SIDEBAR_LOGO}
         collapsedLogo={USER_SIDEBAR_LOGO_COLLAPSED}
         theme={{
           wrapper: "h-screen flex-shrink-0 border-r border-slate-200 bg-slate-50",
-          expandedWidth: "w-64",
-          toggleBtn:
-            "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
-          toggleIconColor: "text-slate-600",
+          expandedWidth: "w-56",
+          collapsedWidth: "w-16",
           logoBorder: "border-b border-slate-200",
           logoExpandedPadding: "h-14 gap-2 px-4",
           logoCollapsedPadding: "h-14 justify-center px-2",
@@ -286,7 +295,13 @@ export function UserDashboardPage() {
       />
 
       <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
-        <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950">
+        <div className="relative z-60 flex h-14 items-center justify-between border-b border-slate-200 bg-white pr-4 pl-16 md:px-4 dark:border-slate-800 dark:bg-slate-950">
+          <div className="hidden shrink-0 pr-2 md:flex">
+            <DashboardSidebarToggle
+              isCollapsed={isSidebarCollapsed}
+              onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+            />
+          </div>
           <DashboardBreadcrumb items={breadcrumbItems} className="min-w-0 flex-1" />
           <div className="shrink-0 pl-3">
             <NotificationBell notificationsPath="/user?tab=notifications" />

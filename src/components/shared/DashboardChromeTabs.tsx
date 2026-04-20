@@ -45,6 +45,7 @@ export interface DashboardChromeTabsProps {
   onTabSelect: (_tabId: string) => void;
   onTabClose: (_tabId: string) => void;
   onNewTab: (_type: string) => void;
+  leftSlot?: React.ReactNode;
   rightSlot?: React.ReactNode;
   tabIcons?: Record<string, React.ElementType>;
   tabColors?: Record<string, string>;
@@ -60,6 +61,7 @@ export function DashboardChromeTabs({
   onTabSelect,
   onTabClose,
   onNewTab,
+  leftSlot,
   rightSlot,
   tabIcons,
   tabColors,
@@ -156,7 +158,7 @@ export function DashboardChromeTabs({
   }, [closeNewTabMenu, showNewTabMenu]);
 
   const newTabButton = (
-    <div data-testid="chrome-tabs-new-tab" className={cn("shrink-0", showNewTabMenu && "z-40")}>
+    <div data-testid="chrome-tabs-new-tab" className={cn("shrink-0", showNewTabMenu && "z-80")}>
       <button
         ref={newTabButtonRef}
         type="button"
@@ -178,7 +180,7 @@ export function DashboardChromeTabs({
 
       {showNewTabMenu && (
         <>
-          <div className="fixed inset-0 z-30" onClick={closeNewTabMenu} />
+          <div className="fixed inset-0 z-80" onClick={closeNewTabMenu} />
           <div
             ref={newTabMenuRef}
             style={{
@@ -187,7 +189,7 @@ export function DashboardChromeTabs({
               visibility: newTabMenuPosition ? "visible" : "hidden",
             }}
             className={cn(
-              "fixed z-40 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
+              "fixed z-90 rounded-lg border bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800",
               theme.menuWidth || "w-48"
             )}>
             {menuGroups.map((group, groupIdx) => (
@@ -254,9 +256,10 @@ export function DashboardChromeTabs({
     return (
       <div
         className={cn(
-          "flex h-14 items-end gap-1.5 border-b px-2 pb-0 dark:border-slate-800 dark:bg-slate-900",
+          "relative z-60 flex h-14 items-end gap-1.5 border-b pr-2 pb-0 pl-16 md:z-auto md:px-2 dark:border-slate-800 dark:bg-slate-900",
           theme.bg
         )}>
+        {leftSlot && <div className="hidden h-9 shrink-0 items-center md:flex">{leftSlot}</div>}
         {tabs.map((tab) => (
           <div
             key={tab.id}
@@ -303,13 +306,17 @@ export function DashboardChromeTabs({
   return (
     <div
       className={cn(
-        "flex h-14 items-end border-b dark:border-slate-800 dark:bg-slate-900",
+        "relative z-60 flex h-14 items-end border-b md:z-auto dark:border-slate-800 dark:bg-slate-900",
         theme.bg
       )}>
+      {leftSlot && (
+        <div className="hidden h-full shrink-0 items-center pl-2 md:flex">{leftSlot}</div>
+      )}
+
       {/* Tab List */}
       <div
         data-testid="chrome-tabs-full-strip"
-        className="flex h-full min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-visible px-2 pb-0">
+        className="flex h-full min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-visible pr-2 pb-0 pl-16 md:px-2">
         {tabs.map((tab) => {
           const Icon = tabIcons?.[tab.type];
           const isActive = tab.id === activeTabId;

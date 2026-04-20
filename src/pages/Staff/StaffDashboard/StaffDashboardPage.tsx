@@ -2,7 +2,12 @@ import { LayoutDashboard, MessageSquare, Newspaper, Star, UserCheck, Video } fro
 import { useCallback, useRef, useState } from "react";
 
 import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
-import { DashboardChromeTabs, DashboardSidebar } from "@/components/shared";
+import {
+  DashboardChromeTabs,
+  DashboardSidebar,
+  DashboardSidebarToggle,
+  getInitialSidebarCollapsed,
+} from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 
 import { FeedbackModerationPage } from "../FeedbackModeration";
@@ -142,6 +147,9 @@ const STAFF_SIDEBAR_LOGO_COLLAPSED = (
 
 export function StaffDashboardPage() {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    getInitialSidebarCollapsed("staff_sidebar_collapsed")
+  );
   const [tabs, setTabs] = useState<Tab[]>([
     { id: generateTabId(), type: "mentorApplications", title: "Duyệt Mentor" },
   ]);
@@ -218,16 +226,17 @@ export function StaffDashboardPage() {
         activeTab={activeTab?.type || "mentorApplications"}
         onNavigate={handleSidebarNavigate}
         storageKey="staff_sidebar_collapsed"
+        collapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
+        showDesktopToggle={false}
         logo={STAFF_SIDEBAR_LOGO}
         collapsedLogo={STAFF_SIDEBAR_LOGO_COLLAPSED}
         showSettings
         settingsLabel="Cài đặt"
         theme={{
           wrapper: "h-full border-r border-gray-200 bg-white",
-          expandedWidth: "w-64",
-          toggleBtn:
-            "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-colors hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
-          toggleIconColor: "text-gray-600",
+          expandedWidth: "w-56",
+          collapsedWidth: "w-16",
           logoBorder: "border-b border-gray-200",
           logoExpandedPadding: "h-14 gap-3 px-4",
           logoCollapsedPadding: "h-14 justify-center px-2",
@@ -261,6 +270,13 @@ export function StaffDashboardPage() {
           onTabSelect={handleTabSelect}
           onTabClose={handleTabClose}
           onNewTab={handleNewTab}
+          leftSlot={
+            <DashboardSidebarToggle
+              isCollapsed={isSidebarCollapsed}
+              onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+              className="hidden md:inline-flex"
+            />
+          }
           menuGroups={CHROME_TABS_MENU_GROUPS}
           compact
           theme={{

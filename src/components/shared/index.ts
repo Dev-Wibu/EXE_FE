@@ -10,7 +10,7 @@ export type {
   ChromeTabsTheme,
   DashboardChromeTabsProps,
 } from "./DashboardChromeTabs";
-export { DashboardSidebar } from "./DashboardSidebar";
+export { DashboardSidebar, DashboardSidebarToggle } from "./DashboardSidebar";
 export type {
   DashboardSidebarProps,
   DashboardSidebarTheme,
@@ -36,6 +36,7 @@ export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { ReloadButton } from "./ReloadButton";
 export type { ReloadButtonProps } from "./ReloadButton";
 export { SessionExpiryGuard } from "./SessionExpiryGuard";
+export { getInitialSidebarCollapsed } from "./sidebar-collapse";
 export { SocketStatusBadge } from "./SocketStatusBadge";
 export type { SocketConnectionState } from "./SocketStatusBadge";
 export { SortButton } from "./SortButton";

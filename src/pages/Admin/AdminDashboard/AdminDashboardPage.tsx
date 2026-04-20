@@ -17,14 +17,19 @@ import {
   Video,
   Wallet,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   ChromeTabMenuAction,
   ChromeTabMenuGroup,
   SidebarMenuGroup,
 } from "@/components/shared";
-import { DashboardChromeTabs, DashboardSidebar } from "@/components/shared";
+import {
+  DashboardChromeTabs,
+  DashboardSidebar,
+  DashboardSidebarToggle,
+  getInitialSidebarCollapsed,
+} from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
 
@@ -250,7 +255,7 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
       {
         type: "feedback",
         icon: MessageSquare,
-        label: "Phản hồi của ứng viên",
+        label: "Phản hồi từ ứng viên",
         color: "text-cyan-600",
       },
       { type: "notifications", icon: Bell, label: "Thông báo", color: "text-red-600" },
@@ -346,6 +351,9 @@ export function AdminDashboardPage() {
     availableTabs: AVAILABLE_TABS,
   });
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    getInitialSidebarCollapsed("admin_sidebar_collapsed", "manager_sidebar_collapsed")
+  );
 
   const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
 
@@ -473,21 +481,22 @@ export function AdminDashboardPage() {
         onNavigate={handleSidebarNavigate}
         storageKey="admin_sidebar_collapsed"
         legacyStorageKey="manager_sidebar_collapsed"
+        collapsed={isSidebarCollapsed}
+        onCollapsedChange={setIsSidebarCollapsed}
+        showDesktopToggle={false}
         logo={ADMIN_SIDEBAR_LOGO}
         collapsedLogo={ADMIN_SIDEBAR_LOGO_COLLAPSED}
         showSettings
         settingsLabel="Cài đặt"
         theme={{
           wrapper: "h-full border-r border-gray-200 bg-white",
-          expandedWidth: "w-64",
-          toggleBtn:
-            "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-colors hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
-          toggleIconColor: "text-gray-600",
+          expandedWidth: "w-56",
+          collapsedWidth: "w-16",
           logoBorder: "border-b border-gray-200",
           logoExpandedPadding: "h-14 gap-3 px-4",
           logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex-1 space-y-1 overflow-y-auto",
-          navExpandedPadding: "p-4",
+          navExpandedPadding: "p-2 pt-4",
           navCollapsedPadding: "p-2",
           sectionLabel:
             "text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-slate-400",
@@ -516,6 +525,13 @@ export function AdminDashboardPage() {
           onTabSelect={handleTabSelect}
           onTabClose={closeTab}
           onNewTab={handleNewTab}
+          leftSlot={
+            <DashboardSidebarToggle
+              isCollapsed={isSidebarCollapsed}
+              onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
+              className="hidden md:inline-flex"
+            />
+          }
           tabIcons={TAB_ICONS}
           tabColors={TAB_COLORS}
           menuGroups={CHROME_TABS_MENU_GROUPS}

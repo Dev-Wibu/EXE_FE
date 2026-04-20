@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Settings } from "lucide-react";
+import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { authManager } from "@/services/auth.manager";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
+
+import { getInitialSidebarCollapsed } from "./sidebar-collapse";
 
 export interface SidebarMenuItem {
   type: string;
@@ -29,9 +31,10 @@ export interface DashboardSidebarTheme {
   // Container
   wrapper: string;
   expandedWidth: string;
+  collapsedWidth?: string;
   // Toggle button
-  toggleBtn: string;
-  toggleIconColor: string;
+  toggleBtn?: string;
+  toggleIconColor?: string;
   // Logo
   logoBorder: string;
   logoExpandedPadding: string;
@@ -69,6 +72,9 @@ export interface DashboardSidebarProps {
   onNavigate: (_type: string) => void;
   storageKey: string;
   legacyStorageKey?: string;
+  collapsed?: boolean;
+  onCollapsedChange?: (_collapsed: boolean) => void;
+  showDesktopToggle?: boolean;
   logo: React.ReactNode;
   collapsedLogo?: React.ReactNode;
   showSettings?: boolean;
@@ -78,12 +84,47 @@ export interface DashboardSidebarProps {
   theme: DashboardSidebarTheme;
 }
 
+export interface DashboardSidebarToggleProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  className?: string;
+  collapsedAriaLabel?: string;
+  expandedAriaLabel?: string;
+}
+
+const DEFAULT_DESKTOP_TOGGLE_BUTTON_CLASS =
+  "absolute top-14 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700";
+
+export function DashboardSidebarToggle({
+  isCollapsed,
+  onToggle,
+  className,
+  collapsedAriaLabel = "Mở rộng thanh điều hướng",
+  expandedAriaLabel = "Thu gọn thanh điều hướng",
+}: DashboardSidebarToggleProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={isCollapsed ? collapsedAriaLabel : expandedAriaLabel}
+      className={cn(
+        "flex h-6 w-6 items-center justify-center rounded-md p-0 text-slate-500 transition-colors hover:bg-transparent hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none dark:text-slate-400 dark:hover:text-slate-100",
+        className
+      )}>
+      {isCollapsed ? <PanelLeftOpen className="h-6 w-6" /> : <PanelLeftClose className="h-6 w-6" />}
+    </button>
+  );
+}
+
 export function DashboardSidebar({
   menuGroups,
   activeTab,
   onNavigate,
   storageKey,
   legacyStorageKey,
+  collapsed: controlledCollapsed,
+  onCollapsedChange,
+  showDesktopToggle = true,
   logo,
   collapsedLogo,
   showSettings = false,
@@ -96,21 +137,11 @@ export function DashboardSidebar({
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const isMobile = useIsMobile();
 
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved !== null) return saved === "true";
-
-    if (legacyStorageKey) {
-      const legacy = localStorage.getItem(legacyStorageKey);
-      if (legacy !== null) {
-        localStorage.setItem(storageKey, legacy);
-        localStorage.removeItem(legacyStorageKey);
-        return legacy === "true";
-      }
-    }
-
-    return false;
-  });
+  const [internalCollapsed, setInternalCollapsed] = useState(() =>
+    getInitialSidebarCollapsed(storageKey, legacyStorageKey)
+  );
+  const isControlled = controlledCollapsed !== undefined;
+  const isCollapsed = isControlled ? controlledCollapsed : internalCollapsed;
 
   const desktopSidebarRef = useRef<HTMLElement | null>(null);
 
@@ -122,6 +153,17 @@ export function DashboardSidebar({
     const saved = localStorage.getItem(`${storageKey}_mobile_expanded`);
     return saved || null;
   });
+
+  const setCollapsed = (nextCollapsed: boolean | ((_prev: boolean) => boolean)) => {
+    const resolved =
+      typeof nextCollapsed === "function" ? nextCollapsed(isCollapsed) : nextCollapsed;
+
+    if (!isControlled) {
+      setInternalCollapsed(resolved);
+    }
+
+    onCollapsedChange?.(resolved);
+  };
 
   useEffect(() => {
     localStorage.setItem(storageKey, String(isCollapsed));
@@ -163,7 +205,7 @@ export function DashboardSidebar({
     setHoveredDesktopParent(null);
     setCollapsedDropdownParent(null);
     setPinnedDesktopParent(null);
-    setIsCollapsed((prev) => !prev);
+    setCollapsed((prev) => !prev);
   };
 
   const handleNavigate = (type: string) => {
@@ -485,7 +527,7 @@ export function DashboardSidebar({
     <TooltipProvider delayDuration={0}>
       <>
         {isMobile && (
-          <div className="fixed top-3 left-3 z-40 md:hidden">
+          <div className="fixed top-[calc(0.75rem+env(safe-area-inset-top))] left-[calc(0.75rem+env(safe-area-inset-left))] z-70 md:hidden">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
                 <button
@@ -495,7 +537,9 @@ export function DashboardSidebar({
                   <Menu className="h-5 w-5 text-slate-700 dark:text-slate-200" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[83vw] max-w-[336px] p-0 sm:max-w-[352px]">
+              <SheetContent
+                side="left"
+                className="inset-y-auto top-14 bottom-0 h-[calc(100dvh-3.5rem)] w-[83vw] max-w-[336px] p-0 sm:max-w-[352px]">
                 <div className="flex h-full min-h-0 flex-col overflow-hidden bg-linear-to-b from-slate-100/95 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
                   <div className="shrink-0 border-b border-slate-200/90 px-3.5 pt-[calc(0.9rem+env(safe-area-inset-top))] pb-3 dark:border-slate-800/90">
                     <div className="flex items-center gap-3 rounded-2xl border border-slate-200/85 bg-white/85 px-3 py-2 shadow-sm shadow-slate-300/30 backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/80 dark:shadow-black/30">
@@ -586,21 +630,34 @@ export function DashboardSidebar({
           ref={desktopSidebarRef}
           className={cn(
             "relative z-30 hidden flex-col overflow-visible transition-all duration-300 md:flex dark:border-slate-800 dark:bg-slate-900",
-            isCollapsed ? "w-20" : theme.expandedWidth,
+            isCollapsed ? theme.collapsedWidth || "w-16" : theme.expandedWidth,
             theme.wrapper
           )}>
-          {/* Collapse Toggle Button */}
-          <button onClick={toggleCollapse} className={theme.toggleBtn}>
-            {isCollapsed ? (
-              <ChevronRight
-                className={cn("h-4 w-4", theme.toggleIconColor, "dark:text-slate-400")}
-              />
-            ) : (
-              <ChevronLeft
-                className={cn("h-4 w-4", theme.toggleIconColor, "dark:text-slate-400")}
-              />
-            )}
-          </button>
+          {showDesktopToggle && (
+            <button
+              type="button"
+              onClick={toggleCollapse}
+              aria-label={isCollapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"}
+              className={theme.toggleBtn || DEFAULT_DESKTOP_TOGGLE_BUTTON_CLASS}>
+              {isCollapsed ? (
+                <PanelLeftOpen
+                  className={cn(
+                    "h-4 w-4",
+                    theme.toggleIconColor || "text-slate-600",
+                    "dark:text-slate-400"
+                  )}
+                />
+              ) : (
+                <PanelLeftClose
+                  className={cn(
+                    "h-4 w-4",
+                    theme.toggleIconColor || "text-slate-600",
+                    "dark:text-slate-400"
+                  )}
+                />
+              )}
+            </button>
+          )}
 
           {/* Logo */}
           <div
