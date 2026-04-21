@@ -62,13 +62,13 @@ export function NotificationManagementPage() {
   } = useQuery({
     queryKey: ["admin", "notifications", "all"],
     queryFn: async (): Promise<Notification[]> => {
-      const response = await notificationManager.getAll();
+      const response = await notificationManager.getAllForAdmin();
       if (response.success && response.data) {
         if (Array.isArray(response.data)) {
           return response.data as Notification[];
         }
         if ("items" in response.data) {
-          return (response.data.items || []) as Notification[];
+          return ((response.data as { items?: Notification[] }).items || []) as Notification[];
         }
       }
       return [];

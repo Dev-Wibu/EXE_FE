@@ -50,6 +50,25 @@ export class NotificationManager implements BaseManager<Notification> {
   }
 
   /**
+   * Get all notifications (Admin only)
+   * GET /api/notifications
+   */
+  async getAllForAdmin(): Promise<ApiResponse<Notification[]>> {
+    try {
+      const response = await this.api.get(API_ENDPOINTS.NOTIFICATIONS.LIST_ALL);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Không thể tải danh sách thông báo",
+      };
+    }
+  }
+
+  /**
    * Get notifications by user ID
    * GET /api/notifications/{id}
    */
@@ -150,15 +169,23 @@ export class NotificationManager implements BaseManager<Notification> {
   }
 
   /**
-   * Delete notification (not supported by current API)
+   * Delete notification
+   * DELETE /api/notifications/{notificationId}
    */
-  async delete(_id: string | number): Promise<ApiResponse<void>> {
-    void _id;
-
-    return {
-      success: false,
-      error: "Không hỗ trợ xóa thông báo",
-    };
+  async delete(notificationId: string | number): Promise<ApiResponse<void>> {
+    try {
+      const endpoint = buildEndpoint(API_ENDPOINTS.NOTIFICATIONS.DELETE, { notificationId });
+      await this.api.delete(endpoint);
+      return {
+        success: true,
+        data: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Không thể xóa thông báo",
+      };
+    }
   }
 }
 

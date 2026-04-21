@@ -1,4 +1,4 @@
-import { Crown, FileText, History, User } from "lucide-react";
+import { Crown, FileText, History, Settings, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -18,7 +18,13 @@ import { transactionManager, usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
-import { MembershipTab, ProfileTab, TransactionHistoryTab, WalletTab } from "./AccountTabs";
+import {
+  MembershipTab,
+  ProfileTab,
+  SettingsTab,
+  TransactionHistoryTab,
+  WalletTab,
+} from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
 import { shouldHideTransactionFromHistory } from "./wallet-mapping";
@@ -28,7 +34,8 @@ type AccountSubTab =
   | "wallet"
   | "transactionHistory"
   | "candidateProfile"
-  | "membership";
+  | "membership"
+  | "settings";
 
 const parseAccountSubTab = (value?: string | null): AccountSubTab | null => {
   if (
@@ -36,7 +43,8 @@ const parseAccountSubTab = (value?: string | null): AccountSubTab | null => {
     value === "wallet" ||
     value === "transactionHistory" ||
     value === "candidateProfile" ||
-    value === "membership"
+    value === "membership" ||
+    value === "settings"
   ) {
     return value;
   }
@@ -541,6 +549,8 @@ export function AccountPage() {
         return <CandidateProfileTab />;
       case "membership":
         return <MembershipTab />;
+      case "settings":
+        return <SettingsTab />;
       default:
         return userProfile ? (
           <ProfileTab
@@ -628,6 +638,16 @@ export function AccountPage() {
           }`}>
           <Crown className="h-4 w-4" />
           Gói thành viên
+        </button>
+        <button
+          onClick={() => handleSwitchTab("settings")}
+          className={`flex items-center gap-2 px-6 py-3 font-['Inter'] text-base font-medium transition-colors ${
+            activeTab === "settings"
+              ? "border-b-2 border-[#0047AB] text-[#0047AB] dark:border-[#66B2FF] dark:text-[#66B2FF]"
+              : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-300"
+          }`}>
+          <Settings className="h-4 w-4" />
+          Cài đặt
         </button>
       </div>
 

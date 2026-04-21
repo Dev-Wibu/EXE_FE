@@ -267,7 +267,9 @@ export const API_ENDPOINTS = {
   // Notifications endpoints - Based on schema-from-be.d.ts
   NOTIFICATIONS: {
     LIST: "/api/notifications/:id",
+    LIST_ALL: "/api/notifications",
     CREATE: "/api/notifications",
+    DELETE: "/api/notifications/:notificationId",
     CHECK_READ: "/api/notifications/check-read/:notificationId",
   },
 
