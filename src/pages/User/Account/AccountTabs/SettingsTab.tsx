@@ -23,8 +23,8 @@ export function SettingsTab() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+    if (newPassword.length < 8) {
+      toast.error("Mật khẩu mới phải có ít nhất 8 ký tự");
       return;
     }
 
@@ -111,7 +111,7 @@ export function SettingsTab() {
               <Input
                 id="newPassword"
                 type={showNewPassword ? "text" : "password"}
-                placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                placeholder="Nhập mật khẩu mới (ít nhất 8 ký tự)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="pr-10"

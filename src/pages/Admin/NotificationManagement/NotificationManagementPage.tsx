@@ -67,9 +67,8 @@ export function NotificationManagementPage() {
         if (Array.isArray(response.data)) {
           return response.data as Notification[];
         }
-        if ("items" in response.data) {
-          return ((response.data as { items?: Notification[] }).items || []) as Notification[];
-        }
+        const paginated = response.data as { items?: Notification[] };
+        return paginated.items ?? [];
       }
       return [];
     },
