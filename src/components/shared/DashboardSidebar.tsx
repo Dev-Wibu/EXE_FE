@@ -2,7 +2,6 @@ import { ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Settings } from "lu
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -59,7 +58,6 @@ export interface DashboardSidebarTheme {
   footerBorder: string;
   footerExpandedPadding: string;
   footerCollapsedPadding: string;
-  themeToggleLabel: string;
   logoutExpandedBtn: string;
   logoutCollapsedBtn: string;
   logoutIcon: string;
@@ -597,12 +595,6 @@ export function DashboardSidebar({
                       theme.footerBorder,
                       "shrink-0 border-t border-slate-200/90 bg-slate-50/88 px-2.5 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/72"
                     )}>
-                    <div className="mb-1.5 flex items-center justify-between rounded-2xl border border-slate-200/85 bg-white/82 px-3 py-2.5 shadow-sm shadow-slate-300/20 dark:border-slate-700/80 dark:bg-slate-900/52 dark:shadow-none">
-                      <span className="text-sm font-medium text-gray-600 dark:text-slate-400">
-                        {theme.themeToggleLabel}
-                      </span>
-                      <ThemeToggle iconOnly />
-                    </div>
                     {showSettings && (
                       <button
                         onClick={onSettingsClick}
@@ -715,12 +707,6 @@ export function DashboardSidebar({
             )}>
             {!isCollapsed ? (
               <>
-                <div className="mb-2 flex items-center justify-between rounded-lg px-3 py-2">
-                  <span className="text-sm font-medium text-gray-600 dark:text-slate-400">
-                    {theme.themeToggleLabel}
-                  </span>
-                  <ThemeToggle iconOnly />
-                </div>
                 {showSettings && (
                   <button onClick={onSettingsClick} className={settingsExpandedClass}>
                     <Settings className="h-5 w-5" />
@@ -734,7 +720,6 @@ export function DashboardSidebar({
               </>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <ThemeToggle iconOnly />
                 {showSettings && (
                   <Tooltip>
                     <TooltipTrigger asChild>

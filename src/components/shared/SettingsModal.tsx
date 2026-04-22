@@ -3,13 +3,13 @@
  * Provides a Discord/Slack-style settings UI with tabs on the left and content on the right.
  *
  * Tabs:
- *  - Giao diện (Appearance): Theme, Font size, Display density
- *  - Năng suất (Productivity): Sidebar behaviour, Default page size
+ *  - Giao diện (Appearance): Theme, Font size
+ *  - Năng suất (Productivity): Sidebar behaviour
  *  - Thông báo (Notification Preferences): Mute sound, Mute toast
  */
 
 import { Monitor, Moon, RotateCcw, Sun, X } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,17 +17,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import {
-  type DefaultPageSize,
-  type DisplayDensity,
-  type FontSize,
-  type SidebarBehavior,
-  useSettingsStore,
-} from "@/stores/settingsStore";
+import { type FontSize, type SidebarBehavior, useSettingsStore } from "@/stores/settingsStore";
 import { applyTheme, type Theme, useThemeStore } from "@/stores/themeStore";
-
-// ---------- Types ----------
-
 type SettingsTab = "appearance" | "productivity" | "notifications";
 
 interface SettingsModalProps {
@@ -45,7 +36,7 @@ const TABS: Array<{ id: SettingsTab; label: string }> = [
 
 // ---------- Sub-components ----------
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h3 className="mb-3 text-xs font-semibold tracking-widest text-slate-500 uppercase dark:text-slate-400">
       {children}
@@ -60,7 +51,7 @@ function OptionCard({
 }: {
   selected: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <button
@@ -105,7 +96,7 @@ function ToggleRow({
 
 function AppearancePanel() {
   const { theme, setTheme } = useThemeStore();
-  const { fontSize, setFontSize, displayDensity, setDisplayDensity } = useSettingsStore();
+  const { fontSize, setFontSize } = useSettingsStore();
 
   const themes: Array<{ value: Theme; label: string; icon: React.ElementType }> = [
     { value: "light", label: "Sáng", icon: Sun },
@@ -117,15 +108,6 @@ function AppearancePanel() {
     { value: "small", label: "Nhỏ", preview: "Aa" },
     { value: "default", label: "Mặc định", preview: "Aa" },
     { value: "large", label: "Lớn", preview: "Aa" },
-  ];
-
-  const densities: Array<{ value: DisplayDensity; label: string; description: string }> = [
-    {
-      value: "default",
-      label: "Mặc định",
-      description: "Khoảng cách bình thường giữa các phần tử",
-    },
-    { value: "compact", label: "Thu gọn", description: "Giảm padding để hiển thị nhiều hơn" },
   ];
 
   return (
@@ -168,36 +150,11 @@ function AppearancePanel() {
           ))}
         </div>
       </div>
-
-      <Separator />
-
-      {/* Display density */}
-      <div>
-        <SectionTitle>Mật độ hiển thị</SectionTitle>
-        <RadioGroup
-          value={displayDensity}
-          onValueChange={(v) => setDisplayDensity(v as DisplayDensity)}
-          className="space-y-3">
-          {densities.map(({ value, label, description }) => (
-            <div key={value} className="flex items-start gap-3">
-              <RadioGroupItem value={value} id={`density-${value}`} className="mt-0.5" />
-              <div>
-                <Label htmlFor={`density-${value}`} className="cursor-pointer font-medium">
-                  {label}
-                </Label>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
-              </div>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
     </div>
   );
 }
-
 function ProductivityPanel() {
-  const { sidebarBehavior, setSidebarBehavior, defaultPageSize, setDefaultPageSize } =
-    useSettingsStore();
+  const { sidebarBehavior, setSidebarBehavior } = useSettingsStore();
 
   const sidebarOptions: Array<{ value: SidebarBehavior; label: string; description: string }> = [
     {
@@ -212,14 +169,8 @@ function ProductivityPanel() {
     },
   ];
 
-  const pageSizes: Array<{ value: DefaultPageSize; label: string }> = [
-    { value: 10, label: "10 dòng" },
-    { value: 20, label: "20 dòng" },
-    { value: 50, label: "50 dòng" },
-  ];
-
   return (
-    <div className="space-y-8">
+    <div>
       {/* Sidebar behaviour */}
       <div>
         <SectionTitle>Hành vi thanh bên</SectionTitle>
@@ -239,24 +190,6 @@ function ProductivityPanel() {
             </div>
           ))}
         </RadioGroup>
-      </div>
-
-      <Separator />
-
-      {/* Default page size */}
-      <div>
-        <SectionTitle>Số dòng mặc định trong bảng</SectionTitle>
-        <div className="flex flex-wrap gap-3">
-          {pageSizes.map(({ value, label }) => (
-            <OptionCard
-              key={value}
-              selected={defaultPageSize === value}
-              onClick={() => setDefaultPageSize(value)}>
-              <span className="text-lg font-bold">{value}</span>
-              <span className="text-xs">{label}</span>
-            </OptionCard>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -359,7 +292,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         {/* Right content area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-900">
             <h3 className="font-semibold text-slate-900 dark:text-white">
               {TABS.find((t) => t.id === activeTab)?.label}
             </h3>

@@ -8,7 +8,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
@@ -26,6 +26,7 @@ import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
 import { getDashboardTabFromPath } from "@/lib/dashboard-breadcrumb";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 import { MentorAccountPage } from "../Account";
 import { GivenFeedbackListPage } from "../Feedback";
@@ -112,9 +113,14 @@ const DEFAULT_TAB: TabType = "overview";
 export function MentorDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
-    getInitialSidebarCollapsed("mentor_dashboard_sidebar_collapsed")
+    getInitialSidebarCollapsed(
+      "mentor_dashboard_sidebar_collapsed",
+      undefined,
+      sidebarBehavior === "auto-collapse"
+    )
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { activeTab, openTab } = useTabsState({
@@ -150,6 +156,10 @@ export function MentorDashboardPage() {
   useDashboardScrollRestoration(contentRef, {
     enabled: typedActiveTab !== "messenger",
   });
+
+  useEffect(() => {
+    setIsSidebarCollapsed(sidebarBehavior === "auto-collapse");
+  }, [sidebarBehavior]);
 
   // When on a nested route (outlet), navigate back to the dashboard base with the tab param
   const handleNavigate = useCallback(
@@ -225,7 +235,6 @@ export function MentorDashboardPage() {
           footerBorder: "border-t border-emerald-200",
           footerExpandedPadding: "p-3",
           footerCollapsedPadding: "p-2",
-          themeToggleLabel: "Giao diện",
           logoutExpandedBtn:
             "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
           logoutCollapsedBtn:

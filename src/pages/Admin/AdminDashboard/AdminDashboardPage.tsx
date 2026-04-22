@@ -33,6 +33,7 @@ import {
 } from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
 import { DashboardOverviewPage } from "../DashboardOverview";
@@ -346,6 +347,7 @@ const validateChromeTabsMenuConfiguration = () => {
 };
 
 export function AdminDashboardPage() {
+  const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const { activeTab, openTabs, setActiveTab, openTab, closeTab, resetTabsTo } = useTabsState({
     storageKey: "admin",
     defaultTab: "dashboard",
@@ -353,7 +355,11 @@ export function AdminDashboardPage() {
   });
   const contentRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
-    getInitialSidebarCollapsed("admin_sidebar_collapsed", "manager_sidebar_collapsed")
+    getInitialSidebarCollapsed(
+      "admin_sidebar_collapsed",
+      "manager_sidebar_collapsed",
+      sidebarBehavior === "auto-collapse"
+    )
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -376,6 +382,10 @@ export function AdminDashboardPage() {
   }, []);
 
   useDashboardScrollRestoration(contentRef, { scopeKey: typedActiveTab });
+
+  useEffect(() => {
+    setIsSidebarCollapsed(sidebarBehavior === "auto-collapse");
+  }, [sidebarBehavior]);
 
   const chromeTabsData = useMemo(() => {
     return openTabs
@@ -511,7 +521,6 @@ export function AdminDashboardPage() {
           footerBorder: "border-t border-gray-200",
           footerExpandedPadding: "p-4",
           footerCollapsedPadding: "p-2",
-          themeToggleLabel: "Giao diện",
           logoutExpandedBtn:
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
           logoutCollapsedBtn:

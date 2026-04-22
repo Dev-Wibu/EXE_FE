@@ -10,30 +10,24 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const SETTINGS_SCHEMA_VERSION = 1;
+const SETTINGS_SCHEMA_VERSION = 2;
 
 // ---------- Types ----------
 
 export type FontSize = "small" | "default" | "large";
-export type DisplayDensity = "compact" | "default";
 export type SidebarBehavior = "always-open" | "auto-collapse";
-export type DefaultPageSize = 10 | 20 | 50;
 
 export interface SettingsState {
   /** Internal schema version — used for future migrations */
   _version: number;
 
   // --- Appearance ---
-  /** Font size preference (applied via CSS class on <html>) */
+  /** Font size preference (applied via data attribute on <html>) */
   fontSize: FontSize;
-  /** Display density: compact reduces padding/spacing globally */
-  displayDensity: DisplayDensity;
 
   // --- Productivity ---
   /** How the desktop sidebar behaves on dashboards */
   sidebarBehavior: SidebarBehavior;
-  /** Default page size used in all paginated tables */
-  defaultPageSize: DefaultPageSize;
 
   // --- Notification Preferences (UI-only) ---
   /** When true, notification sound effects are disabled */
@@ -43,9 +37,7 @@ export interface SettingsState {
 
   // --- Actions ---
   setFontSize: (v: FontSize) => void;
-  setDisplayDensity: (v: DisplayDensity) => void;
   setSidebarBehavior: (v: SidebarBehavior) => void;
-  setDefaultPageSize: (v: DefaultPageSize) => void;
   setMuteSoundNotification: (v: boolean) => void;
   setMuteToastNotification: (v: boolean) => void;
   /** Reset all settings to factory defaults */
@@ -55,34 +47,23 @@ export interface SettingsState {
 const DEFAULT_SETTINGS: Omit<
   SettingsState,
   | "setFontSize"
-  | "setDisplayDensity"
   | "setSidebarBehavior"
-  | "setDefaultPageSize"
   | "setMuteSoundNotification"
   | "setMuteToastNotification"
   | "resetToDefaults"
 > = {
   _version: SETTINGS_SCHEMA_VERSION,
   fontSize: "default",
-  displayDensity: "default",
   sidebarBehavior: "always-open",
-  defaultPageSize: 10,
   muteSoundNotification: false,
   muteToastNotification: false,
 };
 
 // ---------- Font-size helpers ----------
 
-const FONT_SIZE_CLASS: Record<FontSize, string> = {
-  small: "text-size-small",
-  default: "text-size-default",
-  large: "text-size-large",
-};
-
 export function applyFontSize(fontSize: FontSize): void {
   const root = document.documentElement;
-  Object.values(FONT_SIZE_CLASS).forEach((cls) => root.classList.remove(cls));
-  root.classList.add(FONT_SIZE_CLASS[fontSize]);
+  root.setAttribute("data-font-size", fontSize);
 }
 
 // ---------- Store ----------
@@ -96,9 +77,7 @@ export const useSettingsStore = create<SettingsState>()(
         applyFontSize(fontSize);
         set({ fontSize });
       },
-      setDisplayDensity: (displayDensity) => set({ displayDensity }),
       setSidebarBehavior: (sidebarBehavior) => set({ sidebarBehavior }),
-      setDefaultPageSize: (defaultPageSize) => set({ defaultPageSize }),
       setMuteSoundNotification: (muteSoundNotification) => set({ muteSoundNotification }),
       setMuteToastNotification: (muteToastNotification) => set({ muteToastNotification }),
 

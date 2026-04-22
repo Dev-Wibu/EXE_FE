@@ -1,5 +1,5 @@
 import { LayoutDashboard, MessageSquare, Newspaper, Star, UserCheck, Video } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
 import {
@@ -10,6 +10,7 @@ import {
   SettingsModal,
 } from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 import { FeedbackModerationPage } from "../FeedbackModeration";
 import { MentorApplicationsPage } from "../MentorApplications";
@@ -147,9 +148,14 @@ const STAFF_SIDEBAR_LOGO_COLLAPSED = (
 );
 
 export function StaffDashboardPage() {
+  const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
-    getInitialSidebarCollapsed("staff_sidebar_collapsed")
+    getInitialSidebarCollapsed(
+      "staff_sidebar_collapsed",
+      undefined,
+      sidebarBehavior === "auto-collapse"
+    )
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tabs, setTabs] = useState<Tab[]>([
@@ -160,6 +166,10 @@ export function StaffDashboardPage() {
   const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   useDashboardScrollRestoration(contentRef, { scopeKey: activeTabId });
+
+  useEffect(() => {
+    setIsSidebarCollapsed(sidebarBehavior === "auto-collapse");
+  }, [sidebarBehavior]);
 
   const handleTabSelect = useCallback((tabId: string) => {
     setActiveTabId(tabId);
@@ -256,7 +266,6 @@ export function StaffDashboardPage() {
           footerBorder: "border-t border-gray-200",
           footerExpandedPadding: "p-4",
           footerCollapsedPadding: "p-2",
-          themeToggleLabel: "Giao diện",
           logoutExpandedBtn:
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
           logoutCollapsedBtn:
