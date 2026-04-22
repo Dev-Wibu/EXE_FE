@@ -22,6 +22,7 @@ import {
   DashboardSidebar,
   DashboardSidebarToggle,
   getInitialSidebarCollapsed,
+  SettingsModal,
 } from "@/components/shared";
 import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
@@ -157,6 +158,7 @@ export function UserDashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed("user_dashboard_sidebar_collapsed")
   );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { activeTab, openTab } = useTabsState({
     storageKey: "user",
     defaultTab: DEFAULT_TAB,
@@ -246,6 +248,9 @@ export function UserDashboardPage() {
         showDesktopToggle={false}
         logo={USER_SIDEBAR_LOGO}
         collapsedLogo={USER_SIDEBAR_LOGO_COLLAPSED}
+        showSettings
+        settingsLabel="Cài đặt"
+        onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
           wrapper: "h-screen flex-shrink-0 border-r border-slate-200 bg-slate-50",
           expandedWidth: "w-56",
@@ -307,6 +312,8 @@ export function UserDashboardPage() {
           {outlet ?? renderContent()}
         </div>
       </div>
+
+      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

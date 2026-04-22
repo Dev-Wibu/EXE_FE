@@ -4,4 +4,5 @@
 
 export * from "./authStore";
 export * from "./notificationStore";
+export * from "./settingsStore";
 export * from "./themeStore";
