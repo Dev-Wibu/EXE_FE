@@ -7,6 +7,7 @@ import {
   DashboardSidebar,
   DashboardSidebarToggle,
   getInitialSidebarCollapsed,
+  SettingsModal,
 } from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 
@@ -150,6 +151,7 @@ export function StaffDashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed("staff_sidebar_collapsed")
   );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tabs, setTabs] = useState<Tab[]>([
     { id: generateTabId(), type: "mentorApplications", title: "Duyệt mentor" },
   ]);
@@ -233,6 +235,7 @@ export function StaffDashboardPage() {
         collapsedLogo={STAFF_SIDEBAR_LOGO_COLLAPSED}
         showSettings
         settingsLabel="Cài đặt"
+        onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
           wrapper: "h-full border-r border-gray-200 bg-white",
           expandedWidth: "w-56",
@@ -298,6 +301,8 @@ export function StaffDashboardPage() {
           {renderContent()}
         </div>
       </div>
+
+      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

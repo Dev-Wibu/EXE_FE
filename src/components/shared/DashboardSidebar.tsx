@@ -81,6 +81,8 @@ export interface DashboardSidebarProps {
   settingsLabel?: string;
   settingsExpandedClass?: string;
   settingsCollapsedClass?: string;
+  /** Callback invoked when the Settings button is clicked */
+  onSettingsClick?: () => void;
   theme: DashboardSidebarTheme;
 }
 
@@ -131,6 +133,7 @@ export function DashboardSidebar({
   settingsLabel = "Cài đặt",
   settingsExpandedClass = "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
   settingsCollapsedClass = "flex items-center justify-center rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
+  onSettingsClick,
   theme,
 }: DashboardSidebarProps) {
   const navigate = useNavigate();
@@ -602,6 +605,7 @@ export function DashboardSidebar({
                     </div>
                     {showSettings && (
                       <button
+                        onClick={onSettingsClick}
                         className={cn(
                           settingsExpandedClass,
                           "rounded-2xl border border-transparent"
@@ -718,7 +722,7 @@ export function DashboardSidebar({
                   <ThemeToggle iconOnly />
                 </div>
                 {showSettings && (
-                  <button className={settingsExpandedClass}>
+                  <button onClick={onSettingsClick} className={settingsExpandedClass}>
                     <Settings className="h-5 w-5" />
                     {settingsLabel}
                   </button>
@@ -734,7 +738,7 @@ export function DashboardSidebar({
                 {showSettings && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button className={settingsCollapsedClass}>
+                      <button onClick={onSettingsClick} className={settingsCollapsedClass}>
                         <Settings className="h-5 w-5" />
                       </button>
                     </TooltipTrigger>

@@ -20,6 +20,7 @@ import {
   DashboardSidebar,
   DashboardSidebarToggle,
   getInitialSidebarCollapsed,
+  SettingsModal,
 } from "@/components/shared";
 import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
@@ -115,6 +116,7 @@ export function MentorDashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed("mentor_dashboard_sidebar_collapsed")
   );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { activeTab, openTab } = useTabsState({
     storageKey: "mentor",
     defaultTab: DEFAULT_TAB,
@@ -198,6 +200,9 @@ export function MentorDashboardPage() {
         showDesktopToggle={false}
         logo={MENTOR_SIDEBAR_LOGO}
         collapsedLogo={MENTOR_SIDEBAR_LOGO_COLLAPSED}
+        showSettings
+        settingsLabel="Cài đặt"
+        onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
           wrapper: "h-screen border-r border-emerald-200 bg-emerald-50/50",
           expandedWidth: "w-56",
@@ -252,6 +257,8 @@ export function MentorDashboardPage() {
           {outlet ?? renderContent()}
         </div>
       </div>
+
+      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

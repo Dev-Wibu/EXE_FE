@@ -1,10 +1,20 @@
 /**
  * Admin Notification Management Page
- * Allows admin to view all notifications and send system notifications
+ * Allows admin to view all notifications and send system notifications.
+ *
+ * Step 1 upgrades (per PLAN.md):
+ * - Searchable Autocomplete for recipient picker (Popover + Command)
+ * - Notification templates for quick-fill
+ * - Message preview panel
+ * - Strict form validation (send button disabled until all fields filled)
+ * - Local notification history stored in localStorage for admin reference
+ *
+ * Step 3 (per PLAN.md):
+ * - Removed Delete button (BE does not support delete notification API)
  */
 
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
-import { Bell, Eye, Plus, Search, Send, Trash2 } from "lucide-react";
+import { Bell, Check, ChevronsUpDown, Eye, Plus, Search, Send } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { PaginationControl, ReloadButton, SortButton } from "@/components/shared";
@@ -12,6 +22,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +42,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingCardList } from "@/components/ui/loading-card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -31,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -45,10 +65,156 @@ import { useCreateNotification, type Notification } from "@/hooks/useNotificatio
 
 import { useSortable } from "@/hooks/useSortable";
 import { toVietnamDateKey } from "@/lib/formatting";
+import { cn } from "@/lib/utils";
 import { notificationManager } from "@/services/notification.manager";
 import { usersAdminManager } from "@/services/users-admin.manager";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+// ---------- Notification templates ----------
+
+interface NotificationTemplate {
+  label: string;
+  title: string;
+  message: string;
+}
+
+const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
+  {
+    label: "Cảnh báo vi phạm",
+    title: "Cảnh báo từ hệ thống",
+    message:
+      "Tài khoản của bạn đã bị ghi nhận vi phạm chính sách sử dụng. Vui lòng kiểm tra và tuân thủ các quy định để tránh bị khóa tài khoản.",
+  },
+  {
+    label: "Cập nhật hệ thống",
+    title: "Thông báo cập nhật hệ thống",
+    message:
+      "Hệ thống sẽ được bảo trì và nâng cấp vào lúc 02:00 ngày mai. Trong thời gian này, dịch vụ có thể bị gián đoạn trong khoảng 30 phút.",
+  },
+  {
+    label: "Chào mừng thành viên mới",
+    title: "Chào mừng bạn đến với INBLUE AI!",
+    message:
+      "Cảm ơn bạn đã đăng ký tài khoản. Hãy khám phá các tính năng phỏng vấn AI và kết nối với mentor để nâng cao kỹ năng của bạn.",
+  },
+  {
+    label: "Nhắc nhở thanh toán",
+    title: "Nhắc nhở thanh toán gói dịch vụ",
+    message:
+      "Gói dịch vụ của bạn sẽ hết hạn trong 3 ngày nữa. Vui lòng gia hạn để tiếp tục sử dụng đầy đủ các tính năng.",
+  },
+  {
+    label: "Phiên phỏng vấn được duyệt",
+    title: "Phiên phỏng vấn của bạn đã được xác nhận",
+    message:
+      "Mentor đã xác nhận lịch phỏng vấn với bạn. Hãy chuẩn bị kỹ càng và tham gia đúng giờ để có buổi phỏng vấn hiệu quả.",
+  },
+];
+
+// ---------- Recipient combobox ----------
+
+interface RecipientComboboxProps {
+  users: Array<{ id?: number; name?: string; email?: string }>;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function RecipientCombobox({ users, value, onChange }: RecipientComboboxProps) {
+  const [open, setOpen] = useState(false);
+  const selectedUser = users.find((u) => String(u.id) === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal">
+          {selectedUser ? (
+            <span className="flex items-center gap-2 truncate">
+              <span className="truncate font-medium">{selectedUser.name}</span>
+              <span className="shrink-0 text-xs text-slate-500">({selectedUser.email})</span>
+            </span>
+          ) : (
+            <span className="text-slate-500">Tìm kiếm người nhận...</span>
+          )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Tìm theo tên hoặc email..." />
+          <CommandList>
+            <CommandEmpty>Không tìm thấy người dùng.</CommandEmpty>
+            <CommandGroup>
+              {users.map((user) => (
+                <CommandItem
+                  key={user.id}
+                  value={`${user.name} ${user.email}`}
+                  onSelect={() => {
+                    onChange(String(user.id));
+                    setOpen(false);
+                  }}>
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === String(user.id) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span className="font-medium">{user.name}</span>
+                  <span className="ml-1.5 text-xs text-slate-500">({user.email})</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ---------- Notification preview ----------
+
+interface NotificationPreviewProps {
+  title: string;
+  message: string;
+  recipientName?: string;
+}
+
+function NotificationPreview({ title, message, recipientName }: NotificationPreviewProps) {
+  if (!title && !message) return null;
+  return (
+    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
+      <p className="mb-2 text-xs font-semibold tracking-wider text-blue-600 uppercase dark:text-blue-400">
+        Xem trước thông báo
+        {recipientName && (
+          <span className="ml-1 font-normal text-slate-500 normal-case">
+            — gửi đến {recipientName}
+          </span>
+        )}
+      </p>
+      <div className="flex gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600">
+          <Bell className="h-4 w-4 text-white" />
+        </div>
+        <div className="min-w-0">
+          {title && (
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</p>
+          )}
+          {message && (
+            <p className="mt-0.5 text-sm whitespace-pre-wrap text-slate-600 dark:text-slate-300">
+              {message}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Main page ----------
 
 export function NotificationManagementPage() {
   const queryClient = useQueryClient();
@@ -199,22 +365,6 @@ export function NotificationManagementPage() {
         },
       }
     );
-  };
-
-  const handleDelete = async (notification: Notification) => {
-    if (!notification.id) return;
-
-    try {
-      const response = await notificationManager.delete(notification.id);
-      if (response.success) {
-        toast.success("Đã xóa thông báo");
-        queryClient.invalidateQueries({ queryKey: ["admin", "notifications", "all"] });
-      } else {
-        toast.error(response.error || "Không thể xóa thông báo");
-      }
-    } catch {
-      toast.error("Không thể xóa thông báo");
-    }
   };
 
   return (
@@ -413,20 +563,12 @@ export function NotificationManagementPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(notification)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(notification)}>
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetail(notification)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -501,7 +643,7 @@ export function NotificationManagementPage() {
 
       {/* Create Notification Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Send className="h-5 w-5" />
@@ -510,48 +652,89 @@ export function NotificationManagementPage() {
             <DialogDescription>Gửi thông báo đến người dùng cụ thể</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Template picker */}
             <div>
-              <Label htmlFor="userId">Người nhận</Label>
+              <Label>Chọn từ mẫu (tùy chọn)</Label>
               <Select
-                value={createForm.userId}
-                onValueChange={(value) => setCreateForm({ ...createForm, userId: value })}>
+                onValueChange={(value) => {
+                  const template = NOTIFICATION_TEMPLATES.find((t) => t.label === value);
+                  if (template) {
+                    setCreateForm((prev) => ({
+                      ...prev,
+                      title: template.title,
+                      message: template.message,
+                    }));
+                  }
+                }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn người nhận" />
+                  <SelectValue placeholder="Chọn mẫu thông báo..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user: { id?: number; name?: string; email?: string }) => (
-                    <SelectItem key={user.id} value={String(user.id)}>
-                      {user.name} ({user.email})
+                  {NOTIFICATION_TEMPLATES.map((t) => (
+                    <SelectItem key={t.label} value={t.label}>
+                      {t.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <Separator />
+
+            {/* Recipient searchable combobox */}
             <div>
-              <Label htmlFor="title">Tiêu đề</Label>
-              <Input
-                id="title"
-                placeholder="Nhập tiêu đề thông báo"
-                value={createForm.title}
-                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+              <Label>Người nhận *</Label>
+              <RecipientCombobox
+                users={users}
+                value={createForm.userId}
+                onChange={(value) => setCreateForm((prev) => ({ ...prev, userId: value }))}
               />
             </div>
+
+            {/* Title */}
             <div>
-              <Label htmlFor="message">Nội dung</Label>
+              <Label htmlFor="notify-title">Tiêu đề *</Label>
+              <Input
+                id="notify-title"
+                placeholder="Nhập tiêu đề thông báo"
+                value={createForm.title}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+
+            {/* Message */}
+            <div>
+              <Label htmlFor="notify-message">Nội dung *</Label>
               <Textarea
-                id="message"
+                id="notify-message"
                 placeholder="Nhập nội dung thông báo"
                 rows={4}
                 value={createForm.message}
-                onChange={(e) => setCreateForm({ ...createForm, message: e.target.value })}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, message: e.target.value }))}
               />
             </div>
+
+            {/* Preview */}
+            <NotificationPreview
+              title={createForm.title}
+              message={createForm.message}
+              recipientName={
+                users.find((u: { id?: number }) => String(u.id) === createForm.userId)?.name
+              }
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isCreating}>
               Hủy
             </Button>
-            <Button onClick={handleCreateSubmit} disabled={isCreating}>
+            <Button
+              onClick={handleCreateSubmit}
+              disabled={
+                isCreating ||
+                !createForm.userId ||
+                !createForm.title.trim() ||
+                !createForm.message.trim()
+              }>
               {isCreating ? "Đang gửi..." : "Gửi thông báo"}
             </Button>
           </DialogFooter>

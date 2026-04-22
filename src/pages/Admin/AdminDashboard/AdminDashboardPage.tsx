@@ -29,6 +29,7 @@ import {
   DashboardSidebar,
   DashboardSidebarToggle,
   getInitialSidebarCollapsed,
+  SettingsModal,
 } from "@/components/shared";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
@@ -354,6 +355,7 @@ export function AdminDashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed("admin_sidebar_collapsed", "manager_sidebar_collapsed")
   );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
 
@@ -488,6 +490,7 @@ export function AdminDashboardPage() {
         collapsedLogo={ADMIN_SIDEBAR_LOGO_COLLAPSED}
         showSettings
         settingsLabel="Cài đặt"
+        onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
           wrapper: "h-full border-r border-gray-200 bg-white",
           expandedWidth: "w-56",
@@ -553,6 +556,8 @@ export function AdminDashboardPage() {
           {renderContent()}
         </div>
       </div>
+
+      <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }
