@@ -227,7 +227,7 @@ export function MentorAccountPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Top Banner */}
-      <div className="flex h-56 items-center justify-between rounded-[30px] bg-gradient-to-r from-emerald-100 to-teal-100 px-10 dark:from-emerald-900/20 dark:to-teal-900/20">
+      <div className="flex h-56 items-center justify-between rounded-[30px] bg-linear-to-r from-emerald-100 to-teal-100 px-10 dark:from-emerald-900/20 dark:to-teal-900/20">
         <div className="flex flex-col gap-4">
           <h1 className="font-['Open_Sans'] text-3xl leading-tight font-bold text-emerald-800 dark:text-emerald-400">
             Tài khoản Mentor
@@ -241,24 +241,28 @@ export function MentorAccountPage() {
         </div>
       </div>
 
-      <MentorProfileSection
-        mentorProfile={mentorProfile}
-        isEditing={isEditing}
-        isSaving={isSaving}
-        formData={formData}
-        avatarPreview={avatarPreview}
-        onRefreshData={handleRefreshData}
-        onStartEdit={handleStartEdit}
-        onCancelEdit={handleCancelEdit}
-        onSaveProfile={handleSaveProfile}
-        onAvatarChange={handleAvatarChange}
-        onClearAvatar={handleClearAvatar}
-        onInputChange={handleInputChange}
-      />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <MentorProfileSection
+          mentorProfile={mentorProfile}
+          isEditing={isEditing}
+          isSaving={isSaving}
+          formData={formData}
+          avatarPreview={avatarPreview}
+          onRefreshData={handleRefreshData}
+          onStartEdit={handleStartEdit}
+          onCancelEdit={handleCancelEdit}
+          onSaveProfile={handleSaveProfile}
+          onAvatarChange={handleAvatarChange}
+          onClearAvatar={handleClearAvatar}
+          onInputChange={handleInputChange}
+        />
 
-      <MentorDocumentsSection mentorProfile={mentorProfile} />
+        <div className="flex flex-col gap-6">
+          <MentorDocumentsSection mentorProfile={mentorProfile} />
 
-      <MentorPasswordSection />
+          <MentorPasswordSection />
+        </div>
+      </div>
     </div>
   );
 }

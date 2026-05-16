@@ -36,14 +36,14 @@ export function MentorDocumentsSection({ mentorProfile }: MentorDocumentsSection
 
   return (
     <>
-      <div className="rounded-2xl bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:bg-slate-900 dark:shadow-slate-900/50">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.05)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-slate-900/50">
         <h3 className="mb-4 font-['Inter'] text-xl font-semibold text-zinc-800 dark:text-white">
           Giấy tờ đã nộp
         </h3>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1">
           {/* Identity Document */}
-          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
+          <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/30">
               <FileText className="h-5 w-5 text-rose-500" />
             </div>
@@ -64,7 +64,7 @@ export function MentorDocumentsSection({ mentorProfile }: MentorDocumentsSection
           </div>
 
           {/* Degree Document */}
-          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
+          <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
               <Award className="h-5 w-5 text-amber-500" />
             </div>
@@ -89,7 +89,7 @@ export function MentorDocumentsSection({ mentorProfile }: MentorDocumentsSection
           </div>
 
           {/* Other File */}
-          <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4 dark:bg-slate-800">
+          <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700">
               <FileText className="h-5 w-5 text-slate-500" />
             </div>
