@@ -244,8 +244,7 @@ export function My3DCard() {
       className="transition-all duration-200 ease-out"
       style={{ transformStyle: "preserve-3d" }}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
+      onMouseLeave={handleMouseLeave}>
       {/* card content */}
     </div>
   );
@@ -253,6 +252,7 @@ export function My3DCard() {
 ```
 
 **Lưu ý quan trọng**:
+
 - Luôn dùng `useRef` để tránh re-render không cần thiết
 - Set `transformStyle: "preserve-3d"` trên element cần 3D transform
 - Reset transform về origin khi `mouseleave`

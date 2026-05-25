@@ -173,3 +173,60 @@ export function getTransactionPurposeBadge(
       };
   }
 }
+
+export function getJobDescriptionStatusBadge(status?: string): StatusBadgeConfig {
+  switch (status?.toUpperCase()) {
+    case "OPEN":
+      return {
+        label: "Đang mở",
+        variant: "default",
+        className: "bg-emerald-600 text-white hover:bg-emerald-600",
+      };
+    case "CLOSED":
+      return {
+        label: "Đã đóng",
+        variant: "default",
+        className: "bg-red-600 text-white hover:bg-red-600",
+      };
+    case "DRAFT":
+      return {
+        label: "Nháp",
+        variant: "outline",
+        className: "border-amber-500 bg-amber-500 text-white hover:bg-amber-500",
+      };
+    default:
+      return { label: status || "Không rõ", variant: "outline" };
+  }
+}
+
+export function getJobDescriptionLevelBadge(level?: string): StatusBadgeConfig {
+  switch (level?.toUpperCase()) {
+    case "INTERN":
+      return {
+        label: "Intern",
+        variant: "default",
+        className: "bg-gray-500 text-white hover:bg-gray-500",
+      };
+    case "FRESHER":
+      return {
+        label: "Fresher",
+        variant: "default",
+        className: "bg-green-500 text-white hover:bg-green-500",
+      };
+    case "JUNIOR":
+      return {
+        label: "Junior",
+        variant: "default",
+        className: "bg-blue-500 text-white hover:bg-blue-500",
+      };
+    case "MIDDLE":
+      return {
+        label: "Middle",
+        variant: "default",
+        className: "bg-purple-600 text-white hover:bg-purple-600",
+      };
+    default:
+      return { label: level || "Không rõ", variant: "outline" };
+  }
+}
+
