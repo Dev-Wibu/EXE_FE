@@ -151,8 +151,8 @@ export function CompanyHeroSection({ company }: CompanyHeroSectionProps) {
                   onClick={() => {
                     if (navigator.share) {
                       navigator.share({
-                        title: company.name || "Công ty",
-                        text: company.description || "",
+                        title: company.name,
+                        text: company.description,
                         url: window.location.href,
                       });
                     } else {

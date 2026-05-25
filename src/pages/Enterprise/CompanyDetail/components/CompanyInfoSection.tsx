@@ -56,8 +56,7 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                   </h3>
                 </div>
                 <p className="leading-relaxed text-slate-600 dark:text-slate-400">
-                  {company.description ||
-                    "Chúng tôi là một công ty công nghệ hàng đầu, chuyên cung cấp các giải pháp số toàn diện cho doanh nghiệp."}
+                  {company.description}
                 </p>
               </CardContent>
             </Card>
@@ -107,32 +106,40 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                       </h3>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          Nhân viên
-                        </span>
-                        <Badge variant="secondary">
-                          {stats.totalEmployees?.toLocaleString() || "350"}+
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          Vị trí đang tuyển
-                        </span>
-                        <Badge variant="secondary">{stats.openPositions || "12"}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          Buổi phỏng vấn/tháng
-                        </span>
-                        <Badge variant="secondary">{stats.interviewsPerMonth || "45"}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          Tỷ lệ tuyển dụng
-                        </span>
-                        <Badge variant="secondary">{stats.hiringRate || "78"}%</Badge>
-                      </div>
+                      {stats?.totalEmployees !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Nhân viên
+                          </span>
+                          <Badge variant="secondary">
+                            {stats.totalEmployees.toLocaleString()}+
+                          </Badge>
+                        </div>
+                      )}
+                      {stats?.openPositions !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Vị trí đang tuyển
+                          </span>
+                          <Badge variant="secondary">{stats.openPositions}</Badge>
+                        </div>
+                      )}
+                      {stats?.interviewsPerMonth !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Buổi phỏng vấn/tháng
+                          </span>
+                          <Badge variant="secondary">{stats.interviewsPerMonth}</Badge>
+                        </div>
+                      )}
+                      {stats?.hiringRate !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            Tỷ lệ tuyển dụng
+                          </span>
+                          <Badge variant="secondary">{stats.hiringRate}%</Badge>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -152,18 +159,24 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                     </h3>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Quy mô</span>
-                      <Badge variant="secondary">{company.size || "200-500"}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Địa điểm</span>
-                      <Badge variant="secondary">{company.location || "Hồ Chí Minh"}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 dark:text-slate-400">Thành lập</span>
-                      <Badge variant="secondary">{company.foundedYear || "2018"}</Badge>
-                    </div>
+                    {company.size && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">Quy mô</span>
+                        <Badge variant="secondary">{company.size}</Badge>
+                      </div>
+                    )}
+                    {company.location && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">Địa điểm</span>
+                        <Badge variant="secondary">{company.location}</Badge>
+                      </div>
+                    )}
+                    {company.foundedYear && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">Thành lập</span>
+                        <Badge variant="secondary">{company.foundedYear}</Badge>
+                      </div>
+                    )}
                     {company.industry && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-500 dark:text-slate-400">
