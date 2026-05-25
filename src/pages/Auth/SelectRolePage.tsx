@@ -1,7 +1,8 @@
 import { Check, User, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { Footer, Header } from "@/components/layouts";
+import { HomepageHeader } from "@/components/homepage-redesign";
+import { Footer } from "@/components/layouts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ export function SelectRolePage() {
         <div className="absolute top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#0047AB]/10 blur-3xl dark:bg-[#66B2FF]/10" />
       </div>
 
-      <Header />
+      <HomepageHeader />
 
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-5xl">
