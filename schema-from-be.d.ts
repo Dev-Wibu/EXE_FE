@@ -20,6 +20,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rounds/jd/{jdId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Thiết lập các vòng phỏng vấn cho một Job Description
+         * @description Cho phép nhà tuyển dụng thiết lập các vòng phỏng vấn cho một JD cụ thể.
+         */
+        put: operations["setUpRoundForJd"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rounds/jd/{jdId}/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Cập nhật các vòng phỏng vấn cho một Job Description
+         * @description Cho phép nhà tuyển dụng cập nhật các vòng phỏng vấn đã thiết lập cho một JD cụ thể.
+         */
+        put: operations["updateRoundForJd"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/question-categories": {
         parameters: {
             query?: never;
@@ -174,6 +214,41 @@ export interface paths {
         get: operations["getAllMajors"];
         put: operations["updateMajor"];
         post: operations["createMajor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/job-descriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all job descriptions */
+        get: operations["getAll"];
+        /** Update a job description */
+        put: operations["update"];
+        /** Create a new job description */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllCompanies"];
+        put: operations["updateCompany"];
+        post: operations["addCompany"];
         delete?: never;
         options?: never;
         head?: never;
@@ -426,7 +501,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getAll"];
+        get: operations["getAll_1"];
         put?: never;
         post: operations["createQuizSet"];
         delete?: never;
@@ -740,6 +815,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllApplications"];
+        put?: never;
+        post: operations["applyJd"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1575,6 +1666,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/job-descriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get job description by ID */
+        get: operations["getById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/job-descriptions/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search job descriptions by keyword and status */
+        get: operations["searchJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/job-descriptions/company/{companyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all job descriptions by company ID */
+        get: operations["getByCompanyId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interview-sessions/{sessionId}": {
         parameters: {
             query?: never;
@@ -1646,7 +1788,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getAll_1"];
+        get: operations["getAll_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1751,6 +1893,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCompanyById"];
+        put?: never;
+        post?: never;
+        delete: operations["deleteCompanyById"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/candidate-profiles/{userId}": {
         parameters: {
             query?: never;
@@ -1783,6 +1941,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApplicationById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllApplicationsByUserId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/posts/likes/{postId}/{userId}": {
         parameters: {
             query?: never;
@@ -1798,6 +1988,23 @@ export interface paths {
          * @description User unlike một bài viết
          */
         delete: operations["unlikePost"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/job-descriptions/{id}/soft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Soft delete a job description */
+        delete: operations["softDelete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1840,6 +2047,75 @@ export interface components {
             /** Format: int32 */
             totalPrice?: number;
             transactionCode?: string;
+        };
+        QuizQuestionDto: {
+            questionText: string;
+            options: string[];
+            correctAnswer: string;
+            /** Format: int32 */
+            points: number;
+        };
+        RoundConfigDto: {
+            instruction?: string;
+            submissionFormat?: string;
+            /** Format: int32 */
+            timeLimitMinutes?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            aiSystemPrompt?: string;
+            evaluationCriteria?: string;
+            quizQuestions?: components["schemas"]["QuizQuestionDto"][];
+        };
+        RoundItemDto: {
+            name: string;
+            /** Format: int32 */
+            roundOrder: number;
+            /** @enum {string} */
+            roundType: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "DB_DESIGN" | "AI_INTERVIEW";
+            /** Format: double */
+            passThreshold: number;
+            configData: components["schemas"]["RoundConfigDto"];
+        };
+        SetupJdRoundsRequest: {
+            rounds: components["schemas"]["RoundItemDto"][];
+        };
+        QuizQuestion: {
+            questionText?: string;
+            options?: string[];
+            correctAnswer?: string;
+            /** Format: int32 */
+            points?: number;
+        };
+        Round: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: int32 */
+            roundOrder?: number;
+            /** @enum {string} */
+            roundType?: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "DB_DESIGN" | "AI_INTERVIEW";
+            /** Format: double */
+            passThreshold?: number;
+            configData?: components["schemas"]["RoundConfig"];
+            isDeleted?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        RoundConfig: {
+            instruction?: string;
+            submissionFormat?: string;
+            /** Format: int32 */
+            timeLimitMinutes?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            aiSystemPrompt?: string;
+            evaluationCriteria?: string;
+            quizQuestions?: components["schemas"]["QuizQuestion"][];
+        };
+        UpdateJdRoundRequest: {
+            rounds: components["schemas"]["RoundItemDto"][];
         };
         QuestionLesson: {
             /** Format: int32 */
@@ -2012,6 +2288,78 @@ export interface components {
             id?: number;
             majorName?: string;
             description?: string;
+        };
+        UpdateJobDescriptionRequest: {
+            /** Format: int64 */
+            id?: number;
+            title?: string;
+            description?: string;
+            requirements?: string;
+            benefits?: string;
+            /** @enum {string} */
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            /** Format: double */
+            salaryMin?: number;
+            /** Format: double */
+            salaryMax?: number;
+            currency?: string;
+            /** @enum {string} */
+            status?: "OPEN" | "CLOSED" | "DRAFT";
+            /** Format: date-time */
+            deadlineAt?: string;
+        };
+        JobDescription: {
+            /** Format: int64 */
+            id?: number;
+            title?: string;
+            description?: string;
+            requirements?: string;
+            benefits?: string;
+            /** @enum {string} */
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            /** Format: double */
+            salaryMin?: number;
+            /** Format: double */
+            salaryMax?: number;
+            rounds?: components["schemas"]["Round"][];
+            /** Format: int32 */
+            appliedCount?: number;
+            currency?: string;
+            /** @enum {string} */
+            status?: "OPEN" | "CLOSED" | "DRAFT";
+            isDeleted?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
+            /** Format: date-time */
+            deadlineAt?: string;
+        };
+        UpdateCompanyRequest: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            description?: string;
+            status?: string;
+        };
+        Company: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            logoUrl?: string;
+            bannerUrl?: string;
+            description?: string;
+            status?: string;
+            isDeleted?: boolean;
+            jobDescriptions?: components["schemas"]["JobDescription"][];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            deletedAt?: string;
         };
         CandidateProfile: {
             /** Format: int32 */
@@ -2396,6 +2744,25 @@ export interface components {
             rating?: number;
             comment?: string;
         };
+        CreateJobDescriptionRequest: {
+            title?: string;
+            description?: string;
+            requirements?: string;
+            benefits?: string;
+            /** @enum {string} */
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            /** Format: double */
+            salaryMin?: number;
+            /** Format: double */
+            salaryMax?: number;
+            currency?: string;
+            /** @enum {string} */
+            status?: "OPEN" | "CLOSED" | "DRAFT";
+            /** Format: date-time */
+            deadlineAt?: string;
+            /** Format: int64 */
+            companyId?: number;
+        };
         BasicInfo: {
             job_title?: string;
             industry_domain?: string;
@@ -2435,9 +2802,33 @@ export interface components {
             status?: "TURNING_LEFT" | "TURNING_RIGHT" | "BOWING_HEAD" | "LOOKING_UP_HEAD" | "TOO_CLOSE" | "TOO_FAR" | "GLANCING_LEFT" | "GLANCING_RIGHT" | "LOOKING_UP_EYES" | "LOOKING_DOWN_EYES" | "NORMAL" | "UNKNOWN";
             warning?: boolean;
         };
+        CreateCompanyRequest: {
+            name?: string;
+            description?: string;
+            status?: string;
+        };
         LoginRequest: {
             email?: string;
             password?: string;
+        };
+        Application: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int32 */
+            userId?: number;
+            /** Format: int64 */
+            jdId?: number;
+            /** Format: int32 */
+            currentRoundOrder?: number;
+            /** @enum {string} */
+            status?: "IN_PROGRESS" | "PASSED" | "FAILED" | "SOFT_FAILED";
+            /** Format: double */
+            overallScore?: number;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         UserSubscriptionResponse: {
             /** @enum {string} */
@@ -2580,10 +2971,10 @@ export interface components {
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
         PagePostResponse: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
             pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
@@ -2846,8 +3237,8 @@ export interface components {
             defaultProfiles?: string[];
         };
         FilterRegistration: {
-            servletNameMappings?: string[];
             urlPatternMappings?: string[];
+            servletNameMappings?: string[];
             initParameters?: {
                 [key: string]: string;
             };
@@ -2869,18 +3260,18 @@ export interface components {
             taglibs?: components["schemas"]["TaglibDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
-            errorOnELNotFound?: string;
-            pageEncoding?: string;
             scriptingInvalid?: string;
             includePreludes?: string[];
             includeCodas?: string[];
             deferredSyntaxAllowedAsLiteral?: string;
+            errorOnUndeclaredNamespace?: string;
             elIgnored?: string;
             isXml?: string;
-            urlPatterns?: string[];
-            errorOnUndeclaredNamespace?: string;
-            defaultContentType?: string;
+            errorOnELNotFound?: string;
+            pageEncoding?: string;
             trimDirectiveWhitespaces?: string;
+            defaultContentType?: string;
+            urlPatterns?: string[];
             buffer?: string;
         };
         RedirectView: {
@@ -2915,31 +3306,14 @@ export interface components {
             };
         };
         ServletContext: {
+            initParameterNames?: unknown;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             /** Format: int32 */
             sessionTimeout?: number;
-            requestCharacterEncoding?: string;
-            responseCharacterEncoding?: string;
-            /** Format: int32 */
-            effectiveMajorVersion?: number;
-            /** Format: int32 */
-            effectiveMinorVersion?: number;
-            servletContextName?: string;
-            servletRegistrations?: {
-                [key: string]: components["schemas"]["ServletRegistration"];
-            };
-            filterRegistrations?: {
-                [key: string]: components["schemas"]["FilterRegistration"];
-            };
-            jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
-            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            serverInfo?: string;
             virtualServerName?: string;
             sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            initParameterNames?: unknown;
-            contextPath?: string;
             attributeNames?: unknown;
+            contextPath?: string;
             classLoader?: {
                 name?: string;
                 registeredAsParallelCapable?: boolean;
@@ -3004,6 +3378,23 @@ export interface components {
             majorVersion?: number;
             /** Format: int32 */
             minorVersion?: number;
+            requestCharacterEncoding?: string;
+            responseCharacterEncoding?: string;
+            /** Format: int32 */
+            effectiveMajorVersion?: number;
+            /** Format: int32 */
+            effectiveMinorVersion?: number;
+            servletContextName?: string;
+            servletRegistrations?: {
+                [key: string]: components["schemas"]["ServletRegistration"];
+            };
+            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            serverInfo?: string;
+            filterRegistrations?: {
+                [key: string]: components["schemas"]["FilterRegistration"];
+            };
+            jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
         };
         ServletRegistration: {
             runAsRole?: string;
@@ -3015,12 +3406,12 @@ export interface components {
             className?: string;
         };
         SessionCookieConfig: {
+            secure?: boolean;
             /** Format: int32 */
             maxAge?: number;
+            path?: string;
             domain?: string;
             httpOnly?: boolean;
-            path?: string;
-            secure?: boolean;
             name?: string;
             attributes?: {
                 [key: string]: string;
@@ -3081,6 +3472,58 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Session"];
+                };
+            };
+        };
+    };
+    setUpRoundForJd: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jdId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetupJdRoundsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Round"][];
+                };
+            };
+        };
+    };
+    updateRoundForJd: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jdId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateJdRoundRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Round"][];
                 };
             };
         };
@@ -3677,6 +4120,154 @@ export interface operations {
             };
         };
     };
+    getAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobDescription"][];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateJobDescriptionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobDescription"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateJobDescriptionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobDescription"];
+                };
+            };
+        };
+    };
+    getAllCompanies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": Record<string, never>;
+                };
+            };
+        };
+    };
+    updateCompany: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    data: components["schemas"]["UpdateCompanyRequest"];
+                    /** Format: binary */
+                    logo?: string;
+                    /** Format: binary */
+                    banner?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
+    addCompany: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    data: components["schemas"]["CreateCompanyRequest"];
+                    /** Format: binary */
+                    logo?: string;
+                    /** Format: binary */
+                    banner?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
     getAllProfile: {
         parameters: {
             query?: never;
@@ -4060,7 +4651,7 @@ export interface operations {
             };
         };
     };
-    getAll: {
+    getAll_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4591,6 +5182,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    getAllApplications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Application"][];
+                };
+            };
+        };
+    };
+    applyJd: {
+        parameters: {
+            query: {
+                jdId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Application"];
                 };
             };
         };
@@ -5868,6 +6501,76 @@ export interface operations {
             };
         };
     };
+    getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobDescription"];
+                };
+            };
+        };
+    };
+    searchJobs: {
+        parameters: {
+            query?: {
+                titleKeyword?: string;
+                status?: "OPEN" | "CLOSED" | "DRAFT";
+                level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+                salaryMin?: number;
+                salaryMax?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobDescription"][];
+                };
+            };
+        };
+    };
+    getByCompanyId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobDescription"][];
+                };
+            };
+        };
+    };
     getSessionById: {
         parameters: {
             query?: never;
@@ -5956,7 +6659,7 @@ export interface operations {
             };
         };
     };
-    getAll_1: {
+    getAll_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6098,6 +6801,50 @@ export interface operations {
             };
         };
     };
+    getCompanyById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Company"];
+                };
+            };
+        };
+    };
+    deleteCompanyById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": Record<string, never>;
+                };
+            };
+        };
+    };
     getByUserId: {
         parameters: {
             query?: never;
@@ -6140,6 +6887,48 @@ export interface operations {
             };
         };
     };
+    getApplicationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Application"];
+                };
+            };
+        };
+    };
+    getAllApplicationsByUserId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Application"][];
+                };
+            };
+        };
+    };
     unlikePost: {
         parameters: {
             query?: never;
@@ -6147,6 +6936,30 @@ export interface operations {
             path: {
                 postId: number;
                 userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    softDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
             };
             cookie?: never;
         };
