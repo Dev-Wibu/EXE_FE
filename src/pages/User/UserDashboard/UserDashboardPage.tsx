@@ -25,6 +25,7 @@ import {
   getInitialSidebarCollapsed,
   SettingsModal,
 } from "@/components/shared";
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
@@ -167,6 +168,7 @@ export function UserDashboardPage() {
   const location = useLocation();
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed(
       "user_dashboard_sidebar_collapsed",
@@ -204,6 +206,15 @@ export function UserDashboardPage() {
     activeTab: typedActiveTab,
     availableTabs: AVAILABLE_TABS,
   });
+
+  const shouldHideScrollButton =
+    location.pathname.startsWith("/user/ai-interview/session") ||
+    location.pathname.startsWith("/user/mock-interview/room/");
+
+  const handleContentRef = useCallback((node: HTMLDivElement | null) => {
+    contentRef.current = node;
+    setScrollTarget(node);
+  }, []);
 
   useDashboardScrollRestoration(contentRef, {
     enabled: typedActiveTab !== "messenger",
@@ -323,7 +334,7 @@ export function UserDashboardPage() {
           </div>
         </div>
         <div
-          ref={contentRef}
+          ref={handleContentRef}
           className={cn(
             "flex-1 overflow-hidden",
             typedActiveTab === "messenger" || typedActiveTab === "mentors"
@@ -332,6 +343,7 @@ export function UserDashboardPage() {
           )}>
           {outlet ?? renderContent()}
         </div>
+        <ScrollToTopButton target={scrollTarget} threshold={600} hidden={shouldHideScrollButton} />
       </div>
 
       <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

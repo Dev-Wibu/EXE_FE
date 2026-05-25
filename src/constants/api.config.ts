@@ -57,6 +57,7 @@ export const API_ENDPOINTS = {
     TOTAL_TRANSACTION: "/api/dashboard/total-transaction",
     TOTAL_INCOME: "/api/dashboard/total-income",
     FEATURE_USAGE_LOGS: "/api/feature-usage-logs",
+    FEATURE_USAGE_BY_FEATURE: "/api/feature-usage-logs/by-feature",
   },
 
   // Transaction endpoints - schema-first mapping (skeleton phase: constants only)
@@ -339,6 +340,40 @@ export const API_ENDPOINTS = {
     UNLIKE: "/api/posts/likes/:postId/:userId",
   },
 
+  // Companies endpoints - Based on schema-from-be.d.ts
+  COMPANIES: {
+    LIST: "/api/companies",
+    DETAIL: "/api/companies/:id",
+    CREATE: "/api/companies",
+    UPDATE: "/api/companies",
+    DELETE: "/api/companies/:id",
+  },
+
+  // Job Descriptions endpoints - Based on schema-from-be.d.ts
+  JOB_DESCRIPTIONS: {
+    LIST: "/api/job-descriptions",
+    DETAIL: "/api/job-descriptions/:id",
+    CREATE: "/api/job-descriptions",
+    UPDATE: "/api/job-descriptions",
+    SEARCH: "/api/job-descriptions/search",
+    BY_COMPANY: "/api/job-descriptions/company/:companyId",
+    SOFT_DELETE: "/api/job-descriptions/:id/soft",
+  },
+
+  // Interview rounds endpoints (Job Description rounds)
+  ROUNDS: {
+    SETUP_JD: "/api/rounds/jd/:jdId",
+    UPDATE_JD: "/api/rounds/jd/:jdId/update",
+  },
+
+  // Job applications endpoints
+  APPLICATIONS: {
+    LIST: "/api/applications",
+    DETAIL: "/api/applications/:id",
+    APPLY: "/api/applications",
+    MY: "/api/applications/me",
+  },
+
   // Interview Sessions endpoints - Based on schema-from-be.d.ts
   // POST /api/interview-sessions/create-session - createInterviewSession (JSON body)
   // POST /api/interview-sessions/generate-job-requirement - generateJobRequirement (JSON body)
@@ -348,6 +383,18 @@ export const API_ENDPOINTS = {
     GENERATE_JOB_REQUIREMENT: "/api/interview-sessions/generate-job-requirement",
     CONFIG_OPTIONS: "/api/interview-sessions/config-options",
     USER_SESSIONS: "/api/interview-sessions/user/:userId",
+    DETAIL: "/api/interview-sessions/:sessionId",
+    CACHE: "/api/interview-sessions/cache/:sessionKey",
+  },
+
+  // Interview analysis endpoints
+  INTERVIEW_ANALYSIS: {
+    FACE_BEHAVIOR: "/api/interview-analysis/face-behavior",
+  },
+
+  // Proctoring endpoints (v1)
+  PROCTORING: {
+    TRACK: "/api/v1/proctoring/track",
   },
 
   // Interview V1 endpoints - Based on schema-from-be.d.ts

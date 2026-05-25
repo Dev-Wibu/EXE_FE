@@ -32,8 +32,8 @@ export function extractDataArray<T>(response: ApiResponse<PaginatedResponse<T> |
 }
 
 /**
- * Formats a Date object to Vietnam timezone ISO-like string with +07:00 offset.
- * Example: 2026-02-24T10:30:00+07:00
+ * Formats a Date object to Vietnam timezone ISO-like string.
+ * Example: 2026-02-24T10:30:00
  */
 export function formatToVietnamISOString(date: Date): string {
   const formatter = new Intl.DateTimeFormat("sv-SE", {
@@ -58,15 +58,15 @@ export function formatToVietnamISOString(date: Date): string {
   const minute = get("minute");
   const second = get("second");
 
-  return `${year}-${month}-${day}T${hour}:${minute}:${second}+07:00`;
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 }
 
 /**
  * Converts datetime-local value (yyyy-MM-ddTHH:mm or yyyy-MM-ddTHH:mm:ss)
- * to Vietnam timezone string with +07:00 offset.
+ * to Vietnam timezone string.
  */
 export function datetimeLocalToVietnamISOString(value: string): string {
   const withoutTimezone = value.replace(/([zZ]|[+-]\d{2}:\d{2})$/, "");
   const withSeconds = withoutTimezone.length === 16 ? `${withoutTimezone}:00` : withoutTimezone;
-  return `${withSeconds}+07:00`;
+  return `${withSeconds}`;
 }

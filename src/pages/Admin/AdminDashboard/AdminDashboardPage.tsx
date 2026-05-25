@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpen,
+  Building2,
   CreditCard,
   FileQuestion,
   FileText,
@@ -18,6 +19,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import type {
   ChromeTabMenuAction,
@@ -31,11 +33,13 @@ import {
   getInitialSidebarCollapsed,
   SettingsModal,
 } from "@/components/shared";
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
 import { useSettingsStore } from "@/stores/settingsStore";
 
 import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
+import { CompanyManagementPage } from "../CompanyManagement";
 import { DashboardOverviewPage } from "../DashboardOverview";
 import { FeedbackManagementPage } from "../FeedbackManagement";
 import { MembershipPlanManagementPage } from "../MembershipPlanManagement";
@@ -66,6 +70,7 @@ type TabType =
   | "practiceQuestions"
   | "quizSets"
   | "posts"
+  | "companies"
   | "candidateProfiles"
   | "membershipPlans"
   | "transactionsPayments";
@@ -84,6 +89,7 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "practiceQuestions", label: "Câu hỏi ôn tập" },
   { type: "quizSets", label: "Bộ trắc nghiệm" },
   { type: "posts", label: "Bài viết & Cộng đồng" },
+  { type: "companies", label: "Quản lý công ty" },
   { type: "candidateProfiles", label: "Hồ sơ ứng viên" },
   { type: "membershipPlans", label: "Gói thành viên" },
   { type: "transactionsPayments", label: "Giao dịch & Thanh toán" },
@@ -107,6 +113,7 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   practiceQuestions: FileQuestion,
   quizSets: Trophy,
   posts: Newspaper,
+  companies: Building2,
   candidateProfiles: FileText,
   membershipPlans: CreditCard,
   transactionsPayments: Wallet,
@@ -126,6 +133,7 @@ const TAB_COLORS: Record<TabType, string> = {
   practiceQuestions: "text-emerald-600",
   quizSets: "text-amber-600",
   posts: "text-purple-500",
+  companies: "text-sky-600",
   candidateProfiles: "text-teal-600",
   membershipPlans: "text-rose-600",
   transactionsPayments: "text-indigo-600",
@@ -219,6 +227,12 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
         iconColor: "text-purple-500",
       },
       {
+        type: "companies",
+        label: "Quản lý công ty",
+        icon: Building2,
+        iconColor: "text-sky-600",
+      },
+      {
         type: "candidateProfiles",
         label: "Hồ sơ ứng viên",
         icon: FileText,
@@ -293,6 +307,12 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
         color: "text-purple-500",
       },
       {
+        type: "companies",
+        icon: Building2,
+        label: "Công ty",
+        color: "text-sky-600",
+      },
+      {
         type: "candidateProfiles",
         icon: FileText,
         label: "Hồ sơ ứng viên",
@@ -347,13 +367,16 @@ const validateChromeTabsMenuConfiguration = () => {
 };
 
 export function AdminDashboardPage() {
+  const navigate = useNavigate();
+  const { companyId } = useParams();
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
-  const { activeTab, openTabs, setActiveTab, openTab, closeTab, resetTabsTo } = useTabsState({
+  const { activeTab, openTabs, setActiveTab, closeTab, resetTabsTo } = useTabsState({
     storageKey: "admin",
     defaultTab: "dashboard",
     availableTabs: AVAILABLE_TABS,
   });
   const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed(
       "admin_sidebar_collapsed",
@@ -364,6 +387,16 @@ export function AdminDashboardPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
+
+  useEffect(() => {
+    if (!companyId) {
+      return;
+    }
+
+    if (activeTab !== "companies") {
+      setActiveTab("companies");
+    }
+  }, [activeTab, companyId, setActiveTab]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) {
@@ -402,33 +435,46 @@ export function AdminDashboardPage() {
     return activeTabData?.id || "";
   }, [openTabs, activeTab]);
 
+  const navigateToTab = useCallback(
+    (tabType: string) => {
+      if (companyId && tabType !== "companies") {
+        navigate(`/admin?tab=${tabType}`, { replace: true });
+      }
+      setActiveTab(tabType);
+    },
+    [companyId, navigate, setActiveTab]
+  );
+
   const handleTabSelect = useCallback(
     (tabId: string) => {
       const selectedTab = openTabs.find((tab) => tab.id === tabId);
       if (selectedTab) {
-        setActiveTab(selectedTab.type);
+        navigateToTab(selectedTab.type);
       }
     },
-    [openTabs, setActiveTab]
+    [navigateToTab, openTabs]
   );
 
   const handleNewTab = useCallback(
     (type: string) => {
-      openTab(type);
+      navigateToTab(type);
     },
-    [openTab]
+    [navigateToTab]
   );
 
   const handleSidebarNavigate = useCallback(
     (type: string) => {
-      setActiveTab(type);
+      navigateToTab(type);
     },
-    [setActiveTab]
+    [navigateToTab]
   );
 
   const handleCloseAllTabs = useCallback(() => {
+    if (companyId) {
+      navigate("/admin?tab=dashboard", { replace: true });
+    }
     resetTabsTo("dashboard");
-  }, [resetTabsTo]);
+  }, [companyId, navigate, resetTabsTo]);
 
   const closeAllDisabled = openTabs.length === 1 && openTabs[0]?.type === "dashboard";
 
@@ -474,6 +520,8 @@ export function AdminDashboardPage() {
         return <QuizSetManagementPage />;
       case "posts":
         return <PostManagementPage />;
+      case "companies":
+        return <CompanyManagementPage />;
       case "candidateProfiles":
         return <CandidateProfileManagementPage />;
       case "membershipPlans":
@@ -484,6 +532,11 @@ export function AdminDashboardPage() {
         return <div>Loại tab không hợp lệ</div>;
     }
   };
+
+  const handleContentRef = useCallback((node: HTMLDivElement | null) => {
+    contentRef.current = node;
+    setScrollTarget(node);
+  }, []);
 
   return (
     <div className="isolate flex h-screen bg-gray-50 dark:bg-slate-950">
@@ -561,9 +614,10 @@ export function AdminDashboardPage() {
           }}
         />
 
-        <div ref={contentRef} className="flex-1 overflow-auto">
+        <div ref={handleContentRef} className="flex-1 overflow-auto">
           {renderContent()}
         </div>
+        <ScrollToTopButton target={scrollTarget} threshold={600} />
       </div>
 
       <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

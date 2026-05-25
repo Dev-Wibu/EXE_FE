@@ -24,7 +24,7 @@ import {
   socketService,
   type ChatMessageDto,
   type SocketConnectionState,
-} from "@/services/socket.service";
+} from "@/services/socket.manager";
 import { useAuthStore } from "@/stores/authStore";
 import {
   ArrowLeft,
