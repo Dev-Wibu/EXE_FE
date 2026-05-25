@@ -14,6 +14,7 @@ import {
   SignupPage,
   WaitingAcceptMentorPage,
 } from "@/pages/Auth";
+import { CompanyDetailPage, CompanySearchPage, JobDescriptionDetailPage } from "@/pages/Enterprise";
 import {
   ForbiddenPage,
   GatewayTimeoutPage,
@@ -54,8 +55,10 @@ import {
   AIInterviewResultPage,
   AIInterviewSessionPage,
   AIInterviewSetupPage,
+  ApplicationHistoryPage,
   BookingSuccessPage,
   FeedbackDetailPage,
+  InterviewHistoryPage,
   MentorDetailPage,
   MockInterviewSchedulePage,
   MockInterviewSelectMentorPage,
@@ -116,6 +119,11 @@ function App() {
             <Route path="/questions/bank" element={<QuestionBankPage />} />
             <Route path="/questions/tips" element={<InterviewTipsPage />} />
 
+            {/* Enterprise Simulation pages (public) */}
+            <Route path="/enterprise/companies" element={<CompanySearchPage />} />
+            <Route path="/enterprise/company/:id" element={<CompanyDetailPage />} />
+            <Route path="/enterprise/job/:id" element={<JobDescriptionDetailPage />} />
+
             {/* Features pages (public) */}
             <Route path="/features/ai-interview" element={<AIInterviewFeaturePage />} />
             <Route path="/features/mentor-interview" element={<MentorInterviewFeaturePage />} />
@@ -175,6 +183,8 @@ function App() {
                 <Route path="practice/:id" element={<PracticeSetDetailPage />} />
                 <Route path="feedback/:id" element={<FeedbackDetailPage />} />
                 <Route path="mentors/:mentorId" element={<MentorDetailPage />} />
+                <Route path="interview-history" element={<InterviewHistoryPage />} />
+                <Route path="application-history" element={<ApplicationHistoryPage />} />
               </Route>
             </Route>
             {/* Backward-compat redirects for old /dashboard/* URLs */}

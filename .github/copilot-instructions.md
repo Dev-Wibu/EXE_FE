@@ -6,6 +6,7 @@
 - **Never edit `schema-from-be.d.ts`**: Auto-generated from backend OpenAPI. Regenerate with `pnpm generate-schema`.
 - **Quality gate**: Run `pnpm format && pnpm lint && pnpm typecheck && pnpm build` before finishing. All must pass.
 - **Path alias**: `@/` → `src/` (configured in `vite.config.ts` and `tsconfig.json`).
+- **Git commits**: NEVER add Co-authored-by or any AI attribution. All commits must belong to the user (user.name and user.email from git config). Never modify git user configuration or add co-authors.
 
 ## Comment Rules
 
@@ -194,3 +195,65 @@ These patterns were found and catalogued in `md/error.md`. Avoid introducing the
 - Do NOT name a file `PaymentPage` if it contains no payment logic. Name it after what it actually does.
 - Do NOT put production-used utility functions (e.g., `formatCurrency`) inside `mocks/` files. `mocks/` is for test/mock data only.
 - Do NOT place real page components inside a `mock/` sub-folder — that name implies test data.
+
+## Homepage Redesign Conventions
+
+### Naming Conventions
+
+- **Folder**: `src/components/homepage-redesign/` — chứa các component mới cho trang chủ đã được cải tiến
+- **Component naming**: Dùng prefix `Homepage` (ví dụ: `HomepageHeader`, `HomepageHero`, `HomepageFooter`)
+- **Không dùng tên**: `Stitch*`, `stitch*`, `HomepageStitch*` — đã deprecated
+
+### 3D Card Hover Effect
+
+Khi cần hiệu ứng 3D perspective tilt cho card (card nghiêng theo hướng chuột):
+
+```tsx
+import { useRef } from "react";
+
+export function My3DCard() {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = (y - centerY) / 25;
+    const rotateY = (centerX - x) / 25;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+  };
+
+  const handleMouseLeave = () => {
+    const card = cardRef.current;
+    if (card) {
+      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
+    }
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      className="transition-all duration-200 ease-out"
+      style={{ transformStyle: "preserve-3d" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* card content */}
+    </div>
+  );
+}
+```
+
+**Lưu ý quan trọng**:
+- Luôn dùng `useRef` để tránh re-render không cần thiết
+- Set `transformStyle: "preserve-3d"` trên element cần 3D transform
+- Reset transform về origin khi `mouseleave`
+- Effect intensity có thể điều chỉnh bằng cách thay đổi giá trị chia (vd: `/25` → `/15` cho effect mạnh hơn)

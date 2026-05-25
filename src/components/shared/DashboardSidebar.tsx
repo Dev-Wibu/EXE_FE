@@ -256,7 +256,7 @@ export function DashboardSidebar({
         key={item.type}
         onClick={() => handleNavigate(item.type)}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg text-sm font-medium transition-colors",
+          "flex w-full items-center gap-3 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
           isCollapsed ? cn("justify-center px-2", theme.itemPy) : cn("px-3", theme.itemPy),
           isActive ? theme.activeItem : theme.inactiveItem
         )}>
@@ -350,7 +350,7 @@ export function DashboardSidebar({
               setPinnedDesktopParent((prev) => (prev === item.type ? null : item.type))
             }
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+              "flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors",
               theme.itemPy,
               isActive ? theme.activeItem : theme.inactiveItem
             )}>
@@ -375,7 +375,8 @@ export function DashboardSidebar({
             className={cn(
               "absolute top-0 left-[calc(100%+0.5rem)] z-70 min-w-52 rounded-xl border bg-white p-1.5 shadow-lg dark:border-slate-700 dark:bg-slate-900",
               theme.flyoutBorder
-            )}>
+            )}
+            style={{ willChange: "opacity, transform" }}>
             <p className="px-2.5 pt-1 pb-1.5 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400">
               {item.label}
             </p>
@@ -408,7 +409,9 @@ export function DashboardSidebar({
         )}
 
         {!isCollapsed && isExpandedDropdownOpen && item.children && (
-          <div className="mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700/80">
+          <div
+            className="mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700/80"
+            style={{ willChange: "opacity, transform" }}>
             {item.children.map((child) => {
               const isChildActive = activeTab === child.type;
               return (
@@ -647,7 +650,8 @@ export function DashboardSidebar({
             "relative z-30 hidden flex-col overflow-visible transition-all duration-300 md:flex dark:border-slate-800 dark:bg-slate-900",
             isCollapsed ? theme.collapsedWidth || "w-16" : theme.expandedWidth,
             theme.wrapper
-          )}>
+          )}
+          style={{ contain: "layout style" }}>
           {showDesktopToggle && (
             <button
               type="button"
@@ -688,6 +692,7 @@ export function DashboardSidebar({
           <nav
             className={cn(
               theme.navWrapper,
+              "min-h-0 flex-shrink overflow-y-auto",
               isCollapsed ? theme.navCollapsedPadding : theme.navExpandedPadding
             )}>
             {menuGroups.map((group, groupIdx) => (
@@ -695,7 +700,13 @@ export function DashboardSidebar({
                 {groupIdx > 0 && (
                   <>
                     {!isCollapsed && group.label && (
-                      <p className={cn("mt-4 mb-2", theme.sectionLabel)}>{group.label}</p>
+                      <p
+                        className={cn(
+                          "mt-4 mb-2 border-b border-slate-200/70 pb-2",
+                          theme.sectionLabel
+                        )}>
+                        {group.label}
+                      </p>
                     )}
                     {isCollapsed && (
                       <div
@@ -710,7 +721,9 @@ export function DashboardSidebar({
                   </>
                 )}
                 {groupIdx === 0 && !isCollapsed && group.label && (
-                  <p className={cn("mb-2", theme.sectionLabel)}>{group.label}</p>
+                  <p className={cn("mb-2 border-b border-slate-200/70 pb-2", theme.sectionLabel)}>
+                    {group.label}
+                  </p>
                 )}
                 {group.items.map(renderMenuItem)}
               </div>
@@ -721,7 +734,7 @@ export function DashboardSidebar({
           <div
             className={cn(
               theme.footerBorder,
-              "dark:border-slate-800",
+              "flex-shrink-0 border-t border-slate-200 dark:border-slate-800",
               isCollapsed ? theme.footerCollapsedPadding : theme.footerExpandedPadding
             )}>
             {!isCollapsed ? (

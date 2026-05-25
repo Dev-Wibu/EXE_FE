@@ -18,9 +18,10 @@ function NavigationMenu({
       data-slot="navigation-menu"
       data-viewport={viewport}
       className={cn(
-        "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
+        "group/navigation-menu relative flex max-w-max items-center justify-center",
         className
       )}
+      style={{ isolation: "isolate" }}
       {...props}>
       {children}
       {viewport && <NavigationMenuViewport />}
