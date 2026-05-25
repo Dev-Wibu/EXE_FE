@@ -438,7 +438,7 @@ export function JobDescriptionDetailPage() {
                 hasApplied || job.status !== "OPEN"
                   ? "cursor-not-allowed bg-green-600 hover:bg-green-600"
                   : !isLoggedIn
-                    ? "bg-slate-400 hover:bg-slate-500 cursor-not-allowed"
+                    ? "cursor-not-allowed bg-slate-400 hover:bg-slate-500"
                     : "bg-[#0047AB] hover:bg-[#003d8f]"
               }`}
               size="lg">

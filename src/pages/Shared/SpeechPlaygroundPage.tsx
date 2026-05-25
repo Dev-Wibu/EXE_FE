@@ -1,8 +1,8 @@
 import { AlertTriangle, LoaderCircle, Square, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Footer } from "@/components/layouts";
 import { HomepageHeader } from "@/components/homepage-redesign";
+import { Footer } from "@/components/layouts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

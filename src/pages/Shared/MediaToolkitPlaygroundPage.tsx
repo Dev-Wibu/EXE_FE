@@ -1,8 +1,8 @@
 import { FileText, ImageIcon, Link2, UploadCloud } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Footer } from "@/components/layouts";
 import { HomepageHeader } from "@/components/homepage-redesign";
+import { Footer } from "@/components/layouts";
 import {
   ImageZoomPreview,
   MediaLightboxDialog,

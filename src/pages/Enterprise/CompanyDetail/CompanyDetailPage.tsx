@@ -9,8 +9,8 @@ import { useParams } from "react-router-dom";
 
 import { motion } from "framer-motion";
 
-import { Footer } from "@/components/layouts";
 import { HomepageHeader } from "@/components/homepage-redesign";
+import { Footer } from "@/components/layouts";
 import { Spinner } from "@/components/ui/spinner";
 import { companyManager, type Company, type JobDescription } from "@/services/company.manager";
 
@@ -229,10 +229,7 @@ export function CompanyDetailPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <HomepageHeader />
 
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}>
+      <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
         {/* Hero Section - Banner + Company Info */}
         <CompanyHeroSection company={company} />
 

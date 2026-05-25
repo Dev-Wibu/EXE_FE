@@ -108,19 +108,29 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Nhân viên</span>
-                        <Badge variant="secondary">{stats.totalEmployees?.toLocaleString() || "350"}+</Badge>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          Nhân viên
+                        </span>
+                        <Badge variant="secondary">
+                          {stats.totalEmployees?.toLocaleString() || "350"}+
+                        </Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Vị trí đang tuyển</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          Vị trí đang tuyển
+                        </span>
                         <Badge variant="secondary">{stats.openPositions || "12"}</Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Buổi phỏng vấn/tháng</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          Buổi phỏng vấn/tháng
+                        </span>
                         <Badge variant="secondary">{stats.interviewsPerMonth || "45"}</Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Tỷ lệ tuyển dụng</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          Tỷ lệ tuyển dụng
+                        </span>
                         <Badge variant="secondary">{stats.hiringRate || "78"}%</Badge>
                       </div>
                     </div>
@@ -156,7 +166,9 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                     </div>
                     {company.industry && (
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Ngành nghề</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          Ngành nghề
+                        </span>
                         <Badge variant="secondary">{company.industry}</Badge>
                       </div>
                     )}
