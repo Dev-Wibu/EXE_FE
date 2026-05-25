@@ -121,7 +121,7 @@ const MOCK_JOBS: JobDescription[] = [
       "- 4+ năm kinh nghiệm với Go\n- Kinh nghiệm với microservices\n- Hiểu biết về Kubernetes\n- Khả năng thiết kế hệ thống",
     benefits:
       "- Lương: 40.000.000 - 70.000.000 VND\n- Thưởng hiệu suất cao\n- Cổ phần công ty\n- Lịch làm việc linh hoạt",
-    level: "SENIOR",
+    level: "MIDDLE",
     salaryMin: 40000000,
     salaryMax: 70000000,
     appliedCount: 8,

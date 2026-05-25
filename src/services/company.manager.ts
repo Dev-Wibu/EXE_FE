@@ -4,13 +4,12 @@
  * Implements BaseManager interface
  */
 
-import type { 
-  ApiResponse, 
-  BaseManager, 
-  PaginatedResponse, 
-  PaginationParams,
+import type {
+  ApiResponse,
   CreateCompanyRequest,
-  UpdateCompanyRequest
+  PaginatedResponse,
+  PaginationParams,
+  UpdateCompanyRequest,
 } from "@/interfaces";
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
@@ -83,7 +82,7 @@ export interface JobDescription {
   description?: string;
   requirements?: string;
   benefits?: string;
-  level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
+  level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
   salaryMin?: number;
   salaryMax?: number;
   appliedCount?: number;
@@ -143,7 +142,7 @@ const buildCompanyFormData = (
 // ==========================================
 // 3. MAIN MANAGER CLASS
 // ==========================================
-export class CompanyManager implements BaseManager<Company> {
+export class CompanyManager {
   private api = createApiInstance();
 
   // Kết hợp flexible parse của feat và endpoint chuẩn của main
@@ -152,7 +151,7 @@ export class CompanyManager implements BaseManager<Company> {
   ): Promise<ApiResponse<PaginatedResponse<Company> | Company[]>> {
     try {
       // Fallback string nếu API_ENDPOINTS chưa có
-      const url = API_ENDPOINTS?.COMPANIES?.LIST || "/api/companies"; 
+      const url = API_ENDPOINTS?.COMPANIES?.LIST || "/api/companies";
       const response = await this.api.get(url, { params });
       const data = response.data;
 
@@ -185,8 +184,8 @@ export class CompanyManager implements BaseManager<Company> {
 
   async getById(id: number | string): Promise<ApiResponse<Company>> {
     try {
-      const endpoint = API_ENDPOINTS?.COMPANIES?.DETAIL 
-        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DETAIL, { id }) 
+      const endpoint = API_ENDPOINTS?.COMPANIES?.DETAIL
+        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DETAIL, { id })
         : `/api/companies/${id}`;
       const response = await this.api.get<Company>(endpoint);
       return { success: true, data: response.data };
@@ -234,8 +233,8 @@ export class CompanyManager implements BaseManager<Company> {
 
   async delete(id: number | string): Promise<ApiResponse<void>> {
     try {
-      const endpoint = API_ENDPOINTS?.COMPANIES?.DELETE 
-        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DELETE, { id }) 
+      const endpoint = API_ENDPOINTS?.COMPANIES?.DELETE
+        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DELETE, { id })
         : `/api/companies/${id}`;
       await this.api.delete(endpoint);
       return { success: true };
@@ -250,7 +249,7 @@ export class CompanyManager implements BaseManager<Company> {
   // ==========================================
   // CÁC HÀM TỪ NHÁNH FEAT (BẢO LƯU HOÀN TOÀN)
   // ==========================================
-  
+
   async getDetail(id: string | number): Promise<ApiResponse<CompanyDetail>> {
     try {
       const response = await this.api.get(`/api/companies/${id}/detail`);
