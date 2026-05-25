@@ -4,10 +4,20 @@
  * Implements BaseManager interface
  */
 
-import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
+import type { 
+  ApiResponse, 
+  BaseManager, 
+  PaginatedResponse, 
+  PaginationParams,
+  CreateCompanyRequest,
+  UpdateCompanyRequest
+} from "@/interfaces";
 
-import { createApiInstance } from "@/constants/api.config";
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
+// ==========================================
+// 1. INTERFACES DÀNH CHO UI (Từ nhánh feat)
+// ==========================================
 export interface Company {
   id?: number;
   name?: string;
@@ -96,14 +106,54 @@ export interface CompanyDetail extends Company {
   jobDescriptions?: JobDescription[];
 }
 
+// ==========================================
+// 2. PAYLOAD & HELPER (Từ nhánh main)
+// ==========================================
+export interface CreateCompanyPayload {
+  data: CreateCompanyRequest;
+  logo?: File;
+  banner?: File;
+}
+
+export interface UpdateCompanyPayload {
+  data: UpdateCompanyRequest;
+  logo?: File;
+  banner?: File;
+}
+
+const buildCompanyFormData = (
+  data: CreateCompanyRequest | UpdateCompanyRequest,
+  logo?: File,
+  banner?: File
+): FormData => {
+  const formData = new FormData();
+  formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }));
+
+  if (logo) {
+    formData.append("logo", logo);
+  }
+
+  if (banner) {
+    formData.append("banner", banner);
+  }
+
+  return formData;
+};
+
+// ==========================================
+// 3. MAIN MANAGER CLASS
+// ==========================================
 export class CompanyManager implements BaseManager<Company> {
   private api = createApiInstance();
 
+  // Kết hợp flexible parse của feat và endpoint chuẩn của main
   async getAll(
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<Company> | Company[]>> {
     try {
-      const response = await this.api.get("/api/companies", { params });
+      // Fallback string nếu API_ENDPOINTS chưa có
+      const url = API_ENDPOINTS?.COMPANIES?.LIST || "/api/companies"; 
+      const response = await this.api.get(url, { params });
       const data = response.data;
 
       let companyList: Company[] = [];
@@ -124,10 +174,7 @@ export class CompanyManager implements BaseManager<Company> {
         }
       }
 
-      return {
-        success: true,
-        data: companyList,
-      };
+      return { success: true, data: companyList };
     } catch (error) {
       return {
         success: false,
@@ -136,13 +183,13 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  async getById(id: string | number): Promise<ApiResponse<Company>> {
+  async getById(id: number | string): Promise<ApiResponse<Company>> {
     try {
-      const response = await this.api.get(`/api/companies/${id}`);
-      return {
-        success: true,
-        data: response.data,
-      };
+      const endpoint = API_ENDPOINTS?.COMPANIES?.DETAIL 
+        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DETAIL, { id }) 
+        : `/api/companies/${id}`;
+      const response = await this.api.get<Company>(endpoint);
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
@@ -151,27 +198,15 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  async create(_data: Partial<Company>): Promise<ApiResponse<Company>> {
+  // Sử dụng cấu trúc FormData an toàn từ main
+  async create(payload: CreateCompanyPayload): Promise<ApiResponse<Company>> {
     try {
-      const formData = new FormData();
-      Object.entries(_data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (typeof value === "object") {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, String(value));
-          }
-        }
+      const formData = buildCompanyFormData(payload.data, payload.logo, payload.banner);
+      const url = API_ENDPOINTS?.COMPANIES?.CREATE || "/api/companies";
+      const response = await this.api.post<Company>(url, formData, {
+        headers: { "Content-Type": undefined },
       });
-
-      const response = await this.api.post("/api/companies", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      return {
-        success: true,
-        data: response.data,
-      };
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
@@ -180,28 +215,15 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  async update(id: string | number, _data: Partial<Company>): Promise<ApiResponse<Company>> {
+  // Sử dụng cấu trúc FormData an toàn từ main
+  async update(payload: UpdateCompanyPayload): Promise<ApiResponse<Company>> {
     try {
-      const formData = new FormData();
-      formData.append("id", String(id));
-      Object.entries(_data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (typeof value === "object") {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, String(value));
-          }
-        }
+      const formData = buildCompanyFormData(payload.data, payload.logo, payload.banner);
+      const url = API_ENDPOINTS?.COMPANIES?.UPDATE || "/api/companies";
+      const response = await this.api.put<Company>(url, formData, {
+        headers: { "Content-Type": undefined },
       });
-
-      const response = await this.api.put("/api/companies", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      return {
-        success: true,
-        data: response.data,
-      };
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
@@ -210,9 +232,12 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  async delete(id: string | number): Promise<ApiResponse<void>> {
+  async delete(id: number | string): Promise<ApiResponse<void>> {
     try {
-      await this.api.delete(`/api/companies/${id}`);
+      const endpoint = API_ENDPOINTS?.COMPANIES?.DELETE 
+        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DELETE, { id }) 
+        : `/api/companies/${id}`;
+      await this.api.delete(endpoint);
       return { success: true };
     } catch (error) {
       return {
@@ -222,17 +247,14 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  /**
-   * Get company detail with jobs
-   * GET /api/companies/{id}/detail
-   */
+  // ==========================================
+  // CÁC HÀM TỪ NHÁNH FEAT (BẢO LƯU HOÀN TOÀN)
+  // ==========================================
+  
   async getDetail(id: string | number): Promise<ApiResponse<CompanyDetail>> {
     try {
       const response = await this.api.get(`/api/companies/${id}/detail`);
-      return {
-        success: true,
-        data: response.data,
-      };
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,
@@ -241,10 +263,6 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  /**
-   * Get job listings for a company
-   * GET /api/job-descriptions/company/{companyId}
-   */
   async getJobs(
     id: string | number,
     params?: PaginationParams
@@ -265,10 +283,7 @@ export class CompanyManager implements BaseManager<Company> {
         }
       }
 
-      return {
-        success: true,
-        data: jobs,
-      };
+      return { success: true, data: jobs };
     } catch (error) {
       return {
         success: false,
@@ -277,10 +292,6 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  /**
-   * Search job descriptions
-   * GET /api/job-descriptions/search
-   */
   async searchJobs(params: {
     titleKeyword?: string;
     status?: "OPEN" | "CLOSED" | "DRAFT";
@@ -302,10 +313,7 @@ export class CompanyManager implements BaseManager<Company> {
         }
       }
 
-      return {
-        success: true,
-        data: jobs,
-      };
+      return { success: true, data: jobs };
     } catch (error) {
       return {
         success: false,
@@ -314,17 +322,10 @@ export class CompanyManager implements BaseManager<Company> {
     }
   }
 
-  /**
-   * Get job description by ID
-   * GET /api/job-descriptions/{id}
-   */
   async getJobById(id: number): Promise<ApiResponse<JobDescription>> {
     try {
       const response = await this.api.get(`/api/job-descriptions/${id}`);
-      return {
-        success: true,
-        data: response.data,
-      };
+      return { success: true, data: response.data };
     } catch (error) {
       return {
         success: false,

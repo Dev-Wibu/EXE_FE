@@ -1,5 +1,6 @@
 export { AdminDashboardPage } from "./AdminDashboard";
 export { CandidateProfileManagementPage } from "./CandidateProfileManagement";
+export { CompanyManagementPage } from "./CompanyManagement";
 export { DashboardOverviewPage } from "./DashboardOverview";
 export { FeedbackManagementPage } from "./FeedbackManagement";
 export { MembershipPlanManagementPage } from "./MembershipPlanManagement";

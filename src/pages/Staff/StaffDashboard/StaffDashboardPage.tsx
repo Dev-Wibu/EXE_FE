@@ -9,6 +9,7 @@ import {
   getInitialSidebarCollapsed,
   SettingsModal,
 } from "@/components/shared";
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useSettingsStore } from "@/stores/settingsStore";
 
@@ -150,6 +151,7 @@ const STAFF_SIDEBAR_LOGO_COLLAPSED = (
 export function StaffDashboardPage() {
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed(
       "staff_sidebar_collapsed",
@@ -231,6 +233,11 @@ export function StaffDashboardPage() {
     }
   };
 
+  const handleContentRef = useCallback((node: HTMLDivElement | null) => {
+    contentRef.current = node;
+    setScrollTarget(node);
+  }, []);
+
   return (
     <div className="isolate flex h-screen bg-gray-50 dark:bg-slate-950">
       <DashboardSidebar
@@ -306,9 +313,10 @@ export function StaffDashboardPage() {
           }}
         />
 
-        <div ref={contentRef} className="flex-1 overflow-auto">
+        <div ref={handleContentRef} className="flex-1 overflow-auto">
           {renderContent()}
         </div>
+        <ScrollToTopButton target={scrollTarget} threshold={600} />
       </div>
 
       <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

@@ -22,6 +22,7 @@ import {
   getInitialSidebarCollapsed,
   SettingsModal,
 } from "@/components/shared";
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
@@ -115,6 +116,7 @@ export function MentorDashboardPage() {
   const location = useLocation();
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
     getInitialSidebarCollapsed(
       "mentor_dashboard_sidebar_collapsed",
@@ -152,6 +154,13 @@ export function MentorDashboardPage() {
     activeTab: typedActiveTab,
     availableTabs: AVAILABLE_TABS,
   });
+
+  const shouldHideScrollButton = location.pathname.startsWith("/mentor/sessions/room/");
+
+  const handleContentRef = useCallback((node: HTMLDivElement | null) => {
+    contentRef.current = node;
+    setScrollTarget(node);
+  }, []);
 
   useDashboardScrollRestoration(contentRef, {
     enabled: typedActiveTab !== "messenger",
@@ -258,13 +267,14 @@ export function MentorDashboardPage() {
           </div>
         </div>
         <div
-          ref={contentRef}
+          ref={handleContentRef}
           className={cn(
             "flex-1 overflow-hidden",
             typedActiveTab === "messenger" ? "p-0" : "overflow-auto p-6"
           )}>
           {outlet ?? renderContent()}
         </div>
+        <ScrollToTopButton target={scrollTarget} threshold={600} hidden={shouldHideScrollButton} />
       </div>
 
       <SettingsModal open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

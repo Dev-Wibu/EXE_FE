@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthLayout } from "@/components/layouts";
 import { ProtectedRoute, PublicOnlyRoute, SessionExpiryGuard } from "@/components/shared";
+import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/contexts/QueryProvider";
 import { AdminDashboardPage } from "@/pages/Admin";
@@ -83,6 +84,19 @@ function QueryHashRedirect({ to }: { to: string }) {
   return <Navigate to={`${to}${search}${hash}`} replace />;
 }
 
+function PublicScrollToTopButton() {
+  const { pathname } = useLocation();
+  const isDashboardRoute = ["/user", "/mentor", "/admin", "/staff"].some((prefix) =>
+    pathname.startsWith(prefix)
+  );
+
+  if (isDashboardRoute) {
+    return null;
+  }
+
+  return <ScrollToTopButton threshold={600} />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -90,6 +104,7 @@ function App() {
         <Toaster />
         <BrowserRouter>
           <SessionExpiryGuard />
+          <PublicScrollToTopButton />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
@@ -272,6 +287,7 @@ function App() {
             {/* Admin Management routes */}
             <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin/companies/:companyId" element={<AdminDashboardPage />} />
             </Route>
             {/* Redirect routes for backward compatibility - redirect /admin/* to /admin?tab=* */}
             <Route
@@ -310,6 +326,10 @@ function App() {
             />
             <Route path="/admin/quizSets" element={<Navigate to="/admin?tab=quizSets" replace />} />
             <Route path="/admin/posts" element={<Navigate to="/admin?tab=posts" replace />} />
+            <Route
+              path="/admin/companies"
+              element={<Navigate to="/admin?tab=companies" replace />}
+            />
             <Route
               path="/admin/candidateProfiles"
               element={<Navigate to="/admin?tab=candidateProfiles" replace />}

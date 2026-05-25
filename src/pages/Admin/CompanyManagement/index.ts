@@ -1,0 +1,1 @@
+export { CompanyManagementPage } from "./CompanyManagementPage";

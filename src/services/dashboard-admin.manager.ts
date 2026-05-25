@@ -6,6 +6,7 @@
 import { API_ENDPOINTS, createApiInstance } from "@/constants/api.config";
 import type {
   ApiResponse,
+  FeatureName,
   FeatureUsageLog,
   PaymentEntity,
   TransactionEntity,
@@ -119,6 +120,28 @@ export class DashboardAdminManager {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Không thể lấy nhật ký sử dụng tính năng",
+      };
+    }
+  }
+
+  /**
+   * Get feature usage logs filtered by feature name
+   */
+  async getFeatureUsageLogsByFeature(
+    featureName: FeatureName
+  ): Promise<ApiResponse<FeatureUsageLog[]>> {
+    try {
+      const response = await this.api.get(API_ENDPOINTS.DASHBOARD.FEATURE_USAGE_BY_FEATURE, {
+        params: { featureName },
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Không thể lọc nhật ký sử dụng tính năng",
       };
     }
   }
