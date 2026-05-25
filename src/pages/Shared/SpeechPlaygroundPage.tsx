@@ -1,7 +1,8 @@
 import { AlertTriangle, LoaderCircle, Square, Volume2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Footer, Header } from "@/components/layouts";
+import { Footer } from "@/components/layouts";
+import { HomepageHeader } from "@/components/homepage-redesign";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -296,7 +297,7 @@ export function SpeechPlaygroundPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 dark:bg-slate-950">
-      <Header />
+      <HomepageHeader />
 
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
