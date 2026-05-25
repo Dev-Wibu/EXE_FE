@@ -208,7 +208,9 @@ export function Header() {
             /* ── Logged-in: avatar dropdown ── */
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-slate-100 focus:outline-none dark:hover:bg-slate-800">
+                <button
+                  className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-slate-100 focus:outline-none dark:hover:bg-slate-800"
+                  style={{ minWidth: "2.5rem" }}>
                   <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
                     <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name ?? "User"} />
                     <AvatarFallback className="bg-[#DCEEFF] text-xs font-semibold text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]">
