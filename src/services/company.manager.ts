@@ -294,7 +294,7 @@ export class CompanyManager {
   async searchJobs(params: {
     titleKeyword?: string;
     status?: "OPEN" | "CLOSED" | "DRAFT";
-    level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+    level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
     salaryMin?: number;
     salaryMax?: number;
   }): Promise<ApiResponse<JobDescription[]>> {

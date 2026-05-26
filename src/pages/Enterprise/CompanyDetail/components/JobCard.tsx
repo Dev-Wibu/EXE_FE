@@ -4,8 +4,7 @@
  */
 
 import type { JobDescription } from "@/services/company.manager";
-import { Bot, Clock, DollarSign, Eye, MapPin, Users } from "lucide-react";
-import { useRef } from "react";
+import { Clock, DollarSign, Eye, MapPin, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -79,11 +78,7 @@ export function JobCard({ job }: JobCardProps) {
   const isHot = job.level === "MIDDLE";
 
   return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="group relative overflow-hidden rounded-2xl border border-slate-200/50 bg-white p-5 shadow-sm transition-all hover:shadow-xl sm:p-6 dark:border-slate-700/50 dark:bg-slate-900">
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/50 bg-white p-5 shadow-sm transition-all hover:shadow-xl sm:p-6 dark:border-slate-700/50 dark:bg-slate-900">
       <div className="flex flex-col gap-4">
         {/* Top Row: Title + Badges */}
         <div className="flex flex-col gap-2">
@@ -161,24 +156,14 @@ export function JobCard({ job }: JobCardProps) {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
+        {/* Action Button */}
+        <div className="pt-2">
           <Button
-            className="flex-1 gap-2 bg-gradient-to-r from-[#0047AB] to-[#007BFF] text-white hover:opacity-90"
+            className="w-full gap-2 bg-gradient-to-r from-[#0047AB] to-[#007BFF] text-white hover:opacity-90"
             asChild>
             <Link to={`/enterprise/job/${job.id}`}>
               <Eye className="h-4 w-4" />
               Xem chi tiết
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 gap-2 border-[#0047AB] text-[#0047AB] hover:bg-[#0047AB]/10 dark:border-[#66B2FF] dark:text-[#66B2FF]"
-            asChild>
-            <Link
-              to={`/user/ai-interview/setup?company=${job.companyId || ""}&job=${job.id || ""}`}>
-              <Bot className="h-4 w-4" />
-              Phỏng vấn ảo
             </Link>
           </Button>
         </div>

@@ -9,7 +9,6 @@ import {
   DollarSign,
   MapPin,
   Users,
-  Video,
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -190,24 +189,6 @@ export function JobDescriptionDetailPage() {
     }
   };
 
-  const handleAIInterview = () => {
-    if (!isLoggedIn) {
-      toast.info("Vui lòng đăng nhập để sử dụng tính năng này");
-      navigate(`/login?redirect=/user/ai-interview/setup?jdId=${id}`);
-      return;
-    }
-    navigate(`/user/ai-interview/setup?jdId=${id}`);
-  };
-
-  const handleMentorInterview = () => {
-    if (!isLoggedIn) {
-      toast.info("Vui lòng đăng nhập để sử dụng tính năng này");
-      navigate(`/login?redirect=/features/mentor-interview`);
-      return;
-    }
-    navigate(`/features/mentor-interview`);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -296,22 +277,33 @@ export function JobDescriptionDetailPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  onClick={handleAIInterview}
-                  className="gap-2 bg-gradient-to-r from-[#0047AB] to-[#007BFF] text-white hover:opacity-90">
-                  <Bot className="h-4 w-4" />
-                  Phỏng vấn với AI
-                </Button>
-                <Button
-                  onClick={handleMentorInterview}
-                  variant="outline"
-                  className="gap-2 border-[#0047AB] text-[#0047AB] hover:bg-[#0047AB]/10 dark:border-[#66B2FF] dark:text-[#66B2FF]">
-                  <Video className="h-4 w-4" />
-                  Phỏng vấn Mentor
-                </Button>
-              </div>
+              {/* Action Buttons - Apply */}
+              <Button
+                onClick={handleApply}
+                disabled={isApplying || job.status !== "OPEN" || hasApplied}
+                className={`text-white ${
+                  hasApplied || job.status !== "OPEN"
+                    ? "cursor-not-allowed bg-green-600 hover:bg-green-600"
+                    : !isLoggedIn
+                      ? "cursor-not-allowed bg-slate-400 hover:bg-slate-500"
+                      : "bg-[#0047AB] hover:bg-[#003d8f]"
+                }`}
+                size="lg">
+                {isApplying ? (
+                  <>
+                    <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Đang xử lý...
+                  </>
+                ) : hasApplied ? (
+                  "Đã ứng tuyển ✓"
+                ) : job.status !== "OPEN" ? (
+                  "Đã đóng tuyển"
+                ) : !isLoggedIn ? (
+                  "Đăng nhập để ứng tuyển"
+                ) : (
+                  "Ứng tuyển ngay"
+                )}
+              </Button>
             </div>
 
             {/* Deadline */}
@@ -539,29 +531,6 @@ export function JobDescriptionDetailPage() {
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* AI Interview Promo */}
-            <Card className="border-[#0047AB]/30 bg-gradient-to-br from-[#0047AB]/5 to-[#007BFF]/5 dark:border-[#66B2FF]/20 dark:from-[#0047AB]/10 dark:to-[#007BFF]/10">
-              <CardContent className="p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-[#0047AB]" />
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    Phỏng vấn ảo với AI
-                  </span>
-                </div>
-                <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-                  Trải nghiệm phỏng vấn với AI được thiết kế riêng cho vị trí này.
-                </p>
-                <Button
-                  onClick={handleAIInterview}
-                  variant="outline"
-                  className="w-full gap-2"
-                  size="sm">
-                  <Bot className="h-4 w-4" />
-                  Bắt đầu ngay
-                </Button>
               </CardContent>
             </Card>
           </div>
