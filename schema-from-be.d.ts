@@ -2157,7 +2157,7 @@ export interface components {
             practiceSetName?: string;
             objective?: string;
             /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
             /** Format: date-time */
             startDate?: string;
             /** @enum {string} */
@@ -2297,7 +2297,7 @@ export interface components {
             requirements?: string;
             benefits?: string;
             /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
             /** Format: double */
             salaryMin?: number;
             /** Format: double */
@@ -2316,7 +2316,7 @@ export interface components {
             requirements?: string;
             benefits?: string;
             /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
             /** Format: double */
             salaryMin?: number;
             /** Format: double */
@@ -2750,7 +2750,7 @@ export interface components {
             requirements?: string;
             benefits?: string;
             /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
             /** Format: double */
             salaryMin?: number;
             /** Format: double */
@@ -2908,7 +2908,7 @@ export interface components {
             practiceSetName?: string;
             objective?: string;
             /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
             /** Format: date-time */
             startDate?: string;
             /** Format: int32 */
@@ -6528,7 +6528,7 @@ export interface operations {
             query?: {
                 titleKeyword?: string;
                 status?: "OPEN" | "CLOSED" | "DRAFT";
-                level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+                level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
                 salaryMin?: number;
                 salaryMax?: number;
             };

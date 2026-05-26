@@ -6,7 +6,6 @@
 
 import type { 
   ApiResponse, 
-  BaseManager, 
   PaginatedResponse, 
   PaginationParams,
   CreateCompanyRequest,
@@ -143,7 +142,7 @@ const buildCompanyFormData = (
 // ==========================================
 // 3. MAIN MANAGER CLASS
 // ==========================================
-export class CompanyManager implements BaseManager<Company> {
+export class CompanyManager {
   private api = createApiInstance();
 
   // Kết hợp flexible parse của feat và endpoint chuẩn của main
@@ -295,7 +294,7 @@ export class CompanyManager implements BaseManager<Company> {
   async searchJobs(params: {
     titleKeyword?: string;
     status?: "OPEN" | "CLOSED" | "DRAFT";
-    level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
+    level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE" | "SENIOR";
     salaryMin?: number;
     salaryMax?: number;
   }): Promise<ApiResponse<JobDescription[]>> {
