@@ -4,9 +4,8 @@
  */
 
 import type { Company } from "@/services/company.manager";
-import { Award, BookOpen, Briefcase, Lightbulb, Shield, TrendingUp, Users } from "lucide-react";
+import { Award, BookOpen, Briefcase, Lightbulb, Shield, TrendingUp } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface CompanyInfoSectionProps {
@@ -14,7 +13,6 @@ interface CompanyInfoSectionProps {
 }
 
 export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
-  const stats = company.stats;
   const benefits = company.benefits || [];
 
   const benefitIcons: Record<string, React.ReactNode> = {
@@ -41,8 +39,8 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3 lg:items-start">
-          {/* Left: About + Benefits (spans 2 columns) */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Left: About + Benefits (Full width) */}
           <div className="space-y-6 lg:col-span-2">
             {/* About */}
             <Card className="border-slate-200 dark:border-slate-700">
@@ -84,107 +82,6 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                         </span>
                       </div>
                     ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Right: Stats (1 column) */}
-          <div className="space-y-3">
-            {/* Stat Cards */}
-            {stats && (
-              <div className="space-y-3">
-                <Card className="border-[#0047AB]/20 bg-gradient-to-br from-[#0047AB]/5 to-[#007BFF]/5 dark:border-[#66B2FF]/20 dark:from-[#0047AB]/10 dark:to-[#007BFF]/10">
-                  <CardContent className="p-5 sm:p-6">
-                    <div className="mb-4 flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0047AB]/10">
-                        <Users className="h-5 w-5 text-[#0047AB]" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                        Thông tin nhanh
-                      </h3>
-                    </div>
-                    <div className="space-y-3">
-                      {stats?.totalEmployees !== undefined && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Nhân viên
-                          </span>
-                          <Badge variant="secondary">
-                            {stats.totalEmployees.toLocaleString()}+
-                          </Badge>
-                        </div>
-                      )}
-                      {stats?.openPositions !== undefined && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Vị trí đang tuyển
-                          </span>
-                          <Badge variant="secondary">{stats.openPositions}</Badge>
-                        </div>
-                      )}
-                      {stats?.interviewsPerMonth !== undefined && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Buổi phỏng vấn/tháng
-                          </span>
-                          <Badge variant="secondary">{stats.interviewsPerMonth}</Badge>
-                        </div>
-                      )}
-                      {stats?.hiringRate !== undefined && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            Tỷ lệ tuyển dụng
-                          </span>
-                          <Badge variant="secondary">{stats.hiringRate}%</Badge>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Quick Info if no stats */}
-            {!stats && (
-              <Card className="border-slate-200 dark:border-slate-700">
-                <CardContent className="p-5 sm:p-6">
-                  <div className="mb-4 flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0047AB]/10">
-                      <Users className="h-5 w-5 text-[#0047AB]" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      Thông tin nhanh
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    {company.size && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Quy mô</span>
-                        <Badge variant="secondary">{company.size}</Badge>
-                      </div>
-                    )}
-                    {company.location && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Địa điểm</span>
-                        <Badge variant="secondary">{company.location}</Badge>
-                      </div>
-                    )}
-                    {company.foundedYear && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Thành lập</span>
-                        <Badge variant="secondary">{company.foundedYear}</Badge>
-                      </div>
-                    )}
-                    {company.industry && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          Ngành nghề
-                        </span>
-                        <Badge variant="secondary">{company.industry}</Badge>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
