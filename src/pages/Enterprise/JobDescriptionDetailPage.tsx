@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { applicationService } from "@/services/application.service";
+import { applicationService } from "@/services/application.manager";
 import { companyManager, type JobDescription } from "@/services/company.manager";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -65,8 +65,7 @@ function getLevelBadgeColor(level?: string) {
       return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
     case "MIDDLE":
       return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-    case "SENIOR":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+
     default:
       return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
   }

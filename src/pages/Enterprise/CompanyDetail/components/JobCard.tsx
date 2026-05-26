@@ -19,7 +19,6 @@ const levelColors: Record<string, string> = {
   FRESHER: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   JUNIOR: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   MIDDLE: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  SENIOR: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
 const levelLabels: Record<string, string> = {
@@ -27,7 +26,6 @@ const levelLabels: Record<string, string> = {
   FRESHER: "Fresher",
   JUNIOR: "Junior",
   MIDDLE: "Middle",
-  SENIOR: "Senior",
 };
 
 const formatSalary = (min?: number, max?: number, currency = "VND"): string => {
@@ -49,7 +47,35 @@ const formatSalary = (min?: number, max?: number, currency = "VND"): string => {
 };
 
 export function JobCard({ job }: JobCardProps) {
-  const isHot = job.level === "MIDDLE" || job.level === "SENIOR";
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = (y - centerY) / 25;
+    const rotateY = (centerX - x) / 25;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px)`;
+    card.style.transition = "transform 0.1s ease-out";
+  };
+
+  const handleMouseLeave = () => {
+    const card = cardRef.current;
+    if (card) {
+      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
+      card.style.transition = "transform 0.3s ease-out";
+    }
+  };
+
+  const isHot = job.level === "MIDDLE";
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-slate-200/50 bg-white p-5 shadow-sm transition-all hover:shadow-xl sm:p-6 dark:border-slate-700/50 dark:bg-slate-900">
