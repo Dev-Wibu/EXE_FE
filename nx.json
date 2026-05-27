@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "defaultProject": "exe-fe",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": []
@@ -21,6 +22,15 @@
       "cache": true
     },
     "format": {
+      "cache": true
+    },
+    "format:check": {
+      "cache": true
+    },
+    "generate-schema": {
+      "cache": false
+    },
+    "validate": {
       "cache": true
     }
   }
