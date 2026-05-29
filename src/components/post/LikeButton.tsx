@@ -31,7 +31,7 @@ export function LikeButton({
   const likeMutation = useLikePost();
   const unlikeMutation = useUnlikePost();
 
-  const liked = Object.values((likedData ?? {}) as Record<string, boolean>)[0] ?? false;
+  const liked = Object.values((likedData ?? {}) as unknown as Record<string, boolean>)[0] ?? false;
   const count = externalLikeCount !== undefined ? externalLikeCount : (countData ?? 0);
 
   const [optimisticLiked, setOptimisticLiked] = useState<boolean | null>(null);

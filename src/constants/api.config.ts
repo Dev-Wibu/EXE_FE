@@ -637,18 +637,46 @@ export const createApiInstance = (): AxiosInstance => {
 
   // Response interceptor - Global error handling (without toast to prevent duplicates)
   instance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      if (response.data && typeof response.data === "object") {
+        if ("traceId" in response.data) {
+          const record = response.data as Record<string, unknown>;
+          let unwrappedData = response.data;
+          const keys = Object.keys(record);
+
+          if (
+            keys.includes("data") &&
+            (keys.length === 2 || (keys.length === 1 && !keys.includes("traceId")))
+          ) {
+            unwrappedData = record.data;
+          } else {
+            unwrappedData = Object.fromEntries(
+              Object.entries(record).filter(([k]) => k !== "traceId")
+            );
+          }
+          response.data = unwrappedData;
+        }
+      }
+      return response;
+    },
     async (error) => {
       const normalizedError = normalizeApiError(error, "Đã xảy ra lỗi khi gọi API.");
       const status = normalizedError.status;
 
+      // ALWAYS log failed API requests with traceId in all environments
+      console.error(`❌ Axios API Error [Trace ID: ${normalizedError.traceId || "N/A"}]:`, {
+        status,
+        url: error.config?.url,
+        message: normalizedError.message,
+        traceId: normalizedError.traceId,
+        payload: normalizedError.payload,
+      });
+      if (normalizedError.traceId) {
+        console.error(`[COPY TRACE ID] ${normalizedError.traceId}`);
+      }
+
       // Handle network errors (no response) - log but don't toast
       if (!error.response) {
-        console.error("Network error:", {
-          message: normalizedError.message,
-          traceId: normalizedError.traceId,
-          source: normalizedError.source,
-        });
         return Promise.reject(
           toAppApiError(error, "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.")
         );
@@ -656,13 +684,6 @@ export const createApiInstance = (): AxiosInstance => {
 
       // Handle HTTP errors
       if ((status || 0) >= 400) {
-        // Log error for debugging
-        console.error(`HTTP ${status} error:`, {
-          message: normalizedError.message,
-          traceId: normalizedError.traceId,
-          payload: normalizedError.payload,
-        });
-
         // Redirect to login on 401 (unauthorized)
         if (status === 401) {
           const shouldSkip401Redirect = isPublicAuthRequest(

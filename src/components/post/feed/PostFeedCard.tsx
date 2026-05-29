@@ -30,7 +30,8 @@ export function PostFeedCard({ item }: PostFeedCardProps) {
   const { data: likedData } = useCheckLiked(postId, user?.id ?? 0, !!user?.id && postId > 0);
   const [localLikeAdjust, setLocalLikeAdjust] = useState(0);
 
-  const isLiked = Object.values((likedData ?? {}) as Record<string, boolean>)[0] ?? false;
+  const isLiked =
+    Object.values((likedData ?? {}) as unknown as Record<string, boolean>)[0] ?? false;
   const likeCount = (item.likeCount ?? 0) + localLikeAdjust;
 
   const [modalOpen, setModalOpen] = useState(false);

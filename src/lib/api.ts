@@ -57,51 +57,66 @@ fetchClient.use({
     return request;
   },
   async onResponse({ request, response }) {
-    // Log API response (development only)
-    if (import.meta.env.DEV) {
-      const clonedResponse = response.clone();
+    let finalResponse = response;
+    let payload: unknown;
+    let hasJson = false;
 
+    // Detect and parse JSON body
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
       try {
-        const data = await clonedResponse.json();
-        console.log("✅ API Response:", {
-          status: response.status,
-          statusText: response.statusText,
-          url: response.url,
-          data: data,
-          timestamp: new Date().toISOString(),
-        });
+        const clonedForParse = response.clone();
+        payload = await clonedForParse.json();
+        hasJson = true;
       } catch {
-        // If JSON parse fails, try to get raw text for debugging
-        try {
-          const clonedResponse2 = response.clone();
-          const rawText = await clonedResponse2.text();
-          console.log("✅ API Response:", {
-            status: response.status,
-            statusText: response.statusText,
-            url: response.url,
-            body: "(unable to parse JSON)",
-            rawText: rawText,
-            timestamp: new Date().toISOString(),
-          });
-        } catch {
-          console.log("✅ API Response:", {
-            status: response.status,
-            statusText: response.statusText,
-            url: response.url,
-            body: "(unable to parse JSON or text)",
-            timestamp: new Date().toISOString(),
-          });
-        }
+        // Failed to parse JSON
       }
     }
 
-    if (!response.ok) {
-      const clonedResponse = response.clone();
-      let payload: unknown;
+    if (response.ok) {
+      if (hasJson && payload && typeof payload === "object") {
+        if ("traceId" in (payload as Record<string, unknown>)) {
+          const record = payload as Record<string, unknown>;
+          let unwrappedPayload: unknown = payload;
+          const keys = Object.keys(record);
 
-      try {
-        payload = await clonedResponse.json();
-      } catch {
+          if (
+            keys.includes("data") &&
+            (keys.length === 2 || (keys.length === 1 && !keys.includes("traceId")))
+          ) {
+            unwrappedPayload = record["data"];
+          } else {
+            unwrappedPayload = Object.fromEntries(
+              Object.entries(record).filter(([k]) => k !== "traceId")
+            );
+          }
+
+          const newResponse = new Response(JSON.stringify(unwrappedPayload), {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          });
+          Object.defineProperty(newResponse, "url", { value: response.url });
+          finalResponse = newResponse;
+
+          // Use unwrapped payload for subsequent usage/logging
+          payload = unwrappedPayload;
+        }
+      }
+
+      // Log successful API response (development only)
+      if (import.meta.env.DEV) {
+        console.log("✅ API Response:", {
+          status: finalResponse.status,
+          statusText: finalResponse.statusText,
+          url: finalResponse.url,
+          data: hasJson ? payload : "(non-JSON response)",
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } else {
+      // Failed response handling
+      if (!hasJson) {
         try {
           payload = await response.clone().text();
         } catch {
@@ -117,14 +132,16 @@ fetchClient.use({
         "Đã xảy ra lỗi khi gọi API."
       );
 
-      if (import.meta.env.DEV) {
-        console.error("❌ API Error:", {
-          status: response.status,
-          url: response.url,
-          message: normalizedError.message,
-          traceId: normalizedError.traceId,
-          payload,
-        });
+      // ALWAYS log failed API requests with traceId in all environments
+      console.error(`❌ API Error [Trace ID: ${normalizedError.traceId || "N/A"}]:`, {
+        status: response.status,
+        url: response.url,
+        message: normalizedError.message,
+        traceId: normalizedError.traceId,
+        payload,
+      });
+      if (normalizedError.traceId) {
+        console.error(`[COPY TRACE ID] ${normalizedError.traceId}`);
       }
     }
 
@@ -137,7 +154,7 @@ fetchClient.use({
       }
     }
 
-    return response;
+    return finalResponse;
   },
 });
 
