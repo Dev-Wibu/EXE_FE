@@ -198,7 +198,7 @@ export function JobSearchSection() {
                 <Input
                   type="text"
                   inputMode="numeric"
-                  placeholder="Vô hạn"
+                  placeholder="0"
                   value={salaryMax}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/[^\d]/g, "");
