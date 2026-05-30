@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { authManager } from "@/services/auth.manager";
 import { getDashboardPath, useAuthStore } from "@/stores/authStore";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 function getInitials(name?: string): string {
@@ -76,13 +78,14 @@ function MenuItem({ to, icon, title, description }: MenuItemProps) {
 }
 
 export function HomepageHeader() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isLoggedIn, user, clearAuth } = useAuthStore();
 
   const handleLogout = async () => {
     await authManager.logout();
     clearAuth();
-    toast.success("Đăng xuất thành công");
+    toast.success(t("common.logout_success"));
     navigate("/login");
   };
 
@@ -106,7 +109,7 @@ export function HomepageHeader() {
             variant="ghost"
             asChild
             className="text-sm font-medium text-slate-600 hover:text-[#0058be] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-            <Link to="/enterprise/companies">Công ty</Link>
+            <Link to="/enterprise/companies">{t("navigation.companies")}</Link>
           </Button>
 
           {/* Blog - Simple Link */}
@@ -114,7 +117,7 @@ export function HomepageHeader() {
             variant="ghost"
             asChild
             className="text-sm font-medium text-slate-600 hover:text-[#0058be] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-            <Link to="/resources/blog">Blog</Link>
+            <Link to="/resources/blog">{t("navigation.blog")}</Link>
           </Button>
 
           {/* Tính năng - Dropdown */}
@@ -122,21 +125,21 @@ export function HomepageHeader() {
             <NavigationMenuList className="gap-1">
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-slate-600 hover:bg-transparent hover:text-[#0058be] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-                  Tính năng
+                  {t("navigation.features")}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="!left-0">
                   <ul className="grid w-[480px] grid-cols-2 gap-2 p-3">
                     <MenuItem
                       to="/features/ai-interview"
                       icon={<Bot className="h-4 w-4" />}
-                      title="Phòng phỏng vấn ảo"
-                      description="Trải nghiệm phỏng vấn với AI"
+                      title={t("navigation.ai_interview")}
+                      description={t("navigation.ai_interview_desc")}
                     />
                     <MenuItem
                       to="/features/mentor-interview"
                       icon={<Users className="h-4 w-4" />}
-                      title="Phỏng vấn Mentor"
-                      description="Kết nối với mentor thực tế"
+                      title={t("navigation.mentor_interview")}
+                      description={t("navigation.mentor_interview_desc")}
                     />
                   </ul>
                 </NavigationMenuContent>
@@ -150,21 +153,21 @@ export function HomepageHeader() {
               {/* Câu hỏi - Dropdown */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-slate-600 hover:bg-transparent hover:text-[#0058be] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-                  Câu hỏi
+                  {t("navigation.questions")}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="!left-0">
                   <ul className="grid w-[480px] grid-cols-2 gap-2 p-3">
                     <MenuItem
                       to="/questions/bank"
                       icon={<BookOpen className="h-4 w-4" />}
-                      title="Ngân hàng câu hỏi"
-                      description="Hơn 1,500+ câu hỏi thực tế"
+                      title={t("navigation.question_bank")}
+                      description={t("navigation.question_bank_desc")}
                     />
                     <MenuItem
                       to="/questions/tips"
                       icon={<Lightbulb className="h-4 w-4" />}
-                      title="Mẹo phỏng vấn"
-                      description="Bí quyết từ chuyên gia"
+                      title={t("navigation.interview_tips")}
+                      description={t("navigation.interview_tips_desc")}
                     />
                   </ul>
                 </NavigationMenuContent>
@@ -173,21 +176,21 @@ export function HomepageHeader() {
               {/* Tài nguyên - Dropdown */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-slate-600 hover:bg-transparent hover:text-[#0058be] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-                  Tài nguyên
+                  {t("navigation.resources")}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="!left-0">
                   <ul className="grid w-[480px] grid-cols-2 gap-2 p-3">
                     <MenuItem
                       to="/resources/faq"
                       icon={<HelpCircle className="h-4 w-4" />}
-                      title="Câu hỏi thường gặp"
-                      description="Giải đáp thắc mắc"
+                      title={t("navigation.faq")}
+                      description={t("navigation.faq_desc")}
                     />
                     <MenuItem
                       to="/resources/blog"
                       icon={<Newspaper className="h-4 w-4" />}
-                      title="Bài viết"
-                      description="Kiến thức phỏng vấn"
+                      title={t("navigation.blog")}
+                      description={t("navigation.blog_desc")}
                     />
                   </ul>
                 </NavigationMenuContent>
@@ -198,6 +201,7 @@ export function HomepageHeader() {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
+          <LanguageToggle />
           <ThemeToggle iconOnly />
 
           {isLoggedIn && user ? (
@@ -229,14 +233,14 @@ export function HomepageHeader() {
                   <DropdownMenuItem asChild>
                     <Link to={dashboardPath} className="cursor-pointer gap-2">
                       <Settings className="h-4 w-4" />
-                      Dashboard
+                      {t("common.dashboard")}
                     </Link>
                   </DropdownMenuItem>
 
                   <DropdownMenuItem asChild>
                     <Link to={`${dashboardPath}?tab=account`} className="cursor-pointer gap-2">
                       <Settings className="h-4 w-4" />
-                      Tài khoản
+                      {t("common.account")}
                     </Link>
                   </DropdownMenuItem>
 
@@ -245,7 +249,7 @@ export function HomepageHeader() {
                     className="cursor-pointer gap-2 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                     onClick={handleLogout}>
                     <LogOut className="h-4 w-4" />
-                    Đăng xuất
+                    {t("common.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -253,12 +257,12 @@ export function HomepageHeader() {
           ) : (
             <>
               <Button variant="ghost" className="text-slate-600 dark:text-slate-300" asChild>
-                <Link to="/login">Đăng nhập</Link>
+                <Link to="/login">{t("common.login")}</Link>
               </Button>
               <Button
                 className="rounded-lg bg-[#0058be] px-5 py-2 font-medium shadow-sm hover:bg-[#004395] dark:bg-[#0058be] dark:hover:bg-[#004395]"
                 asChild>
-                <Link to="/select-role">Bắt đầu</Link>
+                <Link to="/select-role">{t("common.get_started")}</Link>
               </Button>
             </>
           )}

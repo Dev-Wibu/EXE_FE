@@ -11,7 +11,8 @@ import {
   User as UserIcon,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
@@ -59,82 +60,113 @@ type TabType =
   | "messenger"
   | "account";
 
-const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
-  { type: "homeFeed", label: "Trang chủ" },
-  { type: "overview", label: "Tổng quan" },
-  { type: "mentors", label: "Danh sách Mentor" },
-  { type: "mockInterview", label: "Phỏng vấn với Mentor" },
-  { type: "interviewHistory", label: "Lịch sử phỏng vấn" },
-  { type: "applicationHistory", label: "Lịch sử ứng tuyển" },
-  { type: "feedback", label: "Đánh giá từ Mentor" },
-  { type: "aiInterview", label: "Phỏng vấn với AI" },
-  { type: "practice", label: "Bộ luyện tập" },
-  { type: "practiceQuestions", label: "Câu hỏi luyện tập" },
-  { type: "notifications", label: "Thông báo" },
-  { type: "messenger", label: "Tin nhắn" },
-  { type: "account", label: "Tài khoản" },
-];
-
 const isValidTabType = (value: string): value is TabType => {
-  return AVAILABLE_TABS.some((tab) => tab.type === value);
+  return [
+    "homeFeed",
+    "overview",
+    "mentors",
+    "mockInterview",
+    "interviewHistory",
+    "applicationHistory",
+    "feedback",
+    "aiInterview",
+    "practice",
+    "practiceQuestions",
+    "notifications",
+    "messenger",
+    "account",
+  ].includes(value as TabType);
 };
 
-const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
+const getAvailableTabs = (t: (key: string) => string): Array<{ type: TabType; label: string }> => [
+  { type: "homeFeed", label: t("common.home") },
+  { type: "overview", label: t("common.overview") },
+  { type: "mentors", label: t("sidebar.mentors_list") },
+  { type: "mockInterview", label: t("navigation.mentor_interview_alt") },
+  { type: "interviewHistory", label: t("sidebar.interview_history") },
+  { type: "applicationHistory", label: t("sidebar.application_history") },
+  { type: "feedback", label: t("sidebar.mentor_feedback") },
+  { type: "aiInterview", label: t("navigation.ai_interview_alt") },
+  { type: "practice", label: t("sidebar.practice_sets") },
+  { type: "practiceQuestions", label: t("sidebar.practice_questions") },
+  { type: "notifications", label: t("settings.notifications") },
+  { type: "messenger", label: t("common.messages") },
+  { type: "account", label: t("common.account") },
+];
+
+const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] => [
   {
-    label: "Trang chủ",
-    items: [{ type: "homeFeed", icon: Newspaper, label: "Trang chủ", color: "text-orange-600" }],
+    label: t("sidebar.home_group"),
+    items: [
+      { type: "homeFeed", icon: Newspaper, label: t("common.home"), color: "text-orange-600" },
+    ],
   },
   {
-    label: "Phỏng vấn",
+    label: t("sidebar.interview_group"),
     items: [
-      { type: "overview", icon: LayoutDashboard, label: "Tổng quan", color: "text-blue-600" },
-      { type: "mentors", icon: UserIcon, label: "Danh sách Mentor", color: "text-indigo-600" },
+      {
+        type: "overview",
+        icon: LayoutDashboard,
+        label: t("common.overview"),
+        color: "text-blue-600",
+      },
+      {
+        type: "mentors",
+        icon: UserIcon,
+        label: t("sidebar.mentors_list"),
+        color: "text-indigo-600",
+      },
       {
         type: "mockInterview",
         icon: Users,
-        label: "Phỏng vấn với Mentor",
+        label: t("navigation.mentor_interview_alt"),
         color: "text-purple-600",
       },
       {
         type: "interviewHistory",
         icon: History,
-        label: "Lịch sử phỏng vấn",
+        label: t("sidebar.interview_history"),
         color: "text-orange-600",
       },
       {
         type: "applicationHistory",
         icon: Briefcase,
-        label: "Lịch sử ứng tuyển",
+        label: t("sidebar.application_history"),
         color: "text-teal-600",
       },
       {
         type: "feedback",
         icon: MessageSquare,
-        label: "Đánh giá từ Mentor",
+        label: t("sidebar.mentor_feedback"),
         color: "text-cyan-600",
       },
     ],
   },
   {
-    label: "AI & Học tập",
+    label: t("sidebar.ai_learning_group"),
     items: [
-      { type: "aiInterview", icon: Bot, label: "Phỏng vấn với AI", color: "text-green-600" },
+      {
+        type: "aiInterview",
+        icon: Bot,
+        label: t("navigation.ai_interview_alt"),
+        color: "text-green-600",
+      },
       {
         type: "practice",
         icon: GraduationCap,
-        label: "Luyện tập",
+        label: t("sidebar.practice"),
         color: "text-indigo-600",
         children: [
           {
             type: "practice",
             icon: GraduationCap,
-            label: "Bộ luyện tập",
+            label: t("sidebar.practice_sets"),
             color: "text-indigo-600",
           },
           {
             type: "practiceQuestions",
             icon: FileQuestion,
-            label: "Câu hỏi luyện tập",
+            label: t("sidebar.practice_questions"),
             color: "text-violet-600",
           },
         ],
@@ -142,10 +174,15 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
     ],
   },
   {
-    label: "Cá nhân",
+    label: t("sidebar.personal_group"),
     items: [
-      { type: "messenger", icon: MessageSquare, label: "Tin nhắn", color: "text-blue-500" },
-      { type: "account", icon: UserIcon, label: "Tài khoản", color: "text-gray-600" },
+      {
+        type: "messenger",
+        icon: MessageSquare,
+        label: t("common.messages"),
+        color: "text-blue-500",
+      },
+      { type: "account", icon: UserIcon, label: t("common.account"), color: "text-gray-600" },
     ],
   },
 ];
@@ -164,6 +201,7 @@ const USER_SIDEBAR_LOGO_COLLAPSED = (
 const DEFAULT_TAB: TabType = "homeFeed";
 
 export function UserDashboardPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
@@ -177,10 +215,14 @@ export function UserDashboardPage() {
     )
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const availableTabs = useMemo(() => getAvailableTabs(t), [t]);
+  const sidebarMenuGroups = useMemo(() => getSidebarMenuGroups(t), [t]);
+
   const { activeTab, openTab } = useTabsState({
     storageKey: "user",
     defaultTab: DEFAULT_TAB,
-    availableTabs: AVAILABLE_TABS,
+    availableTabs: availableTabs,
   });
 
   const outlet = useOutlet();
@@ -204,7 +246,7 @@ export function UserDashboardPage() {
     role: "user",
     pathname: location.pathname,
     activeTab: typedActiveTab,
-    availableTabs: AVAILABLE_TABS,
+    availableTabs: availableTabs,
   });
 
   const shouldHideScrollButton =
@@ -272,7 +314,7 @@ export function UserDashboardPage() {
   return (
     <div className="isolate flex h-screen bg-white dark:bg-slate-950">
       <DashboardSidebar
-        menuGroups={SIDEBAR_MENU_GROUPS}
+        menuGroups={sidebarMenuGroups}
         activeTab={typedActiveTab}
         onNavigate={handleNavigate}
         storageKey="user_dashboard_sidebar_collapsed"
@@ -282,7 +324,7 @@ export function UserDashboardPage() {
         logo={USER_SIDEBAR_LOGO}
         collapsedLogo={USER_SIDEBAR_LOGO_COLLAPSED}
         showSettings
-        settingsLabel="Cài đặt"
+        settingsLabel={t("settings.system_settings")}
         onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
           wrapper: "h-screen flex-shrink-0 border-r border-slate-200 bg-slate-50",
@@ -316,7 +358,7 @@ export function UserDashboardPage() {
           logoutCollapsedBtn:
             "flex items-center justify-center rounded-lg p-2.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
           logoutIcon: "text-slate-500 dark:text-slate-400",
-          logoutLabel: "Đăng xuất",
+          logoutLabel: t("common.logout"),
         }}
       />
 

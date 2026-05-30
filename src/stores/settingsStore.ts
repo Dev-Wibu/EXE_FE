@@ -10,12 +10,13 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const SETTINGS_SCHEMA_VERSION = 2;
+const SETTINGS_SCHEMA_VERSION = 3;
 
 // ---------- Types ----------
 
 export type FontSize = "small" | "default" | "large";
 export type SidebarBehavior = "always-open" | "auto-collapse";
+export type Language = "vi" | "en";
 
 export interface SettingsState {
   /** Internal schema version — used for future migrations */
@@ -24,6 +25,8 @@ export interface SettingsState {
   // --- Appearance ---
   /** Font size preference (applied via data attribute on <html>) */
   fontSize: FontSize;
+  /** UI language preference */
+  language: Language;
 
   // --- Productivity ---
   /** How the desktop sidebar behaves on dashboards */
@@ -40,6 +43,7 @@ export interface SettingsState {
   setSidebarBehavior: (v: SidebarBehavior) => void;
   setMuteSoundNotification: (v: boolean) => void;
   setMuteToastNotification: (v: boolean) => void;
+  setLanguage: (v: Language) => void;
   /** Reset all settings to factory defaults */
   resetToDefaults: () => void;
 }
@@ -54,6 +58,7 @@ const DEFAULT_SETTINGS: Omit<
 > = {
   _version: SETTINGS_SCHEMA_VERSION,
   fontSize: "default",
+  language: "vi",
   sidebarBehavior: "always-open",
   muteSoundNotification: false,
   muteToastNotification: false,
@@ -80,6 +85,7 @@ export const useSettingsStore = create<SettingsState>()(
       setSidebarBehavior: (sidebarBehavior) => set({ sidebarBehavior }),
       setMuteSoundNotification: (muteSoundNotification) => set({ muteSoundNotification }),
       setMuteToastNotification: (muteToastNotification) => set({ muteToastNotification }),
+      setLanguage: (language) => set({ language }),
 
       resetToDefaults: () => {
         applyFontSize(DEFAULT_SETTINGS.fontSize);

@@ -12,6 +12,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import icon2 from "@/assets/icon2.svg";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { authManager } from "@/services/auth.manager";
 import { getDashboardPath, useAuthStore } from "@/stores/authStore";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 /**
@@ -49,13 +51,14 @@ function getInitials(name?: string): string {
 }
 
 export function Header() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isLoggedIn, user, clearAuth } = useAuthStore();
 
   const handleLogout = async () => {
     await authManager.logout();
     clearAuth();
-    toast.success("Đăng xuất thành công");
+    toast.success(t("common.logout_success"));
     navigate("/login");
   };
 
@@ -78,7 +81,7 @@ export function Header() {
             {/* Questions Menu */}
             <NavigationMenuItem>
               <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-slate-600 hover:bg-transparent hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-                Câu hỏi
+                {t("navigation.questions")}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-2 p-4 md:w-[500px] md:grid-cols-2">
@@ -89,10 +92,12 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <BookOpen className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Ngân hàng câu hỏi</span>
+                          <span className="text-sm font-medium">
+                            {t("navigation.question_bank")}
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Hơn 1,500+ câu hỏi phỏng vấn thực tế
+                          {t("navigation.question_bank_desc")}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -104,10 +109,12 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Lightbulb className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Mẹo phỏng vấn</span>
+                          <span className="text-sm font-medium">
+                            {t("navigation.interview_tips")}
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Bí quyết phỏng vấn từ chuyên gia
+                          {t("navigation.interview_tips_desc")}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -119,7 +126,7 @@ export function Header() {
             {/* Features Menu */}
             <NavigationMenuItem>
               <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-slate-600 hover:bg-transparent hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-                Tính năng
+                {t("navigation.features")}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-2 p-4 md:w-[500px] md:grid-cols-2">
@@ -130,10 +137,12 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Bot className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Phỏng Vấn AI</span>
+                          <span className="text-sm font-medium">
+                            {t("navigation.ai_interview_alt")}
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Phỏng vấn với trí tuệ nhân tạo 24/7
+                          {t("navigation.ai_interview_desc_alt")}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -145,10 +154,12 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Users className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Phỏng Vấn Với Mentor</span>
+                          <span className="text-sm font-medium">
+                            {t("navigation.mentor_interview_alt")}
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Phỏng vấn với mentor chuyên nghiệp
+                          {t("navigation.mentor_interview_desc_alt")}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -160,7 +171,7 @@ export function Header() {
             {/* Resources Menu */}
             <NavigationMenuItem>
               <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-slate-600 hover:bg-transparent hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]">
-                Tài nguyên
+                {t("navigation.resources")}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-2 p-4 md:w-[500px] md:grid-cols-2">
@@ -171,10 +182,10 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <HelpCircle className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Câu hỏi thường gặp</span>
+                          <span className="text-sm font-medium">{t("navigation.faq")}</span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Giải đáp thắc mắc phổ biến
+                          {t("navigation.faq_desc_alt")}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -186,10 +197,10 @@ export function Header() {
                         className="flex flex-col gap-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-[#DCEEFF] hover:text-[#0047AB] dark:hover:bg-[#0047AB]/20 dark:hover:text-[#66B2FF]">
                         <div className="flex items-center gap-2">
                           <Newspaper className="h-5 w-5 text-[#0047AB] dark:text-[#66B2FF]" />
-                          <span className="text-sm font-medium">Bài viết</span>
+                          <span className="text-sm font-medium">{t("navigation.blog")}</span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Kiến thức và hướng dẫn phỏng vấn
+                          {t("navigation.blog_desc_alt")}
                         </p>
                       </Link>
                     </NavigationMenuLink>
@@ -202,6 +213,7 @@ export function Header() {
 
         {/* Auth Area & Theme Toggle */}
         <div className="flex items-center gap-3">
+          <LanguageToggle />
           <ThemeToggle iconOnly />
 
           {isLoggedIn && user ? (
@@ -235,14 +247,14 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link to={dashboardPath} className="cursor-pointer gap-2">
                     <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
+                    {t("common.dashboard")}
                   </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                   <Link to={`${dashboardPath}?tab=account`} className="cursor-pointer gap-2">
                     <UserCircle className="h-4 w-4" />
-                    Tài khoản
+                    {t("common.account")}
                   </Link>
                 </DropdownMenuItem>
 
@@ -251,7 +263,7 @@ export function Header() {
                   className="cursor-pointer gap-2 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                   onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
-                  Đăng xuất
+                  {t("common.logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -259,12 +271,12 @@ export function Header() {
             /* ── Logged-out: login & signup buttons ── */
             <>
               <Button variant="ghost" className="text-slate-600 dark:text-slate-300" asChild>
-                <Link to="/login">Đăng nhập</Link>
+                <Link to="/login">{t("common.login")}</Link>
               </Button>
               <Button
                 className="rounded-full bg-gradient-to-r from-[#0047AB] to-[#007BFF] px-6 shadow-sm hover:shadow-md"
                 asChild>
-                <Link to="/select-role">Bắt đầu</Link>
+                <Link to="/select-role">{t("common.get_started")}</Link>
               </Button>
             </>
           )}

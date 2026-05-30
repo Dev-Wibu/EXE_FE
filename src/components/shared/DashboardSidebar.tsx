@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { authManager } from "@/services/auth.manager";
 import { useAuthStore } from "@/stores/authStore";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 import { getInitialSidebarCollapsed } from "./sidebar-collapse";
@@ -134,6 +135,7 @@ export function DashboardSidebar({
   onSettingsClick,
   theme,
 }: DashboardSidebarProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const isMobile = useIsMobile();
@@ -234,7 +236,7 @@ export function DashboardSidebar({
       await authManager.logout();
       clearAuth();
       setIsMobileOpen(false);
-      toast.success("Đăng xuất thành công");
+      toast.success(t("common.logout_success"));
       navigate("/login");
     } catch (error) {
       console.error("Logout error:", error);
