@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🚀 Đang tự động tạo Schema từ Backend..."
+pnpm run generate-schema
+
+echo "💅 Đang format code cho các file được commit..."
+pnpm lint-staged
+
+git add .
