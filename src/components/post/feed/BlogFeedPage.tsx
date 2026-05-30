@@ -1,0 +1,230 @@
+import { PenSquare, Search } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { ReloadButton } from "@/components/shared";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { usePublishedFeed } from "@/hooks/usePublishedFeed";
+import { toTimestamp } from "@/lib/formatting";
+import { useAuthStore } from "@/stores/authStore";
+
+import { CreatePostModal } from "./CreatePostModal";
+import { PostFeedCard } from "./PostFeedCard";
+
+type SortBy = "newest" | "popular" | "recent_activity";
+
+interface BlogFeedPageProps {
+  title?: string;
+  description?: string;
+}
+
+export function BlogFeedPage({
+  title = "Trang chủ",
+  description = "Cập nhật bài viết mới nhất từ cộng đồng",
+}: BlogFeedPageProps) {
+  const { user } = useAuthStore();
+  const { posts, hasMore, isLoading, isReloading, isFetchingMore, loadMore, refresh } =
+    usePublishedFeed();
+  const [search, setSearch] = useState("");
+  const [majorFilter, setMajorFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<SortBy>("newest");
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  const authorName = user?.name ?? "Bạn";
+  const authorInitials = authorName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const allMajors = useMemo(() => {
+    return [...new Set(posts.map((p) => p.post?.major?.name || p.post?.major?.majorName).filter(Boolean))] as string[];
+  }, [posts]);
+
+  const filtered = useMemo(() => {
+    const lower = search.toLowerCase();
+    return posts
+      .filter((item) => {
+        const post = item.post;
+        const matchSearch =
+          !search ||
+          post?.title?.toLowerCase().includes(lower) ||
+          post?.tags?.some((t) => t.toLowerCase().includes(lower)) ||
+          false;
+        const matchMajor = majorFilter === "all" || (post?.major?.name || post?.major?.majorName) === majorFilter;
+        return matchSearch && matchMajor;
+      })
+      .sort((a, b) => {
+        if (sortBy === "popular") {
+          const scoreA = (a.likeCount ?? 0) + (a.commentCount ?? 0);
+          const scoreB = (b.likeCount ?? 0) + (b.commentCount ?? 0);
+          return scoreB - scoreA;
+        }
+        if (sortBy === "recent_activity") {
+          const latestComment = (items: typeof a.postComments) => {
+            if (!items?.length) return 0;
+            return items.reduce((latest, c) => {
+              const t = toTimestamp(c.createdAt) ?? 0;
+              return t > latest ? t : latest;
+            }, 0);
+          };
+          const latestA = latestComment(a.postComments);
+          const latestB = latestComment(b.postComments);
+          const fallbackA = toTimestamp(a.post?.creationDate) ?? 0;
+          const fallbackB = toTimestamp(b.post?.creationDate) ?? 0;
+          return Math.max(latestB, fallbackB) - Math.max(latestA, fallbackA);
+        }
+        return 0;
+      });
+  }, [posts, search, majorFilter, sortBy]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isFetchingMore, loadMore]);
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div>
+        <h1 className="text-xl font-bold">{title}</h1>
+        <p className="text-muted-foreground text-sm">{description}</p>
+      </div>
+
+      {user ? (
+        <Card className="overflow-hidden rounded-xl border-slate-200/70 py-0 shadow-sm dark:border-slate-800">
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <Avatar className="h-9 w-9 shrink-0 ring-2 ring-slate-100 dark:ring-slate-800">
+              <AvatarImage src={user?.avatarUrl ?? undefined} alt={authorName} />
+              <AvatarFallback className="bg-[#0047AB]/10 text-xs font-semibold text-[#0047AB]">
+                {authorInitials}
+              </AvatarFallback>
+            </Avatar>
+            <button
+              type="button"
+              className="text-muted-foreground hover:bg-muted flex-1 rounded-full border px-4 py-2 text-left text-sm transition-colors"
+              onClick={() => setCreateModalOpen(true)}>
+              Bạn đang nghĩ gì, {user?.name?.split(" ").pop() ?? "bạn"}?
+            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-[#0047AB]"
+              onClick={() => setCreateModalOpen(true)}>
+              <PenSquare className="h-4 w-4" />
+              <span className="text-xs font-medium">Viết bài</span>
+            </Button>
+            <ReloadButton onReload={refresh} isLoading={isReloading} tooltip="Tải lại bảng tin" />
+          </div>
+        </Card>
+      ) : (
+        <ReloadButton onReload={refresh} isLoading={isReloading} tooltip="Tải lại bảng tin" />
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[180px] flex-1">
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Tìm kiếm bài viết, tag..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <Select value={majorFilter} onValueChange={setMajorFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Chuyên ngành" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả chuyên ngành</SelectItem>
+            {allMajors.map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Bài mới nhất</SelectItem>
+            <SelectItem value="popular">Phổ biến nhất</SelectItem>
+            <SelectItem value="recent_activity">Hoạt động gần đây</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      {isLoading && (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-64 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && filtered.length === 0 && (
+        <div className="py-16 text-center text-slate-500 dark:text-slate-400">
+          Không tìm thấy bài viết nào phù hợp.
+        </div>
+      )}
+
+      {!isLoading && filtered.length > 0 && (
+        <div className="space-y-4">
+          {filtered.map((item, idx) => (
+            <PostFeedCard key={item.post?.postId ?? idx} item={item} />
+          ))}
+        </div>
+      )}
+
+      <div ref={sentinelRef} className="h-4" />
+
+      {isFetchingMore && (
+        <div className="flex justify-center py-4">
+          <Spinner size="md" tone="muted" />
+        </div>
+      )}
+
+      {!hasMore && posts.length > 0 && (
+        <p className="text-muted-foreground py-4 text-center text-xs">
+          Bạn đã xem hết bài viết rồi.
+        </p>
+      )}
+
+      <CreatePostModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onCreated={refresh}
+      />
+    </div>
+  );
+}

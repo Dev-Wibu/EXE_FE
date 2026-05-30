@@ -46,11 +46,13 @@ export function PostFeedModal({
   const [newComment, setNewComment] = useState("");
   const createComment = useCreateComment();
 
-  const enabled = open && postId > 0;
-  const { data: liveRaw } = usePostById(postId, enabled);
+  // Only fetch live data when user is logged in (API requires auth)
+  const shouldFetchLive = !!user?.id;
+  const { data: liveRaw } = usePostById(postId, shouldFetchLive);
   const live = liveRaw as unknown as PostResponse | undefined;
 
-  const { data: likedData } = useCheckLiked(postId, user?.id ?? 0, enabled && !!user?.id);
+  // Only check liked status when user is logged in
+  const { data: likedData } = useCheckLiked(postId, user?.id ?? 0, !!user?.id);
 
   const handlePostModalOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && imageViewerOpen) {

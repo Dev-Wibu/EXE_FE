@@ -451,6 +451,34 @@ const PUBLIC_REGISTRATION_POST_ENDPOINTS = new Set<string>([
   API_ENDPOINTS.MENTOR.CREATE,
 ]);
 
+// Public GET endpoints that don't require authentication
+const PUBLIC_GET_ENDPOINTS = new Set<string>([
+  API_ENDPOINTS.POSTS.PUBLISHED, // GET /api/posts/published - public blog posts
+  "/api/majors", // GET /api/majors - public majors list
+  "/api/companies", // GET /api/companies - public companies
+]);
+
+// Public GET endpoint patterns (for dynamic paths with parameters)
+const PUBLIC_GET_ENDPOINT_PATTERNS: RegExp[] = [
+  // GET /api/posts/{postId} - get individual post
+  /^\/api\/posts\/[^/]+$/,
+  // GET /api/posts/likes/{postId}/check/{userId} - check if user liked post
+  /^\/api\/posts\/likes\/[^/]+\/check\/[^/]+$/,
+  // Any GET to /api/posts/* (including /api/posts/published)
+  /^\/api\/posts/,
+];
+
+// Endpoints that should fail silently on 401 (no redirect, no toast)
+// Used for public content that doesn't require authentication
+const SILENT_401_ENDPOINTS = new Set<string>([
+  API_ENDPOINTS.POSTS.PUBLISHED, // GET /api/posts/published - public blog posts
+]);
+
+const SILENT_401_ENDPOINT_PATTERNS: RegExp[] = [
+  // GET /api/posts/{postId} - get individual post
+  /^\/api\/posts\/[^/]+$/,
+];
+
 const PUBLIC_AUTH_PAGE_PATHS = new Set<string>(["/signup", "/mentor-register", "/select-role"]);
 
 const normalizeRequestPath = (url?: string): string => {
@@ -465,6 +493,30 @@ const normalizeRequestPath = (url?: string): string => {
   }
 };
 
+const isSilent401Endpoint = (url?: string, method?: string): boolean => {
+  const normalizedMethod = (method || "get").toLowerCase();
+  if (normalizedMethod !== "get") {
+    return false;
+  }
+
+  const requestPath = normalizeRequestPath(url);
+  if (!requestPath) {
+    return false;
+  }
+
+  // Check exact match
+  if (SILENT_401_ENDPOINTS.has(requestPath)) {
+    return true;
+  }
+
+  // Check pattern match for dynamic endpoints
+  if (SILENT_401_ENDPOINT_PATTERNS.some((pattern) => pattern.test(requestPath))) {
+    return true;
+  }
+
+  return false;
+};
+
 const isPublicAuthPage = (): boolean => {
   if (typeof window === "undefined") {
     return false;
@@ -475,12 +527,25 @@ const isPublicAuthPage = (): boolean => {
 
 export const isPublicAuthRequest = (url?: string, method?: string): boolean => {
   const normalizedMethod = (method || "get").toLowerCase();
-  if (normalizedMethod !== "post") {
+  const requestPath = normalizeRequestPath(url);
+  if (!requestPath) {
     return false;
   }
 
-  const requestPath = normalizeRequestPath(url);
-  if (!requestPath) {
+  // Check if this is a public GET endpoint (no auth required)
+  if (normalizedMethod === "get") {
+    // Check exact match
+    if (PUBLIC_GET_ENDPOINTS.has(requestPath)) {
+      return true;
+    }
+    // Check pattern match for dynamic endpoints
+    if (PUBLIC_GET_ENDPOINT_PATTERNS.some((pattern) => pattern.test(requestPath))) {
+      return true;
+    }
+  }
+
+  // Only POST requests need auth for auth endpoints
+  if (normalizedMethod !== "post") {
     return false;
   }
 
@@ -684,21 +749,35 @@ export const createApiInstance = (): AxiosInstance => {
 
       // Handle HTTP errors
       if ((status || 0) >= 400) {
-        // Redirect to login on 401 (unauthorized)
+        // Log error for debugging
+        console.error(`HTTP ${status} error:`, {
+          message: normalizedError.message,
+          traceId: normalizedError.traceId,
+          payload: normalizedError.payload,
+        });
+
+        // Handle 401 - don't redirect for public endpoints
         if (status === 401) {
-          const shouldSkip401Redirect = isPublicAuthRequest(
-            error.config?.url,
-            error.config?.method
-          );
+          const requestUrl = error.config?.url ?? "";
+          const requestMethod = (error.config?.method ?? "get").toLowerCase();
 
-          if (!shouldSkip401Redirect) {
-            // Clear full auth state consistently (token, user, current-user-id) before redirect.
-            const { useAuthStore } = await import("@/stores/authStore");
-            useAuthStore.getState().clearAuth();
+          // Check if this is a public endpoint - skip redirect
+          const shouldSkipRedirect = isPublicAuthRequest(requestUrl, requestMethod);
+          const shouldSilentFail = isSilent401Endpoint(requestUrl, requestMethod);
 
-            if (window.location.pathname !== "/login") {
-              window.location.href = "/login";
-            }
+          // Also check generic /posts pattern
+          const isPostsEndpoint = requestUrl.includes("/posts") && requestMethod === "get";
+
+          if (shouldSkipRedirect || shouldSilentFail || isPostsEndpoint) {
+            return Promise.reject(toAppApiError(error, normalizedError.message));
+          }
+
+          // Redirect for protected endpoints
+          const { useAuthStore } = await import("@/stores/authStore");
+          useAuthStore.getState().clearAuth();
+
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
           }
         }
       }

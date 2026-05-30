@@ -1,10 +1,11 @@
 import { Briefcase, Building2, DollarSign, MapPin, Search } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -15,38 +16,13 @@ import {
 import { companyManager, type JobDescription } from "@/services/company.manager";
 
 export function JobSearchSection() {
-  const cardRef = useRef<HTMLDivElement>(null);
-
   const [keyword, setKeyword] = useState("");
   const [level, setLevel] = useState<string>("all");
-  const [salaryRange, setSalaryRange] = useState<string>("all");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [jobs, setJobs] = useState<JobDescription[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-
-    const rotateX = (y - centerY) / 25;
-    const rotateY = (centerX - x) / 25;
-
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
-  };
-
-  const handleMouseLeave = () => {
-    const card = cardRef.current;
-    if (card) {
-      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
-    }
-  };
 
   const handleSearch = async () => {
     setIsSearching(true);
@@ -71,21 +47,14 @@ export function JobSearchSection() {
         params.level = level.toUpperCase() as "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
       }
 
-      switch (salaryRange) {
-        case "1":
-          params.salaryMax = 10000000;
-          break;
-        case "2":
-          params.salaryMin = 10000000;
-          params.salaryMax = 20000000;
-          break;
-        case "3":
-          params.salaryMin = 20000000;
-          params.salaryMax = 40000000;
-          break;
-        case "4":
-          params.salaryMin = 40000000;
-          break;
+      const parsedMin = parseInt(salaryMin.replace(/[^\d]/g, ""), 10);
+      const parsedMax = parseInt(salaryMax.replace(/[^\d]/g, ""), 10);
+
+      if (!isNaN(parsedMin) && parsedMin > 0) {
+        params.salaryMin = parsedMin * 1000000;
+      }
+      if (!isNaN(parsedMax) && parsedMax > 0) {
+        params.salaryMax = parsedMax * 1000000;
       }
 
       const result = await companyManager.searchJobs(params);
@@ -149,12 +118,7 @@ export function JobSearchSection() {
   return (
     <section className="mx-auto max-w-7xl px-6 py-12">
       {/* Search Card */}
-      <div
-        ref={cardRef}
-        className="rounded-2xl border border-slate-200/50 bg-white/70 p-6 shadow-lg backdrop-blur-xl transition-all duration-200 ease-out dark:border-slate-700/50 dark:bg-slate-900/70"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{ transformStyle: "preserve-3d" }}>
+      <div className="rounded-2xl border border-slate-200/50 bg-white/70 p-6 shadow-lg backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/70">
         <div className="mb-6">
           <h2 className="mb-1 text-2xl font-bold text-slate-900 dark:text-white">
             Tìm kiếm cơ hội nghề nghiệp
@@ -199,23 +163,52 @@ export function JobSearchSection() {
               </Select>
             </div>
 
-            {/* Salary Filter */}
-            <div className="min-w-[140px] flex-1 sm:max-w-[200px] sm:min-w-[160px]">
+            {/* Salary Min Input */}
+            <div className="min-w-[120px] flex-1 sm:max-w-[160px] sm:min-w-[120px]">
               <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                Mức lương
+                Lương tối thiểu
               </label>
-              <Select value={salaryRange} onValueChange={setSalaryRange}>
-                <SelectTrigger className="h-10 w-full">
-                  <SelectValue placeholder="Tất cả" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="1">Dưới 10 triệu</SelectItem>
-                  <SelectItem value="2">10 - 20 triệu</SelectItem>
-                  <SelectItem value="3">20 - 40 triệu</SelectItem>
-                  <SelectItem value="4">Trên 40 triệu</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <DollarSign className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={salaryMin}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^\d]/g, "");
+                    setSalaryMin(raw);
+                  }}
+                  className="h-10 w-full pr-12 pl-9 text-sm"
+                />
+                <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-slate-400">
+                  triệu
+                </span>
+              </div>
+            </div>
+
+            {/* Salary Max Input */}
+            <div className="min-w-[120px] flex-1 sm:max-w-[160px] sm:min-w-[120px]">
+              <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Lương tối đa
+              </label>
+              <div className="relative">
+                <DollarSign className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={salaryMax}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^\d]/g, "");
+                    setSalaryMax(raw);
+                  }}
+                  className="h-10 w-full pr-12 pl-9 text-sm"
+                />
+                <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-slate-400">
+                  triệu
+                </span>
+              </div>
             </div>
 
             {/* Search Button */}
