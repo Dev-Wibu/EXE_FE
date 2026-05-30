@@ -1,0 +1,48 @@
+{
+  "project": "EXE_FE",
+  "description": "AI agent permission manifest for the EXE_FE frontend project.",
+  "security": {
+    "mode": "full_access",
+    "terminal": {
+      "auto_execute": false,
+      "allow_list": [
+        "git status",
+        "git diff",
+        "git log",
+        "git add",
+        "git commit",
+        "pnpm dev",
+        "pnpm build",
+        "pnpm format",
+        "pnpm format:check",
+        "pnpm lint",
+        "pnpm lint:fix",
+        "pnpm test",
+        "pnpm test:run",
+        "pnpm test:coverage",
+        "pnpm typecheck",
+        "pnpm validate",
+        "pnpm generate-schema"
+      ]
+    },
+    "file_access": {
+      "allow_non_workspace": false,
+      "explicit_reads": ["./.env"],
+      "protected_files": ["./schema-from-be.d.ts", "./pnpm-lock.yaml"]
+    },
+    "web_access": {
+      "allowed_domains": ["localhost"]
+    }
+  },
+  "mcp_tools": ["chrome-devtools-mcp/*"],
+  "subagents": {
+    "browser": {
+      "enabled": true,
+      "javascript_execution": "disabled",
+      "actuation_rules": {
+        "allow": ["http://localhost:*", "https://localhost:*"],
+        "deny": ["*"]
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
+      "dependsOn": ["generate-schema"],
       "options": {
         "command": "vite"
       }
@@ -39,6 +40,19 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "prettier --write ."
+      }
+    },
+    "format:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --check ."
+      }
+    },
+    "validate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["format:check", "lint", "typecheck", "build"],
+      "options": {
+        "command": "echo Validation complete"
       }
     },
     "test": {

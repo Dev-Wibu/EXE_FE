@@ -1,4 +1,4 @@
-import { Crown, FileText, History, User, Wallet } from "lucide-react";
+import { FileText, History, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -14,32 +14,26 @@ import {
   reconcileWalletBalance,
   upsertPaymentRecoveryContext,
 } from "@/lib";
-import { formatCurrency, formatDate } from "@/lib/formatting";
+import { formatDate } from "@/lib/formatting";
 import { transactionManager, usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
-import { MembershipTab, ProfileTab, TransactionHistoryTab, WalletTab } from "./AccountTabs";
+import { ProfileTab, TransactionHistoryTab, WalletTab } from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
 import { shouldHideTransactionFromHistory } from "./wallet-mapping";
 
-type AccountSubTab =
-  | "profile"
-  | "wallet"
-  | "transactionHistory"
-  | "candidateProfile"
-  | "membership";
+type AccountSubTab = "profile" | "wallet" | "transactionHistory" | "candidateProfile";
 
 const parseAccountSubTab = (value?: string | null): AccountSubTab | null => {
   if (
     value === "profile" ||
     value === "wallet" ||
     value === "transactionHistory" ||
-    value === "candidateProfile" ||
-    value === "membership"
+    value === "candidateProfile"
   ) {
-    return value;
+    return value as AccountSubTab;
   }
 
   return null;
@@ -69,7 +63,6 @@ export function AccountPage() {
   const [topUpAmount, setTopUpAmount] = useState<string>(String(TOP_UP_PRESET_AMOUNTS[1]));
   const topUpInFlightRef = useRef(false);
   const hasLoadedUserDataRef = useRef(false);
-  const [currentPlanName, setCurrentPlanName] = useState<string | null>(null);
 
   // Form state for editing
   const [formData, setFormData] = useState<Partial<UserProfileData>>({});
@@ -111,7 +104,6 @@ export function AccountPage() {
           cv_public_id: userData.cv_public_id || null,
           createdAt: new Date().toISOString(), // Backend doesn't provide createdAt
         });
-        setCurrentPlanName(userData.membershipPlan?.name ?? null);
 
         const transactionResponse = await transactionManager.getByUserId(Number(authUserId));
         const walletResolution = reconcileWalletBalance({
@@ -158,7 +150,6 @@ export function AccountPage() {
           cv_public_id: null,
           createdAt: new Date().toISOString(),
         });
-        setCurrentPlanName(currentAuthUser.membershipPlan?.name ?? null);
         console.warn("Failed to fetch user data, using auth store data");
       }
     } catch (error) {
@@ -177,7 +168,6 @@ export function AccountPage() {
           cv_public_id: null,
           createdAt: new Date().toISOString(),
         });
-        setCurrentPlanName(currentAuthUser.membershipPlan?.name ?? null);
       }
     } finally {
       setIsLoading(false);
@@ -544,8 +534,6 @@ export function AccountPage() {
         return <TransactionHistoryTab transactions={transactions} isLoading={isWalletLoading} />;
       case "candidateProfile":
         return <CandidateProfileTab />;
-      case "membership":
-        return <MembershipTab />;
       default:
         return userProfile ? (
           <ProfileTab
@@ -580,12 +568,6 @@ export function AccountPage() {
       icon: User,
     },
     {
-      id: "wallet",
-      label: "Ví tiền",
-      description: "Theo dõi số dư và nạp tiền",
-      icon: Wallet,
-    },
-    {
       id: "transactionHistory",
       label: "Lịch sử giao dịch",
       description: "Xem các khoản thanh toán gần đây",
@@ -597,26 +579,12 @@ export function AccountPage() {
       description: "Quản lý hồ sơ tuyển dụng cá nhân",
       icon: FileText,
     },
-    {
-      id: "membership",
-      label: "Gói thành viên",
-      description: "Nâng cấp và quản lý quyền lợi",
-      icon: Crown,
-    },
   ];
 
   const summaryAvatar = avatarPreview || userProfile?.avatar || authUser?.avatarUrl || null;
   const summaryName = userProfile?.name || authUser?.name || "Tài khoản";
   const summaryEmail = userProfile?.email || authUser?.email || "—";
   const summaryJoinedAt = userProfile?.createdAt ? formatDate(userProfile.createdAt) : "—";
-  const normalizedPlan = currentPlanName?.toUpperCase() ?? authUser?.membershipPlan?.name;
-  const planLabels: Record<string, string> = {
-    FREE: "INBLUE FREE",
-    NEW: "INBLUE NEW",
-    BASIC: "INBLUE BASIC",
-    PREMIUM: "INBLUE PREMIUM",
-  };
-  const summaryPlanLabel = normalizedPlan ? planLabels[normalizedPlan] || normalizedPlan : "—";
 
   return (
     <div className="px-2 pt-6 pb-10">
@@ -652,23 +620,6 @@ export function AccountPage() {
               </div>
 
               <div className="my-4 h-px bg-slate-200 dark:bg-slate-800" />
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    Gói thành viên hiện tại
-                  </span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {summaryPlanLabel}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Số dư ví</span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {formatCurrency(walletBalance)}
-                  </span>
-                </div>
-              </div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0px_6px_20px_0px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900">

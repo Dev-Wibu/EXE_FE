@@ -11,7 +11,16 @@ export type SchemaMentor = components["schemas"]["Mentor"];
 export type SchemaMentorResponse = components["schemas"]["MentorResponse"];
 export type SchemaUserInfo = components["schemas"]["UserInfo"];
 export type SchemaMentorInfo = components["schemas"]["MentorInfo"];
-export type SchemaMembershipPlan = components["schemas"]["MemberShipPlan"];
+/** MemberShipPlan is no longer in schema-from-be; defined locally to match expected BE shape */
+export type SchemaMembershipPlan = {
+  id?: number;
+  name?: string | null;
+  price?: number | null;
+  max_ai_interview?: number | null;
+  max_practice_sets?: number | null;
+  max_quiz_sets?: number | null;
+  durationDays?: number | null;
+};
 export type SchemaCandidateProfile = components["schemas"]["CandidateProfile"];
 export type SchemaJobDescription = components["schemas"]["JobDescription"];
 export type SchemaCreateJobDescriptionRequest =
@@ -42,7 +51,18 @@ export type SchemaQAResult = components["schemas"]["QAResult"];
 export type SchemaInterviewExchange = components["schemas"]["InterviewExchange"];
 export type SchemaInterviewSessionRedis = components["schemas"]["InterviewSessionRedis"];
 export type SchemaFaceAnalysisResponse = components["schemas"]["FaceAnalysisResponse"];
-export type UserSubscriptionResponse = components["schemas"]["UserSubscriptionResponse"];
+/** UserSubscriptionResponse is no longer in schema-from-be; defined locally to match expected BE shape */
+export type UserSubscriptionResponse = {
+  id?: number;
+  userId?: number;
+  planId?: number;
+  planName?: string | null;
+  active?: boolean | null;
+  expiredAt?: string | null;
+  aiInterviewRemaining?: number | null;
+  practiceSetRemaining?: number | null;
+  quizSetRemaining?: number | null;
+};
 export type TransactionEntity = components["schemas"]["Transaction"];
 export type PaymentEntity = components["schemas"]["Payment"];
 export type PaymentPurpose = NonNullable<components["schemas"]["Payment"]["paymentPurpose"]>;
@@ -97,6 +117,8 @@ export type UserRole = "MENTOR" | "ADMIN" | "STAFF" | "USER";
  */
 export interface User extends Omit<SchemaUser, "role"> {
   role?: UserRole;
+  /** Membership plan from backend user response (not in schema-from-be schema) */
+  membershipPlan?: SchemaMembershipPlan | null;
 }
 
 /**

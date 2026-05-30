@@ -14,12 +14,7 @@ import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   XAxis,
@@ -31,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Spinner } from "@/components/ui/spinner";
 import type { PaymentEntity, TransactionEntity } from "@/interfaces";
 import {
   formatCurrency,
@@ -42,8 +36,6 @@ import {
 } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { dashboardAdminManager } from "@/services";
-
-import { buildMembershipUsageChartData } from "./membershipUsageChart.utils";
 
 type TrendPoint = {
   key: string;
@@ -193,19 +185,6 @@ const formatTransactionTime = (value?: string) => {
   return formatTimeDayMonth(value, "Không có thời gian");
 };
 
-type MembershipPieLabelProps = {
-  value?: number;
-  percent?: number;
-};
-
-const renderMembershipPieLabel = ({ value = 0, percent = 0 }: MembershipPieLabelProps) => {
-  if (!value) {
-    return "";
-  }
-
-  return `${value.toLocaleString("vi-VN")} (${Math.round(percent * 100)}%)`;
-};
-
 export function DashboardOverviewPage() {
   const { data: userCount, isLoading: loadingUsers } = useQuery({
     queryKey: ["admin", "total-users"],
@@ -225,16 +204,6 @@ export function DashboardOverviewPage() {
   const { data: transactionResponse, isLoading: loadingTransactions } = useQuery({
     queryKey: ["admin", "total-transactions"],
     queryFn: () => dashboardAdminManager.getTotalTransactions(),
-  });
-
-  const { data: usageResponse } = useQuery({
-    queryKey: ["admin", "feature-usage-logs"],
-    queryFn: () => dashboardAdminManager.getFeatureUsageLogs(),
-  });
-
-  const { data: userUsageResponse, isLoading: loadingUserUsage } = useQuery({
-    queryKey: ["admin", "user-usage"],
-    queryFn: () => dashboardAdminManager.getUserUsage(),
   });
 
   const [rangeMode, setRangeMode] = useState<RangeMode>("30");
@@ -321,29 +290,6 @@ export function DashboardOverviewPage() {
 
   const incomeRecords = useMemo(() => incomeResponse?.data ?? [], [incomeResponse?.data]);
   const walletRecords = useMemo(() => transactionResponse?.data ?? [], [transactionResponse?.data]);
-  const usageLogs = useMemo(() => {
-    const raw = usageResponse?.data;
-    return Array.isArray(raw) ? raw : [];
-  }, [usageResponse?.data]);
-  const userUsageRecords = useMemo(() => {
-    const raw = userUsageResponse?.data;
-    return Array.isArray(raw) ? raw : [];
-  }, [userUsageResponse?.data]);
-
-  const membershipUsageChartData = useMemo(
-    () => buildMembershipUsageChartData(userUsageRecords),
-    [userUsageRecords]
-  );
-
-  const membershipUsageTotal = useMemo(
-    () => membershipUsageChartData.reduce((sum, item) => sum + item.value, 0),
-    [membershipUsageChartData]
-  );
-
-  const membershipUsageError =
-    userUsageResponse?.success === false
-      ? userUsageResponse.error || "Không thể tải dữ liệu gói thành viên"
-      : null;
 
   const filteredIncomeRecords = useMemo(
     () =>
@@ -359,14 +305,6 @@ export function DashboardOverviewPage() {
         isWithinDateRange(record.createdAt, effectiveRange.fromKey, effectiveRange.toKey)
       ),
     [effectiveRange, walletRecords]
-  );
-
-  const filteredUsageLogs = useMemo(
-    () =>
-      usageLogs.filter((log) =>
-        isWithinDateRange(log.useAt, effectiveRange.fromKey, effectiveRange.toKey)
-      ),
-    [effectiveRange, usageLogs]
   );
 
   const stats = useMemo(() => {
@@ -396,41 +334,6 @@ export function DashboardOverviewPage() {
     () => buildTrendData(filteredWalletRecords, effectiveRange.fromKey, effectiveRange.toKey),
     [effectiveRange, filteredWalletRecords]
   );
-
-  const usageChartData = useMemo(() => {
-    const counts: Record<string, number> = {
-      MENTOR_INTERVIEW: 0,
-      AI_INTERVIEW: 0,
-      PRACTICE: 0,
-      QUIZ: 0,
-    };
-
-    filteredUsageLogs.forEach((log) => {
-      if (counts[log.featureName] !== undefined) {
-        counts[log.featureName] += 1;
-      }
-    });
-
-    const labelMap: Record<string, string> = {
-      MENTOR_INTERVIEW: "Phỏng vấn Mentor",
-      AI_INTERVIEW: "Phỏng vấn AI",
-      PRACTICE: "Luyện tập",
-      QUIZ: "Làm kiểm tra",
-    };
-
-    const colorMap: Record<string, string> = {
-      MENTOR_INTERVIEW: "#8b5cf6", // violet-500
-      AI_INTERVIEW: "#0ea5e9", // sky-500
-      PRACTICE: "#10b981", // emerald-500
-      QUIZ: "#f59e0b", // amber-500
-    };
-
-    return Object.entries(counts).map(([key, value]) => ({
-      name: labelMap[key] || key,
-      value,
-      color: colorMap[key] || "#94a3b8",
-    }));
-  }, [filteredUsageLogs]);
 
   const overviewStats = [
     {
@@ -634,7 +537,7 @@ export function DashboardOverviewPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 xl:grid-cols-2">
         <Card className="border-0 shadow-sm dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg text-violet-600">
@@ -756,183 +659,7 @@ export function DashboardOverviewPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-0 shadow-sm dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-blue-600">
-              <Users className="h-5 w-5" />
-              Người dùng theo gói thành viên
-            </CardTitle>
-            <CardDescription>
-              Thống kê người dùng đang hoạt động theo 4 gói FREE, NEW, BASIC, PREMIUM
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingUserUsage ? (
-              <div className="flex h-[250px] items-center justify-center">
-                <Spinner size="lg" />
-                Đang tải dữ liệu gói thành viên...
-              </div>
-            ) : membershipUsageError ? (
-              <div className="flex h-[250px] flex-col items-center justify-center gap-2 text-center">
-                <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-                  Không thể tải dữ liệu gói thành viên.
-                </p>
-                <p className="max-w-sm text-xs text-slate-500 dark:text-slate-400">
-                  {membershipUsageError}
-                </p>
-              </div>
-            ) : membershipUsageTotal === 0 ? (
-              <div className="flex h-[250px] items-center justify-center text-center text-sm text-slate-500 dark:text-slate-400">
-                Chưa có người dùng đang hoạt động ở 4 gói FREE, NEW, BASIC, PREMIUM.
-              </div>
-            ) : (
-              <>
-                <div className="h-[250px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={membershipUsageChartData}
-                        dataKey="value"
-                        nameKey="label"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={42}
-                        outerRadius={86}
-                        labelLine={false}
-                        label={renderMembershipPieLabel}>
-                        {membershipUsageChartData.map((entry) => (
-                          <Cell key={entry.plan} fill={entry.color} />
-                        ))}
-                      </Pie>
-
-                      <RechartsTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-
-                          const item = payload[0] as {
-                            payload?: (typeof membershipUsageChartData)[0];
-                          };
-
-                          if (!item.payload) return null;
-
-                          return (
-                            <div className="rounded-lg border bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                              <p className="text-xs font-bold text-slate-500">
-                                Gói {item.payload.label}
-                              </p>
-                              <p
-                                className="text-base font-black"
-                                style={{ color: item.payload.color }}>
-                                {item.payload.value.toLocaleString("vi-VN")} người
-                              </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {item.payload.percentage.toFixed(1)}%
-                              </p>
-                            </div>
-                          );
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {membershipUsageChartData.map((item) => (
-                    <div
-                      key={item.plan}
-                      className="rounded-lg border border-slate-100 p-2 text-center dark:border-slate-800">
-                      <div
-                        className="mx-auto mb-1 h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                        {item.label}
-                      </p>
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                        {item.value.toLocaleString("vi-VN")}
-                      </p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        {item.percentage.toFixed(1)}%
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
-                  Tổng số người dùng đang dùng 4 gói:{" "}
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {membershipUsageTotal.toLocaleString("vi-VN")}
-                  </span>
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
       </div>
-
-      <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-emerald-600">
-            <Activity className="h-5 w-5" />
-            Mức độ sử dụng các tính năng
-          </CardTitle>
-          <CardDescription>
-            Thống kê số lượt sử dụng các tính năng chính trong {rangeDays} ngày theo bộ lọc
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={usageChartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                barSize={60}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#64748b" }}
-                  interval={0}
-                  angle={-25}
-                  textAnchor="end"
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: "#64748b" }}
-                  allowDecimals={false}
-                />
-                <RechartsTooltip
-                  cursor={{ fill: "transparent" }}
-                  content={({ active, payload }) => {
-                    if (!active || !payload?.length) return null;
-
-                    const item = payload[0] as {
-                      value?: number;
-                      payload?: (typeof usageChartData)[0];
-                    };
-                    return (
-                      <div className="rounded-lg border bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                        <p className="text-xs font-bold text-slate-500">{item.payload?.name}</p>
-                        <p className="text-lg font-black" style={{ color: item.payload?.color }}>
-                          {item.value?.toLocaleString("vi-VN")} lượt
-                        </p>
-                      </div>
-                    );
-                  }}
-                />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                  {usageChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
 
       <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
         <CardHeader>

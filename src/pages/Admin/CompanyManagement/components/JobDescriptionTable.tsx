@@ -1,7 +1,7 @@
-import { Edit, Power, Search } from "lucide-react";
+import { Edit, Eye, Power, Search } from "lucide-react";
 
 import { SortButton, type SortDirection } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,8 +12,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/formatting";
+import { getJobDescriptionLevelBadge, getJobDescriptionStatusBadge } from "@/lib/status-utils";
+import { cn } from "@/lib/utils";
 
-import type { JobDescription, JobDescriptionLevel, JobDescriptionStatus } from "../types";
+import type { JobDescription } from "../types";
 
 type JobDescriptionSortKey =
   | "idSortValue"
@@ -33,65 +35,21 @@ interface JobDescriptionTableProps {
   jobDescriptions: JobDescription[];
   onEdit: (job: JobDescription) => void;
   onDelete: (job: JobDescription) => void;
+  onView?: (job: JobDescription) => void;
   getSortProps?: (key: JobDescriptionSortKey) => SortProps;
 }
 
-const getLevelBadgeClass = (level?: JobDescriptionLevel): string => {
-  switch (level) {
-    case "INTERN":
-      return "bg-gray-500 hover:bg-gray-500";
-    case "FRESHER":
-      return "bg-green-500 hover:bg-green-500";
-    case "JUNIOR":
-      return "bg-blue-500 hover:bg-blue-500";
-    case "MIDDLE":
-      return "bg-purple-600 hover:bg-purple-600";
-    default:
-      return "bg-gray-400 hover:bg-gray-400";
-  }
-};
-
-const getStatusBadgeClass = (status?: JobDescriptionStatus): string => {
-  switch (status) {
-    case "OPEN":
-      return "bg-emerald-600 hover:bg-emerald-600";
-    case "CLOSED":
-      return "bg-red-600 hover:bg-red-600";
-    case "DRAFT":
-      return "bg-amber-500 hover:bg-amber-500";
-    default:
-      return "bg-gray-400 hover:bg-gray-400";
-  }
-};
-
-const getStatusLabel = (status?: JobDescriptionStatus) => {
-  switch (status) {
-    case "OPEN":
-      return "Đang mở";
-    case "CLOSED":
-      return "Đã đóng";
-    case "DRAFT":
-      return "Nháp";
-    default:
-      return status || "-";
-  }
-};
-
-const formatSalaryRange = (salaryMin?: number, salaryMax?: number, currency?: string): string => {
-  if (salaryMin == null && salaryMax == null) {
-    return "-";
-  }
-
+const formatSalaryRange = (
+  salaryMin?: number | null,
+  salaryMax?: number | null,
+  currency?: string | null
+): string => {
+  if (salaryMin == null && salaryMax == null) return "Thỏa thuận";
   const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
-
   if (salaryMin != null && salaryMax != null) {
     return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
   }
-
-  if (salaryMin != null) {
-    return `Từ ${formatCurrency(salaryMin)}${currencyNote}`;
-  }
-
+  if (salaryMin != null) return `Từ ${formatCurrency(salaryMin)}${currencyNote}`;
   return `Đến ${formatCurrency(salaryMax ?? 0)}${currencyNote}`;
 };
 
@@ -99,19 +57,20 @@ export function JobDescriptionTable({
   jobDescriptions,
   onEdit,
   onDelete,
+  onView,
   getSortProps,
 }: JobDescriptionTableProps) {
   if (jobDescriptions.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <Search className="h-12 w-12 text-gray-400" />
-        <p className="font-['Inter'] text-lg text-gray-500">Chưa có JD nào</p>
+        <Search className="text-muted-foreground/40 h-12 w-12" />
+        <p className="text-muted-foreground text-lg">Chưa có JD nào</p>
       </div>
     );
   }
 
   return (
-    <Table>
+    <Table className="min-w-[980px] table-fixed">
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">
@@ -138,75 +97,82 @@ export function JobDescriptionTable({
               "Trạng thái"
             )}
           </TableHead>
-          <TableHead className="w-48">
+          <TableHead className="w-52">
             {getSortProps ? (
               <SortButton {...getSortProps("salaryMinSortValue")}>Lương</SortButton>
             ) : (
               "Lương"
             )}
           </TableHead>
-          <TableHead className="w-32">
+          <TableHead className="w-28">
             {getSortProps ? (
               <SortButton {...getSortProps("deadlineSortValue")}>Hạn nộp</SortButton>
             ) : (
               "Hạn nộp"
             )}
           </TableHead>
-          <TableHead className="w-32">
+          <TableHead className="w-28">
             {getSortProps ? (
               <SortButton {...getSortProps("updatedAtSortValue")}>Cập nhật</SortButton>
             ) : (
               "Cập nhật"
             )}
           </TableHead>
-          <TableHead className="w-24 text-right">Thao tác</TableHead>
+          <TableHead className="w-28 text-right">Thao tác</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {jobDescriptions.map((job) => (
-          <TableRow key={job.id}>
-            <TableCell className="font-medium">{job.id}</TableCell>
-            <TableCell className="font-medium">{job.title || "-"}</TableCell>
-            <TableCell>
-              {job.level ? (
-                <Badge variant="default" className={`text-white ${getLevelBadgeClass(job.level)}`}>
-                  {job.level}
-                </Badge>
-              ) : (
-                "-"
-              )}
+          <TableRow
+            key={job.id}
+            className={cn(onView && "hover:bg-muted/50 cursor-pointer transition-colors")}
+            onClick={() => onView?.(job)}>
+            <TableCell className="text-muted-foreground font-medium">{job.id}</TableCell>
+            <TableCell className="text-foreground truncate font-semibold">
+              {job.title || "—"}
             </TableCell>
-            <TableCell>
-              <Badge variant="default" className={`text-white ${getStatusBadgeClass(job.status)}`}>
-                {getStatusLabel(job.status)}
-              </Badge>
+            <TableCell onClick={(e) => e.stopPropagation()}>
+              {job.level ? <StatusBadge {...getJobDescriptionLevelBadge(job.level)} /> : "—"}
             </TableCell>
-            <TableCell>
-              {formatSalaryRange(
-                job.salaryMin ?? undefined,
-                job.salaryMax ?? undefined,
-                job.currency
-              )}
+            <TableCell onClick={(e) => e.stopPropagation()}>
+              <StatusBadge {...getJobDescriptionStatusBadge(job.status)} />
             </TableCell>
-            <TableCell>{formatDate(job.deadlineAt)}</TableCell>
-            <TableCell>{formatDate(job.updatedAt)}</TableCell>
-            <TableCell className="text-right">
+            <TableCell className="text-muted-foreground text-sm">
+              {formatSalaryRange(job.salaryMin, job.salaryMax, job.currency)}
+            </TableCell>
+            <TableCell className="text-muted-foreground text-sm">
+              {formatDate(job.deadlineAt)}
+            </TableCell>
+            <TableCell className="text-muted-foreground text-sm">
+              {formatDate(job.updatedAt)}
+            </TableCell>
+            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-end gap-1">
+                {onView && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onView(job)}
+                    className="h-8 w-8 p-0 hover:bg-sky-50 dark:hover:bg-sky-950"
+                    title="Xem chi tiết">
+                    <Eye className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(job)}
-                  className="h-8 w-8 p-0 hover:bg-blue-50"
+                  className="h-8 w-8 p-0 hover:bg-blue-50 dark:hover:bg-blue-950"
                   title="Chỉnh sửa">
-                  <Edit className="h-4 w-4 text-blue-600" />
+                  <Edit className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(job)}
-                  className="h-8 w-8 p-0 hover:bg-red-50"
+                  className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-950"
                   title="Đóng JD">
-                  <Power className="h-4 w-4 text-red-600" />
+                  <Power className="h-4 w-4 text-red-600 dark:text-red-400" />
                 </Button>
               </div>
             </TableCell>

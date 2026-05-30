@@ -26,7 +26,6 @@ const LEVEL_OPTIONS = [
   { value: "FRESHER", label: "Fresher" },
   { value: "JUNIOR", label: "Junior" },
   { value: "MIDDLE", label: "Middle" },
-  { value: "SENIOR", label: "Senior" },
 ];
 
 const SKILL_OPTIONS = [

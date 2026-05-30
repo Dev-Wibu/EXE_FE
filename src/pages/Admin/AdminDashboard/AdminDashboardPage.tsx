@@ -2,7 +2,6 @@ import {
   Bell,
   BookOpen,
   Building2,
-  CreditCard,
   FileQuestion,
   FileText,
   FolderOpen,
@@ -42,7 +41,6 @@ import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
 import { CompanyManagementPage } from "../CompanyManagement";
 import { DashboardOverviewPage } from "../DashboardOverview";
 import { FeedbackManagementPage } from "../FeedbackManagement";
-import { MembershipPlanManagementPage } from "../MembershipPlanManagement";
 import { MentorManagementPage } from "../MentorManagement";
 import { NotificationManagementPage } from "../NotificationManagement";
 import { PostManagementPage } from "../PostManagement";
@@ -72,7 +70,6 @@ type TabType =
   | "posts"
   | "companies"
   | "candidateProfiles"
-  | "membershipPlans"
   | "transactionsPayments";
 
 const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
@@ -91,7 +88,6 @@ const AVAILABLE_TABS: Array<{ type: TabType; label: string }> = [
   { type: "posts", label: "Bài viết & Cộng đồng" },
   { type: "companies", label: "Quản lý công ty" },
   { type: "candidateProfiles", label: "Hồ sơ ứng viên" },
-  { type: "membershipPlans", label: "Gói thành viên" },
   { type: "transactionsPayments", label: "Giao dịch & Thanh toán" },
 ];
 
@@ -115,7 +111,6 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   posts: Newspaper,
   companies: Building2,
   candidateProfiles: FileText,
-  membershipPlans: CreditCard,
   transactionsPayments: Wallet,
 };
 
@@ -135,7 +130,6 @@ const TAB_COLORS: Record<TabType, string> = {
   posts: "text-purple-500",
   companies: "text-sky-600",
   candidateProfiles: "text-teal-600",
-  membershipPlans: "text-rose-600",
   transactionsPayments: "text-indigo-600",
 };
 
@@ -239,12 +233,6 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
         iconColor: "text-teal-600",
       },
       {
-        type: "membershipPlans",
-        label: "Gói thành viên",
-        icon: CreditCard,
-        iconColor: "text-rose-600",
-      },
-      {
         type: "transactionsPayments",
         label: "Giao dịch & Thanh toán",
         icon: Wallet,
@@ -317,12 +305,6 @@ const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
         icon: FileText,
         label: "Hồ sơ ứng viên",
         color: "text-teal-600",
-      },
-      {
-        type: "membershipPlans",
-        icon: CreditCard,
-        label: "Gói thành viên",
-        color: "text-rose-600",
       },
       {
         type: "transactionsPayments",
@@ -524,8 +506,6 @@ export function AdminDashboardPage() {
         return <CompanyManagementPage />;
       case "candidateProfiles":
         return <CandidateProfileManagementPage />;
-      case "membershipPlans":
-        return <MembershipPlanManagementPage />;
       case "transactionsPayments":
         return <TransactionPaymentManagementPage />;
       default:

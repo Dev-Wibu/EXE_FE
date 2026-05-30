@@ -1,0 +1,34 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🚀 Đang kiểm tra mã nguồn trước khi push..."
+
+# 1. Kiểm tra Format
+if ! pnpm run format:check; then
+  echo "\n❌ [LỖI FORMAT] Code của bạn chưa được format đúng chuẩn."
+  echo "👉 Gợi ý sửa: Hãy chạy lệnh 'pnpm format' hoặc 'pnpm run prettier:write'\n"
+  exit 1
+fi
+
+# 2. Kiểm tra Lint
+if ! pnpm run lint; then
+  echo "\n❌ [LỖI LINT] Code của bạn vi phạm quy tắc ESLint/Stylelint."
+  echo "👉 Gợi ý sửa: Hãy kiểm tra log phía trên và chạy 'pnpm lint --fix'\n"
+  exit 1
+fi
+
+# 3. Kiểm tra Typecheck (TypeScript)
+if ! pnpm run typecheck; then
+  echo "\n❌ [LỖI TYPECHECK] Mã nguồn bị lỗi kiểu dữ liệu TypeScript."
+  echo "👉 Gợi ý sửa: Hãy kiểm tra log phía trên để xem dòng code nào đang sai kiểu dữ liệu.\n"
+  exit 1
+fi
+
+# 4. Kiểm tra Build
+if ! pnpm run build; then
+  echo "\n❌ [LỖI BUILD] Dự án không thể build thành công."
+  echo "👉 Gợi ý sửa: Hãy chạy 'pnpm build' ở local để xem chi tiết nguyên nhân.\n"
+  exit 1
+fi
+
+echo "✅ Tất cả kiểm tra đều pass! Đang tiến hành push..."

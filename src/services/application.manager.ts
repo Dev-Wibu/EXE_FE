@@ -1,60 +1,117 @@
-import type { ApiResponse, Application } from "@/interfaces";
+/**
+ * Application Service
+ * Handles job application operations
+ */
 
-import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import { createApiInstance } from "@/constants/api.config";
+import type { ApiResponse } from "@/interfaces";
+import axios from "axios";
 
-export class ApplicationManager {
+export interface Application {
+  id?: number;
+  userId?: number;
+  jdId?: number;
+  currentRoundOrder?: number;
+  status?: "IN_PROGRESS" | "PASSED" | "FAILED" | "SOFT_FAILED";
+  overallScore?: number;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+class ApplicationService {
   private api = createApiInstance();
 
-  async getAll(): Promise<ApiResponse<Application[]>> {
-    try {
-      const response = await this.api.get<Application[]>(API_ENDPOINTS.APPLICATIONS.LIST);
-      return { success: true, data: response.data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Khong the tai danh sach ung tuyen",
-      };
+  private extractErrorMessage(error: unknown): string {
+    if (axios.isAxiosError(error)) {
+      return error.response?.data?.message || error.message || "Đã xảy ra lỗi";
     }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return "Đã xảy ra lỗi không xác định";
   }
 
-  async getById(id: number | string): Promise<ApiResponse<Application>> {
-    try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.APPLICATIONS.DETAIL, { id });
-      const response = await this.api.get<Application>(endpoint);
-      return { success: true, data: response.data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Khong the tai ho so ung tuyen",
-      };
-    }
-  }
-
-  async getMine(): Promise<ApiResponse<Application[]>> {
-    try {
-      const response = await this.api.get<Application[]>(API_ENDPOINTS.APPLICATIONS.MY);
-      return { success: true, data: response.data };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Khong the tai ho so ung tuyen cua ban",
-      };
-    }
-  }
-
+  /**
+   * Apply for a job
+   * POST /api/applications?jdId={jdId}
+   */
   async apply(jdId: number): Promise<ApiResponse<Application>> {
     try {
-      const response = await this.api.post<Application>(API_ENDPOINTS.APPLICATIONS.APPLY, null, {
-        params: { jdId },
-      });
-      return { success: true, data: response.data };
+      const response = await this.api.post(`/api/applications?jdId=${jdId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
+      console.error("[ApplicationService] Apply error:", error);
+      const message = this.extractErrorMessage(error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Khong the ung tuyen vao cong viec",
+        error: message,
+      };
+    }
+  }
+
+  /**
+   * Get all applications
+   * GET /api/applications
+   */
+  async getAll(): Promise<ApiResponse<Application[]>> {
+    try {
+      const response = await this.api.get("/api/applications");
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("[ApplicationService] GetAll error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
+   * Get application by ID
+   * GET /api/applications/{id}
+   */
+  async getById(id: number): Promise<ApiResponse<Application>> {
+    try {
+      const response = await this.api.get(`/api/applications/${id}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("[ApplicationService] GetById error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
+   * Get all applications for current user
+   * GET /api/applications/me
+   */
+  async getMyApplications(): Promise<ApiResponse<Application[]>> {
+    try {
+      const response = await this.api.get("/api/applications/me");
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("[ApplicationService] GetMyApplications error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
       };
     }
   }
 }
 
-export const applicationManager = new ApplicationManager();
+export const applicationService = new ApplicationService();

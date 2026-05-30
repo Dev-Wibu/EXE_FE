@@ -3,7 +3,6 @@ export { CandidateProfileManagementPage } from "./CandidateProfileManagement";
 export { CompanyManagementPage } from "./CompanyManagement";
 export { DashboardOverviewPage } from "./DashboardOverview";
 export { FeedbackManagementPage } from "./FeedbackManagement";
-export { MembershipPlanManagementPage } from "./MembershipPlanManagement";
 export { MentorManagementPage } from "./MentorManagement";
 export { NotificationManagementPage } from "./NotificationManagement";
 export { PostManagementPage } from "./PostManagement";

@@ -78,7 +78,8 @@ export function PostFeedModal({
     });
   };
 
-  const isLiked = Object.values((likedData ?? {}) as Record<string, boolean>)[0] ?? false;
+  const isLiked =
+    Object.values((likedData ?? {}) as unknown as Record<string, boolean>)[0] ?? false;
   const likeCount = live?.likeCount ?? item.likeCount ?? 0;
   const likers = (live?.postLikes ?? item.postLikes ?? []) as PostLikeResponse[];
   const liveCommentCount = live?.commentCount ?? item.commentCount ?? 0;

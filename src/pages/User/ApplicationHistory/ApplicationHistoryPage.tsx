@@ -21,7 +21,7 @@ import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { formatDateTime } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { applicationService, companyManager } from "@/services";
-import type { Application } from "@/services/application.service";
+import type { Application } from "@/services/application.manager";
 import type { Company, JobDescription } from "@/services/company.manager";
 
 // ============================================================
@@ -74,7 +74,6 @@ const LEVEL_LABELS: Record<string, string> = {
   FRESHER: "Fresher",
   JUNIOR: "Junior",
   MIDDLE: "Middle",
-  SENIOR: "Senior",
 };
 
 const ROUND_TYPE_LABELS: Record<string, string> = {
