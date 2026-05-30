@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { postManager } from "@/services/post.manager";
 
-import type { Post } from "@/interfaces/schema.types";
-import type { PostResponseWrapper } from "@/interfaces/schema.types";
+import type { Post, PostResponseWrapper } from "@/interfaces/schema.types";
 import { invalidatePostFeedQueries } from "@/lib/post-feed";
 
 type PostResponseFeed = PostResponseWrapper;
@@ -120,7 +119,8 @@ export function usePublishedFeedFiltered(options?: {
         const matchMajor =
           !options?.majorFilter ||
           options?.majorFilter === "all" ||
-          post?.major?.name || post?.major?.majorName === options?.majorFilter;
+          post?.major?.name ||
+          post?.major?.majorName === options?.majorFilter;
         return matchSearch && matchMajor;
       })
       .sort(() => {

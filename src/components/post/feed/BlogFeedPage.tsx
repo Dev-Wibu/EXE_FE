@@ -51,7 +51,9 @@ export function BlogFeedPage({
     .toUpperCase();
 
   const allMajors = useMemo(() => {
-    return [...new Set(posts.map((p) => p.post?.major?.name || p.post?.major?.majorName).filter(Boolean))] as string[];
+    return [
+      ...new Set(posts.map((p) => p.post?.major?.name || p.post?.major?.majorName).filter(Boolean)),
+    ] as string[];
   }, [posts]);
 
   const filtered = useMemo(() => {
@@ -64,7 +66,8 @@ export function BlogFeedPage({
           post?.title?.toLowerCase().includes(lower) ||
           post?.tags?.some((t) => t.toLowerCase().includes(lower)) ||
           false;
-        const matchMajor = majorFilter === "all" || (post?.major?.name || post?.major?.majorName) === majorFilter;
+        const matchMajor =
+          majorFilter === "all" || (post?.major?.name || post?.major?.majorName) === majorFilter;
         return matchSearch && matchMajor;
       })
       .sort((a, b) => {

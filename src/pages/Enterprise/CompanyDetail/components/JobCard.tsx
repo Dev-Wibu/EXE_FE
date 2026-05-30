@@ -10,7 +10,6 @@ import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { JobDescription } from "@/services/company.manager";
 
 interface JobCardProps {
   job: JobDescription;

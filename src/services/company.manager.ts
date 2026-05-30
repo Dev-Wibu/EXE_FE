@@ -4,10 +4,8 @@
  * Implements BaseManager interface
  */
 
-import type { 
-  ApiResponse, 
-  PaginatedResponse, 
-  PaginationParams,
+import type {
+  ApiResponse,
   CreateCompanyRequest,
   PaginatedResponse,
   PaginationParams,
