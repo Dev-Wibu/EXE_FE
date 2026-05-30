@@ -3,13 +3,13 @@
  * Individual job listing card with 3D hover effect
  */
 
+import type { JobDescription } from "@/services/company.manager";
 import { Clock, DollarSign, Eye, MapPin, Users } from "lucide-react";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { JobDescription } from "@/services/company.manager";
 
 interface JobCardProps {
   job: JobDescription;

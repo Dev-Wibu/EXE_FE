@@ -6,12 +6,6 @@ import { HeroBackground } from "@/components/homepage-redesign";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 
-const popularTags = [
-  { label: "#AI_Engineer", query: "AI" },
-  { label: "#Fullstack", query: "Fullstack" },
-  { label: "#Fintech_Simulator", query: "Fintech" },
-];
-
 export function HomepageHero() {
   const navigate = useNavigate();
   useAuthStore();
@@ -31,10 +25,6 @@ export function HomepageHero() {
     if (e.key === "Enter") {
       handleSearch();
     }
-  };
-
-  const handleTagClick = (query: string) => {
-    navigate(`/enterprise/companies?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -84,21 +74,6 @@ export function HomepageHero() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-
-          {/* Popular Tags */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              Phổ biến:
-            </span>
-            {popularTags.map((tag) => (
-              <button
-                key={tag.label}
-                onClick={() => handleTagClick(tag.query)}
-                className="text-sm font-medium text-[#0058be] transition-colors hover:underline dark:text-[#66B2FF]">
-                {tag.label}
-              </button>
-            ))}
           </div>
         </div>
       </div>
