@@ -44,6 +44,11 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Only fetch majors when modal is open and user is logged in
+    if (!open || !user) {
+      return;
+    }
+
     const fetchMajors = async () => {
       const result = await questionMajorManager.getAll();
       if (result.success && result.data) {
@@ -52,7 +57,7 @@ export function CreatePostModal({ open, onOpenChange, onCreated }: CreatePostMod
       }
     };
     void fetchMajors();
-  }, []);
+  }, [open, user]);
 
   const authorName = user?.name ?? "Bạn";
   const authorInitials = authorName

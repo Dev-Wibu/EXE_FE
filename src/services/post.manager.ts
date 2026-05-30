@@ -34,8 +34,28 @@ function normalizePost(post: Post): Post {
 /**
  * Unwrap backend PostResponse[] into Post[] with embedded counts.
  * Backend wraps each post inside { post, likeCount, commentCount, ... }
+ * API may return:
+ * - Direct array: PostResponseWrapper[] or Post[]
+ * - Paginated: { totalPages, totalElements, content: PostResponseWrapper[] }
  */
 function unwrapPostResponses(data: unknown): Post[] {
+  // Handle standard response wrapper: { traceId, data }
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    const obj = data as Record<string, unknown>;
+    if ("data" in obj && Array.isArray(obj.data)) {
+      return unwrapPostResponses(obj.data);
+    }
+    if ("content" in obj) {
+      return unwrapPostResponses(obj.content);
+    }
+  }
+
+  // Handle paginated response: { content: [...] }
+  if (data && typeof data === "object" && !Array.isArray(data) && "content" in data) {
+    const paginatedData = data as { content?: unknown };
+    return unwrapPostResponses(paginatedData.content);
+  }
+
   if (!Array.isArray(data)) return [];
 
   return data.map((item: PostResponseWrapper | Post, index: number) => {
