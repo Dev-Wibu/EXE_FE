@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Application Service
  * Handles job application operations
@@ -6,7 +8,6 @@
 import { createApiInstance } from "@/constants/api.config";
 import type { ApiResponse } from "@/interfaces";
 import axios from "axios";
-
 export interface Application {
   id?: number;
   userId?: number;
@@ -18,18 +19,16 @@ export interface Application {
   createdAt?: string;
   updatedAt?: string;
 }
-
 class ApplicationService {
   private api = createApiInstance();
-
   private extractErrorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
-      return error.response?.data?.message || error.message || "Đã xảy ra lỗi";
+      return error.response?.data?.message || error.message || t("common.anErrorHasOccurred");
     }
     if (error instanceof Error) {
       return error.message;
     }
-    return "Đã xảy ra lỗi không xác định";
+    return t("general.anUnknownErrorHasOccurred");
   }
 
   /**
@@ -113,5 +112,4 @@ class ApplicationService {
     }
   }
 }
-
 export const applicationService = new ApplicationService();

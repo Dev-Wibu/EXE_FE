@@ -1,9 +1,12 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Company Manager
  * Handles company CRUD operations
  * Implements BaseManager interface
  */
 
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type {
   ApiResponse,
   CreateCompanyRequest,
@@ -11,8 +14,6 @@ import type {
   PaginationParams,
   UpdateCompanyRequest,
 } from "@/interfaces";
-
-import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 
 // ==========================================
 // 1. INTERFACES DÀNH CHO UI (Từ nhánh feat)
@@ -39,14 +40,12 @@ export interface Company {
   culture?: string;
   stats?: CompanyStats;
 }
-
 export interface CompanyStats {
   totalEmployees?: number;
   openPositions?: number;
   interviewsPerMonth?: number;
   hiringRate?: number;
 }
-
 export interface Round {
   id?: number;
   name?: string;
@@ -58,7 +57,6 @@ export interface Round {
   createdAt?: string;
   updatedAt?: string;
 }
-
 export interface RoundConfig {
   instruction?: string;
   submissionFormat?: string;
@@ -68,14 +66,12 @@ export interface RoundConfig {
   evaluationCriteria?: string;
   quizQuestions?: QuizQuestion[];
 }
-
 export interface QuizQuestion {
   questionText?: string;
   options?: string[];
   correctAnswer?: string;
   points?: number;
 }
-
 export interface JobDescription {
   id?: number;
   title?: string;
@@ -100,7 +96,6 @@ export interface JobDescription {
   companyId?: number;
   companyName?: string;
 }
-
 export interface CompanyDetail extends Company {
   jobDescriptions?: JobDescription[];
 }
@@ -113,29 +108,29 @@ export interface CreateCompanyPayload {
   logo?: File;
   banner?: File;
 }
-
 export interface UpdateCompanyPayload {
   data: UpdateCompanyRequest;
   logo?: File;
   banner?: File;
 }
-
 const buildCompanyFormData = (
   data: CreateCompanyRequest | UpdateCompanyRequest,
   logo?: File,
   banner?: File
 ): FormData => {
   const formData = new FormData();
-  formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }));
-
+  formData.append(
+    "data",
+    new Blob([JSON.stringify(data)], {
+      type: "application/json",
+    })
+  );
   if (logo) {
     formData.append("logo", logo);
   }
-
   if (banner) {
     formData.append("banner", banner);
   }
-
   return formData;
 };
 
@@ -152,16 +147,29 @@ export class CompanyManager {
     try {
       // Fallback string nếu API_ENDPOINTS chưa có
       const url = API_ENDPOINTS?.COMPANIES?.LIST || "/api/companies";
-      const response = await this.api.get(url, { params });
+      const response = await this.api.get(url, {
+        params,
+      });
       const data = response.data;
-
       let companyList: Company[] = [];
-
       if (Array.isArray(data)) {
         companyList = data;
       } else if (data && typeof data === "object") {
-        if ("content" in data && Array.isArray((data as { content: unknown }).content)) {
-          companyList = (data as { content: Company[] }).content;
+        if (
+          "content" in data &&
+          Array.isArray(
+            (
+              data as {
+                content: unknown;
+              }
+            ).content
+          )
+        ) {
+          companyList = (
+            data as {
+              content: Company[];
+            }
+          ).content;
         } else {
           const values = Object.values(data as Record<string, unknown>);
           for (const value of values) {
@@ -172,27 +180,33 @@ export class CompanyManager {
           }
         }
       }
-
-      return { success: true, data: companyList };
+      return {
+        success: true,
+        data: companyList,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách công ty",
+        error: error instanceof Error ? error.message : t("common.unableToLoadCompanyList"),
       };
     }
   }
-
   async getById(id: number | string): Promise<ApiResponse<Company>> {
     try {
       const endpoint = API_ENDPOINTS?.COMPANIES?.DETAIL
-        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DETAIL, { id })
+        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DETAIL, {
+            id,
+          })
         : `/api/companies/${id}`;
       const response = await this.api.get<Company>(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải thông tin công ty",
+        error: error instanceof Error ? error.message : t("common.unableToLoadCompanyInformation"),
       };
     }
   }
@@ -203,13 +217,18 @@ export class CompanyManager {
       const formData = buildCompanyFormData(payload.data, payload.logo, payload.banner);
       const url = API_ENDPOINTS?.COMPANIES?.CREATE || "/api/companies";
       const response = await this.api.post<Company>(url, formData, {
-        headers: { "Content-Type": undefined },
+        headers: {
+          "Content-Type": undefined,
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo công ty",
+        error: error instanceof Error ? error.message : t("common.cannotCreateCompany"),
       };
     }
   }
@@ -220,28 +239,36 @@ export class CompanyManager {
       const formData = buildCompanyFormData(payload.data, payload.logo, payload.banner);
       const url = API_ENDPOINTS?.COMPANIES?.UPDATE || "/api/companies";
       const response = await this.api.put<Company>(url, formData, {
-        headers: { "Content-Type": undefined },
+        headers: {
+          "Content-Type": undefined,
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật công ty",
+        error: error instanceof Error ? error.message : t("common.unableToUpdateCompany"),
       };
     }
   }
-
   async delete(id: number | string): Promise<ApiResponse<void>> {
     try {
       const endpoint = API_ENDPOINTS?.COMPANIES?.DELETE
-        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DELETE, { id })
+        ? buildEndpoint(API_ENDPOINTS.COMPANIES.DELETE, {
+            id,
+          })
         : `/api/companies/${id}`;
       await this.api.delete(endpoint);
-      return { success: true };
+      return {
+        success: true,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa công ty",
+        error: error instanceof Error ? error.message : t("general.cannotDeleteCompany"),
       };
     }
   }
@@ -253,44 +280,73 @@ export class CompanyManager {
   async getDetail(id: string | number): Promise<ApiResponse<CompanyDetail>> {
     try {
       const response = await this.api.get(`/api/companies/${id}/detail`);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải chi tiết công ty",
+        error: error instanceof Error ? error.message : t("general.unableToLoadCompanyDetails"),
       };
     }
   }
-
   async getJobs(
     id: string | number,
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<JobDescription> | JobDescription[]>> {
     try {
-      const response = await this.api.get(`/api/job-descriptions/company/${id}`, { params });
+      const response = await this.api.get(`/api/job-descriptions/company/${id}`, {
+        params,
+      });
       const data = response.data;
-
       let jobs: JobDescription[] = [];
-
       if (Array.isArray(data)) {
         jobs = data;
       } else if (data && typeof data === "object") {
-        if ("content" in data && Array.isArray((data as { content: unknown }).content)) {
-          jobs = (data as { content: JobDescription[] }).content;
-        } else if ("data" in data && Array.isArray((data as { data: unknown }).data)) {
-          jobs = (data as { data: JobDescription[] }).data;
+        if (
+          "content" in data &&
+          Array.isArray(
+            (
+              data as {
+                content: unknown;
+              }
+            ).content
+          )
+        ) {
+          jobs = (
+            data as {
+              content: JobDescription[];
+            }
+          ).content;
+        } else if (
+          "data" in data &&
+          Array.isArray(
+            (
+              data as {
+                data: unknown;
+              }
+            ).data
+          )
+        ) {
+          jobs = (
+            data as {
+              data: JobDescription[];
+            }
+          ).data;
         }
       }
-
-      return { success: true, data: jobs };
+      return {
+        success: true,
+        data: jobs,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách việc làm",
+        error: error instanceof Error ? error.message : t("general.unableToLoadJobListing"),
       };
     }
   }
-
   async searchJobs(params: {
     titleKeyword?: string;
     status?: "OPEN" | "CLOSED" | "DRAFT";
@@ -299,39 +355,55 @@ export class CompanyManager {
     salaryMax?: number;
   }): Promise<ApiResponse<JobDescription[]>> {
     try {
-      const response = await this.api.get("/api/job-descriptions/search", { params });
+      const response = await this.api.get("/api/job-descriptions/search", {
+        params,
+      });
       const data = response.data;
-
       let jobs: JobDescription[] = [];
-
       if (Array.isArray(data)) {
         jobs = data;
       } else if (data && typeof data === "object") {
-        if ("content" in data && Array.isArray((data as { content: unknown }).content)) {
-          jobs = (data as { content: JobDescription[] }).content;
+        if (
+          "content" in data &&
+          Array.isArray(
+            (
+              data as {
+                content: unknown;
+              }
+            ).content
+          )
+        ) {
+          jobs = (
+            data as {
+              content: JobDescription[];
+            }
+          ).content;
         }
       }
-
-      return { success: true, data: jobs };
+      return {
+        success: true,
+        data: jobs,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tìm kiếm việc làm",
+        error: error instanceof Error ? error.message : t("general.canTSearchForA"),
       };
     }
   }
-
   async getJobById(id: number): Promise<ApiResponse<JobDescription>> {
     try {
       const response = await this.api.get(`/api/job-descriptions/${id}`);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải thông tin việc làm",
+        error: error instanceof Error ? error.message : t("general.unableToLoadJobInformation"),
       };
     }
   }
 }
-
 export const companyManager = new CompanyManager();

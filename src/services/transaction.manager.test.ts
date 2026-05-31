@@ -1,4 +1,6 @@
+import i18n from "@/lib/i18n";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+const t = i18n.t.bind(i18n);
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
@@ -72,7 +74,7 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferOut(25000, 404);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("kết quả hợp lệ");
+    expect(result.error).toContain(t("general.validResults"));
     expect(mockApi.post).toHaveBeenCalledWith(
       "/api/transactions/transfer-out",
       null,
@@ -124,7 +126,7 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferOut(999999, 55, "MENTOR_INTERVIEW");
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Số dư ví không đủ");
+    expect(result.error).toContain(t("general.walletBalanceIsNotEnough1"));
   });
 
   it("maps insufficient-balance when backend returns only status 400", async () => {
@@ -138,7 +140,7 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferOut(999999, 55, "MENTOR_INTERVIEW");
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Số dư ví không đủ");
+    expect(result.error).toContain(t("general.walletBalanceIsNotEnough1"));
   });
 
   it("keeps transfer-out redirect url when backend still responds with checkout link", async () => {

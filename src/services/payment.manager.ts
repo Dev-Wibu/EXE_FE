@@ -1,4 +1,6 @@
 import type { ApiResponse, PaymentEntity, PaymentPurpose } from "@/interfaces";
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import { getNormalizedErrorMessage } from "@/lib/error-normalizer";
@@ -75,7 +77,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tải danh sách thanh toán."),
+        error: getErrorMessage(error, t("general.unableToLoadPaymentList")),
       };
     }
   }
@@ -91,7 +93,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tải chi tiết thanh toán."),
+        error: getErrorMessage(error, t("general.unableToLoadPaymentDetails")),
       };
     }
   }
@@ -105,7 +107,7 @@ export class PaymentManager {
       if (!item) {
         return {
           success: false,
-          error: "Không tìm thấy thanh toán theo transactionCode.",
+          error: t("general.paymentByTransactioncodeNotFound"),
         };
       }
 
@@ -116,7 +118,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tải thanh toán theo transaction code."),
+        error: getErrorMessage(error, t("general.unableToLoadPaymentBy")),
       };
     }
   }
@@ -132,7 +134,7 @@ export class PaymentManager {
     if (normalizedAmount <= 0) {
       return {
         success: false,
-        error: "Số tiền thanh toán không hợp lệ.",
+        error: t("general.invalidPaymentAmount"),
       };
     }
 
@@ -155,12 +157,12 @@ export class PaymentManager {
 
       return {
         success: false,
-        error: "Backend không trả về link thanh toán hợp lệ.",
+        error: t("general.theBackendDoesNotReturn"),
       };
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tạo thanh toán mới."),
+        error: getErrorMessage(error, t("general.cannotCreateNewPayment")),
       };
     }
   }
@@ -180,7 +182,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể hủy thanh toán."),
+        error: getErrorMessage(error, t("payment_paymentcancelpage.tsx.khong_the_huy_thanh_toan")),
       };
     }
   }

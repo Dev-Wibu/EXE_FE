@@ -1,73 +1,60 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Chat Manager
  * Handles AI chat session and message operations
  */
 
-import type { ApiResponse, PaginatedResponse, PaginationParams } from "@/interfaces";
-import type { components } from "../../schema-from-be";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import type { ApiResponse, PaginatedResponse, PaginationParams } from "@/interfaces";
 import { formatTime } from "@/lib/formatting";
-
+import type { components } from "../../schema-from-be";
 export interface ChatSession {
   id: number;
   title: string;
   lastMessage: string;
   lastMessageTime: string;
 }
-
 export interface ChatMessage {
   id: number;
   sender: "ai" | "user";
   content: string;
   time: string;
 }
-
 type BackendChatMessage = components["schemas"]["ChatMessage"];
 type BackendMentor = components["schemas"]["MentorResponse"];
 type BackendUserResponse = components["schemas"]["UserResponse"];
-
 export type ChatHistoryMessage = BackendChatMessage & {
   sender?: "ai" | "user" | "me";
   sender_id?: number;
   sender_type?: string;
   time?: string;
 };
-
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null;
 };
-
 const mapBackendSenderToUi = (senderType?: string): "ai" | "user" => {
   const normalized = senderType?.toUpperCase();
   return normalized === "AI" ? "ai" : "user";
 };
-
 const formatTimeForUi = (timestamp?: string): string => {
   if (!timestamp) {
     return formatTime(new Date());
   }
-
   return formatTime(timestamp, timestamp);
 };
-
 export class ChatManager {
   private api = createApiInstance();
-
   private mapBackendMessageToUi(raw: BackendChatMessage | Record<string, unknown>): ChatMessage {
     const idValue = raw.id;
     const id =
       typeof idValue === "number" ? idValue : Date.now() + Math.floor(Math.random() * 1000);
-
     const senderTypeValue = raw.senderType;
     const senderType = typeof senderTypeValue === "string" ? senderTypeValue : undefined;
-
     const contentValue = raw.content;
     const content = typeof contentValue === "string" ? contentValue : "";
-
     const timestampValue = raw.timestamp;
     const timestamp = typeof timestampValue === "string" ? timestampValue : undefined;
-
     return {
       id,
       sender: mapBackendSenderToUi(senderType),
@@ -75,16 +62,13 @@ export class ChatManager {
       time: formatTimeForUi(timestamp),
     };
   }
-
   private normalizeMessagesFromApi(data: unknown): ChatMessage[] {
     if (Array.isArray(data)) {
       return data.filter(isRecord).map((item) => this.mapBackendMessageToUi(item));
     }
-
     if (isRecord(data) && Array.isArray(data.content)) {
       return data.content.filter(isRecord).map((item) => this.mapBackendMessageToUi(item));
     }
-
     return [];
   }
 
@@ -95,7 +79,9 @@ export class ChatManager {
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<ChatSession> | ChatSession[]>> {
     try {
-      const response = await this.api.get(API_ENDPOINTS.CHAT.SESSIONS, { params });
+      const response = await this.api.get(API_ENDPOINTS.CHAT.SESSIONS, {
+        params,
+      });
       return {
         success: true,
         data: response.data,
@@ -103,7 +89,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách phiên trò chuyện",
+        error: error instanceof Error ? error.message : t("general.unableToLoadChatSession"),
       };
     }
   }
@@ -113,7 +99,9 @@ export class ChatManager {
    */
   async getChatSession(sessionId: number): Promise<ApiResponse<ChatSession>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, { id: sessionId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, {
+        id: sessionId,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -122,7 +110,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải phiên",
+        error: error instanceof Error ? error.message : t("general.sessionCouldNotBeLoaded"),
       };
     }
   }
@@ -135,17 +123,19 @@ export class ChatManager {
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<ChatMessage> | ChatMessage[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.MESSAGES, { id: sessionId });
-      const response = await this.api.get(endpoint, { params });
+      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.MESSAGES, {
+        id: sessionId,
+      });
+      const response = await this.api.get(endpoint, {
+        params,
+      });
       const normalizedMessages = this.normalizeMessagesFromApi(response.data);
-
       if (normalizedMessages.length > 0) {
         return {
           success: true,
           data: normalizedMessages,
         };
       }
-
       return {
         success: true,
         data: response.data,
@@ -153,7 +143,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải tin nhắn",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadMessage"),
       };
     }
   }
@@ -179,7 +169,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải lịch sử trò chuyện",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadChatHistory"),
       };
     }
   }
@@ -191,7 +181,10 @@ export class ChatManager {
   async getContacts(myId: number, role: string): Promise<ApiResponse<number[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.MESSAGES.CONTACTS, {
-        params: { myId, role: role.toUpperCase() },
+        params: {
+          myId,
+          role: role.toUpperCase(),
+        },
       });
       return {
         success: true,
@@ -200,7 +193,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh bạ liên hệ",
+        error: error instanceof Error ? error.message : t("general.unableToLoadContacts"),
       };
     }
   }
@@ -219,7 +212,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách mentor",
+        error: error instanceof Error ? error.message : t("common.unableToLoadMentorList"),
       };
     }
   }
@@ -230,7 +223,9 @@ export class ChatManager {
    */
   async getMentorDetail(id: number): Promise<ApiResponse<BackendMentor>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, {
+        id,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -239,7 +234,8 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải thông tin mentor",
+        error:
+          error instanceof Error ? error.message : t("general.unableToDownloadMentorInformation"),
       };
     }
   }
@@ -250,7 +246,9 @@ export class ChatManager {
    */
   async getUserDetail(userId: number): Promise<ApiResponse<BackendUserResponse>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.USER.FIND_BY_ID, { userId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.USER.FIND_BY_ID, {
+        userId,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -259,7 +257,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải thông tin người dùng",
+        error: error instanceof Error ? error.message : t("general.unableToLoadUserInformation"),
       };
     }
   }
@@ -269,8 +267,12 @@ export class ChatManager {
    */
   async sendMessage(sessionId: number, content: string): Promise<ApiResponse<ChatMessage>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SEND_MESSAGE, { id: sessionId });
-      const response = await this.api.post(endpoint, { content });
+      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SEND_MESSAGE, {
+        id: sessionId,
+      });
+      const response = await this.api.post(endpoint, {
+        content,
+      });
       return {
         success: true,
         data: response.data,
@@ -278,7 +280,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể gửi tin nhắn",
+        error: error instanceof Error ? error.message : t("general.cannotSendMessage"),
       };
     }
   }
@@ -288,7 +290,9 @@ export class ChatManager {
    */
   async getAIResponse(sessionId: number): Promise<ApiResponse<ChatMessage>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.AI_RESPONSE, { id: sessionId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.AI_RESPONSE, {
+        id: sessionId,
+      });
       const response = await this.api.post(endpoint);
       return {
         success: true,
@@ -297,7 +301,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể nhận phản hồi AI",
+        error: error instanceof Error ? error.message : t("general.unableToReceiveAiResponse"),
       };
     }
   }
@@ -307,7 +311,9 @@ export class ChatManager {
    */
   async createChatSession(title: string): Promise<ApiResponse<ChatSession>> {
     try {
-      const response = await this.api.post(API_ENDPOINTS.CHAT.CREATE_SESSION, { title });
+      const response = await this.api.post(API_ENDPOINTS.CHAT.CREATE_SESSION, {
+        title,
+      });
       return {
         success: true,
         data: response.data,
@@ -315,7 +321,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo phiên",
+        error: error instanceof Error ? error.message : t("general.unableToCreateSession"),
       };
     }
   }
@@ -325,7 +331,9 @@ export class ChatManager {
    */
   async deleteChatSession(sessionId: number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, { id: sessionId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.CHAT.SESSION_DETAIL, {
+        id: sessionId,
+      });
       await this.api.post(endpoint);
       return {
         success: true,
@@ -333,7 +341,7 @@ export class ChatManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa phiên",
+        error: error instanceof Error ? error.message : t("general.cannotDeleteSession"),
       };
     }
   }

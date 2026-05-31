@@ -1,5 +1,7 @@
+import i18n from "@/lib/i18n";
+import { PaymentManager } from "@/services/payment.manager";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
+const t = i18n.t.bind(i18n);
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
     get: vi.fn(),
@@ -7,52 +9,47 @@ const { mockApi } = vi.hoisted(() => ({
     delete: vi.fn(),
   },
 }));
-
 vi.mock("@/constants/api.config", async () => {
   const actual =
     await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
-
   return {
     ...actual,
     createApiInstance: () => mockApi,
   };
 });
-
-import { PaymentManager } from "@/services/payment.manager";
-
 describe("PaymentManager API mode", () => {
   beforeEach(() => {
     mockApi.get.mockReset();
     mockApi.post.mockReset();
     mockApi.delete.mockReset();
   });
-
   it("returns payment list from API", async () => {
     mockApi.get.mockResolvedValueOnce({
-      data: [{ id: 1, transactionCode: "PAY-1", amount: 99000 }],
+      data: [
+        {
+          id: 1,
+          transactionCode: "PAY-1",
+          amount: 99000,
+        },
+      ],
     });
-
     const manager = new PaymentManager();
     const result = await manager.getAll();
-
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(1);
     expect(mockApi.get).toHaveBeenCalledTimes(1);
   });
-
   it("creates payment and returns checkout url from API payload", async () => {
     mockApi.post.mockResolvedValueOnce({
       data: {
         checkoutUrl: "https://payos.vn/checkout?orderCode=ORDER-123",
       },
     });
-
     const manager = new PaymentManager();
     const result = await manager.create(120000, 101, {
       planId: 5,
       planName: "BASIC",
     });
-
     expect(result.success).toBe(true);
     expect(result.data).toContain("orderCode=ORDER-123");
     expect(mockApi.post).toHaveBeenCalledTimes(1);
@@ -68,19 +65,16 @@ describe("PaymentManager API mode", () => {
       })
     );
   });
-
   it("passes explicit payment purpose when provided", async () => {
     mockApi.post.mockResolvedValueOnce({
       data: {
         checkoutUrl: "https://payos.vn/checkout?orderCode=ORDER-999",
       },
     });
-
     const manager = new PaymentManager();
     const result = await manager.create(88000, 77, {
       paymentPurpose: "MENTOR_INTERVIEW",
     });
-
     expect(result.success).toBe(true);
     expect(mockApi.post).toHaveBeenCalledWith(
       "/api/payments/pay",
@@ -94,30 +88,24 @@ describe("PaymentManager API mode", () => {
       })
     );
   });
-
   it("returns error when create amount is invalid", async () => {
     const manager = new PaymentManager();
     const result = await manager.create(0, 1);
-
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Số tiền");
+    expect(result.error).toContain(t("common.amount"));
     expect(mockApi.post).not.toHaveBeenCalled();
   });
-
   it("returns error when API create does not include checkout URL", async () => {
     mockApi.post.mockResolvedValueOnce({
       data: {
         id: 123,
       },
     });
-
     const manager = new PaymentManager();
     const result = await manager.create(50000, 10);
-
     expect(result.success).toBe(false);
-    expect(result.error).toContain("link thanh toán");
+    expect(result.error).toContain(t("general.paymentLink"));
   });
-
   it("cancels payment by transaction code", async () => {
     mockApi.get.mockResolvedValueOnce({
       data: {
@@ -126,15 +114,12 @@ describe("PaymentManager API mode", () => {
         status: "FAILED",
       },
     });
-
     const manager = new PaymentManager();
     const result = await manager.cancel("ORDER-9");
-
     expect(result.success).toBe(true);
     expect(result.data?.status).toBe("FAILED");
     expect(mockApi.get).toHaveBeenCalledTimes(1);
   });
-
   it("returns backend cancel error message when API rejects", async () => {
     mockApi.get.mockRejectedValueOnce({
       response: {
@@ -144,25 +129,26 @@ describe("PaymentManager API mode", () => {
       },
       message: "Request failed with status code 404",
     });
-
     const manager = new PaymentManager();
     const result = await manager.cancel("ORDER-404");
-
     expect(result.success).toBe(false);
     expect(result.error).toContain("Payment not found with transaction code");
   });
-
   it("finds payment by transaction code from payment list", async () => {
     mockApi.get.mockResolvedValueOnce({
       data: [
-        { id: 1, transactionCode: "TX-1" },
-        { id: 2, transactionCode: "TX-2" },
+        {
+          id: 1,
+          transactionCode: "TX-1",
+        },
+        {
+          id: 2,
+          transactionCode: "TX-2",
+        },
       ],
     });
-
     const manager = new PaymentManager();
     const result = await manager.getByTransactionCode("TX-2");
-
     expect(result.success).toBe(true);
     expect(result.data?.id).toBe(2);
   });

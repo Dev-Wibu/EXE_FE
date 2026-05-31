@@ -1,12 +1,13 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Quiz Set Manager
  * Handles quiz set operations (take quizzes, submit answers, view results)
  * Based on schema-from-be.d.ts API specification
  */
 
-import type { ApiResponse } from "@/interfaces";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import type { ApiResponse } from "@/interfaces";
 import type { PracticeSet } from "./practice-set.manager";
 
 /**
@@ -62,7 +63,6 @@ export interface QuizItemCreateRequest {
   correctAnswer?: string;
   explanation?: string;
 }
-
 export class QuizSetManager {
   private api = createApiInstance();
 
@@ -73,11 +73,14 @@ export class QuizSetManager {
   async getAll(): Promise<ApiResponse<QuizSet[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.QUIZ_SETS.LIST);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách bộ trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.unableToLoadListOf1"),
       };
     }
   }
@@ -88,13 +91,18 @@ export class QuizSetManager {
    */
   async getById(quizId: number): Promise<ApiResponse<QuizSet>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.DETAIL, { quizId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.DETAIL, {
+        quizId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bộ trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadTestSet"),
       };
     }
   }
@@ -107,13 +115,19 @@ export class QuizSetManager {
   async create(quizId: number, quizName: string): Promise<ApiResponse<QuizSet>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE, null, {
-        params: { quizId, quizName },
+        params: {
+          quizId,
+          quizName,
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bộ trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.unableToCreateMultipleChoice"),
       };
     }
   }
@@ -131,13 +145,19 @@ export class QuizSetManager {
   ): Promise<ApiResponse<QuizItem[]>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE_FULL, items, {
-        params: { practiceSetId, QuizName: quizName },
+        params: {
+          practiceSetId,
+          QuizName: quizName,
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bộ trắc nghiệm đầy đủ",
+        error: error instanceof Error ? error.message : t("general.unableToCreateFullTest"),
       };
     }
   }
@@ -151,14 +171,19 @@ export class QuizSetManager {
     try {
       // AI generation can take significantly longer than the default 30s timeout
       const response = await this.api.post(API_ENDPOINTS.QUIZ_SETS.CREATE_FULL_AI, null, {
-        params: { practiceSetId },
+        params: {
+          practiceSetId,
+        },
         timeout: 120000,
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bài kiểm tra AI",
+        error: error instanceof Error ? error.message : t("common.unableToCreateAiTest"),
       };
     }
   }
@@ -170,13 +195,18 @@ export class QuizSetManager {
    */
   async submit(quizId: number, answers: Record<string, string>): Promise<ApiResponse<QuizSet>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.SUBMIT, { quizId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.SUBMIT, {
+        quizId,
+      });
       const response = await this.api.post(endpoint, answers);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể nộp bài trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.cannotSubmitQuiz"),
       };
     }
   }
@@ -191,11 +221,14 @@ export class QuizSetManager {
         practiceSetId,
       });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải lịch sử trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadQuizHistory"),
       };
     }
   }
@@ -206,13 +239,17 @@ export class QuizSetManager {
    */
   async delete(quizId: number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.DELETE, { quizId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.DELETE, {
+        quizId,
+      });
       await this.api.delete(endpoint);
-      return { success: true };
+      return {
+        success: true,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa bộ trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.cannotDeleteMultipleChoiceSets"),
       };
     }
   }
@@ -227,11 +264,14 @@ export class QuizSetManager {
         quizSetId,
       });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải mục trắc nghiệm",
+        error: error instanceof Error ? error.message : t("general.unableToLoadMultipleChoice"),
       };
     }
   }

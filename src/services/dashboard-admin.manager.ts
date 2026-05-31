@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Dashboard Admin Manager
  * Handles dashboard-specific API operations for administrators
@@ -22,7 +24,7 @@ export class DashboardAdminManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể lấy tổng số người dùng",
+        error: error instanceof Error ? error.message : t("general.unableToGetTotalNumber"),
       };
     }
   }
@@ -40,7 +42,7 @@ export class DashboardAdminManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể lấy tổng số mentor",
+        error: error instanceof Error ? error.message : t("general.itIsNotPossibleTo"),
       };
     }
   }
@@ -58,7 +60,7 @@ export class DashboardAdminManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể lấy dữ liệu doanh thu",
+        error: error instanceof Error ? error.message : t("general.unableToGetRevenueData"),
       };
     }
   }
@@ -76,7 +78,7 @@ export class DashboardAdminManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể lấy dữ liệu phiên học",
+        error: error instanceof Error ? error.message : t("general.unableToGetSessionData"),
       };
     }
   }
@@ -94,7 +96,7 @@ export class DashboardAdminManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể lấy nhật ký giao dịch",
+        error: error instanceof Error ? error.message : t("general.unableToGetTransactionLog"),
       };
     }
   }

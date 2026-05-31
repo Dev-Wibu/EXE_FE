@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Notification Manager
  * Handles notification CRUD operations
@@ -45,7 +47,7 @@ export class NotificationManager implements BaseManager<Notification> {
     // Note: This endpoint requires userId in path
     return {
       success: false,
-      error: "Vui lòng dùng phương thức getByUserId",
+      error: t("general.pleaseUseTheGetbyuseridMethod"),
     };
   }
 
@@ -64,7 +66,7 @@ export class NotificationManager implements BaseManager<Notification> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải thông báo",
+        error: error instanceof Error ? error.message : t("general.unableToLoadNotification"),
       };
     }
   }
@@ -78,7 +80,7 @@ export class NotificationManager implements BaseManager<Notification> {
 
     return {
       success: false,
-      error: "API không hỗ trợ lấy từng thông báo theo ID",
+      error: t("general.theApiDoesNotSupport"),
     };
   }
 
@@ -107,7 +109,7 @@ export class NotificationManager implements BaseManager<Notification> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo thông báo",
+        error: error instanceof Error ? error.message : t("general.unableToCreateNotification"),
       };
     }
   }
@@ -127,7 +129,7 @@ export class NotificationManager implements BaseManager<Notification> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể đánh dấu thông báo đã đọc",
+        error: error instanceof Error ? error.message : t("general.notificationsCannotBeMarkedAs"),
       };
     }
   }
@@ -145,7 +147,7 @@ export class NotificationManager implements BaseManager<Notification> {
 
     return {
       success: false,
-      error: "Không hỗ trợ cập nhật thông báo",
+      error: t("general.notificationUpdatesAreNotSupported"),
     };
   }
 
@@ -157,7 +159,7 @@ export class NotificationManager implements BaseManager<Notification> {
 
     return {
       success: false,
-      error: "Không hỗ trợ xóa thông báo",
+      error: t("general.clearingNotificationsIsNotSupported"),
     };
   }
 }

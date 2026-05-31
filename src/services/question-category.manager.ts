@@ -1,12 +1,13 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Question Category Manager
  * Handles question category CRUD operations for admin management
  * Based on schema-from-be.d.ts API specification
  */
 
-import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 
 /**
  * QuestionCategory type based on backend schema (QuestionLesson)
@@ -27,7 +28,6 @@ export interface QuestionCategoryFormData {
   description?: string;
   urlTutorial?: string;
 }
-
 export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
   private api = createApiInstance();
 
@@ -69,7 +69,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh mục câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToLoadQuestionList"),
       };
     }
   }
@@ -80,7 +80,9 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
    */
   async getById(id: string | number): Promise<ApiResponse<QuestionCategory>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DETAIL, {
+        id,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -89,7 +91,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh mục câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToLoadQuestionList"),
       };
     }
   }
@@ -105,7 +107,8 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       // id: 0 indicates new record creation
       // Map categoryName → lessonName (backend schema uses QuestionLesson.lessonName)
       const categoryPayload = {
-        id: 0, // Required: 0 for creation
+        id: 0,
+        // Required: 0 for creation
         lessonName: data.categoryName,
         description: data.description,
         urlTutorial: data.urlTutorial ?? "",
@@ -121,7 +124,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo danh mục câu hỏi",
+        error: error instanceof Error ? error.message : t("common.unableToCreateQuestionCategory"),
       };
     }
   }
@@ -150,7 +153,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật danh mục câu hỏi",
+        error: error instanceof Error ? error.message : t("common.unableToUpdateQuestionList"),
       };
     }
   }
@@ -162,7 +165,9 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DELETE, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DELETE, {
+        id,
+      });
       // Use DELETE method as per schema
       await this.api.delete(endpoint);
       return {
@@ -171,7 +176,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa danh mục câu hỏi",
+        error: error instanceof Error ? error.message : t("common.cannotDeleteQuestionCategories"),
       };
     }
   }

@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Mentor Feedback Manager
  * Handles mentor feedback CRUD operations
@@ -60,7 +62,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách phản hồi mentor",
+        error: error instanceof Error ? error.message : t("general.unableToLoadMentorFeedback"),
       };
     }
   }
@@ -77,7 +79,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
       if (!response.data || typeof response.data !== "object") {
         return {
           success: false,
-          error: "Không tìm thấy phản hồi",
+          error: t("general.noResponsesFound"),
         };
       }
 
@@ -94,12 +96,12 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
           ? apiMessage
           : error instanceof Error
             ? error.message
-            : "Không thể tải phản hồi mentor";
+            : t("general.unableToLoadMentorFeedback1");
 
       return {
         success: false,
         error: /not found|no value present/i.test(errorMessage)
-          ? "Không tìm thấy phản hồi"
+          ? t("general.noResponsesFound")
           : errorMessage,
       };
     }
@@ -120,7 +122,8 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải phản hồi theo mentor",
+        error:
+          error instanceof Error ? error.message : t("general.unableToDownloadFeedbackAccording"),
       };
     }
   }
@@ -141,7 +144,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo phản hồi mentor",
+        error: error instanceof Error ? error.message : t("general.unableToCreateMentorResponse"),
       };
     }
   }
@@ -167,7 +170,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật phản hồi mentor",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateMentorResponse"),
       };
     }
   }
@@ -180,7 +183,7 @@ export class MentorFeedbackManager implements BaseManager<MentorFeedback> {
 
     return {
       success: false,
-      error: "Không hỗ trợ xóa phản hồi mentor",
+      error: t("general.deleteMentorFeedbackIsNot"),
     };
   }
 }

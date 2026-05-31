@@ -1,7 +1,9 @@
 import { API_BASE_URL } from "@/constants/api.config";
+import i18n from "@/lib/i18n";
 import { useAuthStore } from "@/stores/authStore";
 import { Client, type Message } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+const t = i18n.t.bind(i18n);
 
 export type SocketConnectionState = "connecting" | "connected" | "disconnected";
 
@@ -143,7 +145,7 @@ class SocketService {
       });
       return true;
     } catch (error) {
-      console.error("Không thể gửi tin nhắn", error);
+      console.error(t("general.cannotSendMessage"), error);
       this.setConnectionState("disconnected");
       return false;
     }

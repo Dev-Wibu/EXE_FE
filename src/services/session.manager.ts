@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Session Manager
  * Handles session CRUD operations for admin management
@@ -197,7 +199,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách phiên",
+        error: error instanceof Error ? error.message : t("general.unableToLoadSessionList"),
       };
     }
   }
@@ -217,7 +219,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải phiên",
+        error: error instanceof Error ? error.message : t("general.sessionCouldNotBeLoaded"),
       };
     }
   }
@@ -237,7 +239,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải phiên của người dùng",
+        error: error instanceof Error ? error.message : t("general.unableToLoadUserSession"),
       };
     }
   }
@@ -286,13 +288,13 @@ export class SessionManager implements BaseManager<Session> {
         if (!userId) {
           return {
             success: false,
-            error: "ID người dùng không hợp lệ.",
+            error: t("general.invalidUserId"),
           };
         }
         if (!mentorId) {
           return {
             success: false,
-            error: "ID mentor không hợp lệ.",
+            error: t("general.invalidMentorId"),
           };
         }
 
@@ -323,14 +325,14 @@ export class SessionManager implements BaseManager<Session> {
       if (!requestData.userId) {
         return {
           success: false,
-          error: "ID người dùng không hợp lệ.",
+          error: t("general.invalidUserId"),
         };
       }
 
       if (!requestData.mentorId) {
         return {
           success: false,
-          error: "ID mentor không hợp lệ.",
+          error: t("general.invalidMentorId"),
         };
       }
 
@@ -342,7 +344,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo phiên",
+        error: error instanceof Error ? error.message : t("general.unableToCreateSession"),
       };
     }
   }
@@ -362,7 +364,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật phiên",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateSession"),
       };
     }
   }
@@ -380,7 +382,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể hủy phiên",
+        error: error instanceof Error ? error.message : t("general.sessionCannotBeCanceled"),
       };
     }
   }
@@ -398,7 +400,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tham gia phiên",
+        error: error instanceof Error ? error.message : t("general.unableToJoinSession"),
       };
     }
   }
@@ -418,7 +420,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật trạng thái phiên",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateSessionState"),
       };
     }
   }
@@ -439,7 +441,7 @@ export class SessionManager implements BaseManager<Session> {
           success: false,
           error: getNormalizedErrorMessage(
             { data: response.data },
-            "Backend không trả về link thanh toán hợp lệ."
+            t("general.theBackendDoesNotReturn")
           ),
         };
       }
@@ -451,7 +453,7 @@ export class SessionManager implements BaseManager<Session> {
     } catch (error) {
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, "Không thể tạo thanh toán phiên"),
+        error: getNormalizedErrorMessage(error, t("general.unableToCreateSessionPayment")),
       };
     }
   }
@@ -468,7 +470,7 @@ export class SessionManager implements BaseManager<Session> {
     if (!sessionResult.success || !sessionResult.data) {
       return {
         success: false,
-        error: sessionResult.error || "Không thể tải phiên để đồng bộ trạng thái thanh toán.",
+        error: sessionResult.error || t("general.unableToLoadSessionTo"),
       };
     }
 
@@ -483,7 +485,7 @@ export class SessionManager implements BaseManager<Session> {
     if (!payload) {
       return {
         success: false,
-        error: "Không đủ dữ liệu phiên để cập nhật trạng thái thanh toán.",
+        error: t("general.notEnoughSessionDataTo"),
       };
     }
 
@@ -497,7 +499,7 @@ export class SessionManager implements BaseManager<Session> {
       return {
         success: false,
         error:
-          error instanceof Error ? error.message : "Không thể đồng bộ trạng thái phiên sang PAID.",
+          error instanceof Error ? error.message : t("general.unableToSynchronizeSessionState"),
       };
     }
   }
@@ -511,7 +513,7 @@ export class SessionManager implements BaseManager<Session> {
     maxAttempts = 3
   ): Promise<ApiResponse<Session>> {
     const attempts = Math.max(Math.trunc(maxAttempts), 1);
-    let lastError = "Không thể đồng bộ trạng thái phiên sang PAID.";
+    let lastError = t("general.unableToSynchronizeSessionState");
 
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       const result = await this.markSessionAsPaid(sessionId, transactionCode);

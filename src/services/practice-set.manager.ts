@@ -1,12 +1,13 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Practice Set Manager
  * Handles practice set CRUD operations for admin management
  * Based on schema-from-be.d.ts API specification
  */
 
-import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 import type { PracticeSetItem } from "./practice-set-item.manager";
 import type { Major } from "./question-major.manager";
 
@@ -73,7 +74,11 @@ export interface PracticeSet {
   major?: Major;
   startDate?: string;
   dateNumber?: number;
-  user?: { id?: number; name?: string; email?: string };
+  user?: {
+    id?: number;
+    name?: string;
+    email?: string;
+  };
   interviewSessionId?: number;
   /** Populated when fetched via /api/practice-sets/interview-session/{id} */
   questions?: SessionQuestion[];
@@ -88,7 +93,6 @@ export interface PracticeSetFormData {
   level: PracticeSetLevel;
   majorId?: number;
 }
-
 export class PracticeSetManager implements BaseManager<PracticeSet> {
   private api = createApiInstance();
 
@@ -100,7 +104,9 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<PracticeSet> | PracticeSet[]>> {
     try {
-      const response = await this.api.get(API_ENDPOINTS.PRACTICE_SETS.LIST, { params: _params });
+      const response = await this.api.get(API_ENDPOINTS.PRACTICE_SETS.LIST, {
+        params: _params,
+      });
       return {
         success: true,
         data: response.data,
@@ -108,7 +114,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToLoadReviewSet3"),
       };
     }
   }
@@ -119,7 +125,9 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    */
   async getById(id: string | number): Promise<ApiResponse<PracticeSet>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DETAIL, {
+        id,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -128,7 +136,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToLoadReviewKit"),
       };
     }
   }
@@ -139,7 +147,9 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    */
   async getByLevel(level: PracticeSetLevel): Promise<ApiResponse<PracticeSet[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_LEVEL, { level });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_LEVEL, {
+        level,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -148,7 +158,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bộ ôn tập theo cấp độ",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadReviewKits"),
       };
     }
   }
@@ -163,7 +173,8 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
       // Backend requires full PracticeSet schema for creation
       // id: 0 indicates new record creation
       const practiceSetPayload: PracticeSet = {
-        id: 0, // Required: 0 for creation
+        id: 0,
+        // Required: 0 for creation
         practiceSetName: data.practiceSetName,
         objective: data.objective,
         level: data.level,
@@ -177,7 +188,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToCreateReviewSet2"),
       };
     }
   }
@@ -188,7 +199,10 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    */
   async update(id: string | number, data: Partial<PracticeSet>): Promise<ApiResponse<PracticeSet>> {
     try {
-      const practiceSetData: PracticeSet = { ...data, id: Number(id) };
+      const practiceSetData: PracticeSet = {
+        ...data,
+        id: Number(id),
+      };
       const response = await this.api.put(API_ENDPOINTS.PRACTICE_SETS.UPDATE, practiceSetData);
       return {
         success: true,
@@ -197,7 +211,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateReviewSet1"),
       };
     }
   }
@@ -209,7 +223,9 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DELETE, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DELETE, {
+        id,
+      });
       // Use DELETE method as per schema
       await this.api.delete(endpoint);
       return {
@@ -218,7 +234,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.cannotDeleteReviewSet"),
       };
     }
   }
@@ -234,13 +250,18 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }>
   > {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.FULL_SET, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.FULL_SET, {
+        id,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bộ ôn tập đầy đủ",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadFullReview"),
       };
     }
   }
@@ -257,14 +278,14 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
         interviewSessionId,
       });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Không thể tải danh sách bộ luyện tập theo session",
+        error: error instanceof Error ? error.message : t("general.unableToLoadSessionTraining"),
       };
     }
   }
@@ -280,11 +301,14 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
   }): Promise<ApiResponse<PracticeSet>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.PRACTICE_SETS.CREATE_BY_AI, data);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo lộ trình luyện tập AI",
+        error: error instanceof Error ? error.message : t("general.cannotCreateAiTrainingRoutes"),
       };
     }
   }
@@ -295,13 +319,18 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
    */
   async getByUser(userId: number): Promise<ApiResponse<PracticeSetResponse[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_USER, { userId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_USER, {
+        userId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách bộ luyện tập",
+        error: error instanceof Error ? error.message : t("common.unableToLoadPracticeSetList"),
       };
     }
   }
@@ -328,11 +357,14 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
   }): Promise<ApiResponse<PracticeSet>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.PRACTICE_SETS.CREATE_FULL, data);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bộ ôn tập đầy đủ",
+        error: error instanceof Error ? error.message : t("general.unableToCreateAFull"),
       };
     }
   }

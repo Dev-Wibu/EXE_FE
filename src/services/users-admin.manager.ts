@@ -1,9 +1,13 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Users Admin Manager
  * Handles user CRUD operations for admin management
  * Based on schema-from-be.d.ts API specification
  */
 
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
+import { normalizeMajor } from "@/constants/majors";
 import type {
   ApiResponse,
   BaseManager,
@@ -13,9 +17,6 @@ import type {
   SchemaUserInfo,
   User,
 } from "@/interfaces";
-
-import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
-import { normalizeMajor } from "@/constants/majors";
 
 // Re-export User type for convenience
 export type { User } from "@/interfaces";
@@ -60,9 +61,10 @@ export interface CreateUserData extends UserInfo {
  * Used as workaround for backend null pointer issues with optional file fields
  */
 function createEmptyFilePlaceholder(): File {
-  return new File([], "empty.txt", { type: "text/plain" });
+  return new File([], "empty.txt", {
+    type: "text/plain",
+  });
 }
-
 export class UsersAdminManager implements BaseManager<User> {
   private api = createApiInstance();
 
@@ -72,7 +74,9 @@ export class UsersAdminManager implements BaseManager<User> {
    */
   async getAll(_params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<User> | User[]>> {
     try {
-      const response = await this.api.get(API_ENDPOINTS.USERS.LIST, { params: _params });
+      const response = await this.api.get(API_ENDPOINTS.USERS.LIST, {
+        params: _params,
+      });
       return {
         success: true,
         data: response.data,
@@ -80,7 +84,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách người dùng",
+        error: error instanceof Error ? error.message : t("common.unableToLoadUserList"),
       };
     }
   }
@@ -91,7 +95,9 @@ export class UsersAdminManager implements BaseManager<User> {
    */
   async getById(id: string | number): Promise<ApiResponse<User>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.USERS.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.USERS.DETAIL, {
+        id,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -100,7 +106,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải người dùng",
+        error: error instanceof Error ? error.message : t("general.unableToLoadUser"),
       };
     }
   }
@@ -118,13 +124,13 @@ export class UsersAdminManager implements BaseManager<User> {
       if (!_data.name || !_data.name.trim()) {
         return {
           success: false,
-          error: "Tên là bắt buộc để tạo người dùng",
+          error: t("general.nameIsRequiredToCreate1"),
         };
       }
       if (!_data.email || !_data.email.trim()) {
         return {
           success: false,
-          error: "Email là bắt buộc để tạo người dùng",
+          error: t("general.emailIsRequiredToCreate1"),
         };
       }
 
@@ -147,14 +153,20 @@ export class UsersAdminManager implements BaseManager<User> {
         // For new users creating with files, send empty string "" as placeholder.
         // Backend will use this to determine if it should create new files.
         // Error "Missing required parameter - public_id" occurs when this field is missing.
-        public_id: createData.avatar ? "" : undefined, // empty string when uploading new file
+        public_id: createData.avatar ? "" : undefined,
+        // empty string when uploading new file
         cv_public_id: createData.cvFile ? "" : undefined, // empty string when uploading new file
       };
 
       // Append the 'data' field as a JSON Blob
       // This is the standard way to send JSON data within multipart/form-data
       // The Blob with type "application/json" tells the server this part is JSON
-      formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(userInfo)], {
+          type: "application/json",
+        })
+      );
 
       // Add file fields - always send placeholder files to avoid backend NullPointerException
       // Backend code calls file.isEmpty() without null check first, causing 500 error
@@ -189,7 +201,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo người dùng",
+        error: error instanceof Error ? error.message : t("common.unableToCreateUser"),
       };
     }
   }
@@ -235,7 +247,8 @@ export class UsersAdminManager implements BaseManager<User> {
       // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
       // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
       const userInfo: UserInfo = {
-        id: Number(_id), // Include id for update operation
+        id: Number(_id),
+        // Include id for update operation
         name: _data.name?.trim(),
         email: _data.email?.trim(),
         password: _data.password,
@@ -253,7 +266,12 @@ export class UsersAdminManager implements BaseManager<User> {
       };
 
       // Append the 'data' field as a JSON Blob (same format as create)
-      formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(userInfo)], {
+          type: "application/json",
+        })
+      );
 
       // Avatar file - send placeholder if not provided to avoid backend NullPointerException
       if (avatarFile) {
@@ -282,7 +300,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật người dùng",
+        error: error instanceof Error ? error.message : t("common.unableToUpdateUser"),
       };
     }
   }
@@ -314,9 +332,7 @@ export class UsersAdminManager implements BaseManager<User> {
           // Không thể tải user data - cannot proceed with toggle
           return {
             success: false,
-            error:
-              fetchResult.error ||
-              "Không thể tải dữ liệu người dùng cho thao tác chuyển trạng thái",
+            error: fetchResult.error || t("general.unableToLoadUserData"),
           };
         }
       }
@@ -347,25 +363,28 @@ export class UsersAdminManager implements BaseManager<User> {
       const formData = new FormData();
 
       // Append the 'data' field as a JSON Blob
-      formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(userInfo)], {
+          type: "application/json",
+        })
+      );
 
       // Send placeholder files to avoid backend NullPointerException
       formData.append("avatar", createEmptyFilePlaceholder());
       formData.append("cvFile", createEmptyFilePlaceholder());
-
       await this.api.post(API_ENDPOINTS.USERS.UPDATE, formData, {
         headers: {
           "Content-Type": undefined,
         },
       });
-
       return {
         success: true,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể chuyển trạng thái người dùng",
+        error: error instanceof Error ? error.message : t("general.unableToSwitchUserState"),
       };
     }
   }
@@ -416,7 +435,7 @@ export class UsersAdminManager implements BaseManager<User> {
       if (userId === null || userId === undefined) {
         return {
           success: false,
-          error: "User ID là bắt buộc để Upload CV",
+          error: t("general.userIdIsRequiredTo"),
         };
       }
 
@@ -424,22 +443,24 @@ export class UsersAdminManager implements BaseManager<User> {
       if (!cvFile.type.includes("pdf") && !cvFile.name.toLowerCase().endsWith(".pdf")) {
         return {
           success: false,
-          error: "Chỉ chấp nhận file PDF",
+          error: t("general.onlyAcceptPdfFiles"),
         };
       }
-
       const formData = new FormData();
       // userId must be sent with application/json content-type as per BE requirement
       // curl example: -F 'userId=4;type=application/json'
-      formData.append("userId", new Blob([String(userId)], { type: "application/json" }));
+      formData.append(
+        "userId",
+        new Blob([String(userId)], {
+          type: "application/json",
+        })
+      );
       formData.append("cvFile", cvFile);
-
       const response = await this.api.post(API_ENDPOINTS.USERS.UPLOAD_CV, formData, {
         headers: {
           "Content-Type": undefined,
         },
       });
-
       return {
         success: true,
         data: response.data,
@@ -447,7 +468,7 @@ export class UsersAdminManager implements BaseManager<User> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể Upload CV",
+        error: error instanceof Error ? error.message : t("general.unableToUploadCv"),
       };
     }
   }

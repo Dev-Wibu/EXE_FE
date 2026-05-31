@@ -1,4 +1,6 @@
+import i18n from "@/lib/i18n";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+const t = i18n.t.bind(i18n);
 
 import { authManager } from "./auth.manager";
 
@@ -157,7 +159,7 @@ describe("AuthManager", () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Tài khoản đã bị khóa");
+      expect(result.error).toBe(t("general.accountHasBeenLocked"));
     });
 
     it("should return API error message when auth API fails", async () => {
@@ -192,7 +194,7 @@ describe("AuthManager", () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("Sai mật khẩu");
+      expect(result.error).toBe(t("general.wrongPassword"));
     });
 
     it("should map 404 user-not-found to wrong-email message", async () => {

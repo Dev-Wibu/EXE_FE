@@ -1,9 +1,12 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Mentor Manager
  * Handles mentor CRUD operations
  * Based on schema-from-be.d.ts API specification
  */
 
+import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type {
   ApiResponse,
   BaseManager,
@@ -14,11 +17,8 @@ import type {
   SchemaMentorResponse,
 } from "@/interfaces";
 
-import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
-
 // Re-export Mentor type for convenience
 export type { Mentor } from "@/interfaces";
-
 export type MentorInfo = SchemaMentorInfo;
 
 /**
@@ -38,9 +38,10 @@ export interface CreateMentorData extends MentorInfo {
  * Used as workaround for backend null pointer issues with optional file fields
  */
 function createEmptyFilePlaceholder(): File {
-  return new File([], "empty.txt", { type: "text/plain" });
+  return new File([], "empty.txt", {
+    type: "text/plain",
+  });
 }
-
 export class MentorManager implements BaseManager<Mentor> {
   private api = createApiInstance();
 
@@ -54,7 +55,9 @@ export class MentorManager implements BaseManager<Mentor> {
     try {
       const response = await this.api.get<
         SchemaMentorResponse[] | PaginatedResponse<SchemaMentorResponse>
-      >(API_ENDPOINTS.MENTOR.LIST, { params: _params });
+      >(API_ENDPOINTS.MENTOR.LIST, {
+        params: _params,
+      });
       return {
         success: true,
         data: response.data as PaginatedResponse<Mentor> | Mentor[],
@@ -62,7 +65,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách mentor",
+        error: error instanceof Error ? error.message : t("common.unableToLoadMentorList"),
       };
     }
   }
@@ -73,7 +76,9 @@ export class MentorManager implements BaseManager<Mentor> {
    */
   async getById(id: string | number): Promise<ApiResponse<Mentor>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.DETAIL, {
+        id,
+      });
       const response = await this.api.get<SchemaMentorResponse>(endpoint);
       return {
         success: true,
@@ -82,7 +87,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải mentor",
+        error: error instanceof Error ? error.message : t("general.unableToDownloadMentor"),
       };
     }
   }
@@ -98,13 +103,13 @@ export class MentorManager implements BaseManager<Mentor> {
       if (!_data.name || !_data.name.trim()) {
         return {
           success: false,
-          error: "Tên là bắt buộc để tạo mentor",
+          error: t("general.nameIsRequiredToCreate"),
         };
       }
       if (!_data.email || !_data.email.trim()) {
         return {
           success: false,
-          error: "Email là bắt buộc để tạo mentor",
+          error: t("general.emailIsRequiredToCreate"),
         };
       }
 
@@ -140,7 +145,9 @@ export class MentorManager implements BaseManager<Mentor> {
       // This ensures the backend receives proper JSON data within multipart/form-data
       formData.append(
         "data",
-        new Blob([JSON.stringify(mentorPayload)], { type: "application/json" })
+        new Blob([JSON.stringify(mentorPayload)], {
+          type: "application/json",
+        })
       );
 
       // Add file fields - always send placeholder files to avoid backend NullPointerException
@@ -186,7 +193,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo mentor",
+        error: error instanceof Error ? error.message : t("common.cannotCreateMentor"),
       };
     }
   }
@@ -208,7 +215,9 @@ export class MentorManager implements BaseManager<Mentor> {
       const formData = new FormData();
 
       // Build MentorInfo payload with id for update
-      const mentorInfo: MentorInfo & { active?: boolean } = {
+      const mentorInfo: MentorInfo & {
+        active?: boolean;
+      } = {
         id: Number(_id),
         name: _data.name?.trim(),
         email: _data.email?.trim(),
@@ -231,34 +240,34 @@ export class MentorManager implements BaseManager<Mentor> {
       if ("active" in _data) {
         mentorInfo.active = Boolean(_data.active);
       }
-
       console.log("Update mentor payload:", JSON.stringify(mentorInfo, null, 2));
 
       // Append the 'data' field as a Blob with application/json content type
       // This matches the curl format: --form 'data="...";type=application/json'
-      formData.append("data", new Blob([JSON.stringify(mentorInfo)], { type: "application/json" }));
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(mentorInfo)], {
+          type: "application/json",
+        })
+      );
 
       // Add file fields - always send placeholder files to avoid backend NullPointerException
       const updateData = _data as CreateMentorData;
-
       if (updateData.avatar) {
         formData.append("avatar", updateData.avatar);
       } else {
         formData.append("avatar", createEmptyFilePlaceholder());
       }
-
       if (updateData.identityFile) {
         formData.append("identityFile", updateData.identityFile);
       } else {
         formData.append("identityFile", createEmptyFilePlaceholder());
       }
-
       if (updateData.degreeFile) {
         formData.append("degreeFile", updateData.degreeFile);
       } else {
         formData.append("degreeFile", createEmptyFilePlaceholder());
       }
-
       if (updateData.otherFile) {
         formData.append("otherFile", updateData.otherFile);
       } else {
@@ -274,7 +283,6 @@ export class MentorManager implements BaseManager<Mentor> {
           "Content-Type": undefined,
         },
       });
-
       return {
         success: true,
         data: response.data,
@@ -283,12 +291,16 @@ export class MentorManager implements BaseManager<Mentor> {
       console.error("Update mentor error:", error);
       // Log full error response for debugging
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as { response?: { data?: unknown } };
+        const axiosError = error as {
+          response?: {
+            data?: unknown;
+          };
+        };
         console.error("Backend error response:", axiosError.response?.data);
       }
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật mentor",
+        error: error instanceof Error ? error.message : t("common.unableToUpdateMentor"),
       };
     }
   }
@@ -300,7 +312,9 @@ export class MentorManager implements BaseManager<Mentor> {
    */
   async toggleActive(_id: string | number): Promise<ApiResponse<Mentor>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.TOGGLE, { id: _id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR.TOGGLE, {
+        id: _id,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -309,10 +323,7 @@ export class MentorManager implements BaseManager<Mentor> {
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Không thể chuyển trạng thái hoạt động của mentor",
+        error: error instanceof Error ? error.message : t("general.cannotChangeMentorSActive"),
       };
     }
   }

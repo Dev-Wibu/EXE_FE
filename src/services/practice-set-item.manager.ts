@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Practice Set Item Manager
  * Handles practice set item CRUD operations for admin management
@@ -72,7 +74,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách mục bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToLoadReviewSet"),
       };
     }
   }
@@ -92,7 +94,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải mục bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToLoadReviewSet1"),
       };
     }
   }
@@ -116,8 +118,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Không thể tải danh sách mục bộ ôn tập theo ID",
+        error: error instanceof Error ? error.message : t("general.unableToLoadReviewSet2"),
       };
     }
   }
@@ -136,7 +137,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo mục bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToCreateReviewSet"),
       };
     }
   }
@@ -164,7 +165,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo danh sách mục bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToCreateReviewSet1"),
       };
     }
   }
@@ -187,7 +188,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật mục bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateReviewSet"),
       };
     }
   }
@@ -206,7 +207,7 @@ export class PracticeSetItemManager implements BaseManager<PracticeSetItem> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa mục bộ ôn tập",
+        error: error instanceof Error ? error.message : t("general.theReviewSetItemCannot"),
       };
     }
   }

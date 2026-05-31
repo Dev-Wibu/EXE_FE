@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Candidate Profile Manager
  * Handles candidate profile CRUD operations
@@ -27,7 +29,8 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách hồ sơ ứng viên",
+        error:
+          error instanceof Error ? error.message : t("general.unableToDownloadCandidateProfile"),
       };
     }
   }
@@ -44,7 +47,8 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải hồ sơ ứng viên",
+        error:
+          error instanceof Error ? error.message : t("general.unableToDownloadCandidateProfile1"),
       };
     }
   }
@@ -60,7 +64,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo hồ sơ ứng viên",
+        error: error instanceof Error ? error.message : t("general.unableToCreateCandidateProfile"),
       };
     }
   }
@@ -80,7 +84,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật hồ sơ ứng viên",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateCandidateProfile"),
       };
     }
   }
@@ -101,7 +105,7 @@ export class CandidateProfileManager implements BaseManager<CandidateProfile> {
 
     return {
       success: false,
-      error: "Không hỗ trợ xóa hồ sơ ứng viên",
+      error: t("general.doesNotSupportDeletingCandidate"),
     };
   }
 }

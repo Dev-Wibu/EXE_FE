@@ -1,12 +1,12 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Question Manager
  * Handles question bank operations
  */
 
-import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
-
+import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 export interface PracticeQuestion {
   questionId?: number;
   title?: string;
@@ -21,7 +21,6 @@ export interface PracticeQuestion {
   answer?: string;
   hint?: string;
 }
-
 export class QuestionManager implements BaseManager<PracticeQuestion> {
   private api = createApiInstance();
 
@@ -32,7 +31,9 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<PracticeQuestion> | PracticeQuestion[]>> {
     try {
-      const response = await this.api.get(API_ENDPOINTS.QUESTION.LIST, { params });
+      const response = await this.api.get(API_ENDPOINTS.QUESTION.LIST, {
+        params,
+      });
       return {
         success: true,
         data: response.data,
@@ -40,7 +41,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToLoadQuestion"),
       };
     }
   }
@@ -50,7 +51,9 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
    */
   async getById(id: string | number): Promise<ApiResponse<PracticeQuestion>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DETAIL, {
+        id,
+      });
       const response = await this.api.get(endpoint);
       return {
         success: true,
@@ -59,7 +62,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToLoadQuestion"),
       };
     }
   }
@@ -84,7 +87,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo câu hỏi",
+        error: error instanceof Error ? error.message : t("common.cannotCreateQuestion"),
       };
     }
   }
@@ -113,7 +116,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật câu hỏi",
+        error: error instanceof Error ? error.message : t("common.unableToUpdateQuestion"),
       };
     }
   }
@@ -124,7 +127,9 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DELETE, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DELETE, {
+        id,
+      });
       await this.api.delete(endpoint);
       return {
         success: true,
@@ -132,7 +137,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa câu hỏi",
+        error: error instanceof Error ? error.message : t("common.questionCannotBeDeleted"),
       };
     }
   }
@@ -146,7 +151,10 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
   ): Promise<ApiResponse<PaginatedResponse<PracticeQuestion> | PracticeQuestion[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.QUESTION.LIST, {
-        params: { ...params, search: searchText },
+        params: {
+          ...params,
+          search: searchText,
+        },
       });
       return {
         success: true,
@@ -155,7 +163,7 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tìm kiếm câu hỏi",
+        error: error instanceof Error ? error.message : t("general.cannotSearchForQuestion"),
       };
     }
   }
@@ -166,13 +174,19 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
   async getRandomByLevel(level: string, count: number): Promise<ApiResponse<PracticeQuestion[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.QUESTION.RANDOM_BY_LEVEL, {
-        params: { level, count },
+        params: {
+          level,
+          count,
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải câu hỏi ngẫu nhiên",
+        error: error instanceof Error ? error.message : t("common.unableToLoadRandomQuestions"),
       };
     }
   }
@@ -187,14 +201,19 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
   ): Promise<ApiResponse<PracticeQuestion[]>> {
     try {
       const response = await this.api.get(API_ENDPOINTS.QUESTION.BY_CATEGORY_LEVEL, {
-        params: { categoryId, level },
+        params: {
+          categoryId,
+          level,
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Không thể tải câu hỏi theo danh mục và cấp độ",
+        error: error instanceof Error ? error.message : t("general.questionsByCategoryAndLevel"),
       };
     }
   }
@@ -207,11 +226,14 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
   async saveAll(questions: PracticeQuestion[]): Promise<ApiResponse<PracticeQuestion[]>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.QUESTION.SAVE_ALL, questions);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể lưu câu hỏi",
+        error: error instanceof Error ? error.message : t("general.questionCannotBeSaved"),
       };
     }
   }

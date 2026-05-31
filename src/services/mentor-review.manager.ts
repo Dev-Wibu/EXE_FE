@@ -1,13 +1,21 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Mentor Review Manager
  * Handles mentor review CRUD operations
  * Based on schema-from-be.d.ts API specification
  */
 
-import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
-import type { Mentor, Session, User } from "@/interfaces";
+import type {
+  ApiResponse,
+  BaseManager,
+  Mentor,
+  PaginatedResponse,
+  PaginationParams,
+  Session,
+  User,
+} from "@/interfaces";
 
 /**
  * MentorReview type based on backend schema
@@ -58,7 +66,6 @@ export interface UpdateMentorReviewRequest {
   weakness?: string;
   improve?: string;
 }
-
 export class MentorReviewManager implements BaseManager<MentorReview> {
   private api = createApiInstance();
 
@@ -70,7 +77,9 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<MentorReview> | MentorReview[]>> {
     try {
-      const response = await this.api.get(API_ENDPOINTS.MENTOR_REVIEWS.LIST, { params: _params });
+      const response = await this.api.get(API_ENDPOINTS.MENTOR_REVIEWS.LIST, {
+        params: _params,
+      });
       return {
         success: true,
         data: response.data,
@@ -78,7 +87,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách đánh giá mentor",
+        error: error instanceof Error ? error.message : t("general.unableToLoadMentorEvaluation"),
       };
     }
   }
@@ -89,35 +98,42 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
    */
   async getById(id: string | number): Promise<ApiResponse<MentorReview>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR_REVIEWS.DETAIL, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.MENTOR_REVIEWS.DETAIL, {
+        id,
+      });
       const response = await this.api.get(endpoint);
-
       if (!response.data || typeof response.data !== "object") {
         return {
           success: false,
-          error: "Không tìm thấy đánh giá",
+          error: t("common.noReviewsFound"),
         };
       }
-
       return {
         success: true,
         data: response.data,
       };
     } catch (error) {
-      const responseData = (error as { response?: { data?: { message?: string; error?: string } } })
-        ?.response?.data;
+      const responseData = (
+        error as {
+          response?: {
+            data?: {
+              message?: string;
+              error?: string;
+            };
+          };
+        }
+      )?.response?.data;
       const apiMessage = responseData?.message || responseData?.error;
       const errorMessage =
         typeof apiMessage === "string" && apiMessage.trim().length > 0
           ? apiMessage
           : error instanceof Error
             ? error.message
-            : "Không thể tải đánh giá mentor";
-
+            : t("general.unableToLoadMentorReview");
       return {
         success: false,
         error: /not found|no value present/i.test(errorMessage)
-          ? "Không tìm thấy đánh giá"
+          ? t("common.noReviewsFound")
           : errorMessage,
       };
     }
@@ -139,7 +155,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo đánh giá mentor",
+        error: error instanceof Error ? error.message : t("general.unableToCreateMentorReview"),
       };
     }
   }
@@ -165,7 +181,7 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật đánh giá mentor",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateMentorRating"),
       };
     }
   }
@@ -175,10 +191,9 @@ export class MentorReviewManager implements BaseManager<MentorReview> {
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     void id;
-
     return {
       success: false,
-      error: "Không hỗ trợ xóa đánh giá mentor",
+      error: t("general.deletingMentorReviewsIsNot"),
     };
   }
 }

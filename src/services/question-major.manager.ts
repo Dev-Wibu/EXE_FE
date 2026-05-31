@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Question Major Manager
  * Handles question major (discipline/field) CRUD operations for admin management
@@ -44,8 +46,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Không thể tải danh sách chuyên ngành câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToLoadListOf"),
       };
     }
   }
@@ -65,7 +66,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải chuyên ngành câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToLoadQuestionMajor"),
       };
     }
   }
@@ -87,7 +88,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo chuyên ngành câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToCreateQuestionMajor"),
       };
     }
   }
@@ -109,7 +110,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật chuyên ngành câu hỏi",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateQuestionMajor"),
       };
     }
   }
@@ -130,7 +131,7 @@ export class QuestionMajorManager implements BaseManager<Major> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa chuyên ngành câu hỏi",
+        error: error instanceof Error ? error.message : t("general.cannotDeleteQuestionMajor"),
       };
     }
   }

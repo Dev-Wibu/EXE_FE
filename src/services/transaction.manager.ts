@@ -1,4 +1,6 @@
 import type { ApiResponse, PaymentPurpose, TransactionEntity } from "@/interfaces";
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import { getNormalizedErrorMessage } from "@/lib/error-normalizer";
@@ -105,7 +107,7 @@ export class TransactionManager {
 
       if (isLikelyHttpUrl(normalized)) {
         return {
-          message: "Đã tạo liên kết xử lý giao dịch.",
+          message: t("general.transactionProcessingLinkCreated"),
           redirectUrl: normalized,
         };
       }
@@ -149,7 +151,9 @@ export class TransactionManager {
 
     const message =
       explicitMessage ||
-      (redirectUrl ? "Đã tạo liên kết xử lý giao dịch." : "Giao dịch ví đã được xử lý.");
+      (redirectUrl
+        ? t("general.transactionProcessingLinkCreated")
+        : t("general.walletTransactionHasBeenProcessed"));
 
     if (!message && !redirectUrl && !transactionCode && currentBalance === undefined && !status) {
       return undefined;
@@ -174,7 +178,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tải danh sách giao dịch."),
+        error: getErrorMessage(error, t("general.unableToLoadTransactionList")),
       };
     }
   }
@@ -192,7 +196,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tải chi tiết giao dịch."),
+        error: getErrorMessage(error, t("general.unableToLoadTransactionDetails")),
       };
     }
   }
@@ -210,7 +214,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tải giao dịch theo người dùng."),
+        error: getErrorMessage(error, t("general.unableToLoadTransactionsBy")),
       };
     }
   }
@@ -220,7 +224,7 @@ export class TransactionManager {
     if (normalizedAmount <= 0) {
       return {
         success: false,
-        error: "Số tiền nạp ví không hợp lệ.",
+        error: t("general.invalidWalletDepositAmount"),
       };
     }
 
@@ -236,7 +240,7 @@ export class TransactionManager {
       if (!redirectUrl) {
         return {
           success: false,
-          error: "Backend không trả về link redirect hợp lệ cho transfer-in.",
+          error: t("general.theBackendDoesNotReturn1"),
         };
       }
 
@@ -247,7 +251,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tạo giao dịch transfer-in."),
+        error: getErrorMessage(error, t("general.unableToCreateTransferIn")),
       };
     }
   }
@@ -261,7 +265,7 @@ export class TransactionManager {
     if (normalizedAmount <= 0) {
       return {
         success: false,
-        error: "Số tiền thanh toán không hợp lệ.",
+        error: t("general.invalidPaymentAmount"),
       };
     }
 
@@ -278,7 +282,7 @@ export class TransactionManager {
       if (!transferOutResult) {
         return {
           success: false,
-          error: "Backend không trả về kết quả hợp lệ cho transfer-out.",
+          error: t("general.backendDoesNotReturnValid"),
         };
       }
 
@@ -289,7 +293,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể tạo giao dịch transfer-out."),
+        error: getErrorMessage(error, t("general.cannotCreateTransferOutTransaction")),
       };
     }
   }
@@ -306,7 +310,7 @@ export class TransactionManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, "Không thể xóa giao dịch."),
+        error: getErrorMessage(error, t("general.transactionCannotBeDeleted")),
       };
     }
   }

@@ -1,3 +1,5 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * User Manager
  * Handles user profile and wallet operations
@@ -28,7 +30,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải hồ sơ",
+        error: error instanceof Error ? error.message : t("general.unableToLoadProfile"),
       };
     }
   }
@@ -46,7 +48,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật hồ sơ",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateProfile"),
       };
     }
   }
@@ -70,7 +72,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật mật khẩu",
+        error: error instanceof Error ? error.message : t("general.unableToUpdatePassword"),
       };
     }
   }
@@ -88,7 +90,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải cài đặt",
+        error: error instanceof Error ? error.message : t("general.unableToLoadSettings"),
       };
     }
   }
@@ -106,7 +108,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật cài đặt",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateSettings"),
       };
     }
   }
@@ -124,7 +126,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải ví",
+        error: error instanceof Error ? error.message : t("general.unableToLoadWallet"),
       };
     }
   }
@@ -142,7 +144,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể nạp tiền vào ví",
+        error: error instanceof Error ? error.message : t("general.unableToDepositMoneyInto"),
       };
     }
   }
@@ -170,7 +172,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể đăng ký gói thành viên",
+        error: error instanceof Error ? error.message : t("general.unableToRegisterForMembership"),
       };
     }
   }
@@ -194,8 +196,7 @@ export class UserManager {
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Không thể tải gói thành viên đang hoạt động",
+        error: error instanceof Error ? error.message : t("general.unableToLoadActiveMembership"),
       };
     }
   }

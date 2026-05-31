@@ -1,10 +1,9 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Auth Manager
  * Handles authentication operations
  */
-
-import type { ApiResponse } from "@/interfaces";
-import type { components } from "../../schema-from-be";
 
 import {
   API_BASE_URL,
@@ -13,14 +12,14 @@ import {
   createApiInstance,
 } from "@/constants/api.config";
 import { isValidMajor } from "@/constants/majors";
+import type { ApiResponse } from "@/interfaces";
 import { fetchClient } from "@/lib/api";
 import { getNormalizedErrorMessage } from "@/lib/error-normalizer";
+import type { components } from "../../schema-from-be";
 
 // Type from backend schema
 type BackendUser = components["schemas"]["User"];
-
 type AuthRole = "ADMIN" | "USER" | "MENTOR" | "STAFF";
-
 type AuthUser = {
   id: string;
   email: string;
@@ -30,7 +29,6 @@ type AuthUser = {
   walletBalance?: number;
   bio?: string;
 };
-
 type MentorRegistration = {
   id?: string;
   fullName?: string;
@@ -39,45 +37,36 @@ type MentorRegistration = {
   submittedAt: string;
   reviewedAt: string | null;
 };
-
 type LoginPayload = {
   user: AuthUser;
   token?: string;
 };
-
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null;
 };
-
 const asNonEmptyString = (value: unknown): string | undefined => {
   if (typeof value !== "string") {
     return undefined;
   }
-
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 };
-
 const asFiniteNumber = (value: unknown): number | undefined => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
-
   if (typeof value === "string" && value.trim().length > 0) {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) {
       return parsed;
     }
   }
-
   return undefined;
 };
-
 const extractFieldErrors = (payload: unknown): Record<string, string> | undefined => {
   if (!isRecord(payload) || !isRecord(payload.errors)) {
     return undefined;
   }
-
   const mapped = Object.entries(payload.errors).reduce<Record<string, string>>(
     (acc, [key, value]) => {
       if (typeof value === "string" && value.trim().length > 0) {
@@ -90,20 +79,16 @@ const extractFieldErrors = (payload: unknown): Record<string, string> | undefine
           acc[key] = firstMessage.trim();
         }
       }
-
       return acc;
     },
     {}
   );
-
   return Object.keys(mapped).length > 0 ? mapped : undefined;
 };
-
 const extractApiErrorMessage = (payload: unknown): string | undefined => {
   if (!isRecord(payload)) {
     return undefined;
   }
-
   return (
     asNonEmptyString(payload.message) ||
     asNonEmptyString(payload.error) ||
@@ -111,27 +96,22 @@ const extractApiErrorMessage = (payload: unknown): string | undefined => {
     asNonEmptyString(payload.title)
   );
 };
-
 const getEmailPrefix = (email: string): string => {
   const prefix = email.split("@")[0]?.trim();
-  return prefix && prefix.length > 0 ? prefix : "Người dùng";
+  return prefix && prefix.length > 0 ? prefix : t("common.user");
 };
-
 const normalizeId = (value: unknown, fallback: string): string => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return String(value);
   }
-
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (trimmed.length > 0) {
       return trimmed;
     }
   }
-
   return fallback;
 };
-
 const OAUTH_TOKEN_PARAM_KEYS = [
   "token",
   "accessToken",
@@ -140,7 +120,6 @@ const OAUTH_TOKEN_PARAM_KEYS = [
   "idToken",
   "id_token",
 ] as const;
-
 const OAUTH_SIGNAL_PARAM_KEYS = [
   ...OAUTH_TOKEN_PARAM_KEYS,
   "error",
@@ -148,14 +127,11 @@ const OAUTH_SIGNAL_PARAM_KEYS = [
   "code",
   "state",
 ] as const;
-
 const OAUTH_ERROR_PARAM_KEYS = ["error_description", "error"] as const;
-
 export interface LoginCredentials {
   email: string;
   password: string;
 }
-
 export interface SignupData {
   fullName: string;
   email: string;
@@ -163,7 +139,6 @@ export interface SignupData {
   university: string;
   major: string;
 }
-
 export interface MentorRegisterData {
   name: string;
   email: string;
@@ -178,7 +153,6 @@ export interface MentorRegisterData {
   degreeFile?: File;
   otherFile?: File;
 }
-
 export class AuthManager {
   private api = createApiInstance();
 
@@ -187,7 +161,6 @@ export class AuthManager {
    */
   private mapBackendRoleToFrontend(backendRole?: string): "ADMIN" | "USER" | "MENTOR" | "STAFF" {
     const normalized = backendRole?.replace(/^ROLE_/i, "").toUpperCase();
-
     switch (normalized) {
       case "ADMIN":
         return "ADMIN";
@@ -200,34 +173,26 @@ export class AuthManager {
         return "USER";
     }
   }
-
   private normalizeToken(token?: string): string | undefined {
     if (!token) {
       return undefined;
     }
-
     let normalized = token.trim();
-
     if (normalized.startsWith('"') && normalized.endsWith('"')) {
       normalized = normalized.slice(1, -1);
     }
-
     if (normalized.startsWith("'") && normalized.endsWith("'")) {
       normalized = normalized.slice(1, -1);
     }
-
     return normalized.replace(/^Bearer\s+/i, "").trim();
   }
-
   private decodeJwtPayload(token: string): Record<string, unknown> | null {
     const parts = token.split(".");
     if (parts.length < 2) {
       return null;
     }
-
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
-
     try {
       if (typeof atob === "function") {
         return JSON.parse(atob(padded)) as Record<string, unknown>;
@@ -235,16 +200,13 @@ export class AuthManager {
     } catch {
       return null;
     }
-
     return null;
   }
-
   private extractRoleFromClaims(claims: Record<string, unknown>): string | undefined {
     const directRole = asNonEmptyString(claims.role);
     if (directRole) {
       return directRole;
     }
-
     const authorities = claims.authorities;
     if (Array.isArray(authorities)) {
       const firstAuthority = authorities.find((item) => typeof item === "string");
@@ -252,7 +214,6 @@ export class AuthManager {
         return firstAuthority;
       }
     }
-
     const roles = claims.roles;
     if (Array.isArray(roles)) {
       const firstRole = roles.find((item) => typeof item === "string");
@@ -260,16 +221,13 @@ export class AuthManager {
         return firstRole;
       }
     }
-
     return undefined;
   }
-
   private buildUserFromToken(token: string, emailFallback: string): AuthUser | undefined {
     const claims = this.decodeJwtPayload(token);
     if (!claims) {
       return undefined;
     }
-
     const email = asNonEmptyString(claims.email) || emailFallback;
     const fullName =
       asNonEmptyString(claims.name) ||
@@ -277,7 +235,6 @@ export class AuthManager {
       asNonEmptyString(claims.preferred_username) ||
       getEmailPrefix(email);
     const role = this.mapBackendRoleToFrontend(this.extractRoleFromClaims(claims));
-
     return {
       id: normalizeId(claims.userId ?? claims.id ?? claims.uid ?? claims.sub, email),
       email,
@@ -287,7 +244,6 @@ export class AuthManager {
       walletBalance: asFiniteNumber(claims.walletBalance) || asFiniteNumber(claims.balance),
     };
   }
-
   private mapUserFromUnknown(
     value: unknown,
     emailFallback: string,
@@ -296,14 +252,12 @@ export class AuthManager {
     if (!isRecord(value)) {
       return undefined;
     }
-
     const email = asNonEmptyString(value.email) || emailFallback;
     const fullName =
       asNonEmptyString(value.fullName) ||
       asNonEmptyString(value.name) ||
       asNonEmptyString(value.username) ||
       getEmailPrefix(email);
-
     return {
       id: normalizeId(value.id ?? value.userId ?? value.uid ?? value.sub, email),
       email,
@@ -313,59 +267,46 @@ export class AuthManager {
       walletBalance: asFiniteNumber(value.walletBalance) || asFiniteNumber(value.balance),
     };
   }
-
   private extractTokenFromUnknown(value: unknown): string | undefined {
     if (typeof value === "string") {
       return this.normalizeToken(value);
     }
-
     if (!isRecord(value)) {
       return undefined;
     }
-
     const directToken =
       asNonEmptyString(value.token) ||
       asNonEmptyString(value.accessToken) ||
       asNonEmptyString(value.jwt) ||
       asNonEmptyString(value.idToken);
-
     if (directToken) {
       return this.normalizeToken(directToken);
     }
-
     if (isRecord(value.data)) {
       return this.extractTokenFromUnknown(value.data);
     }
-
     return undefined;
   }
-
   private extractUserCandidate(value: unknown): unknown {
     if (!isRecord(value)) {
       return undefined;
     }
-
     if (isRecord(value.user)) {
       return value.user;
     }
-
     if (isRecord(value.data)) {
       if (isRecord(value.data.user)) {
         return value.data.user;
       }
-
       return value.data;
     }
-
     return value;
   }
-
   private parseLoginResponse(data: unknown, emailFallback: string): LoginPayload {
     const token = this.extractTokenFromUnknown(data);
     const userCandidate = this.extractUserCandidate(data);
     const userFromCandidate = this.mapUserFromUnknown(userCandidate, emailFallback);
     const userFromToken = token ? this.buildUserFromToken(token, emailFallback) : undefined;
-
     let user = userFromCandidate || userFromToken;
     if (!user) {
       user = {
@@ -375,41 +316,37 @@ export class AuthManager {
         role: "USER",
       };
     }
-
     return {
       user,
       token,
     };
   }
-
   private normalizeLoginResponseData(data: unknown): unknown {
     if (typeof data !== "string") {
       return data;
     }
-
     const trimmed = data.trim();
     if (trimmed.length === 0) {
       return trimmed;
     }
-
     try {
       return JSON.parse(trimmed) as unknown;
     } catch {
       return trimmed;
     }
   }
-
-  private parseOAuthCallbackUrl(rawUrl: string): { query: URLSearchParams; hash: URLSearchParams } {
+  private parseOAuthCallbackUrl(rawUrl: string): {
+    query: URLSearchParams;
+    hash: URLSearchParams;
+  } {
     const fallbackOrigin = typeof window !== "undefined" ? window.location.origin : API_BASE_URL;
     const parsedUrl = new URL(rawUrl, fallbackOrigin);
     const hashValue = parsedUrl.hash.startsWith("#") ? parsedUrl.hash.slice(1) : parsedUrl.hash;
-
     return {
       query: parsedUrl.searchParams,
       hash: new URLSearchParams(hashValue),
     };
   }
-
   private getFirstParamValue(
     sources: URLSearchParams[],
     keys: readonly string[]
@@ -422,19 +359,15 @@ export class AuthManager {
         }
       }
     }
-
     return undefined;
   }
-
   private extractErrorMessage(error: unknown): string | undefined {
     if (typeof error === "string") {
       return error;
     }
-
     if (!isRecord(error)) {
       return undefined;
     }
-
     const dataMessage =
       asNonEmptyString(error.data) ||
       (isRecord(error.data)
@@ -442,7 +375,6 @@ export class AuthManager {
           asNonEmptyString(error.data.error) ||
           asNonEmptyString(error.data.detail)
         : undefined);
-
     const responseMessage = isRecord(error.response)
       ? asNonEmptyString(error.response.data) ||
         (isRecord(error.response.data)
@@ -451,7 +383,6 @@ export class AuthManager {
             asNonEmptyString(error.response.data.detail)
           : undefined)
       : undefined;
-
     return (
       asNonEmptyString(error.message) ||
       asNonEmptyString(error.error) ||
@@ -460,60 +391,49 @@ export class AuthManager {
       responseMessage
     );
   }
-
   private extractHttpStatus(error: unknown): number | undefined {
     const toStatus = (value: unknown): number | undefined => {
       if (typeof value === "number" && Number.isFinite(value)) {
         return Math.trunc(value);
       }
-
       if (typeof value === "string") {
         const parsed = Number(value);
         if (Number.isFinite(parsed)) {
           return Math.trunc(parsed);
         }
       }
-
       return undefined;
     };
-
     if (!isRecord(error)) {
       return undefined;
     }
-
     const topLevelStatus = toStatus(error.status) ?? toStatus(error.statusCode);
     if (topLevelStatus) {
       return topLevelStatus;
     }
-
     if (isRecord(error.response)) {
       const responseStatus = toStatus(error.response.status) ?? toStatus(error.response.statusCode);
       if (responseStatus) {
         return responseStatus;
       }
     }
-
     if (isRecord(error.data)) {
       const dataStatus = toStatus(error.data.status) ?? toStatus(error.data.statusCode);
       if (dataStatus) {
         return dataStatus;
       }
     }
-
     return undefined;
   }
-
   private mapLoginErrorMessage(httpStatus?: number, rawMessage?: string): string {
     const normalizedMessage = rawMessage?.toLowerCase() || "";
-
     if (
       httpStatus === 401 ||
       normalizedMessage.includes("bad credentials") ||
       normalizedMessage.includes("invalid password")
     ) {
-      return "Sai mật khẩu";
+      return t("general.wrongPassword");
     }
-
     if (
       httpStatus === 404 ||
       normalizedMessage.includes("user not found") ||
@@ -521,20 +441,17 @@ export class AuthManager {
     ) {
       return "Sai email";
     }
-
     if (
       httpStatus === 403 ||
       normalizedMessage.includes("locked") ||
       normalizedMessage.includes("disabled")
     ) {
-      return "Tài khoản đã bị khóa";
+      return t("general.accountHasBeenLocked");
     }
-
     if (httpStatus === 429) {
-      return "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau";
+      return t("general.youHaveEnteredIncorrectlyToo");
     }
-
-    return rawMessage || "Đăng nhập thất bại";
+    return rawMessage || t("auth_loginpage.tsx.ang_nhap_that_bai");
   }
 
   /**
@@ -552,7 +469,6 @@ export class AuthManager {
         },
         parseAs: "text",
       });
-
       if (error) {
         const httpStatus = this.extractHttpStatus(error);
         const rawErrorMessage = this.extractErrorMessage(error);
@@ -561,32 +477,27 @@ export class AuthManager {
           error: this.mapLoginErrorMessage(httpStatus, rawErrorMessage),
         };
       }
-
       if (data === undefined || data === null) {
         return {
           success: false,
-          error: "Không nhận được dữ liệu đăng nhập từ máy chủ",
+          error: t("general.loginDataNotReceivedFrom"),
         };
       }
-
       const normalizedData = this.normalizeLoginResponseData(data);
       if (typeof normalizedData === "string" && normalizedData.trim().length === 0) {
         return {
           success: false,
-          error: "Không nhận được dữ liệu đăng nhập từ máy chủ",
+          error: t("general.loginDataNotReceivedFrom"),
         };
       }
-
       const userCandidate = this.extractUserCandidate(normalizedData);
       if (isRecord(userCandidate) && userCandidate.isActive === false) {
         return {
           success: false,
-          error: "Tài khoản đã bị khóa",
+          error: t("general.accountHasBeenLocked"),
         };
       }
-
       const payload = this.parseLoginResponse(normalizedData, credentials.email.trim());
-
       return {
         success: true,
         data: payload,
@@ -595,7 +506,7 @@ export class AuthManager {
       console.error("Login error:", error);
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, "Đăng nhập thất bại"),
+        error: getNormalizedErrorMessage(error, t("auth_loginpage.tsx.ang_nhap_that_bai")),
       };
     }
   }
@@ -608,7 +519,6 @@ export class AuthManager {
     if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
       return endpoint;
     }
-
     return new URL(endpoint, API_BASE_URL).toString();
   }
 
@@ -619,7 +529,6 @@ export class AuthManager {
     try {
       const { query, hash } = this.parseOAuthCallbackUrl(rawUrl);
       const sources = [query, hash];
-
       return sources.some((source) => OAUTH_SIGNAL_PARAM_KEYS.some((key) => source.has(key)));
     } catch {
       return false;
@@ -645,21 +554,17 @@ export class AuthManager {
     try {
       const { query, hash } = this.parseOAuthCallbackUrl(rawUrl);
       const sources = [query, hash];
-
       const normalizedToken = this.normalizeToken(
         this.getFirstParamValue(sources, OAUTH_TOKEN_PARAM_KEYS)
       );
-
       if (!normalizedToken) {
         return {
           success: false,
-          error: "Không tìm thấy token đăng nhập Google trong URL callback.",
+          error: t("general.googleLoginTokenNotFound"),
         };
       }
-
       const emailFallback =
         this.getFirstParamValue(sources, ["email", "userEmail"]) || "google-user@inblue.local";
-
       const userCandidate = {
         id: this.getFirstParamValue(sources, ["userId", "id", "uid", "sub"]),
         email: this.getFirstParamValue(sources, ["email", "userEmail"]),
@@ -667,10 +572,8 @@ export class AuthManager {
         role: this.getFirstParamValue(sources, ["role"]),
         avatarUrl: this.getFirstParamValue(sources, ["avatarUrl", "avatar"]),
       };
-
       const userFromToken = this.buildUserFromToken(normalizedToken, emailFallback);
       const userFromParams = this.mapUserFromUnknown(userCandidate, emailFallback, "USER");
-
       const user = userFromToken ||
         userFromParams || {
           id: emailFallback,
@@ -678,7 +581,6 @@ export class AuthManager {
           fullName: getEmailPrefix(emailFallback),
           role: "USER" as const,
         };
-
       return {
         success: true,
         data: {
@@ -689,7 +591,7 @@ export class AuthManager {
     } catch {
       return {
         success: false,
-        error: "Không thể xử lý callback đăng nhập Google.",
+        error: t("general.unableToHandleGoogleLogin"),
       };
     }
   }
@@ -716,12 +618,10 @@ export class AuthManager {
       if (!isValidMajor(data.major)) {
         return {
           success: false,
-          error: "Chuyên ngành không hợp lệ",
+          error: t("general.invalidMajor"),
         };
       }
-
       const formData = new FormData();
-
       const userInfo = {
         name: data.fullName.trim(),
         email: data.email.trim(),
@@ -729,27 +629,26 @@ export class AuthManager {
         university: data.university?.trim() || "",
         major: data.major,
       };
-
-      formData.append("data", new Blob([JSON.stringify(userInfo)], { type: "application/json" }));
-
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(userInfo)], {
+          type: "application/json",
+        })
+      );
       const response = await this.api.post(API_ENDPOINTS.USERS.CREATE, formData, {
         headers: {
           "Content-Type": undefined,
         },
       });
-
       const backendUser = response.data as BackendUser;
       const user = this.mapUserFromUnknown(backendUser, data.email, "USER");
-
       if (!user) {
         return {
           success: false,
-          error: "Không thể đọc thông tin tài khoản sau đăng ký",
+          error: t("general.unableToReadAccountInformation"),
         };
       }
-
       user.role = "USER";
-
       return {
         success: true,
         data: {
@@ -761,7 +660,7 @@ export class AuthManager {
       console.error("Signup error:", error);
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, "Đăng ký thất bại"),
+        error: getNormalizedErrorMessage(error, t("auth_signuppage.tsx.ang_ky_that_bai")),
       };
     }
   }
@@ -793,7 +692,12 @@ export class AuthManager {
       };
 
       // Append the 'data' field as a JSON Blob
-      formData.append("data", new Blob([JSON.stringify(mentorInfo)], { type: "application/json" }));
+      formData.append(
+        "data",
+        new Blob([JSON.stringify(mentorInfo)], {
+          type: "application/json",
+        })
+      );
 
       // Only append files the user actually uploaded.
       if (data.avatar) {
@@ -808,13 +712,11 @@ export class AuthManager {
       if (data.otherFile) {
         formData.append("otherFile", data.otherFile);
       }
-
       const response = await this.api.post(API_ENDPOINTS.MENTOR.CREATE, formData, {
         headers: {
           "Content-Type": undefined, // Let axios set multipart boundary automatically
         },
       });
-
       return {
         success: true,
         data: {
@@ -830,18 +732,15 @@ export class AuthManager {
       };
     } catch (error) {
       console.error("Mentor registration error:", error);
-
       const response = isRecord(error) && isRecord(error.response) ? error.response : undefined;
       const status = typeof response?.status === "number" ? response.status : undefined;
       const payload = response?.data;
       const fieldErrors = extractFieldErrors(payload);
-
       const normalizedErrorMessage =
         extractApiErrorMessage(payload) ||
         (typeof status === "number" ? ERROR_MESSAGES[status] : undefined) ||
         getNormalizedErrorMessage(error, "") ||
-        "Đăng ký mentor thất bại. Vui lòng thử lại.";
-
+        t("general.mentorRegistrationFailedPleaseTry");
       return {
         success: false,
         error: normalizedErrorMessage,
@@ -854,7 +753,9 @@ export class AuthManager {
    * Logout user
    */
   async logout(): Promise<ApiResponse<void>> {
-    return { success: true };
+    return {
+      success: true,
+    };
   }
 
   /**
@@ -870,7 +771,7 @@ export class AuthManager {
     } catch (error) {
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, "Không thể kiểm tra trạng thái"),
+        error: getNormalizedErrorMessage(error, t("general.unableToCheckStatus")),
       };
     }
   }
@@ -878,7 +779,11 @@ export class AuthManager {
   /**
    * Refresh authentication token
    */
-  async refreshToken(): Promise<ApiResponse<{ token: string }>> {
+  async refreshToken(): Promise<
+    ApiResponse<{
+      token: string;
+    }>
+  > {
     try {
       const response = await this.api.post(API_ENDPOINTS.AUTH.REFRESH);
       return {
@@ -888,7 +793,7 @@ export class AuthManager {
     } catch (error) {
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, "Làm mới token thất bại"),
+        error: getNormalizedErrorMessage(error, t("general.tokenRefreshFailed")),
       };
     }
   }

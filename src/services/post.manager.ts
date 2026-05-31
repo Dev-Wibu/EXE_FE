@@ -1,13 +1,17 @@
+import i18n from "@/lib/i18n";
+const t = i18n.t.bind(i18n);
 /**
  * Post Manager
  * Handles post, comment, and like CRUD operations
  * Based on schema-from-be.d.ts API specification
  */
 
-import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
-
 import { API_ENDPOINTS, buildEndpoint, createApiInstance } from "@/constants/api.config";
 import type {
+  ApiResponse,
+  BaseManager,
+  PaginatedResponse,
+  PaginationParams,
   Post,
   PostCommentRequest,
   PostCommentResponse,
@@ -25,7 +29,10 @@ function normalizePost(post: Post): Post {
   if (post.major && !post.major.name && post.major.majorName) {
     return {
       ...post,
-      major: { ...post.major, name: post.major.majorName },
+      major: {
+        ...post.major,
+        name: post.major.majorName,
+      },
     };
   }
   return post;
@@ -52,12 +59,12 @@ function unwrapPostResponses(data: unknown): Post[] {
 
   // Handle paginated response: { content: [...] }
   if (data && typeof data === "object" && !Array.isArray(data) && "content" in data) {
-    const paginatedData = data as { content?: unknown };
+    const paginatedData = data as {
+      content?: unknown;
+    };
     return unwrapPostResponses(paginatedData.content);
   }
-
   if (!Array.isArray(data)) return [];
-
   return data.map((item: PostResponseWrapper | Post, index: number) => {
     // Check if this is a PostResponse wrapper (has .post property)
     if (item && typeof item === "object" && "post" in item && item.post) {
@@ -74,7 +81,6 @@ function unwrapPostResponses(data: unknown): Post[] {
     return normalizePost(item as Post);
   });
 }
-
 export class PostManager implements BaseManager<Post> {
   private api = createApiInstance();
 
@@ -96,15 +102,19 @@ export class PostManager implements BaseManager<Post> {
       if (data.tags) {
         data.tags.forEach((tag) => formData.append("tags", tag));
       }
-
       const response = await this.api.post(API_ENDPOINTS.POSTS.CREATE, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bài viết",
+        error: error instanceof Error ? error.message : t("general.unableToCreatePost"),
       };
     }
   }
@@ -115,13 +125,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async getCommentsByPostId(postId: number): Promise<ApiResponse<PostCommentResponse[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENTS, { postId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENTS, {
+        postId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bình luận",
+        error: error instanceof Error ? error.message : t("general.unableToLoadComments"),
       };
     }
   }
@@ -132,13 +147,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async getCommentsCount(postId: number): Promise<ApiResponse<number>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENTS_COUNT, { postId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENTS_COUNT, {
+        postId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải số lượng bình luận",
+        error: error instanceof Error ? error.message : t("general.unableToLoadCommentCount"),
       };
     }
   }
@@ -150,11 +170,14 @@ export class PostManager implements BaseManager<Post> {
   async createComment(data: PostCommentRequest): Promise<ApiResponse<PostCommentResponse>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.POSTS.CREATE_COMMENT, data);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tạo bình luận",
+        error: error instanceof Error ? error.message : t("general.cannotCreateComment"),
       };
     }
   }
@@ -165,13 +188,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async getCommentById(commentId: number): Promise<ApiResponse<PostCommentResponse>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENT_DETAIL, { commentId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENT_DETAIL, {
+        commentId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bình luận",
+        error: error instanceof Error ? error.message : t("general.unableToLoadComments"),
       };
     }
   }
@@ -185,13 +213,18 @@ export class PostManager implements BaseManager<Post> {
     data: Partial<PostCommentRequest>
   ): Promise<ApiResponse<PostCommentResponse>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.UPDATE_COMMENT, { commentId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.UPDATE_COMMENT, {
+        commentId,
+      });
       const response = await this.api.put(endpoint, data);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật bình luận",
+        error: error instanceof Error ? error.message : t("general.unableToUpdateComments"),
       };
     }
   }
@@ -202,13 +235,17 @@ export class PostManager implements BaseManager<Post> {
    */
   async deleteComment(commentId: number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DELETE_COMMENT, { commentId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DELETE_COMMENT, {
+        commentId,
+      });
       await this.api.delete(endpoint);
-      return { success: true };
+      return {
+        success: true,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa bình luận",
+        error: error instanceof Error ? error.message : t("common.commentsCannotBeDeleted"),
       };
     }
   }
@@ -219,13 +256,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async getReplies(parentCommentId: number): Promise<ApiResponse<PostCommentResponse[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENT_REPLIES, { parentCommentId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.COMMENT_REPLIES, {
+        parentCommentId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải phản hồi",
+        error: error instanceof Error ? error.message : t("general.couldNotLoadResponse"),
       };
     }
   }
@@ -237,11 +279,14 @@ export class PostManager implements BaseManager<Post> {
   async likePost(data: PostLikeRequest): Promise<ApiResponse<PostLikeResponse>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.POSTS.LIKE, data);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể thích bài viết",
+        error: error instanceof Error ? error.message : t("common.cannotLikeThePost"),
       };
     }
   }
@@ -252,13 +297,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async getLikesByPostId(postId: number): Promise<ApiResponse<PostLikeResponse[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.LIKES_BY_POST, { postId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.LIKES_BY_POST, {
+        postId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải lượt thích",
+        error: error instanceof Error ? error.message : t("general.unableToLoadLikes"),
       };
     }
   }
@@ -269,13 +319,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async getLikesCount(postId: number): Promise<ApiResponse<number>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.LIKES_COUNT, { postId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.LIKES_COUNT, {
+        postId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải số lượt thích",
+        error: error instanceof Error ? error.message : t("general.unableToLoadLikes1"),
       };
     }
   }
@@ -286,13 +341,19 @@ export class PostManager implements BaseManager<Post> {
    */
   async checkLiked(postId: number, userId: number): Promise<ApiResponse<boolean>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHECK_LIKED, { postId, userId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHECK_LIKED, {
+        postId,
+        userId,
+      });
       const response = await this.api.get(endpoint);
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể kiểm tra trạng thái thích",
+        error: error instanceof Error ? error.message : t("general.unableToCheckLikeStatus"),
       };
     }
   }
@@ -303,13 +364,18 @@ export class PostManager implements BaseManager<Post> {
    */
   async unlikePost(postId: number, userId: number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.UNLIKE, { postId, userId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.UNLIKE, {
+        postId,
+        userId,
+      });
       await this.api.delete(endpoint);
-      return { success: true };
+      return {
+        success: true,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể bỏ thích bài viết",
+        error: error instanceof Error ? error.message : t("common.cannotUnlikePosts"),
       };
     }
   }
@@ -317,18 +383,22 @@ export class PostManager implements BaseManager<Post> {
   // BaseManager interface methods
   async getAll(_params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<Post> | Post[]>> {
     try {
-      const response = await this.api.get(API_ENDPOINTS.POSTS.LIST, { params: _params });
+      const response = await this.api.get(API_ENDPOINTS.POSTS.LIST, {
+        params: _params,
+      });
       // Backend returns PostResponse[] wrapper — unwrap into Post[]
       const posts = unwrapPostResponses(response.data);
-      return { success: true, data: posts };
+      return {
+        success: true,
+        data: posts,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải danh sách bài viết",
+        error: error instanceof Error ? error.message : t("common.unableToLoadArticleList"),
       };
     }
   }
-
   async getById(id: string | number): Promise<ApiResponse<Post>> {
     try {
       // No GET /api/posts/{postId} endpoint in schema.
@@ -337,13 +407,19 @@ export class PostManager implements BaseManager<Post> {
       const posts = unwrapPostResponses(response.data);
       const post = posts.find((p) => p.postId === Number(id));
       if (!post) {
-        return { success: false, error: "Không tìm thấy bài viết" };
+        return {
+          success: false,
+          error: t("common.noArticlesFound"),
+        };
       }
-      return { success: true, data: post };
+      return {
+        success: true,
+        data: post,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bài viết",
+        error: error instanceof Error ? error.message : t("common.unableToLoadArticle"),
       };
     }
   }
@@ -357,11 +433,14 @@ export class PostManager implements BaseManager<Post> {
       const response = await this.api.get(API_ENDPOINTS.POSTS.PUBLISHED);
       // Backend returns PostResponse[] wrapper — unwrap into Post[]
       const posts = unwrapPostResponses(response.data);
-      return { success: true, data: posts };
+      return {
+        success: true,
+        data: posts,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể tải bài viết đã xuất bản",
+        error: error instanceof Error ? error.message : t("general.unableToLoadPublishedArticle"),
       };
     }
   }
@@ -375,32 +454,42 @@ export class PostManager implements BaseManager<Post> {
     status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
   ): Promise<ApiResponse<Record<string, string>>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHANGE_STATUS, { postId });
-      const response = await this.api.get(endpoint, { params: { status } });
-      return { success: true, data: response.data };
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.CHANGE_STATUS, {
+        postId,
+      });
+      const response = await this.api.get(endpoint, {
+        params: {
+          status,
+        },
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể thay đổi trạng thái bài viết",
+        error: error instanceof Error ? error.message : t("general.cannotChangePostStatus"),
       };
     }
   }
-
   async create(data: Partial<Post>): Promise<ApiResponse<Post>> {
     return this.createPost(data as PostCreateRequest);
   }
-
   async update(id: string | number, data: Partial<Post>): Promise<ApiResponse<Post>> {
     try {
       const response = await this.api.post(API_ENDPOINTS.POSTS.UPDATE, {
         ...data,
         postId: Number(id),
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật bài viết",
+        error: error instanceof Error ? error.message : t("general.unableToUpdatePost"),
       };
     }
   }
@@ -425,28 +514,35 @@ export class PostManager implements BaseManager<Post> {
       if (data.tags) {
         data.tags.forEach((tag) => formData.append("tags", tag));
       }
-
       const response = await this.api.post(API_ENDPOINTS.POSTS.CREATE, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      return { success: true, data: response.data };
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể cập nhật bài viết",
+        error: error instanceof Error ? error.message : t("general.unableToUpdatePost"),
       };
     }
   }
-
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DELETE, { postId: id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.POSTS.DELETE, {
+        postId: id,
+      });
       await this.api.delete(endpoint);
-      return { success: true };
+      return {
+        success: true,
+      };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Không thể xóa bài viết",
+        error: error instanceof Error ? error.message : t("general.postsCannotBeDeleted"),
       };
     }
   }
@@ -456,10 +552,8 @@ export class PostManager implements BaseManager<Post> {
 export const postManager = new PostManager();
 
 // React Query hooks using $api
-import { useQuery } from "@tanstack/react-query";
-
 import { $api } from "@/lib/api";
-
+import { useQuery } from "@tanstack/react-query";
 export const useCreatePost = () => $api.useMutation("post", "/api/posts");
 export const usePostComments = (postId: number, enabled = true) =>
   useQuery({
@@ -523,19 +617,40 @@ export const useCheckLiked = (postId: number, userId: number, enabled = true) =>
   $api.useQuery(
     "get",
     "/api/posts/likes/{postId}/check/{userId}",
-    { params: { path: { postId, userId } } },
-    { enabled: enabled && postId > 0 && userId > 0 }
+    {
+      params: {
+        path: {
+          postId,
+          userId,
+        },
+      },
+    },
+    {
+      enabled: enabled && postId > 0 && userId > 0,
+    }
   );
 export const useUnlikePost = () => $api.useMutation("delete", "/api/posts/likes/{postId}/{userId}");
 export const usePublishedPosts = () => $api.useQuery("get", "/api/posts/published");
 export const useChangePostStatus = () =>
   $api.useMutation("get", "/api/posts/change-status/{postId}");
 export const useNewFeed = (params?: { page?: number; size?: number }) =>
-  $api.useQuery("get", "/api/posts/feed", { params: { query: params } });
+  $api.useQuery("get", "/api/posts/feed", {
+    params: {
+      query: params,
+    },
+  });
 export const usePostById = (postId: number, enabled = true) =>
   $api.useQuery(
     "get",
     "/api/posts/{postId}",
-    { params: { path: { postId } } },
-    { enabled: enabled && postId > 0 }
+    {
+      params: {
+        path: {
+          postId,
+        },
+      },
+    },
+    {
+      enabled: enabled && postId > 0,
+    }
   );
