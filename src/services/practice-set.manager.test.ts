@@ -2,21 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
+    GET: vi.fn(),
+    POST: vi.fn(),
+    PUT: vi.fn(),
+    DELETE: vi.fn(),
   },
 }));
 
-vi.mock("@/constants/api.config", async () => {
-  const actual =
-    await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
-
+vi.mock("@/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
     ...actual,
-    MANAGER_MODE: "api",
-    createApiInstance: () => mockApi,
+    fetchClient: mockApi,
   };
 });
 
@@ -24,11 +21,11 @@ import { PracticeSetManager } from "@/services/practice-set.manager";
 
 describe("PracticeSetManager createByAI", () => {
   beforeEach(() => {
-    mockApi.post.mockReset();
+    mockApi.POST.mockReset();
   });
 
   it("sends PracticeGenerateRequest body without userId", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         id: 1,
       },
@@ -43,10 +40,12 @@ describe("PracticeSetManager createByAI", () => {
     const result = await manager.createByAI(requestBody);
 
     expect(result.success).toBe(true);
-    expect(mockApi.post).toHaveBeenCalledTimes(1);
-    expect(mockApi.post).toHaveBeenCalledWith("/api/practice-sets/create-by-ai", requestBody);
+    expect(mockApi.POST).toHaveBeenCalledTimes(1);
+    expect(mockApi.POST).toHaveBeenCalledWith("/api/practice-sets/create-by-ai", {
+      body: requestBody,
+    });
 
-    const sentBody = mockApi.post.mock.calls[0]?.[1] as Record<string, unknown>;
+    const sentBody = mockApi.POST.mock.calls[0]?.[1] as Record<string, unknown>;
     expect(sentBody).not.toHaveProperty("userId");
   });
 });

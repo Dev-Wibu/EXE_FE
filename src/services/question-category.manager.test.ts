@@ -2,20 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
+    GET: vi.fn(),
+    POST: vi.fn(),
+    PUT: vi.fn(),
+    DELETE: vi.fn(),
   },
 }));
 
-vi.mock("@/constants/api.config", async () => {
-  const actual =
-    await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
-
+vi.mock("@/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
     ...actual,
-    createApiInstance: () => mockApi,
+    fetchClient: mockApi,
   };
 });
 
@@ -23,14 +21,14 @@ import { QuestionCategoryManager } from "@/services/question-category.manager";
 
 describe("QuestionCategoryManager", () => {
   beforeEach(() => {
-    mockApi.get.mockReset();
-    mockApi.post.mockReset();
-    mockApi.put.mockReset();
-    mockApi.delete.mockReset();
+    mockApi.GET.mockReset();
+    mockApi.POST.mockReset();
+    mockApi.PUT.mockReset();
+    mockApi.DELETE.mockReset();
   });
 
   it("maps lessonName to categoryName in getAll", async () => {
-    mockApi.get.mockResolvedValueOnce({
+    mockApi.GET.mockResolvedValueOnce({
       data: [
         {
           id: 1,
@@ -52,12 +50,12 @@ describe("QuestionCategoryManager", () => {
       categoryName: "Technical Skills",
       description: "Questions about technical knowledge",
     });
-    expect(mockApi.get).toHaveBeenCalledTimes(1);
-    expect(mockApi.get.mock.calls[0]?.[0]).toBe("/api/question-categories");
+    expect(mockApi.GET).toHaveBeenCalledTimes(1);
+    expect(mockApi.GET.mock.calls[0]?.[0]).toBe("/api/question-categories");
   });
 
   it("returns mapped category by id", async () => {
-    mockApi.get.mockResolvedValueOnce({
+    mockApi.GET.mockResolvedValueOnce({
       data: {
         id: 1,
         lessonName: "Behavioral",
@@ -74,11 +72,11 @@ describe("QuestionCategoryManager", () => {
       categoryName: "Behavioral",
       description: "Questions about behavior",
     });
-    expect(mockApi.get).toHaveBeenCalledWith("/api/question-categories/1");
+    expect(mockApi.GET).toHaveBeenCalledWith("/api/question-categories/1");
   });
 
   it("sends backend-aligned payload when creating category", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         id: 10,
         lessonName: "System Design",
@@ -94,16 +92,18 @@ describe("QuestionCategoryManager", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(mockApi.post).toHaveBeenCalledWith("/api/question-categories", {
-      id: 0,
-      lessonName: "System Design",
-      description: "Advanced topics",
-      urlTutorial: "",
+    expect(mockApi.POST).toHaveBeenCalledWith("/api/question-categories", {
+      body: {
+        id: 0,
+        lessonName: "System Design",
+        description: "Advanced topics",
+        urlTutorial: "",
+      },
     });
   });
 
   it("sends backend-aligned payload when updating category", async () => {
-    mockApi.put.mockResolvedValueOnce({
+    mockApi.PUT.mockResolvedValueOnce({
       data: {
         id: 1,
         lessonName: "Updated Category",
@@ -116,26 +116,28 @@ describe("QuestionCategoryManager", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(mockApi.put).toHaveBeenCalledWith("/api/question-categories", {
-      id: 1,
-      lessonName: "Updated Category",
-      description: undefined,
-      urlTutorial: undefined,
+    expect(mockApi.PUT).toHaveBeenCalledWith("/api/question-categories", {
+      body: {
+        id: 1,
+        lessonName: "Updated Category",
+        description: undefined,
+        urlTutorial: undefined,
+      },
     });
   });
 
   it("calls delete endpoint with built id path", async () => {
-    mockApi.delete.mockResolvedValueOnce({});
+    mockApi.DELETE.mockResolvedValueOnce({});
 
     const manager = new QuestionCategoryManager();
     const result = await manager.delete(1);
 
     expect(result.success).toBe(true);
-    expect(mockApi.delete).toHaveBeenCalledWith("/api/question-categories/1");
+    expect(mockApi.DELETE).toHaveBeenCalledWith("/api/question-categories/1");
   });
 
   it("returns error response when request fails", async () => {
-    mockApi.get.mockRejectedValueOnce(new Error("Not found"));
+    mockApi.GET.mockRejectedValueOnce(new Error("Not found"));
 
     const manager = new QuestionCategoryManager();
     const result = await manager.getById(999);

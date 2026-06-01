@@ -4,27 +4,26 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const t = i18n.t.bind(i18n);
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
-    get: vi.fn(),
-    post: vi.fn(),
-    delete: vi.fn(),
+    GET: vi.fn(),
+    POST: vi.fn(),
+    DELETE: vi.fn(),
   },
 }));
-vi.mock("@/constants/api.config", async () => {
-  const actual =
-    await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
+vi.mock("@/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
     ...actual,
-    createApiInstance: () => mockApi,
+    fetchClient: mockApi,
   };
 });
 describe("PaymentManager API mode", () => {
   beforeEach(() => {
-    mockApi.get.mockReset();
-    mockApi.post.mockReset();
-    mockApi.delete.mockReset();
+    mockApi.GET.mockReset();
+    mockApi.POST.mockReset();
+    mockApi.DELETE.mockReset();
   });
   it("returns payment list from API", async () => {
-    mockApi.get.mockResolvedValueOnce({
+    mockApi.GET.mockResolvedValueOnce({
       data: [
         {
           id: 1,
@@ -37,10 +36,10 @@ describe("PaymentManager API mode", () => {
     const result = await manager.getAll();
     expect(result.success).toBe(true);
     expect(result.data).toHaveLength(1);
-    expect(mockApi.get).toHaveBeenCalledTimes(1);
+    expect(mockApi.GET).toHaveBeenCalledTimes(1);
   });
   it("creates payment and returns checkout url from API payload", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         checkoutUrl: "https://payos.vn/checkout?orderCode=ORDER-123",
       },
@@ -52,10 +51,9 @@ describe("PaymentManager API mode", () => {
     });
     expect(result.success).toBe(true);
     expect(result.data).toContain("orderCode=ORDER-123");
-    expect(mockApi.post).toHaveBeenCalledTimes(1);
-    expect(mockApi.post).toHaveBeenCalledWith(
+    expect(mockApi.POST).toHaveBeenCalledTimes(1);
+    expect(mockApi.POST).toHaveBeenCalledWith(
       "/api/payments/pay",
-      null,
       expect.objectContaining({
         params: expect.objectContaining({
           amount: 120000,
@@ -66,7 +64,7 @@ describe("PaymentManager API mode", () => {
     );
   });
   it("passes explicit payment purpose when provided", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         checkoutUrl: "https://payos.vn/checkout?orderCode=ORDER-999",
       },
@@ -76,9 +74,8 @@ describe("PaymentManager API mode", () => {
       paymentPurpose: "MENTOR_INTERVIEW",
     });
     expect(result.success).toBe(true);
-    expect(mockApi.post).toHaveBeenCalledWith(
+    expect(mockApi.POST).toHaveBeenCalledWith(
       "/api/payments/pay",
-      null,
       expect.objectContaining({
         params: expect.objectContaining({
           amount: 88000,
@@ -92,11 +89,11 @@ describe("PaymentManager API mode", () => {
     const manager = new PaymentManager();
     const result = await manager.create(0, 1);
     expect(result.success).toBe(false);
-    expect(result.error).toContain(t("common.amount"));
-    expect(mockApi.post).not.toHaveBeenCalled();
+    expect(result.error).toContain("Invalid payment amount.");
+    expect(mockApi.POST).not.toHaveBeenCalled();
   });
   it("returns error when API create does not include checkout URL", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         id: 123,
       },
@@ -107,7 +104,7 @@ describe("PaymentManager API mode", () => {
     expect(result.error).toContain(t("general.paymentLink"));
   });
   it("cancels payment by transaction code", async () => {
-    mockApi.get.mockResolvedValueOnce({
+    mockApi.GET.mockResolvedValueOnce({
       data: {
         id: 9,
         transactionCode: "ORDER-9",
@@ -118,10 +115,10 @@ describe("PaymentManager API mode", () => {
     const result = await manager.cancel("ORDER-9");
     expect(result.success).toBe(true);
     expect(result.data?.status).toBe("FAILED");
-    expect(mockApi.get).toHaveBeenCalledTimes(1);
+    expect(mockApi.GET).toHaveBeenCalledTimes(1);
   });
   it("returns backend cancel error message when API rejects", async () => {
-    mockApi.get.mockRejectedValueOnce({
+    mockApi.GET.mockRejectedValueOnce({
       response: {
         data: {
           error: "Payment not found with transaction code: ORDER-404",
@@ -135,7 +132,7 @@ describe("PaymentManager API mode", () => {
     expect(result.error).toContain("Payment not found with transaction code");
   });
   it("finds payment by transaction code from payment list", async () => {
-    mockApi.get.mockResolvedValueOnce({
+    mockApi.GET.mockResolvedValueOnce({
       data: [
         {
           id: 1,

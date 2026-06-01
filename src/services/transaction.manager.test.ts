@@ -4,19 +4,17 @@ const t = i18n.t.bind(i18n);
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
-    get: vi.fn(),
-    post: vi.fn(),
-    delete: vi.fn(),
+    GET: vi.fn(),
+    POST: vi.fn(),
+    DELETE: vi.fn(),
   },
 }));
 
-vi.mock("@/constants/api.config", async () => {
-  const actual =
-    await vi.importActual<typeof import("@/constants/api.config")>("@/constants/api.config");
-
+vi.mock("@/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
     ...actual,
-    createApiInstance: () => mockApi,
+    fetchClient: mockApi,
   };
 });
 
@@ -24,13 +22,13 @@ import { TransactionManager } from "@/services/transaction.manager";
 
 describe("TransactionManager API mode", () => {
   beforeEach(() => {
-    mockApi.get.mockReset();
-    mockApi.post.mockReset();
-    mockApi.delete.mockReset();
+    mockApi.GET.mockReset();
+    mockApi.POST.mockReset();
+    mockApi.DELETE.mockReset();
   });
 
   it("returns list of transactions from API", async () => {
-    mockApi.get.mockResolvedValueOnce({
+    mockApi.GET.mockResolvedValueOnce({
       data: [{ id: 1, transactionCode: "TX-1", amount: 10000 }],
     });
 
@@ -42,7 +40,7 @@ describe("TransactionManager API mode", () => {
   });
 
   it("creates transfer-in and returns redirect url", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         redirectUrl: "https://payos.vn/checkout?orderCode=TX-11",
       },
@@ -60,11 +58,11 @@ describe("TransactionManager API mode", () => {
     const result = await manager.transferIn(0, 303);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Số tiền nạp ví không hợp lệ");
+    expect(result.error).toContain("Invalid wallet deposit amount.");
   });
 
   it("returns error when transfer-out response has no redirect url", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         ok: true,
       },
@@ -75,9 +73,8 @@ describe("TransactionManager API mode", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain(t("general.validResults"));
-    expect(mockApi.post).toHaveBeenCalledWith(
+    expect(mockApi.POST).toHaveBeenCalledWith(
       "/api/transactions/transfer-out",
-      null,
       expect.objectContaining({
         params: expect.objectContaining({
           amount: 25000,
@@ -89,7 +86,7 @@ describe("TransactionManager API mode", () => {
   });
 
   it("parses transfer-out text response from backend", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: "Transfer out successful. Current balance: 0",
     });
 
@@ -99,9 +96,8 @@ describe("TransactionManager API mode", () => {
     expect(result.success).toBe(true);
     expect(result.data?.message).toContain("Transfer out successful");
     expect(result.data?.currentBalance).toBe(0);
-    expect(mockApi.post).toHaveBeenCalledWith(
+    expect(mockApi.POST).toHaveBeenCalledWith(
       "/api/transactions/transfer-out",
-      null,
       expect.objectContaining({
         params: expect.objectContaining({
           amount: 44000,
@@ -113,7 +109,7 @@ describe("TransactionManager API mode", () => {
   });
 
   it("returns vietnamese insufficient-balance message for transfer-out errors", async () => {
-    mockApi.post.mockRejectedValueOnce({
+    mockApi.POST.mockRejectedValueOnce({
       response: {
         status: 400,
         data: {
@@ -130,7 +126,7 @@ describe("TransactionManager API mode", () => {
   });
 
   it("maps insufficient-balance when backend returns only status 400", async () => {
-    mockApi.post.mockRejectedValueOnce({
+    mockApi.POST.mockRejectedValueOnce({
       response: {
         status: 400,
       },
@@ -144,7 +140,7 @@ describe("TransactionManager API mode", () => {
   });
 
   it("keeps transfer-out redirect url when backend still responds with checkout link", async () => {
-    mockApi.post.mockResolvedValueOnce({
+    mockApi.POST.mockResolvedValueOnce({
       data: {
         redirectUrl: "https://payos.vn/checkout?orderCode=TX-44",
       },
@@ -155,9 +151,8 @@ describe("TransactionManager API mode", () => {
 
     expect(result.success).toBe(true);
     expect(result.data?.redirectUrl).toContain("orderCode=TX-44");
-    expect(mockApi.post).toHaveBeenCalledWith(
+    expect(mockApi.POST).toHaveBeenCalledWith(
       "/api/transactions/transfer-out",
-      null,
       expect.objectContaining({
         params: expect.objectContaining({
           amount: 44000,
@@ -169,17 +164,17 @@ describe("TransactionManager API mode", () => {
   });
 
   it("deletes transaction by transaction code", async () => {
-    mockApi.delete.mockResolvedValueOnce({ data: null });
+    mockApi.DELETE.mockResolvedValueOnce({ data: null });
 
     const manager = new TransactionManager();
     const result = await manager.delete("TX-DELETE-1");
 
     expect(result.success).toBe(true);
-    expect(mockApi.delete).toHaveBeenCalledTimes(1);
+    expect(mockApi.DELETE).toHaveBeenCalledTimes(1);
   });
 
   it("returns backend delete error message when API rejects", async () => {
-    mockApi.delete.mockRejectedValueOnce({
+    mockApi.DELETE.mockRejectedValueOnce({
       response: {
         data: {
           error: "Transaction not found with transaction code: TX-404",
