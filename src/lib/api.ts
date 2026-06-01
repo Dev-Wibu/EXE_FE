@@ -10,8 +10,8 @@ import type { paths } from "../../schema-from-be";
 import createFetchClient from "openapi-fetch";
 import createClient from "openapi-react-query";
 
-import { API_BASE_URL, isPublicAuthRequest } from "@/constants/api.config";
-import { normalizeApiError } from "@/lib/error-normalizer";
+import { API_BASE_URL, isPublicAuthRequest, isSilent401Endpoint } from "@/constants/api.config";
+import { normalizeApiError, toAppApiError } from "@/lib/error-normalizer";
 
 // Create the fetch client with base configuration
 const fetchClient = createFetchClient<paths>({
@@ -32,6 +32,10 @@ fetchClient.use({
     if (token && !shouldSkipAuthHeader) {
       request.headers.set("Authorization", `Bearer ${token}`);
     }
+
+    // Generate unique request ID for debugging
+    const requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    request.headers.set("X-Request-ID", requestId);
 
     // Log API request (development only)
     if (import.meta.env.DEV) {
@@ -93,10 +97,12 @@ fetchClient.use({
             );
           }
 
+          const newHeaders = new Headers(response.headers);
+          newHeaders.delete("content-length");
           const newResponse = new Response(JSON.stringify(unwrappedPayload), {
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
+            headers: newHeaders,
           });
           Object.defineProperty(newResponse, "url", { value: response.url });
           finalResponse = newResponse;
@@ -126,11 +132,13 @@ fetchClient.use({
         }
       }
 
+      const errorDescriptor = {
+        status: response.status,
+        data: payload,
+      };
+
       const normalizedError = normalizeApiError(
-        {
-          status: response.status,
-          data: payload,
-        },
+        errorDescriptor,
         t("general.anErrorOccurredWhileCalling")
       );
 
@@ -145,15 +153,29 @@ fetchClient.use({
       if (normalizedError.traceId) {
         console.error(`[COPY TRACE ID] ${normalizedError.traceId}`);
       }
-    }
 
-    // Auto-logout on 401 (token expired or invalid)
-    if (response.status === 401 && !isPublicAuthRequest(request.url, request.method)) {
-      const { useAuthStore } = await import("@/stores/authStore");
-      useAuthStore.getState().clearAuth();
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
+      // Auto-logout on 401 (token expired or invalid)
+      if (response.status === 401) {
+        const requestUrl = request.url;
+        const requestMethod = request.method;
+        const shouldSkipRedirect = isPublicAuthRequest(requestUrl, requestMethod);
+        const shouldSilentFail = isSilent401Endpoint(requestUrl, requestMethod);
+        const isPostsEndpoint =
+          requestUrl.includes("/posts") && requestMethod.toLowerCase() === "get";
+
+        if (!shouldSkipRedirect && !shouldSilentFail && !isPostsEndpoint) {
+          const { useAuthStore } = await import("@/stores/authStore");
+          useAuthStore.getState().clearAuth();
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+          }
+        }
       }
+
+      // Throw a normalized AppApiError so that openapi-react-query (React Query)
+      // receives the same error shape as the Axios interceptor.
+      // This unifies error handling across both API clients.
+      throw toAppApiError(errorDescriptor, normalizedError.message);
     }
 
     return finalResponse;

@@ -1,20 +1,15 @@
-import i18n from "@/lib/i18n";
-const t = i18n.t.bind(i18n);
 /**
  * API Configuration and Constants
  * Based on schema-from-be.d.ts API specification
  */
 
 import type { ApiConfig, ManagerMode } from "@/interfaces";
-import axios, { AxiosHeaders, type AxiosInstance, type AxiosRequestConfig } from "axios";
-
-import { normalizeApiError, toAppApiError } from "@/lib/error-normalizer";
 
 // API-only mode: mock branches are removed from service managers.
 export const MANAGER_MODE: ManagerMode = "api";
 
 // API Base URL from environment or default (use localhost for development)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+export const API_BASE_URL = "http://localhost:8080";
 
 // API Configuration
 export const apiConfig: ApiConfig = {
@@ -422,25 +417,6 @@ export function buildEndpoint(endpoint: string, params?: Record<string, string |
   }, endpoint);
 }
 
-// Error messages mapping - Vietnamese user-friendly messages
-// EXPORTED for components to use when handling HTTP errors
-// Components can import this to get consistent, localized error messages:
-// import { ERROR_MESSAGES } from '@/constants/api.config';
-// const message = ERROR_MESSAGES[response.status] || 'Đã xảy ra lỗi';
-export const ERROR_MESSAGES: Record<number, string> = {
-  400: t("general.invalidDataPleaseCheckAgain"),
-  401: t("general.loginSessionExpiredPleaseLog"),
-  403: t("general.youDoNotHavePermission"),
-  404: t("general.requestedDataNotFound"),
-  413: t("general.fileIsTooLargePlease"),
-  415: t("general.fileFormatNotSupported"),
-  429: t("general.tooManyRequestsPleaseTry"),
-  500: t("general.theSystemIsExperiencingProblems"),
-  502: t("general.theServerIsTemporarilyUnavailable"),
-  503: t("general.serviceIsUnderMaintenancePlease"),
-  504: t("general.theServerRespondsTooSlowly"),
-};
-
 const PUBLIC_AUTH_POST_ENDPOINTS = new Set<string>([
   API_ENDPOINTS.AUTH.LOGIN,
   API_ENDPOINTS.AUTH.LOGIN_WITH_GOOGLE,
@@ -495,7 +471,7 @@ const normalizeRequestPath = (url?: string): string => {
   }
 };
 
-const isSilent401Endpoint = (url?: string, method?: string): boolean => {
+export const isSilent401Endpoint = (url?: string, method?: string): boolean => {
   const normalizedMethod = (method || "get").toLowerCase();
   if (normalizedMethod !== "get") {
     return false;
@@ -560,231 +536,4 @@ export const isPublicAuthRequest = (url?: string, method?: string): boolean => {
   }
 
   return false;
-};
-
-const appendCurlQueryParams = (url: URL, params: AxiosRequestConfig["params"]): void => {
-  if (!params) {
-    return;
-  }
-
-  if (params instanceof URLSearchParams) {
-    params.forEach((value, key) => {
-      url.searchParams.append(key, value);
-    });
-    return;
-  }
-
-  if (typeof params !== "object") {
-    return;
-  }
-
-  Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
-    if (value == null) {
-      return;
-    }
-
-    const values = Array.isArray(value) ? value : [value];
-    values.forEach((item) => {
-      if (item == null) {
-        return;
-      }
-
-      const normalizedValue =
-        item instanceof Date
-          ? item.toISOString()
-          : typeof item === "object"
-            ? JSON.stringify(item)
-            : String(item);
-
-      url.searchParams.append(key, normalizedValue);
-    });
-  });
-};
-
-const buildCurlCommand = (config: AxiosRequestConfig): string => {
-  try {
-    const baseUrl = config.baseURL || API_BASE_URL;
-    const resolvedUrl = config.url ? new URL(config.url, baseUrl) : new URL(baseUrl);
-    appendCurlQueryParams(resolvedUrl, config.params);
-
-    const method = (config.method || "get").toString().toUpperCase();
-    const parts: string[] = [`curl -X ${method} "${resolvedUrl.toString()}"`];
-
-    const headers = AxiosHeaders.from(
-      config.headers as Parameters<typeof AxiosHeaders.from>[0]
-    ).toJSON() as Record<string, unknown>;
-    Object.entries(headers).forEach(([key, value]) => {
-      if (key.toLowerCase() === "common" || key.toLowerCase() === "content-type" || value == null) {
-        return;
-      }
-
-      const normalizedValue = Array.isArray(value) ? value.join(", ") : String(value);
-      parts.push(`  -H ${JSON.stringify(`${key}: ${normalizedValue}`)}`);
-    });
-
-    if (config.data != null && config.data !== "") {
-      if (typeof FormData !== "undefined" && config.data instanceof FormData) {
-        config.data.forEach((value, key) => {
-          if (typeof File !== "undefined" && value instanceof File) {
-            const fileName = value.name || "file";
-            const mimeType = value.type || "application/octet-stream";
-            parts.push(`  -F "${key}=@${fileName};type=${mimeType}"`);
-            return;
-          }
-
-          if (typeof value === "string") {
-            parts.push(`  -F "${key}=${value}"`);
-            return;
-          }
-
-          parts.push(`  -F "${key}=${JSON.stringify(value)}"`);
-        });
-      } else {
-        const rawBody = typeof config.data === "string" ? config.data : JSON.stringify(config.data);
-        parts.push(`  -H "Content-Type: application/json"`);
-        parts.push(`  -d '${rawBody.replace(/'/g, "'\"'\"'")}'`);
-      }
-    }
-
-    return parts.join(" \\\n");
-  } catch {
-    return "# Failed to build cURL";
-  }
-};
-
-/**
- * Create axios instance with response interceptors for global error handling
- *
- * NOTE: Toast notifications are NOT shown in the interceptor to prevent duplicate toasts.
- * Components/hooks should handle their own error toasts for more specific messaging.
- *
- * @returns Configured axios instance with error interceptors
- */
-export const createApiInstance = (): AxiosInstance => {
-  const instance = axios.create(apiConfig);
-
-  // Request interceptor - Add request ID for debugging
-  instance.interceptors.request.use(async (config) => {
-    // Keep auth behavior consistent across clients: always attach token when available.
-    const { useAuthStore } = await import("@/stores/authStore");
-    const token = useAuthStore.getState().token;
-
-    const shouldSkipAuthHeader = isPublicAuthRequest(config.url, config.method);
-    const headers =
-      config.headers instanceof AxiosHeaders ? config.headers : AxiosHeaders.from(config.headers);
-
-    if (token && !shouldSkipAuthHeader) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-
-    // Generate unique request ID for debugging
-    const requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-    headers.set("X-Request-ID", requestId);
-    config.headers = headers;
-
-    const shouldLogCurl =
-      typeof window !== "undefined" &&
-      (import.meta.env.DEV || import.meta.env.VITE_DEBUG_CURL === "true");
-
-    if (shouldLogCurl) {
-      const curlCommand = buildCurlCommand(config);
-      try {
-        console.groupCollapsed(
-          `[API cURL] ${(config.method || "GET").toString().toUpperCase()} ${config.url}`
-        );
-        console.log(curlCommand);
-        console.groupEnd();
-      } catch {
-        console.log("[API cURL]", curlCommand);
-      }
-    }
-
-    return config;
-  });
-
-  // Response interceptor - Global error handling (without toast to prevent duplicates)
-  instance.interceptors.response.use(
-    (response) => {
-      if (response.data && typeof response.data === "object") {
-        if ("traceId" in response.data) {
-          const record = response.data as Record<string, unknown>;
-          let unwrappedData = response.data;
-          const keys = Object.keys(record);
-
-          if (
-            keys.includes("data") &&
-            (keys.length === 2 || (keys.length === 1 && !keys.includes("traceId")))
-          ) {
-            unwrappedData = record.data;
-          } else {
-            unwrappedData = Object.fromEntries(
-              Object.entries(record).filter(([k]) => k !== "traceId")
-            );
-          }
-          response.data = unwrappedData;
-        }
-      }
-      return response;
-    },
-    async (error) => {
-      const normalizedError = normalizeApiError(error, t("general.anErrorOccurredWhileCalling"));
-      const status = normalizedError.status;
-
-      // ALWAYS log failed API requests with traceId in all environments
-      console.error(`❌ Axios API Error [Trace ID: ${normalizedError.traceId || "N/A"}]:`, {
-        status,
-        url: error.config?.url,
-        message: normalizedError.message,
-        traceId: normalizedError.traceId,
-        payload: normalizedError.payload,
-      });
-      if (normalizedError.traceId) {
-        console.error(`[COPY TRACE ID] ${normalizedError.traceId}`);
-      }
-
-      // Handle network errors (no response) - log but don't toast
-      if (!error.response) {
-        return Promise.reject(toAppApiError(error, t("general.unableToConnectToThe")));
-      }
-
-      // Handle HTTP errors
-      if ((status || 0) >= 400) {
-        // Log error for debugging
-        console.error(`HTTP ${status} error:`, {
-          message: normalizedError.message,
-          traceId: normalizedError.traceId,
-          payload: normalizedError.payload,
-        });
-
-        // Handle 401 - don't redirect for public endpoints
-        if (status === 401) {
-          const requestUrl = error.config?.url ?? "";
-          const requestMethod = (error.config?.method ?? "get").toLowerCase();
-
-          // Check if this is a public endpoint - skip redirect
-          const shouldSkipRedirect = isPublicAuthRequest(requestUrl, requestMethod);
-          const shouldSilentFail = isSilent401Endpoint(requestUrl, requestMethod);
-
-          // Also check generic /posts pattern
-          const isPostsEndpoint = requestUrl.includes("/posts") && requestMethod === "get";
-
-          if (shouldSkipRedirect || shouldSilentFail || isPostsEndpoint) {
-            return Promise.reject(toAppApiError(error, normalizedError.message));
-          }
-
-          // Redirect for protected endpoints
-          const { useAuthStore } = await import("@/stores/authStore");
-          useAuthStore.getState().clearAuth();
-
-          if (window.location.pathname !== "/login") {
-            window.location.href = "/login";
-          }
-        }
-      }
-
-      return Promise.reject(toAppApiError(error, normalizedError.message));
-    }
-  );
-
-  return instance;
 };
