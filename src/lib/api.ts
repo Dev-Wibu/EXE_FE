@@ -19,6 +19,17 @@ const fetchClient = createFetchClient<paths>({
   headers: {
     "Content-Type": "application/json",
   },
+  // Provide a custom fetch implementation to add a global 90s timeout
+  // This is especially important for slow AI API responses
+  fetch: async (request: Request) => {
+    // If a request doesn't provide its own abort signal, add a 90s timeout signal
+    let signal = request.signal;
+    if (!signal && typeof AbortSignal.timeout === "function") {
+      signal = AbortSignal.timeout(90000); // 90 seconds
+    }
+    const newRequest = new Request(request, { signal });
+    return fetch(newRequest);
+  },
 });
 
 // Add middleware to include JWT token in Authorization header and log requests/responses
