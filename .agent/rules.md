@@ -1,6 +1,6 @@
 # EXE_FE — AI Agent Rules
 
-> **@LAST_SYNCED: 2026-05-31**
+> **@LAST_SYNCED: 2026-06-01**
 > Canonical source of truth for all AI agents working on this codebase.
 > Mirrored to `.github/copilot-instructions.md` for GitHub Copilot compatibility.
 
@@ -64,8 +64,7 @@ const isLoggedIn = !!token; // check login ← unnecessary
 | Icons | `lucide-react` |
 | File uploads | `@uppy/*` + `react-dropzone` |
 | PDF viewer | `react-pdf` + `pdfjs-dist` |
-| API client (canonical) | `openapi-fetch` + `openapi-react-query` |
-| API client (legacy) | `axios` |
+| API client | `openapi-fetch` + `openapi-react-query` |
 | WebSocket | `@stomp/stompjs` + `sockjs-client` |
 | Carousel | `embla-carousel-react` |
 | Panel resizing | `react-resizable-panels` |
@@ -170,28 +169,19 @@ $api.useMutation("delete", "/api/sessions/{id}");
 - Error normalization via `normalizeApiError()` with Vietnamese messages
 - Skips auth header for public endpoints (`isPublicAuthRequest()`)
 
-### Axios Managers — Legacy (do NOT create new ones)
+### Service Managers (Migrated from Axios)
 
-Class-based services in `src/services/*.manager.ts`. Each implements `BaseManager<T>` and uses `createApiInstance()` from `constants/api.config.ts`.
+Class-based services in `src/services/*.manager.ts`. These historically used Axios, but have been fully migrated to use `fetchClient` under the hood. They are still maintained for backwards compatibility with existing components, but **for new code, prefer using `$api` directly** where possible.
 
 ```typescript
-// ⚠️ LEGACY — do not create new managers
 import { sessionManager } from "@/services";
+// Works the same as before, but uses openapi-fetch internally
 const response = await sessionManager.getAll();
 ```
 
-**How `createApiInstance()` works** (`src/constants/api.config.ts`):
+### Migration Checklist (Manager → $api)
 
-- Base URL: `VITE_API_BASE_URL` (fallback `http://localhost:8080`)
-- Request interceptor: auto-attaches Bearer token from `useAuthStore`, adds `X-Request-ID`
-- Response interceptor: unwraps `traceId` wrapper, handles 401 → clearAuth + redirect
-- Timeout: 90 seconds
-
-> **Note**: Both `$api` and Axios managers auto-inject JWT and handle 401 logout. The old instructions incorrectly stated Axios doesn't inject JWT — this has been corrected.
-
-### Migration Checklist (Axios → $api)
-
-When you encounter Axios manager code during a feature change:
+When you encounter legacy manager code during a feature change:
 
 1. Check if the endpoint exists in `schema-from-be.d.ts`
 2. If yes, replace the manager call with `$api.useQuery()` or `$api.useMutation()`
@@ -523,6 +513,13 @@ These anti-patterns were catalogued in `docs/error.md`. **Do NOT introduce them 
   const filtered = useMemo(() => items.filter(predicate), [items]);
   ```
 
+### ❌ AP-11: Bypassing Type Safety ("Trick Bẩn")
+
+- Do NOT use `as any` or `: any` to forcefully bypass TypeScript compiler errors. If the backend schema doesn't match the frontend interface, map it properly using Utility Types (`Pick`, `Omit`, etc.) or transform functions.
+- Do NOT use `@ts-ignore` or `@ts-expect-error` unless absolutely necessary (e.g., waiting for a third-party library fix), and it MUST be accompanied by an explanatory comment.
+- Do NOT disable strict ESLint rules (like `@typescript-eslint/no-explicit-any` or `react-hooks/exhaustive-deps`) globally or via file headers just to pass CI/CD.
+- Do NOT use non-null assertions (`!`) such as `user.profile!.avatar`. Always use Optional Chaining (`?.`) and handle undefined cases safely.
+
 ---
 
 ## §12 — Operational Playbook
@@ -632,5 +629,6 @@ When a trigger is detected:
 
 | Date       | Change                                                                                                                                                                                                                                                                                                                                                                        |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-01 | Removed Axios completely from the project. Migrated all legacy Service Managers to use `fetchClient` (which wraps `openapi-fetch`). Updated API guidelines to reflect that `createApiInstance` is dead and `$api` is the only supported API client moving forward.                                                                                                            |
 | 2026-05-31 | Migrated the application to full dynamic i18n using `react-i18next`. Extracted all hardcoded Vietnamese text into JSON locales (`en.json`, `vi.json`). Updated Hard Rules to require `t()` translations for all new user-facing strings. Added `i18next` to active stack and defined new i18n architecture under §5.                                                          |
 | 2026-05-30 | Initial creation. Distilled from legacy `.github/copilot-instructions.md` and `docs/error.md`. Corrected inaccurate documentation about Axios JWT handling. Removed dead Homepage Redesign section. Added Auto-Evolution Protocol, Operational Playbook, comprehensive Anti-Patterns, and strict Naming Conventions. Flagged `formik` and `react-icons` as dead dependencies. |
