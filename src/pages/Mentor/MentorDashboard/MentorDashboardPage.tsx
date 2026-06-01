@@ -25,7 +25,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
 import { MentorAccountPage } from "../Account";
@@ -48,10 +48,28 @@ type TabType =
   | "notifications"
   | "messenger"
   | "account";
-const AVAILABLE_TABS: Array<{
+
+const VALID_TAB_TYPES: TabType[] = [
+  "homeFeed",
+  "overview",
+  "sessions",
+  "students",
+  "reviews",
+  "feedback",
+  "notifications",
+  "messenger",
+  "account",
+];
+
+const isValidTabType = (value: string): value is TabType => {
+  return VALID_TAB_TYPES.includes(value as TabType);
+};
+const getAvailableTabs = (
+  t: (key: string) => string
+): Array<{
   type: TabType;
   label: string;
-}> = [
+}> => [
   {
     type: "homeFeed",
     label: t("common.home"),
@@ -89,10 +107,7 @@ const AVAILABLE_TABS: Array<{
     label: t("common.account"),
   },
 ];
-const isValidTabType = (value: string): value is TabType => {
-  return AVAILABLE_TABS.some((tab) => tab.type === value);
-};
-const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
+const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] => [
   {
     label: t("common.home"),
     items: [
@@ -187,10 +202,12 @@ export function MentorDashboardPage() {
     )
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const availableTabs = useMemo(() => getAvailableTabs(t), [t]);
+  const sidebarMenuGroups = useMemo(() => getSidebarMenuGroups(t), [t]);
   const { activeTab, openTab } = useTabsState({
     storageKey: "mentor",
     defaultTab: DEFAULT_TAB,
-    availableTabs: AVAILABLE_TABS,
+    availableTabs: availableTabs,
   });
   const outlet = useOutlet();
   const routedTab = getDashboardTabFromPath({
@@ -211,7 +228,7 @@ export function MentorDashboardPage() {
     role: "mentor",
     pathname: location.pathname,
     activeTab: typedActiveTab,
-    availableTabs: AVAILABLE_TABS,
+    availableTabs: availableTabs,
   });
   const shouldHideScrollButton = location.pathname.startsWith("/mentor/sessions/room/");
   const handleContentRef = useCallback((node: HTMLDivElement | null) => {
@@ -263,7 +280,7 @@ export function MentorDashboardPage() {
   return (
     <div className="isolate flex h-screen bg-white dark:bg-slate-950">
       <DashboardSidebar
-        menuGroups={SIDEBAR_MENU_GROUPS}
+        menuGroups={sidebarMenuGroups}
         activeTab={typedActiveTab}
         onNavigate={handleNavigate}
         storageKey="mentor_dashboard_sidebar_collapsed"

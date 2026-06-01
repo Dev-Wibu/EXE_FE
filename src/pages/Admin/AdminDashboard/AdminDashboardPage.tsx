@@ -71,10 +71,35 @@ type TabType =
   | "companies"
   | "candidateProfiles"
   | "transactionsPayments";
-const AVAILABLE_TABS: Array<{
+
+const VALID_TAB_TYPES: TabType[] = [
+  "dashboard",
+  "users",
+  "mentors",
+  "sessions",
+  "reviews",
+  "feedback",
+  "notifications",
+  "questionCategories",
+  "questionMajors",
+  "practiceSets",
+  "practiceQuestions",
+  "quizSets",
+  "posts",
+  "companies",
+  "candidateProfiles",
+  "transactionsPayments",
+];
+
+const isValidTabType = (value: string): value is TabType => {
+  return VALID_TAB_TYPES.includes(value as TabType);
+};
+const getAvailableTabs = (
+  t: (key: string) => string
+): Array<{
   type: TabType;
   label: string;
-}> = [
+}> => [
   {
     type: "dashboard",
     label: "Dashboard",
@@ -140,9 +165,6 @@ const AVAILABLE_TABS: Array<{
     label: t("adminAdmindashboard.transactionsPayments"),
   },
 ];
-const isValidTabType = (value: string): value is TabType => {
-  return AVAILABLE_TABS.some((tab) => tab.type === value);
-};
 const TAB_ICONS: Record<TabType, React.ElementType> = {
   dashboard: LayoutDashboard,
   users: Users,
@@ -179,7 +201,7 @@ const TAB_COLORS: Record<TabType, string> = {
   candidateProfiles: "text-teal-600",
   transactionsPayments: "text-indigo-600",
 };
-const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
+const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup[] => [
   {
     items: [
       {
@@ -297,7 +319,7 @@ const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
     ],
   },
 ];
-const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
+const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] => [
   {
     label: t("adminAdmindashboard.administration"),
     items: [
@@ -433,14 +455,17 @@ const ADMIN_SIDEBAR_LOGO_COLLAPSED = (
     <LayoutDashboard className="h-6 w-6 text-white" />
   </div>
 );
-const validateChromeTabsMenuConfiguration = () => {
-  const availableTabTypes = new Set(AVAILABLE_TABS.map((tab) => tab.type));
+const validateChromeTabsMenuConfiguration = (
+  availableTabs: Array<{ type: TabType; label: string }>,
+  chromeTabsMenuGroups: ChromeTabMenuGroup[]
+) => {
+  const availableTabTypes = new Set(availableTabs.map((tab) => tab.type));
   const menuTabTypes = new Set(
-    CHROME_TABS_MENU_GROUPS.flatMap((group) => group.items.map((item) => item.type as TabType))
+    chromeTabsMenuGroups.flatMap((group) => group.items.map((item) => item.type as TabType))
   );
-  const missingInMenu = AVAILABLE_TABS.filter((tab) => !menuTabTypes.has(tab.type)).map(
-    (tab) => tab.type
-  );
+  const missingInMenu = availableTabs
+    .filter((tab) => !menuTabTypes.has(tab.type))
+    .map((tab) => tab.type);
   const invalidInMenu = Array.from(menuTabTypes).filter((type) => !availableTabTypes.has(type));
   return {
     missingInMenu,
@@ -452,10 +477,13 @@ export function AdminDashboardPage() {
   const navigate = useNavigate();
   const { companyId } = useParams();
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
+  const availableTabs = useMemo(() => getAvailableTabs(t), [t]);
+  const sidebarMenuGroups = useMemo(() => getSidebarMenuGroups(t), [t]);
+  const chromeTabsMenuGroups = useMemo(() => getChromeTabsMenuGroups(t), [t]);
   const { activeTab, openTabs, setActiveTab, closeTab, resetTabsTo } = useTabsState({
     storageKey: "admin",
     defaultTab: "dashboard",
-    availableTabs: AVAILABLE_TABS,
+    availableTabs: availableTabs,
   });
   const contentRef = useRef<HTMLDivElement>(null);
   const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
@@ -480,7 +508,10 @@ export function AdminDashboardPage() {
     if (!import.meta.env.DEV) {
       return;
     }
-    const { missingInMenu, invalidInMenu } = validateChromeTabsMenuConfiguration();
+    const { missingInMenu, invalidInMenu } = validateChromeTabsMenuConfiguration(
+      availableTabs,
+      chromeTabsMenuGroups
+    );
     if (missingInMenu.length === 0 && invalidInMenu.length === 0) {
       return;
     }
@@ -608,7 +639,7 @@ export function AdminDashboardPage() {
   return (
     <div className="isolate flex h-screen bg-gray-50 dark:bg-slate-950">
       <DashboardSidebar
-        menuGroups={SIDEBAR_MENU_GROUPS}
+        menuGroups={sidebarMenuGroups}
         activeTab={typedActiveTab}
         onNavigate={handleSidebarNavigate}
         storageKey="admin_sidebar_collapsed"
@@ -666,7 +697,7 @@ export function AdminDashboardPage() {
           }
           tabIcons={TAB_ICONS}
           tabColors={TAB_COLORS}
-          menuGroups={CHROME_TABS_MENU_GROUPS}
+          menuGroups={chromeTabsMenuGroups}
           menuActions={chromeMenuActions}
           theme={{
             bg: "bg-gray-100",

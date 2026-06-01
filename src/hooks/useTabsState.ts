@@ -8,7 +8,7 @@
  * - Browser history support (back/forward navigation)
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 const STORAGE_KEY_PREFIX = "tabs_state_";
@@ -262,9 +262,19 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
     [availableTabs, setSearchParams]
   );
 
+  const translatedOpenTabs = useMemo(() => {
+    return openTabs.map((tab) => {
+      const config = availableTabs.find((t) => t.type === tab.type);
+      return {
+        ...tab,
+        label: config ? config.label : tab.label,
+      };
+    });
+  }, [openTabs, availableTabs]);
+
   return {
     activeTab,
-    openTabs,
+    openTabs: translatedOpenTabs,
     setActiveTab,
     openTab,
     closeTab,
