@@ -370,7 +370,7 @@ export function getTransactionTypeLabel(type: string): string {
     case "refund":
       return t("general.withdrawMoney");
     case "unknown":
-      return t("shared_speechplaygroundpage.tsx.khong_xac_inh");
+      return t("sharedSpeechplaygroundpage.areNot");
     default:
       return type;
   }

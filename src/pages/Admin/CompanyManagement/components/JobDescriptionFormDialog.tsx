@@ -142,14 +142,12 @@ export function JobDescriptionFormDialog({
                     requirements: e.target.value,
                   })
                 }
-                placeholder={t("enterprise_jobdescriptiondetailpage.tsx.yeu_cau_ung_vien")}
+                placeholder={t("common.candidateRequirements")}
                 rows={4}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="jd-benefits">
-                {t("enterprise_jobdescriptiondetailpage.tsx.phuc_loi")}
-              </Label>
+              <Label htmlFor="jd-benefits">{t("common.welfare")}</Label>
               <Textarea
                 id="jd-benefits"
                 value={formData.benefits || ""}

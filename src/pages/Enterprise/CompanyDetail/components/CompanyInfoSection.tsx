@@ -82,7 +82,7 @@ export function CompanyInfoSection({ company }: CompanyInfoSectionProps) {
                       <Award className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {t("enterprise_jobdescriptiondetailpage.tsx.phuc_loi")}
+                      {t("common.welfare")}
                     </h3>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">

@@ -221,7 +221,7 @@ export function UserFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="major">{t("auth_signuppage.tsx.chuyen_nganh")}</Label>
+              <Label htmlFor="major">{t("authSignuppage.specialized")}</Label>
               <Select
                 value={formData.major || ""}
                 onValueChange={(value) =>

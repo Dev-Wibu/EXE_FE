@@ -25,10 +25,10 @@ export function NotFoundPage() {
 
         {/* Title & Description */}
         <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-          {t("error_notfoundpage.tsx.trang_khong_tim_thay")}
+          {t("errorNotfoundpage.pageNotFound")}
         </h1>
         <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">
-          {t("error_notfoundpage.tsx.xin_loi_trang_ban_ang_tim_kiem_khong_ton")}
+          {t("errorNotfoundpage.sorryPageNotFound")}
         </p>
 
         {/* Action Buttons */}
@@ -39,15 +39,13 @@ export function NotFoundPage() {
           </Button>
           <Button onClick={() => navigate("/")} className="gap-2 bg-blue-600 hover:bg-blue-700">
             <Home className="h-4 w-4" />
-            {t("error_unauthorizedpage.tsx.ve_trang_chu")}
+            {t("common.backToHomePage")}
           </Button>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        {t("error_notfoundpage.tsx.ma_loi_404_khong_tim_thay_trang")}
-      </div>
+      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">{t("common.code")}</div>
     </div>
   );
 }

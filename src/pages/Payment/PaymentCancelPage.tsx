@@ -41,9 +41,9 @@ const isIdempotentHandledError = (error?: string): boolean => {
     normalized.includes("not found") ||
     normalized.includes("404") ||
     normalized.includes("already") ||
-    normalized.includes(t("payment_paymentcancelpage.tsx.a_uoc_xu_ly")) ||
+    normalized.includes(t("paymentPaymentcancelpage.processed")) ||
     normalized.includes("da duoc xu ly") ||
-    normalized.includes(t("payment_paymentcancelpage.tsx.a_huy")) ||
+    normalized.includes(t("paymentPaymentcancelpage.cancelled")) ||
     normalized.includes("da huy") ||
     normalized.includes("processed")
   );
@@ -60,7 +60,7 @@ const getCancelPrimaryRedirect = (
       if (sessionId) {
         return {
           to: `/user/mock-interview/history/${sessionId}`,
-          label: t("payment_paymentcancelpage.tsx.xem_chi_tiet_phien"),
+          label: t("paymentPaymentcancelpage.viewSessionDetails"),
         };
       }
       return {
@@ -71,13 +71,13 @@ const getCancelPrimaryRedirect = (
     case "WITHDRAW_FROM_WALLET":
       return {
         to: "/user?tab=account&subtab=wallet",
-        label: t("payment_paymentsuccesspage.tsx.en_vi_cua_toi"),
+        label: t("paymentPaymentsuccesspage.goToMyWallet"),
       };
     case "BUY_MEMBERSHIP":
     default:
       return {
         to: "/user?tab=account",
-        label: t("payment_paymentsuccesspage.tsx.quay_lai_tai_khoan"),
+        label: t("common.returnToAccount"),
       };
   }
 };
@@ -102,9 +102,7 @@ export function PaymentCancelPage() {
   );
   const [processing, setProcessing] = useState(false);
   const [chainResult, setChainResult] = useState<CancelChainResult>("idle");
-  const [resultMessage, setResultMessage] = useState(
-    t("payment_paymentcancelpage.tsx.ang_xu_ly_yeu_cau_cua_ban")
-  );
+  const [resultMessage, setResultMessage] = useState(t("adminUsermanagement.hide"));
   const [recoveryContext, setRecoveryContext] = useState<PaymentRecoveryContext | null>(null);
   const recoveryContextRef = useRef<PaymentRecoveryContext | null>(null);
   const inFlightTransactionCodeRef = useRef<string | null>(null);
@@ -215,7 +213,7 @@ export function PaymentCancelPage() {
           paymentPurpose: context.paymentPurpose,
           sessionId: context.sessionId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentcancelpage.tsx.retry_callback_first_bo_qua_context_cu_v"),
+          message: t("paymentPaymentcancelpage.retryCallbackSkipContext"),
           payload: {
             recoverySource,
             retry: true,
@@ -234,7 +232,7 @@ export function PaymentCancelPage() {
           paymentPurpose: context.paymentPurpose,
           sessionId: context.sessionId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentcancelpage.tsx.bo_qua_recovery_context_co_o_tin_cay_tha"),
+          message: t("general.set"),
           payload: {
             recoverySource,
           },
@@ -261,7 +259,7 @@ export function PaymentCancelPage() {
             paymentPurpose: context?.paymentPurpose,
             sessionId: context?.sessionId,
             status: "UNMAPPED_ORDER",
-            message: t("payment_paymentcancelpage.tsx.callback_co_inh_danh_hop_le_nhung_contex"),
+            message: t("paymentPaymentcancelpage.callbackValidIdentityInvalidContext"),
             payload: {
               recoverySource,
               mismatchedKeys: identifierMismatch.mismatchedKeys,
@@ -280,17 +278,15 @@ export function PaymentCancelPage() {
             paymentPurpose: context?.paymentPurpose,
             sessionId: context?.sessionId,
             status: "UNMAPPED_ORDER",
-            message: t("payment_paymentcancelpage.tsx.inh_danh_callback_khong_khop_voi_recover"),
+            message: t("paymentPaymentcancelpage.identityCallbackMismatchRecovery"),
             payload: {
               recoverySource,
               mismatchedKeys: identifierMismatch.mismatchedKeys,
             },
           });
           setChainResult("missing");
-          setResultMessage(
-            t("payment_paymentcancelpage.tsx.khong_the_oi_chieu_giao_dich_can_huy_vui")
-          );
-          toast.error(t("payment_paymentcancelpage.tsx.khong_the_oi_chieu_giao_dich_can_huy"));
+          setResultMessage(t("sharedSpeechplaygroundpage.areNot"));
+          toast.error(t("sharedSpeechplaygroundpage.areNot"));
           if (pendingSessionPayment?.sessionId && context?.paymentPurpose !== "MENTOR_INTERVIEW") {
             clearPendingSessionPaymentContext();
           }
@@ -335,7 +331,7 @@ export function PaymentCancelPage() {
           sessionId: resolvedSessionId,
           checkoutUrl: context.checkoutUrl,
           status: "CALLBACK_CANCEL",
-          note: t("payment_paymentcancelpage.tsx.nguoi_dung_a_quay_ve_trang_huy_thanh_toa"),
+          note: t("adminUsermanagement.user"),
         });
         setRecoveryContext(callbackContext);
         addPaymentSupportLog({
@@ -350,7 +346,7 @@ export function PaymentCancelPage() {
           paymentPurpose: callbackContext.paymentPurpose,
           sessionId: callbackContext.sessionId,
           status: "CALLBACK_CANCEL",
-          message: t("payment_paymentcancelpage.tsx.nguoi_dung_quay_ve_trang_huy_thanh_toan"),
+          message: t("paymentPaymentcancelpage.theUserReturnsToThe"),
           payload: {
             callbackStatus: status,
             recoverySource,
@@ -369,7 +365,7 @@ export function PaymentCancelPage() {
           paymentPurpose: resolvedPurpose,
           sessionId: resolvedSessionId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentcancelpage.tsx.thieu_ma_giao_dich_e_thuc_hien_huy_thanh"),
+          message: t("paymentPaymentcancelpage.missingTxCodeToCancelPayment"),
           payload: {
             status,
             recoverySource,
@@ -392,15 +388,13 @@ export function PaymentCancelPage() {
             sessionId: resolvedSessionId,
             checkoutUrl: context.checkoutUrl,
             status: "CANCEL_CHAIN_FAILED",
-            note: t("payment_paymentcancelpage.tsx.thieu_ma_giao_dich_e_huy_thanh_toan"),
+            note: t("paymentPaymentcancelpage.missingTxCodeToCancel"),
           });
           setRecoveryContext(failedContext);
         }
         setChainResult("missing");
-        setResultMessage(
-          t("payment_paymentcancelpage.tsx.khong_tim_thay_thong_tin_giao_dich_e_huy")
-        );
-        toast.error(t("payment_paymentcancelpage.tsx.khong_tim_thay_giao_dich_can_huy"));
+        setResultMessage(t("sharedSpeechplaygroundpage.areNot"));
+        toast.error(t("paymentPaymentcancelpage.noTransactionFoundToCancel"));
         if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
           clearPendingSessionPaymentContext();
         }
@@ -411,7 +405,7 @@ export function PaymentCancelPage() {
       }
       if (handledTransactionCodesRef.current.has(resolvedTransactionCode)) {
         setChainResult("success");
-        setResultMessage(t("payment_paymentcancelpage.tsx.giao_dich_nay_a_uoc_huy_truoc_o"));
+        setResultMessage(t("adminTransactionpaymentmanagement.transaction"));
         return;
       }
       inFlightTransactionCodeRef.current = resolvedTransactionCode;
@@ -433,7 +427,7 @@ export function PaymentCancelPage() {
             paymentPurpose: resolvedPurpose,
             sessionId: resolvedSessionId,
             status: "CANCEL_CHAIN_FAILED",
-            message: t("payment_paymentcancelpage.tsx.huy_thanh_toan_that_bai"),
+            message: t("paymentPaymentcancelpage.paymentCancellationFailed"),
             payload: {
               error: cancelResult.error || null,
               recoverySource,
@@ -455,16 +449,13 @@ export function PaymentCancelPage() {
               sessionId: resolvedSessionId,
               checkoutUrl: context.checkoutUrl,
               status: "CANCEL_CHAIN_FAILED",
-              note:
-                cancelResult.error || t("payment_paymentcancelpage.tsx.huy_thanh_toan_that_bai"),
+              note: cancelResult.error || t("paymentPaymentcancelpage.paymentCancellationFailed"),
             });
             setRecoveryContext(failedContext);
           }
           setChainResult("failed");
-          setResultMessage(
-            t("payment_paymentcancelpage.tsx.khong_the_huy_thanh_toan_luc_nay_vui_lon")
-          );
-          toast.error(t("payment_paymentcancelpage.tsx.khong_the_huy_thanh_toan"));
+          setResultMessage(t("common.paymentCannotBeCanceled"));
+          toast.error(t("common.paymentCannotBeCanceled"));
           if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
             clearPendingSessionPaymentContext();
           }
@@ -485,7 +476,7 @@ export function PaymentCancelPage() {
             paymentPurpose: resolvedPurpose,
             sessionId: resolvedSessionId,
             status: "CANCEL_CHAIN_FAILED",
-            message: t("payment_paymentcancelpage.tsx.xoa_giao_dich_that_bai_sau_khi_huy_thanh"),
+            message: t("general.delete"),
             payload: {
               error: deleteResult.error || null,
               recoverySource,
@@ -507,15 +498,13 @@ export function PaymentCancelPage() {
               sessionId: resolvedSessionId,
               checkoutUrl: context.checkoutUrl,
               status: "CANCEL_CHAIN_FAILED",
-              note: deleteResult.error || t("payment_paymentcancelpage.tsx.xoa_giao_dich_that_bai"),
+              note: deleteResult.error || t("paymentPaymentcancelpage.deleteFailedTransaction"),
             });
             setRecoveryContext(failedContext);
           }
           setChainResult("failed");
-          setResultMessage(
-            t("payment_paymentcancelpage.tsx.thanh_toan_a_uoc_huy_nhung_he_thong_ang_")
-          );
-          toast.error(t("payment_paymentcancelpage.tsx.khong_the_hoan_tat_yeu_cau_huy"));
+          setResultMessage(t("common.pay"));
+          toast.error(t("paymentPaymentcancelpage.theCancellationRequestCouldNot"));
           if (pendingSessionPayment?.sessionId && resolvedPurpose !== "MENTOR_INTERVIEW") {
             clearPendingSessionPaymentContext();
           }
@@ -536,8 +525,8 @@ export function PaymentCancelPage() {
           status: "CANCEL_CHAIN_SUCCESS",
           message:
             cancelResult.success && deleteResult.success
-              ? t("payment_paymentcancelpage.tsx.a_huy_thanh_toan_thanh_cong")
-              : t("payment_paymentcancelpage.tsx.giao_dich_a_uoc_xu_ly_truoc_o"),
+              ? t("paymentPaymentcancelpage.cancelledThanhToanThanhCong")
+              : t("adminTransactionpaymentmanagement.transaction"),
           payload:
             cancelResult.success && deleteResult.success
               ? undefined
@@ -566,15 +555,13 @@ export function PaymentCancelPage() {
             sessionId: resolvedSessionId,
             checkoutUrl: context?.checkoutUrl,
             status: "CANCEL_CHAIN_SUCCESS",
-            note: t("payment_paymentcancelpage.tsx.a_huy_thanh_toan_thanh_cong"),
+            note: t("paymentPaymentcancelpage.cancelledThanhToanThanhCong"),
           });
           setRecoveryContext(successContext);
         }
         setChainResult("success");
-        setResultMessage(
-          t("payment_paymentcancelpage.tsx.yeu_cau_huy_thanh_toan_a_uoc_xu_ly_thanh")
-        );
-        toast.success(t("payment_paymentcancelpage.tsx.a_huy_thanh_toan_thanh_cong"));
+        setResultMessage(t("adminCompanymanagement.request"));
+        toast.success(t("paymentPaymentcancelpage.cancelledThanhToanThanhCong"));
         if (pendingSessionPayment?.sessionId) {
           clearPendingSessionPaymentContext();
         }
@@ -622,10 +609,10 @@ export function PaymentCancelPage() {
           </div>
           <div>
             <h1 className="font-['Poppins'] text-2xl font-bold text-amber-700 dark:text-amber-300">
-              {t("payment_paymentcancelpage.tsx.thanh_toan_a_bi_huy")}
+              {t("common.pay")}
             </h1>
             <p className="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
-              {t("payment_paymentcancelpage.tsx.chung_toi_ang_cap_nhat_trang_thai_thanh_")}
+              {t("paymentPaymentcancelpage.updatingPaymentStatus")}
             </p>
           </div>
         </div>
@@ -634,7 +621,7 @@ export function PaymentCancelPage() {
           {processing ? (
             <div className="flex items-center gap-2">
               <Spinner size="sm" tone="muted" />
-              {t("payment_paymentcancelpage.tsx.ang_xu_ly_yeu_cau_huy_thanh_toan")}
+              {t("adminUsermanagement.hide")}
             </div>
           ) : (
             resultMessage
@@ -665,7 +652,7 @@ export function PaymentCancelPage() {
             <Link
               to="/user?tab=account"
               className="rounded-xl border border-slate-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-              {t("payment_paymentsuccesspage.tsx.chon_goi_thanh_vien_khac")}
+              {t("common.chooseAnotherMembershipPackage")}
             </Link>
           )}
         </div>

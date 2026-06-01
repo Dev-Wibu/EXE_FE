@@ -123,9 +123,7 @@ export function CompanySearchPage() {
               <Search className="absolute left-4 h-5 w-5 text-slate-400" />
               <Input
                 type="text"
-                placeholder={t(
-                  "enterprise_companysearchpage.tsx.tim_kiem_theo_ten_cong_ty_nganh_nghe"
-                )}
+                placeholder={t("enterpriseCompanysearchpage.timKiemTheoTenCongTyNganhNghe")}
                 className="h-12 pr-4 pl-12"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -140,10 +138,10 @@ export function CompanySearchPage() {
           <div className="mb-6 flex items-center justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-400">
               {isLoading ? (
-                t("enterprise_companysearchpage.tsx.ang_tim_kiem")
+                t("adminUsermanagement.hide")
               ) : (
                 <>
-                  {t("enterprise_companysearchpage.tsx.tim_thay")}{" "}
+                  {t("common.find")}{" "}
                   <span className="font-semibold text-slate-900 dark:text-white">
                     {companies.length}
                   </span>{" "}
@@ -162,7 +160,7 @@ export function CompanySearchPage() {
                 size="sm"
                 onClick={handleClear}
                 className="text-sm text-slate-500 hover:text-[#0047AB]">
-                {t("enterprise_companysearchpage.tsx.xoa_tim_kiem")}
+                {t("enterpriseCompanysearchpage.clearSearch")}
               </Button>
             )}
           </div>
@@ -183,16 +181,16 @@ export function CompanySearchPage() {
                 </div>
               </div>
               <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
-                {t("enterprise_companysearchpage.tsx.khong_tim_thay_cong_ty_nao")}
+                {t("enterpriseCompanysearchpage.noCompaniesFound")}
               </h3>
               <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                {t("enterprise_companysearchpage.tsx.thu_tim_kiem_voi_tu_khoa_khac_hoac_xem_t")}
+                {t("enterpriseCompanysearchpage.trySearchingWithAnotherKeyword")}
               </p>
               <Button
                 variant="outline"
                 onClick={handleClear}
                 className="border-[#0047AB] text-[#0047AB] hover:bg-[#0047AB]/10 dark:border-[#66B2FF] dark:text-[#66B2FF]">
-                {t("enterprise_companysearchpage.tsx.xem_tat_ca_cong_ty")}
+                {t("enterpriseCompanysearchpage.viewAllCompanies")}
               </Button>
             </div>
           )}
@@ -223,8 +221,7 @@ export function CompanySearchPage() {
                       </div>
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${colorScheme.bg} ${colorScheme.text}`}>
-                        {company.jobDescriptions?.length || 0}{" "}
-                        {t("enterprise_companysearchpage.tsx.vi_tri")}
+                        {company.jobDescriptions?.length || 0} {t("common.location")}
                       </span>
                     </div>
 
@@ -236,7 +233,7 @@ export function CompanySearchPage() {
                       <span>
                         {company.description ||
                           company.industry ||
-                          t("enterprise_companysearchpage.tsx.cong_nghe")}
+                          t("enterpriseCompanysearchpage.technology")}
                       </span>
                     </div>
 
@@ -247,7 +244,7 @@ export function CompanySearchPage() {
                         <div className="h-6 w-6 rounded-full border-2 border-white bg-[#66B2FF] dark:border-slate-800 dark:bg-[#007BFF]/30" />
                       </div>
                       <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        {t("enterprise_companysearchpage.tsx.nhieu_nguoi_a_tham_gia")}
+                        {t("enterpriseCompanysearchpage.manyPeopleJoined")}
                       </span>
                     </div>
                   </Link>

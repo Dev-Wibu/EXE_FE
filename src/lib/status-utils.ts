@@ -199,13 +199,13 @@ export function getJobDescriptionStatusBadge(status?: string): StatusBadgeConfig
       };
     case "CLOSED":
       return {
-        label: t("enterprise_jobdescriptiondetailpage.tsx.a_ong"),
+        label: t("enterpriseJobdescriptiondetailpage.closed"),
         variant: "default",
         className: "bg-red-600 text-white hover:bg-red-600",
       };
     case "DRAFT":
       return {
-        label: t("enterprise_jobdescriptiondetailpage.tsx.nhap"),
+        label: t("common.draft1"),
         variant: "outline",
         className: "border-amber-500 bg-amber-500 text-white hover:bg-amber-500",
       };

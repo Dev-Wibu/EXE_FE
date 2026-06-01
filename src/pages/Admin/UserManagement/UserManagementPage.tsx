@@ -233,7 +233,7 @@ export function UserManagementPage() {
         const action =
           selectedUser.isActive !== false
             ? t("adminUsermanagement.disabled")
-            : t("payment_paymentsuccesspage.tsx.a_kich_hoat");
+            : t("paymentPaymentsuccesspage.activated");
         toast.success(
           t("general.userSuccessfully", {
             var_0: action,

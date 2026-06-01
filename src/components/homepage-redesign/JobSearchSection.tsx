@@ -91,7 +91,7 @@ export function JobSearchSection() {
         var_1: currency || "VND",
       });
     }
-    return t("enterprise_jobdescriptiondetailpage.tsx.thoa_thuan");
+    return t("common.agree");
   };
   const getLevelBadgeColor = (level?: string) => {
     switch (level?.toUpperCase()) {
@@ -139,7 +139,7 @@ export function JobSearchSection() {
             {/* Level Filter */}
             <div className="min-w-[140px] flex-1 sm:max-w-[200px] sm:min-w-[160px]">
               <label className="mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                {t("enterprise_jobdescriptiondetailpage.tsx.cap_bac")}
+                {t("common.rank")}
               </label>
               <Select value={level} onValueChange={setLevel}>
                 <SelectTrigger className="h-10 w-full">
@@ -231,14 +231,14 @@ export function JobSearchSection() {
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-400">
               {isSearching ? (
-                t("enterprise_companysearchpage.tsx.ang_tim_kiem")
+                t("adminUsermanagement.hide")
               ) : (
                 <>
-                  {t("enterprise_companysearchpage.tsx.tim_thay")}{" "}
+                  {t("common.find")}{" "}
                   <span className="font-semibold text-slate-900 dark:text-white">
                     {jobs.length}
                   </span>{" "}
-                  {t("enterprise_companysearchpage.tsx.vi_tri")}
+                  {t("common.location")}
                   {keyword && (
                     <span className="ml-1">
                       cho "<span className="font-medium">{keyword}</span>"
@@ -279,10 +279,7 @@ export function JobSearchSection() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                           <MapPin className="h-4 w-4 shrink-0" />
-                          <span>
-                            {job.location ||
-                              t("enterprise_jobdescriptiondetailpage.tsx.ho_chi_minh")}
-                          </span>
+                          <span>{job.location || t("common.hoChiMinh")}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                           <Building2 className="h-4 w-4 shrink-0" />
@@ -292,7 +289,7 @@ export function JobSearchSection() {
 
                       <div className="flex flex-wrap gap-2">
                         <Badge className={`text-xs ${getLevelBadgeColor(job.level)}`}>
-                          {job.level || t("shared_speechplaygroundpage.tsx.khong_xac_inh")}
+                          {job.level || t("sharedSpeechplaygroundpage.areNot")}
                         </Badge>
                         {job.skills?.slice(0, 2).map((skill, idx) => (
                           <Badge

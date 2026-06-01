@@ -81,7 +81,7 @@ export function LoginPage() {
       }
       const callbackResult = authManager.consumeGoogleCallbackFromUrl(callbackUrl);
       if (!callbackResult.success || !callbackResult.data?.user || !callbackResult.data.token) {
-        setError(callbackResult.error || t("auth_signuppage.tsx.ang_nhap_google_that_bai"));
+        setError(callbackResult.error || t("adminUsermanagement.hide"));
         return;
       }
       applyAuthState(callbackResult.data);
@@ -102,7 +102,7 @@ export function LoginPage() {
     if (result.success && result.data?.user) {
       applyAuthState(result.data);
     } else {
-      const errorMessage = result.error || t("auth_loginpage.tsx.ang_nhap_that_bai");
+      const errorMessage = result.error || t("adminUsermanagement.hide");
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -131,7 +131,7 @@ export function LoginPage() {
           {t("common.logIn")}
         </CardTitle>
         <CardDescription className="text-slate-600 dark:text-slate-300">
-          {t("auth_loginpage.tsx.chao_mung_quay_tro_lai_vui_long_ien_thon")}
+          {t("authLoginpage.welcomeBackPleaseFillIn")}
         </CardDescription>
       </CardHeader>
 
@@ -160,7 +160,7 @@ export function LoginPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          {t("auth_signuppage.tsx.tiep_tuc_voi_google")}
+          {t("common.continueWithGoogle")}
         </Button>
 
         <div className="relative">
@@ -169,7 +169,7 @@ export function LoginPage() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-white px-2 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-              {t("auth_signuppage.tsx.hoac")}
+              {t("common.or")}
             </span>
           </div>
         </div>
@@ -185,7 +185,7 @@ export function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("auth_loginpage.tsx.nhap_email")}
+              placeholder={t("authLoginpage.enterEmail")}
               required
               className={inputClassName}
             />
@@ -193,7 +193,7 @@ export function LoginPage() {
 
           <div className="space-y-2">
             <Label htmlFor="password" className="dark:text-slate-300">
-              {t("auth_signuppage.tsx.mat_khau")}
+              {t("common.password")}
             </Label>
             <div className="relative">
               <Input
@@ -201,7 +201,7 @@ export function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("auth_signuppage.tsx.nhap_mat_khau")}
+                placeholder={t("common.enterPassword")}
                 required
                 className={passwordInputClassName}
               />
@@ -216,7 +216,7 @@ export function LoginPage() {
 
           <div className="text-right">
             <Link to="#" className="text-sm text-[#0047AB] hover:underline dark:text-[#66B2FF]">
-              {t("auth_loginpage.tsx.quen_mat_khau")}
+              {t("authLoginpage.forgotPassword")}
             </Link>
           </div>
 
@@ -232,7 +232,7 @@ export function LoginPage() {
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t("auth_loginpage.tsx.ang_ang_nhap") : t("common.logIn")}
+            {isLoading ? t("adminUsermanagement.hide") : t("common.logIn")}
           </Button>
         </form>
 
@@ -241,12 +241,12 @@ export function LoginPage() {
         {/* Signup Link */}
         <p className="text-center text-sm">
           <span className="text-slate-600 dark:text-slate-400">
-            {t("auth_loginpage.tsx.ban_co_tai_khoan_chua")}{" "}
+            {t("authLoginpage.doYouHaveAnAccount")}{" "}
           </span>
           <Link
             to="/signup"
             className="font-medium text-[#0047AB] hover:underline dark:text-[#66B2FF]">
-            {t("auth_loginpage.tsx.ang_ky_ngay")}
+            {t("adminUsermanagement.hide")}
           </Link>
         </p>
       </CardContent>

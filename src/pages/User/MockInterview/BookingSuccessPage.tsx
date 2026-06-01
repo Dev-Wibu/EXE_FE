@@ -45,7 +45,7 @@ export function BookingSuccessPage() {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-amber-600" />
                   <span className="text-slate-600 dark:text-slate-400">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.thoi_gian")}
+                    {t("enterpriseJobdescriptiondetailpage.time")}
                   </span>
                   <span className="font-medium">{state.joinTime}</span>
                 </div>

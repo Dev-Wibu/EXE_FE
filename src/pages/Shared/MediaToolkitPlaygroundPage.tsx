@@ -29,15 +29,15 @@ function buildTempSampleItems(): MediaViewerItem[] {
   return [
     {
       id: "temp-image",
-      name: t("shared_mediatoolkitplaygroundpage.tsx.anh_mau_temp_file"),
+      name: t("adminUsermanagement.hide"),
       src: TEMP_IMAGE_URL,
-      alt: t("shared_mediatoolkitplaygroundpage.tsx.anh_mau_temp_file"),
+      alt: t("adminUsermanagement.hide"),
       kind: "image",
       requireAuth: false,
     },
     {
       id: "temp-pdf",
-      name: t("shared_mediatoolkitplaygroundpage.tsx.pdf_mau_temp_file"),
+      name: t("sharedMediatoolkitplaygroundpage.samplePdf"),
       src: TEMP_PDF_URL,
       kind: "pdf",
       requireAuth: false,
@@ -120,29 +120,27 @@ export function MediaToolkitPlaygroundPage() {
             <CardHeader>
               <CardTitle className="text-2xl">Media Toolkit Playground (DEV)</CardTitle>
               <CardDescription>
-                {t(
-                  "shared_mediatoolkitplaygroundpage.tsx.khu_thu_nghiem_uploader_anh_pdf_xem_tai_"
-                )}
+                {t("sharedMediatoolkitplaygroundpage.playgroundUploaderDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">
-                  {t("shared_mediatoolkitplaygroundpage.tsx.anh_mau")} {TEMP_IMAGE_URL}
+                  {t("sharedMediatoolkitplaygroundpage.samplePhoto")} {TEMP_IMAGE_URL}
                 </Badge>
                 <Badge variant="outline">
-                  {t("shared_mediatoolkitplaygroundpage.tsx.pdf_mau")} {TEMP_PDF_URL}
+                  {t("sharedMediatoolkitplaygroundpage.samplePdf")} {TEMP_PDF_URL}
                 </Badge>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="button" variant="outline" onClick={handleResetTempSamples}>
-                  {t("shared_mediatoolkitplaygroundpage.tsx.nap_lai_du_lieu_temp_file")}
+                  {t("sharedMediatoolkitplaygroundpage.reloadTempFileData")}
                 </Button>
                 <Label
                   htmlFor="local-media-input"
                   className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900">
                   <UploadCloud className="h-4 w-4" />
-                  {t("shared_mediatoolkitplaygroundpage.tsx.them_anh_pdf_tu_may")}
+                  {t("sharedMediatoolkitplaygroundpage.addPhotosPdfsFromYour")}
                 </Label>
                 <Input
                   id="local-media-input"
@@ -158,13 +156,9 @@ export function MediaToolkitPlaygroundPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>
-                {t("shared_mediatoolkitplaygroundpage.tsx.1_uploader_a_nang_uppy")}
-              </CardTitle>
+              <CardTitle>{t("sharedMediatoolkitplaygroundpage.uploaderVersatileUppy")}</CardTitle>
               <CardDescription>
-                {t(
-                  "shared_mediatoolkitplaygroundpage.tsx.ho_tro_keo_tha_chon_nhieu_tep_copy_paste"
-                )}
+                {t("sharedMediatoolkitplaygroundpage.supportDragDropCopyPaste")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -176,7 +170,7 @@ export function MediaToolkitPlaygroundPage() {
                     transportMode === "mock" ? "border-[#0047AB] bg-[#DCEEFF]" : "border-slate-300"
                   )}
                   onClick={() => setTransportMode("mock")}>
-                  {t("shared_mediatoolkitplaygroundpage.tsx.mock_upload_khuyen_dung_khi_be_sap")}
+                  {t("sharedMediatoolkitplaygroundpage.mockUploadRecommendedWhenBe")}
                 </button>
                 <button
                   type="button"
@@ -185,7 +179,7 @@ export function MediaToolkitPlaygroundPage() {
                     transportMode === "xhr" ? "border-[#0047AB] bg-[#DCEEFF]" : "border-slate-300"
                   )}
                   onClick={() => setTransportMode("xhr")}>
-                  {t("shared_mediatoolkitplaygroundpage.tsx.xhr_upload_endpoint_that")}
+                  {t("sharedMediatoolkitplaygroundpage.xhrUploadRealEndpoint")}
                 </button>
 
                 <label className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -194,7 +188,7 @@ export function MediaToolkitPlaygroundPage() {
                     checked={sequentialUpload}
                     onChange={(event) => setSequentialUpload(event.target.checked)}
                   />
-                  {t("shared_mediatoolkitplaygroundpage.tsx.tai_lien_tiep_tuan_tu")}
+                  {t("sharedMediatoolkitplaygroundpage.continuousSequentialLoading")}
                 </label>
 
                 <label className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -203,7 +197,7 @@ export function MediaToolkitPlaygroundPage() {
                     checked={bundleUpload}
                     onChange={(event) => setBundleUpload(event.target.checked)}
                   />
-                  {t("shared_mediatoolkitplaygroundpage.tsx.gop_theo_nhom_1_request")}
+                  {t("sharedMediatoolkitplaygroundpage.groupByGroup1Request")}
                 </label>
               </div>
 
@@ -214,9 +208,7 @@ export function MediaToolkitPlaygroundPage() {
                     id="uploader-endpoint"
                     value={uploadEndpoint}
                     onChange={(event) => setUploadEndpoint(event.target.value)}
-                    placeholder={t(
-                      "shared_mediatoolkitplaygroundpage.tsx.vi_du_https_api_example_com_upload"
-                    )}
+                    placeholder={t("sharedMediatoolkitplaygroundpage.exampleUrl")}
                   />
                 </div>
               )}
@@ -229,10 +221,8 @@ export function MediaToolkitPlaygroundPage() {
                 acceptedFileTypes={["image/*", ".pdf", "application/pdf"]}
                 maxFileSizeMB={50}
                 maxNumberOfFiles={50}
-                title={t("shared_mediatoolkitplaygroundpage.tsx.uploader_anh_pdf_dung_chung")}
-                description={t(
-                  "shared_mediatoolkitplaygroundpage.tsx.thu_drag_drop_paste_upload_nhieu_tep_va_"
-                )}
+                title={t("sharedMediatoolkitplaygroundpage.sharedImagePdfUploader")}
+                description={t("sharedMediatoolkitplaygroundpage.tryDragDropUpload")}
               />
             </CardContent>
           </Card>
@@ -240,13 +230,9 @@ export function MediaToolkitPlaygroundPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {t("shared_mediatoolkitplaygroundpage.tsx.2_preview_pdf_linh_hoat")}
-                </CardTitle>
+                <CardTitle>{t("sharedMediatoolkitplaygroundpage.2FlexiblePdfPreview")}</CardTitle>
                 <CardDescription>
-                  {t(
-                    "shared_mediatoolkitplaygroundpage.tsx.mac_inh_tai_pdf_bang_fetch_authorization"
-                  )}
+                  {t("sharedMediatoolkitplaygroundpage.defaultLoadPdfFetchAuth")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -255,13 +241,13 @@ export function MediaToolkitPlaygroundPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setPdfSource(TEMP_PDF_URL)}>
-                    {t("shared_mediatoolkitplaygroundpage.tsx.dung_pdf_mau_temp_file")}
+                    {t("general.text")}
                   </Button>
                   <Label
                     htmlFor="local-pdf-input"
                     className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900">
                     <FileText className="h-4 w-4" />
-                    {t("shared_mediatoolkitplaygroundpage.tsx.chon_pdf_local")}
+                    {t("sharedMediatoolkitplaygroundpage.selectPdfLocal")}
                   </Label>
                   <Input
                     id="local-pdf-input"
@@ -288,7 +274,7 @@ export function MediaToolkitPlaygroundPage() {
                     onChange={(event) => setPdfRequireAuth(event.target.checked)}
                     disabled={!(typeof pdfSource === "string")}
                   />
-                  {t("shared_mediatoolkitplaygroundpage.tsx.yeu_cau_authorization_khi_tai_tu_url")}
+                  {t("sharedMediatoolkitplaygroundpage.requireAuthorizationWhenDownloadingFrom")}
                 </label>
 
                 <PdfPreviewViewer source={pdfSource} requireAuth={pdfRequireAuth} />
@@ -297,20 +283,16 @@ export function MediaToolkitPlaygroundPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {t("shared_mediatoolkitplaygroundpage.tsx.3_preview_anh_phong_to")}
-                </CardTitle>
+                <CardTitle>{t("sharedMediatoolkitplaygroundpage.3PreviewEnlargedImage")}</CardTitle>
                 <CardDescription>
-                  {t(
-                    "shared_mediatoolkitplaygroundpage.tsx.component_nhanh_e_click_anh_va_mo_fullsc"
-                  )}
+                  {t("sharedMediatoolkitplaygroundpage.quickComponentClickToFullscreen")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ImageZoomPreview
                   src={preferredImageItem?.src ?? TEMP_IMAGE_URL}
-                  alt={t("shared_mediatoolkitplaygroundpage.tsx.anh_demo_zoom")}
-                  title={t("shared_mediatoolkitplaygroundpage.tsx.xem_anh_phong_to")}
+                  alt={t("sharedMediatoolkitplaygroundpage.zoomDemoImage")}
+                  title={t("sharedMediatoolkitplaygroundpage.seeEnlargedPhoto")}
                   className="w-full"
                   imageClassName="max-h-96"
                   requireAuth={false}
@@ -322,21 +304,15 @@ export function MediaToolkitPlaygroundPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {t(
-                  "shared_mediatoolkitplaygroundpage.tsx.4_trinh_xem_fullscreen_cho_nhieu_anh_pdf"
-                )}
+                {t("sharedMediatoolkitplaygroundpage.fullscreenViewerMultiple")}
               </CardTitle>
               <CardDescription>
-                {t(
-                  "shared_mediatoolkitplaygroundpage.tsx.ho_tro_next_prev_zoom_xoay_va_mo_tai_nha"
-                )}
+                {t("sharedMediatoolkitplaygroundpage.supportNextPrevZoomRotate")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {mediaItems.length === 0 ? (
-                <p className="text-sm text-slate-500">
-                  {t("shared_mediatoolkitplaygroundpage.tsx.chua_co_media_e_hien_thi")}
-                </p>
+                <p className="text-sm text-slate-500">{t("common.notYet")}</p>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {mediaItems.map((item, index) => {
@@ -368,7 +344,7 @@ export function MediaToolkitPlaygroundPage() {
                             variant="outline"
                             className="w-full"
                             onClick={() => handleOpenViewer(index)}>
-                            {t("shared_mediatoolkitplaygroundpage.tsx.mo_fullscreen")}
+                            {t("sharedMediatoolkitplaygroundpage.openFullscreen")}
                           </Button>
                         </div>
                       </div>

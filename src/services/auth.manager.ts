@@ -444,7 +444,7 @@ export class AuthManager {
     if (httpStatus === 429) {
       return t("general.youHaveEnteredIncorrectlyToo");
     }
-    return rawMessage || t("auth_loginpage.tsx.ang_nhap_that_bai");
+    return rawMessage || t("adminUsermanagement.hide");
   }
 
   /**
@@ -499,7 +499,7 @@ export class AuthManager {
       console.error("Login error:", error);
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, t("auth_loginpage.tsx.ang_nhap_that_bai")),
+        error: getNormalizedErrorMessage(error, t("adminUsermanagement.hide")),
       };
     }
   }
@@ -663,7 +663,7 @@ export class AuthManager {
       console.error("Signup error:", error);
       return {
         success: false,
-        error: getNormalizedErrorMessage(error, t("auth_signuppage.tsx.ang_ky_that_bai")),
+        error: getNormalizedErrorMessage(error, t("adminUsermanagement.hide")),
       };
     }
   }

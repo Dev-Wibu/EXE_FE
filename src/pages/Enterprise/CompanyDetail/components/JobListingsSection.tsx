@@ -145,7 +145,7 @@ export function JobListingsSection({ jobs, companyName }: JobListingsSectionProp
               <Badge
                 variant="secondary"
                 className="bg-[#0047AB]/10 px-3 py-1 text-sm font-medium text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]">
-                {filteredJobs.length} {t("enterprise_companysearchpage.tsx.vi_tri")}
+                {filteredJobs.length} {t("common.location")}
               </Badge>
 
               <Button
@@ -209,7 +209,7 @@ export function JobListingsSection({ jobs, companyName }: JobListingsSectionProp
                 <div>
                   <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
                     <Filter className="h-4 w-4 text-[#0047AB]" />
-                    {t("enterprise_jobdescriptiondetailpage.tsx.cap_bac")}
+                    {t("common.rank")}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {LEVEL_OPTIONS.map((level) => (

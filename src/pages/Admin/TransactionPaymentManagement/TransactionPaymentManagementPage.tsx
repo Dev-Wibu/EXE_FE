@@ -429,7 +429,7 @@ export function TransactionPaymentManagementPage() {
                       </th>
                       <th className="px-4 py-3 text-left font-['Inter'] text-xs font-semibold text-slate-600 uppercase dark:text-slate-300">
                         <SortButton {...getTransactionSortProps("transactionTypeSortValue")}>
-                          {t("shared_speechplaygroundpage.tsx.loai")}
+                          {t("common.type")}
                         </SortButton>
                       </th>
                       <th className="px-4 py-3 text-left font-['Inter'] text-xs font-semibold text-slate-600 uppercase dark:text-slate-300">

@@ -22,11 +22,9 @@ export function UnauthorizedPage() {
 
         {/* Title & Description */}
         <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-          {t("error_unauthorizedpage.tsx.chua_xac_thuc")}
+          {t("errorUnauthorizedpage.notAuthenticated")}
         </h1>
-        <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">
-          {t("error_unauthorizedpage.tsx.ban_can_ang_nhap_e_truy_cap_trang_nay_vu")}
-        </p>
+        <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">{t("common.friend")}</p>
 
         {/* Action Buttons */}
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
@@ -38,15 +36,13 @@ export function UnauthorizedPage() {
           </Button>
           <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
             <Home className="h-4 w-4" />
-            {t("error_unauthorizedpage.tsx.ve_trang_chu")}
+            {t("common.backToHomePage")}
           </Button>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        {t("error_unauthorizedpage.tsx.ma_loi_401_chua_xac_thuc")}
-      </div>
+      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">{t("common.code")}</div>
     </div>
   );
 }

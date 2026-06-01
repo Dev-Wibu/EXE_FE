@@ -48,10 +48,10 @@ function formatSalary(min?: number, max?: number, currency = "VND") {
       var_1: currency,
     });
   }
-  return t("enterprise_jobdescriptiondetailpage.tsx.thoa_thuan");
+  return t("common.agree");
 }
 function formatDate(dateStr?: string) {
-  if (!dateStr) return t("enterprise_jobdescriptiondetailpage.tsx.khong_gioi_han");
+  if (!dateStr) return t("enterpriseJobdescriptiondetailpage.unlimited");
   const date = new Date(dateStr);
   return date.toLocaleDateString("vi-VN", {
     day: "2-digit",
@@ -123,9 +123,7 @@ export function JobDescriptionDetailPage() {
         if (result.success && result.data) {
           setJob(result.data);
         } else {
-          setError(
-            t("enterprise_jobdescriptiondetailpage.tsx.khong_tim_thay_thong_tin_vi_tri_tuyen_du")
-          );
+          setError(t("enterpriseJobdescriptiondetailpage.noVacancyInformationFound"));
         }
 
         // Check if user has already applied for this job
@@ -140,7 +138,7 @@ export function JobDescriptionDetailPage() {
         }
       } catch (err) {
         console.error("[JobDescriptionDetailPage] Error:", err);
-        setError(t("enterprise_jobdescriptiondetailpage.tsx.a_xay_ra_loi_khi_tai_thong_tin"));
+        setError(t("enterpriseJobdescriptiondetailpage.errorLoadingInfo"));
       } finally {
         setIsLoading(false);
       }
@@ -149,14 +147,12 @@ export function JobDescriptionDetailPage() {
   }, [id, isLoggedIn, t]);
   const handleApply = async () => {
     if (!isLoggedIn) {
-      toast.error(t("enterprise_jobdescriptiondetailpage.tsx.vui_long_ang_nhap_e_ung_tuyen"));
+      toast.error(t("enterpriseJobdescriptiondetailpage.pleaseLoginToApply"));
       navigate(`/login?redirect=/enterprise/job/${id}`);
       return;
     }
     if (job?.status !== "OPEN") {
-      toast.warning(
-        t("enterprise_jobdescriptiondetailpage.tsx.vi_tri_nay_hien_khong_con_tuyen_dung")
-      );
+      toast.warning(t("enterpriseJobdescriptiondetailpage.thisPositionIsCurrentlyNo"));
       return;
     }
     if (!job?.id) return;
@@ -164,9 +160,7 @@ export function JobDescriptionDetailPage() {
     try {
       const result = await applicationService.apply(job.id);
       if (result.success) {
-        toast.success(
-          t("enterprise_jobdescriptiondetailpage.tsx.ung_tuyen_thanh_cong_chuc_ban_may_man")
-        );
+        toast.success(t("enterpriseJobdescriptiondetailpage.successfulApplicationGoodLuck"));
         setHasApplied(true);
         // Refresh job data to update applied count
         const refreshResult = await companyManager.getJobById(job.id);
@@ -176,16 +170,14 @@ export function JobDescriptionDetailPage() {
       } else {
         const errorMsg =
           result.error ||
-          t("enterprise_jobdescriptiondetailpage.tsx.ung_tuyen_khong_thanh_cong_vui_long_thu_");
+          t("enterpriseJobdescriptiondetailpage.applicationUnsuccessfulPleaseTryAgain");
         toast.error(errorMsg, {
           duration: 5000,
         });
       }
     } catch (err) {
       console.error("[Apply] Catch error:", err);
-      toast.error(
-        t("enterprise_jobdescriptiondetailpage.tsx.a_xay_ra_loi_khi_ung_tuyen_vui_long_thu_")
-      );
+      toast.error(t("enterpriseJobdescriptiondetailpage.errorApplyingPleaseTryAgain"));
     } finally {
       setIsApplying(false);
     }
@@ -221,7 +213,7 @@ export function JobDescriptionDetailPage() {
             <CardContent className="flex items-center gap-3 p-6">
               <AlertCircle className="h-6 w-6 text-red-500" />
               <p className="text-red-700 dark:text-red-400">
-                {error || t("enterprise_jobdescriptiondetailpage.tsx.khong_tim_thay_vi_tri")}
+                {error || t("enterpriseJobdescriptiondetailpage.locationNotFound")}
               </p>
             </CardContent>
           </Card>
@@ -249,18 +241,18 @@ export function JobDescriptionDetailPage() {
               <div className="flex-1">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <Badge className={getLevelBadgeColor(job.level)}>
-                    {job.level || t("shared_speechplaygroundpage.tsx.khong_xac_inh")}
+                    {job.level || t("sharedSpeechplaygroundpage.areNot")}
                   </Badge>
                   <Badge className={`border ${getStatusBadgeColor(job.status)}`}>
                     {job.status === "OPEN"
-                      ? t("enterprise_jobdescriptiondetailpage.tsx.ang_tuyen")
+                      ? t("adminUsermanagement.hide")
                       : job.status === "CLOSED"
-                        ? t("enterprise_jobdescriptiondetailpage.tsx.a_ong")
-                        : t("enterprise_jobdescriptiondetailpage.tsx.nhap")}
+                        ? t("enterpriseJobdescriptiondetailpage.closed")
+                        : t("common.draft1")}
                   </Badge>
                 </div>
                 <h1 className="mb-2 text-2xl font-bold text-slate-900 md:text-3xl dark:text-white">
-                  {job.title || t("enterprise_jobdescriptiondetailpage.tsx.vi_tri_tuyen_dung")}
+                  {job.title || t("enterpriseJobdescriptiondetailpage.recruitmentPosition")}
                 </h1>
                 <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-1.5">
@@ -269,9 +261,7 @@ export function JobDescriptionDetailPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" />
-                    <span>
-                      {job.location || t("enterprise_jobdescriptiondetailpage.tsx.ho_chi_minh")}
-                    </span>
+                    <span>{job.location || t("common.hoChiMinh")}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Users className="h-4 w-4" />
@@ -294,13 +284,13 @@ export function JobDescriptionDetailPage() {
                     {t("common.processing")}
                   </>
                 ) : hasApplied ? (
-                  t("enterprise_jobdescriptiondetailpage.tsx.a_ung_tuyen")
+                  t("enterpriseJobdescriptiondetailpage.applied")
                 ) : job.status !== "OPEN" ? (
-                  t("enterprise_jobdescriptiondetailpage.tsx.a_ong_tuyen")
+                  t("enterpriseJobdescriptiondetailpage.closedTuyen")
                 ) : !isLoggedIn ? (
-                  t("enterprise_jobdescriptiondetailpage.tsx.ang_nhap_e_ung_tuyen")
+                  t("adminUsermanagement.hide")
                 ) : (
-                  t("enterprise_jobdescriptiondetailpage.tsx.ung_tuyen_ngay")
+                  t("enterpriseJobdescriptiondetailpage.applyNow")
                 )}
               </Button>
             </div>
@@ -332,8 +322,7 @@ export function JobDescriptionDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-slate-600 dark:text-slate-400">
-                  {job.description ||
-                    t("enterprise_jobdescriptiondetailpage.tsx.chua_co_mo_ta_cong_viec")}
+                  {job.description || t("enterpriseJobdescriptiondetailpage.noJobDescriptionYet")}
                 </p>
               </CardContent>
             </Card>
@@ -343,13 +332,13 @@ export function JobDescriptionDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-[#0047AB]" />
-                  {t("enterprise_jobdescriptiondetailpage.tsx.yeu_cau_ung_vien")}
+                  {t("common.candidateRequirements")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-slate-600 dark:text-slate-400">
                   {job.requirements ||
-                    t("enterprise_jobdescriptiondetailpage.tsx.chua_co_yeu_cau_cu_the")}
+                    t("enterpriseJobdescriptiondetailpage.thereAreNoSpecificRequirements")}
                 </p>
               </CardContent>
             </Card>
@@ -359,13 +348,13 @@ export function JobDescriptionDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-amber-500" />
-                  {t("enterprise_jobdescriptiondetailpage.tsx.phuc_loi")}
+                  {t("common.welfare")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-slate-600 dark:text-slate-400">
                   {job.benefits ||
-                    t("enterprise_jobdescriptiondetailpage.tsx.chua_co_thong_tin_phuc_loi")}
+                    t("enterpriseJobdescriptiondetailpage.thereIsNoBenefitInformation")}
                 </p>
               </CardContent>
             </Card>
@@ -376,8 +365,8 @@ export function JobDescriptionDetailPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-[#0047AB]" />
-                    {t("enterprise_jobdescriptiondetailpage.tsx.quy_trinh_phong_van")}
-                    {job.rounds.length} {t("enterprise_jobdescriptiondetailpage.tsx.vong")}
+                    {t("enterpriseJobdescriptiondetailpage.interviewProcess")}
+                    {job.rounds.length} {t("common.ring")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -401,24 +390,24 @@ export function JobDescriptionDetailPage() {
                               {getRoundTypeIcon(round.roundType)}
                               <span className="ml-1">
                                 {round.roundType?.replace("_", " ") ||
-                                  t("shared_speechplaygroundpage.tsx.khong_xac_inh")}
+                                  t("sharedSpeechplaygroundpage.areNot")}
                               </span>
                             </Badge>
                           </div>
                           <div className="mb-2 flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400">
                             <span>
-                              {t("enterprise_jobdescriptiondetailpage.tsx.thu_tu")}{" "}
+                              {t("enterpriseJobdescriptiondetailpage.order")}{" "}
                               {round.roundOrder || index + 1}
                             </span>
                             {round.passThreshold && (
                               <span>
-                                {t("enterprise_jobdescriptiondetailpage.tsx.nguong_at")}{" "}
+                                {t("enterpriseJobdescriptiondetailpage.passingScore")}{" "}
                                 {round.passThreshold}%
                               </span>
                             )}
                             {round.configData?.timeLimitMinutes && (
                               <span>
-                                {t("enterprise_jobdescriptiondetailpage.tsx.thoi_gian")}{" "}
+                                {t("enterpriseJobdescriptiondetailpage.time")}{" "}
                                 {round.configData.timeLimitMinutes} {t("common.minute")}
                               </span>
                             )}
@@ -451,13 +440,13 @@ export function JobDescriptionDetailPage() {
                   {t("common.processing")}
                 </>
               ) : hasApplied ? (
-                t("enterprise_jobdescriptiondetailpage.tsx.a_ung_tuyen")
+                t("enterpriseJobdescriptiondetailpage.applied")
               ) : job.status !== "OPEN" ? (
-                t("enterprise_jobdescriptiondetailpage.tsx.a_ong_tuyen")
+                t("enterpriseJobdescriptiondetailpage.closedTuyen")
               ) : !isLoggedIn ? (
-                t("enterprise_jobdescriptiondetailpage.tsx.ang_nhap_e_ung_tuyen")
+                t("adminUsermanagement.hide")
               ) : (
-                t("enterprise_jobdescriptiondetailpage.tsx.ung_tuyen_ngay")
+                t("enterpriseJobdescriptiondetailpage.applyNow")
               )}
             </Button>
 
@@ -465,21 +454,21 @@ export function JobDescriptionDetailPage() {
             <Card className="border-slate-200 dark:border-slate-700">
               <CardHeader>
                 <CardTitle className="text-base">
-                  {t("enterprise_jobdescriptiondetailpage.tsx.thong_tin_tuyen_dung")}
+                  {t("enterpriseJobdescriptiondetailpage.recruitmentInformation")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.cap_bac")}
+                    {t("common.rank")}
                   </span>
                   <Badge className={getLevelBadgeColor(job.level)}>
-                    {job.level || t("shared_speechplaygroundpage.tsx.khong_xac_inh")}
+                    {job.level || t("sharedSpeechplaygroundpage.areNot")}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.muc_luong")}
+                    {t("common.salary")}
                   </span>
                   <span className="text-sm font-medium text-slate-900 dark:text-white">
                     {formatSalary(job.salaryMin, job.salaryMax, job.currency)}
@@ -487,15 +476,15 @@ export function JobDescriptionDetailPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.ia_iem")}
+                    {t("enterpriseJobdescriptiondetailpage.location")}
                   </span>
                   <span className="text-sm font-medium text-slate-900 dark:text-white">
-                    {job.location || t("enterprise_jobdescriptiondetailpage.tsx.ho_chi_minh")}
+                    {job.location || t("common.hoChiMinh")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.han_nop")}
+                    {t("common.submissionDeadline")}
                   </span>
                   <span className="text-sm font-medium text-slate-900 dark:text-white">
                     {formatDate(job.deadlineAt)}
@@ -503,7 +492,7 @@ export function JobDescriptionDetailPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.so_nguoi_ung_tuyen")}
+                    {t("enterpriseJobdescriptiondetailpage.numberOfApplicants")}
                   </span>
                   <span className="text-sm font-medium text-slate-900 dark:text-white">
                     {job.appliedCount || 0}
@@ -517,7 +506,7 @@ export function JobDescriptionDetailPage() {
               <Card className="border-slate-200 dark:border-slate-700">
                 <CardHeader>
                   <CardTitle className="text-base">
-                    {t("enterprise_jobdescriptiondetailpage.tsx.ky_nang_yeu_cau")}
+                    {t("enterpriseJobdescriptiondetailpage.requiredSkills")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -536,7 +525,7 @@ export function JobDescriptionDetailPage() {
             <Card className="border-slate-200 dark:border-slate-700">
               <CardHeader>
                 <CardTitle className="text-base">
-                  {t("enterprise_jobdescriptiondetailpage.tsx.thong_tin_cong_ty")}
+                  {t("enterpriseJobdescriptiondetailpage.companyInformation")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -547,13 +536,13 @@ export function JobDescriptionDetailPage() {
                   <div>
                     <p className="font-semibold text-slate-900 dark:text-white">
                       {job.companyName ||
-                        t("enterprise_jobdescriptiondetailpage.tsx.cong_ty_tuyen_dung")}
+                        t("enterpriseJobdescriptiondetailpage.recruitmentCompany")}
                     </p>
                     {job.companyId && (
                       <Link
                         to={`/enterprise/company/${job.companyId}`}
                         className="text-xs text-[#0047AB] hover:underline dark:text-[#66B2FF]">
-                        {t("enterprise_jobdescriptiondetailpage.tsx.xem_cong_ty")}
+                        {t("enterpriseJobdescriptiondetailpage.viewCompany")}
                       </Link>
                     )}
                   </div>

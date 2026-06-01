@@ -39,10 +39,10 @@ export function HomePage() {
               {t("common.interviewMode")}
             </Badge>
             <h2 className="mb-3 text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl dark:text-white">
-              {t("homepage_homepage.tsx.chon_phong_cach_phong_van_cua_ban")}
+              {t("homepageHomepage.chooseYourInterviewStyle")}
             </h2>
             <p className="mx-auto max-w-2xl text-sm text-slate-600 dark:text-slate-400">
-              {t("homepage_homepage.tsx.thuc_hanh_phong_van_theo_cach_phu_hop_nh")}
+              {t("homepageHomepage.practiceInterviewingInTheWay")}
             </p>
           </div>
 
@@ -94,7 +94,7 @@ export function HomePage() {
               {t("common.evaluate")}
             </Badge>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl dark:text-white">
-              {t("homepage_homepage.tsx.moi_nguoi_noi_gi_ve_chung_toi")}
+              {t("homepageHomepage.whatDoPeopleSayAbout")}
             </h2>
           </div>
           <div className="mt-8">
@@ -102,7 +102,7 @@ export function HomePage() {
               testimonials={[
                 {
                   id: 1,
-                  name: t("homepage_homepage.tsx.nguyen_pham_thu_ha"),
+                  name: t("common.nguyenPhamThuHa"),
                   role: "Software Engineering",
                   content:
                     "I always felt confident about coding, but behavioral questions were a different story. AMA Interview helped me practice clear, impactful answers using the STAR method. It gave me the confidence to handle even the toughest behavioral rounds.",
@@ -111,7 +111,7 @@ export function HomePage() {
                 },
                 {
                   id: 2,
-                  name: t("homepage_homepage.tsx.tran_minh_uc"),
+                  name: t("homepageHomepage.tranMinhDuc"),
                   role: "Data Science",
                   content:
                     "The AI interview practice sessions were incredibly helpful. I could practice anytime, anywhere, and the feedback was detailed and actionable. After two weeks of practice, I landed my dream job at a top tech company.",
@@ -120,7 +120,7 @@ export function HomePage() {
                 },
                 {
                   id: 3,
-                  name: t("homepage_homepage.tsx.le_thi_mai_anh"),
+                  name: t("common.leThiMaiAnh"),
                   role: "Product Management",
                   content:
                     "As a PM transitioning from engineering, I needed help with product sense questions. InBlue Interview's curated questions and AI feedback helped me understand what interviewers look for. Highly recommend!",
@@ -129,25 +129,25 @@ export function HomePage() {
                 },
                 {
                   id: 4,
-                  name: t("homepage_homepage.tsx.pham_van_hung"),
+                  name: t("common.phamVanHung"),
                   role: "Frontend Developer",
-                  content: t("homepage_homepage.tsx.toi_a_chuan_bi_rat_nhieu_cho_cac_buoi_ph"),
+                  content: t("common.dark"),
                   avatar: null,
                   rating: 5,
                 },
                 {
                   id: 5,
-                  name: t("homepage_homepage.tsx.hoang_thi_linh"),
+                  name: t("common.hoangThiLinh"),
                   role: "UX Designer",
-                  content: t("homepage_homepage.tsx.cac_cau_hoi_phong_van_thiet_ke_rat_kho_t"),
+                  content: t("common.designInterviewQuestionsAreDifficult"),
                   avatar: null,
                   rating: 4,
                 },
                 {
                   id: 6,
-                  name: t("homepage_homepage.tsx.ngo_inh_khoa"),
+                  name: t("homepageHomepage.ngoDinhKhoa"),
                   role: "Backend Engineer",
-                  content: t("homepage_homepage.tsx.ai_interview_giup_toi_tu_tin_hon_rat_nhi"),
+                  content: t("common.aiInterviewHelpsMeBeMuchMoreConfi"),
                   avatar: null,
                   rating: 5,
                 },

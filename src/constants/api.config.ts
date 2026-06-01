@@ -3,22 +3,13 @@
  * Based on schema-from-be.d.ts API specification
  */
 
-import type { ApiConfig, ManagerMode } from "@/interfaces";
+import type { ManagerMode } from "@/interfaces";
 
 // API-only mode: mock branches are removed from service managers.
 export const MANAGER_MODE: ManagerMode = "api";
 
 // API Base URL from environment or default (use localhost for development)
-export const API_BASE_URL = "http://localhost:8080";
-
-// API Configuration
-export const apiConfig: ApiConfig = {
-  baseURL: API_BASE_URL,
-  timeout: 90000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-};
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 // API Endpoints - Aligned with backend schema (schema-from-be.d.ts)
 export const API_ENDPOINTS = {

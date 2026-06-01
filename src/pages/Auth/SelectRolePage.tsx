@@ -34,13 +34,13 @@ export function SelectRolePage() {
         <div className="w-full max-w-5xl">
           <div className="mb-10 text-center">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl dark:text-white">
-              {t("auth_selectrolepage.tsx.chao_mung_en_voi")}{" "}
+              {t("authSelectrolepage.welcomeTo")}{" "}
               <span className="bg-linear-to-r from-[#0047AB] to-[#007BFF] bg-clip-text text-transparent dark:from-[#66B2FF] dark:to-[#A5C8F2]">
                 INBLUE AI Interview
               </span>
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-slate-600 md:text-lg dark:text-slate-300">
-              {t("auth_selectrolepage.tsx.chon_vai_tro_phu_hop_e_tiep_tuc_voi_trai")}
+              {t("compShared.select")}
             </p>
           </div>
 
@@ -54,25 +54,21 @@ export function SelectRolePage() {
                   {t("common.user")}
                 </CardTitle>
                 <CardDescription className="text-slate-600 dark:text-slate-300">
-                  {t("auth_selectrolepage.tsx.luyen_tap_phong_van_voi_ai_va_mentor_chu")}
+                  {t("authSelectrolepage.practiceInterviewsWithAiAnd")}
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-5">
                 <div className="space-y-2">
-                  <BenefitItem
-                    text={t("auth_selectrolepage.tsx.luyen_tap_phong_van_voi_ai_thong_minh")}
-                  />
-                  <BenefitItem
-                    text={t("auth_selectrolepage.tsx.nhan_feedback_chi_tiet_tu_mentor")}
-                  />
-                  <BenefitItem text={t("auth_selectrolepage.tsx.theo_doi_tien_o_hoc_tap")} />
+                  <BenefitItem text={t("authSelectrolepage.practiceInterviewsWithSmartAi")} />
+                  <BenefitItem text={t("authSelectrolepage.receiveDetailedFeedbackFromMentor")} />
+                  <BenefitItem text={t("adminPostmanagement.card")} />
                 </div>
 
                 <Button
                   className="w-full bg-[#0047AB] text-white hover:bg-[#003A8C] dark:bg-[#005FD1] dark:hover:bg-[#4A90FF]"
                   onClick={handleUserSelect}>
-                  {t("auth_selectrolepage.tsx.bat_au_ngay")}
+                  {t("common.turnOn")}
                 </Button>
               </CardContent>
             </Card>
@@ -85,8 +81,8 @@ export function SelectRolePage() {
                 <CardTitle className="mt-1 text-slate-900 dark:text-white">Mentor</CardTitle>
                 <CardDescription className="text-slate-600 dark:text-slate-300">
                   {isMentor
-                    ? t("auth_selectrolepage.tsx.truy_cap_nhanh_vao_khu_vuc_quan_ly_mento")
-                    : t("auth_selectrolepage.tsx.chia_se_kinh_nghiem_ong_hanh_cung_ung_vi")}
+                    ? t("authSelectrolepage.quickAccessToYourMentor")
+                    : t("enterpriseCompanydetail.share")}
                 </CardDescription>
               </CardHeader>
 
@@ -95,18 +91,14 @@ export function SelectRolePage() {
                   {isMentor ? (
                     <>
                       <BenefitItem text={t("common.manageInterviewSessions")} />
-                      <BenefitItem text={t("auth_selectrolepage.tsx.xem_anh_gia_tu_hoc_vien")} />
-                      <BenefitItem text={t("auth_selectrolepage.tsx.theo_doi_thu_nhap")} />
+                      <BenefitItem text={t("authSelectrolepage.viewStudentReviews")} />
+                      <BenefitItem text={t("authSelectrolepage.trackYourIncome")} />
                     </>
                   ) : (
                     <>
-                      <BenefitItem
-                        text={t("auth_selectrolepage.tsx.ho_tro_nguoi_hoc_tren_toan_quoc")}
-                      />
-                      <BenefitItem
-                        text={t("auth_selectrolepage.tsx.linh_hoat_thoi_gian_lam_viec")}
-                      />
-                      <BenefitItem text={t("auth_selectrolepage.tsx.nhan_thu_nhap_hap_dan")} />
+                      <BenefitItem text={t("authSelectrolepage.supportLearnersNationwide")} />
+                      <BenefitItem text={t("authSelectrolepage.flexibleWorkingTime")} />
+                      <BenefitItem text={t("authSelectrolepage.getAttractiveIncome")} />
                     </>
                   )}
                 </div>
@@ -121,8 +113,8 @@ export function SelectRolePage() {
                   )}
                   onClick={handleMentorSelect}>
                   {isMentor
-                    ? t("auth_selectrolepage.tsx.vao_trang_mentor")
-                    : t("auth_selectrolepage.tsx.ang_ky_mentor")}
+                    ? t("authSelectrolepage.goToMentorPage")
+                    : t("adminUsermanagement.hide")}
                 </Button>
               </CardContent>
             </Card>

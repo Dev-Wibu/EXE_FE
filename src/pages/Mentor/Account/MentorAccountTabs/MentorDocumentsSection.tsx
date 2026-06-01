@@ -56,7 +56,7 @@ export function MentorDocumentsSection({ mentorProfile }: MentorDocumentsSection
                 </button>
               ) : (
                 <p className="font-['Inter'] text-sm font-medium text-gray-400">
-                  {t("shared_speechplaygroundpage.tsx.chua_co")}
+                  {t("common.notYet")}
                 </p>
               )}
             </div>
@@ -83,7 +83,7 @@ export function MentorDocumentsSection({ mentorProfile }: MentorDocumentsSection
                 </button>
               ) : (
                 <p className="font-['Inter'] text-sm font-medium text-gray-400">
-                  {t("shared_speechplaygroundpage.tsx.chua_co")}
+                  {t("common.notYet")}
                 </p>
               )}
             </div>
@@ -110,7 +110,7 @@ export function MentorDocumentsSection({ mentorProfile }: MentorDocumentsSection
                 </button>
               ) : (
                 <p className="font-['Inter'] text-sm font-medium text-gray-400">
-                  {t("shared_speechplaygroundpage.tsx.chua_co")}
+                  {t("common.notYet")}
                 </p>
               )}
             </div>

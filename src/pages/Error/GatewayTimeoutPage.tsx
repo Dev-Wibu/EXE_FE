@@ -29,29 +29,25 @@ export function GatewayTimeoutPage() {
 
         {/* Title & Description */}
         <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-          {t("error_gatewaytimeoutpage.tsx.het_thoi_gian_cho")}
+          {t("errorGatewaytimeoutpage.timeoutExpired")}
         </h1>
-        <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">
-          {t("error_gatewaytimeoutpage.tsx.may_chu_khong_phan_hoi_kip_thoi_ieu_nay_")}
-        </p>
+        <p className="mb-8 max-w-md text-gray-600 dark:text-slate-400">{t("common.code")}</p>
 
         {/* Action Buttons */}
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Button variant="outline" onClick={handleRefresh} className="gap-2">
             <RefreshCcw className="h-4 w-4" />
-            {t("error_serviceunavailablepage.tsx.tai_lai_trang")}
+            {t("common.reloadThePage")}
           </Button>
           <Button onClick={() => navigate("/")} className="gap-2 bg-blue-600 hover:bg-blue-700">
             <Home className="h-4 w-4" />
-            {t("error_unauthorizedpage.tsx.ve_trang_chu")}
+            {t("common.backToHomePage")}
           </Button>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">
-        {t("error_gatewaytimeoutpage.tsx.ma_loi_504_het_thoi_gian_cho_cong")}
-      </div>
+      <div className="mt-16 text-sm text-gray-500 dark:text-slate-500">{t("common.code")}</div>
     </div>
   );
 }

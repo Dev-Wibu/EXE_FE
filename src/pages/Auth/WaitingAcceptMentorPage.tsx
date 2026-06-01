@@ -21,10 +21,10 @@ export function WaitingAcceptMentorPage() {
             </div>
 
             <CardTitle className="mt-6 text-2xl">
-              {t("auth_waitingacceptmentorpage.tsx.on_ang_ky_ang_uoc_xem_xet")}
+              {t("authWaitingacceptmentorpage.applicationUnderReview")}
             </CardTitle>
             <CardDescription className="text-base">
-              {t("auth_waitingacceptmentorpage.tsx.cam_on_ban_a_ang_ky_tro_thanh_mentor_tai")}
+              {t("authWaitingacceptmentorpage.thankYouForRegisteringAsMentor")}
             </CardDescription>
           </CardHeader>
 
@@ -34,9 +34,9 @@ export function WaitingAcceptMentorPage() {
               <div className="flex items-center gap-3">
                 <Clock className="h-5 w-5 text-amber-600" />
                 <p className="text-sm text-slate-700">
-                  {t("auth_waitingacceptmentorpage.tsx.thoi_gian_xet_duyet")}{" "}
+                  {t("authWaitingacceptmentorpage.reviewTime")}{" "}
                   <span className="font-semibold">
-                    {t("auth_waitingacceptmentorpage.tsx.24_48_gio")}
+                    {t("authWaitingacceptmentorpage.timeFrame24To48Hours")}
                   </span>
                 </p>
               </div>
@@ -44,14 +44,14 @@ export function WaitingAcceptMentorPage() {
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-amber-600" />
                 <p className="text-sm text-slate-700">
-                  {t("auth_waitingacceptmentorpage.tsx.chung_toi_se_gui_email_thong_bao_ket_qua")}
+                  {t("authWaitingacceptmentorpage.weWillSendAnEmail")}
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-amber-600" />
                 <p className="text-sm text-slate-700">
-                  {t("auth_waitingacceptmentorpage.tsx.kiem_tra_email_thuong_xuyen_e_khong_bo_l")}
+                  {t("authWaitingacceptmentorpage.checkEmailRegularly")}
                 </p>
               </div>
             </div>
@@ -59,7 +59,7 @@ export function WaitingAcceptMentorPage() {
             {/* Progress Steps */}
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-slate-900">
-                {t("auth_waitingacceptmentorpage.tsx.tien_trinh_xu_ly")}
+                {t("authWaitingacceptmentorpage.processingProcess")}
               </h4>
 
               {/* Step 1: Submitted */}
@@ -72,10 +72,10 @@ export function WaitingAcceptMentorPage() {
                 </div>
                 <div>
                   <h5 className="font-medium text-slate-900">
-                    {t("auth_waitingacceptmentorpage.tsx.a_nop_on")}
+                    {t("authWaitingacceptmentorpage.applicationSubmitted")}
                   </h5>
                   <p className="text-sm text-slate-500">
-                    {t("auth_waitingacceptmentorpage.tsx.on_ang_ky_cua_ban_a_uoc_gui_thanh_cong")}
+                    {t("authWaitingacceptmentorpage.applicationSubmittedSuccessfully")}
                   </p>
                 </div>
               </div>
@@ -89,11 +89,9 @@ export function WaitingAcceptMentorPage() {
                   <div className="h-8 w-0.5 bg-slate-200" />
                 </div>
                 <div>
-                  <h5 className="font-medium text-slate-900">
-                    {t("auth_waitingacceptmentorpage.tsx.ang_xem_xet")}
-                  </h5>
+                  <h5 className="font-medium text-slate-900">{t("adminUsermanagement.hide")}</h5>
                   <p className="text-sm text-slate-500">
-                    {t("auth_waitingacceptmentorpage.tsx.chung_toi_ang_xem_xet_ho_so_cua_ban")}
+                    {t("authWaitingacceptmentorpage.reviewingYourProfile")}
                   </p>
                 </div>
               </div>
@@ -105,18 +103,16 @@ export function WaitingAcceptMentorPage() {
                 </div>
                 <div>
                   <h5 className="font-medium text-slate-500">
-                    {t("auth_waitingacceptmentorpage.tsx.thong_bao_ket_qua")}
+                    {t("authWaitingacceptmentorpage.notificationOfResults")}
                   </h5>
-                  <p className="text-sm text-slate-400">
-                    {t("auth_waitingacceptmentorpage.tsx.ban_se_nhan_uoc_email_thong_bao")}
-                  </p>
+                  <p className="text-sm text-slate-400">{t("common.friend")}</p>
                 </div>
               </div>
             </div>
 
             {/* Back Button */}
             <Button variant="outline" className="w-full" asChild>
-              <Link to="/">{t("auth_waitingacceptmentorpage.tsx.quay_ve_trang_chu")}</Link>
+              <Link to="/">{t("authWaitingacceptmentorpage.returnToHomePage")}</Link>
             </Button>
           </CardContent>
         </Card>

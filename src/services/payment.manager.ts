@@ -209,7 +209,7 @@ export class PaymentManager {
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error, t("payment_paymentcancelpage.tsx.khong_the_huy_thanh_toan")),
+        error: getErrorMessage(error, t("common.paymentCannotBeCanceled")),
       };
     }
   }

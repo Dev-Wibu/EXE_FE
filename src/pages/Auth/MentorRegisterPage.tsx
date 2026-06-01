@@ -144,7 +144,7 @@ function FileUploadBox({
         );
         return;
       }
-      setDropError(t("auth_mentorregisterpage.tsx.khong_the_tai_tep_nay_vui_long_thu_tep_k"));
+      setDropError(t("authMentorregisterpage.thisFileCouldNotBe"));
     },
     [acceptedTypes, maxSize, t]
   );
@@ -181,8 +181,7 @@ function FileUploadBox({
               {selectedFile.name}
             </p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              {formatFileSize(selectedFile.size)}{" "}
-              {t("auth_mentorregisterpage.tsx.nhan_e_thay_oi_tep")}
+              {formatFileSize(selectedFile.size)} {t("authMentorregisterpage.clickToChangeFile")}
             </p>
           </>
         ) : (
@@ -194,11 +193,11 @@ function FileUploadBox({
               {label} {required && <span className="text-red-500">*</span>}
             </p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              {t("auth_mentorregisterpage.tsx.keo_tha_tep_vao_ay_hoac_nhan_e_chon")}
+              {t("authMentorregisterpage.dragDropOrClick")}
             </p>
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#0047AB]/10 px-3 py-1 text-xs font-medium text-[#0047AB] dark:bg-[#0047AB]/20 dark:text-[#66B2FF]">
               <UploadCloud className="h-3.5 w-3.5" />
-              {acceptedTypes} {t("auth_mentorregisterpage.tsx.toi_a")} {maxSize}
+              {acceptedTypes} {t("common.dark")} {maxSize}
             </div>
           </>
         )}
@@ -258,40 +257,30 @@ export function MentorRegisterPage() {
     setError("");
     const clientFieldErrors: Partial<Record<MentorFieldKey, string>> = {};
     if (!formData.name.trim())
-      clientFieldErrors.name = t("auth_mentorregisterpage.tsx.vui_long_nhap_ho_va_ten");
+      clientFieldErrors.name = t("authMentorregisterpage.pleaseEnterYourFirstAnd");
     if (!formData.email.trim())
-      clientFieldErrors.email = t("auth_mentorregisterpage.tsx.vui_long_nhap_email");
+      clientFieldErrors.email = t("authMentorregisterpage.pleaseEnterEmail");
     if (!formData.password.trim())
-      clientFieldErrors.password = t("auth_mentorregisterpage.tsx.vui_long_nhap_mat_khau");
+      clientFieldErrors.password = t("authMentorregisterpage.pleaseEnterYourPassword");
     if (!formData.confirmPassword.trim()) {
-      clientFieldErrors.confirmPassword = t(
-        "auth_mentorregisterpage.tsx.vui_long_xac_nhan_mat_khau"
-      );
+      clientFieldErrors.confirmPassword = t("authMentorregisterpage.pleaseConfirmPassword");
     }
     if (!formData.currentCompany.trim()) {
-      clientFieldErrors.currentCompany = t(
-        "auth_mentorregisterpage.tsx.vui_long_nhap_cong_ty_hien_tai"
-      );
+      clientFieldErrors.currentCompany = t("authMentorregisterpage.pleaseEnterCurrentCompany");
     }
     if (!formData.expertise.trim()) {
-      clientFieldErrors.expertise = t(
-        "auth_mentorregisterpage.tsx.vui_long_nhap_linh_vuc_chuyen_mon"
-      );
+      clientFieldErrors.expertise = t("authMentorregisterpage.pleaseEnterExpertise");
     }
     const yearsOfExperience = formData.yearsOfExperience ? Number(formData.yearsOfExperience) : 0;
     if (Number.isNaN(yearsOfExperience) || yearsOfExperience < 0) {
-      clientFieldErrors.yearsOfExperience = t(
-        "auth_mentorregisterpage.tsx.so_nam_kinh_nghiem_phai_la_so_khong_am"
-      );
+      clientFieldErrors.yearsOfExperience = t("authMentorregisterpage.experienceMustBeNonNegative");
     }
     if (formData.password !== formData.confirmPassword) {
-      clientFieldErrors.confirmPassword = t(
-        "auth_mentorregisterpage.tsx.mat_khau_xac_nhan_khong_khop"
-      );
+      clientFieldErrors.confirmPassword = t("authMentorregisterpage.confirmationPasswordMismatch");
     }
     if (Object.keys(clientFieldErrors).length > 0) {
       setFieldErrors(clientFieldErrors);
-      setError(t("auth_mentorregisterpage.tsx.vui_long_kiem_tra_lai_thong_tin_bat_buoc"));
+      setError(t("authMentorregisterpage.pleaseDoubleCheckRequiredInformation"));
       return;
     }
     setFieldErrors({});
@@ -319,9 +308,7 @@ export function MentorRegisterPage() {
       if (Object.keys(normalizedFieldErrors).length > 0) {
         setFieldErrors(normalizedFieldErrors);
       }
-      setError(
-        result.error || t("auth_mentorregisterpage.tsx.ang_ky_that_bai_vui_long_kiem_tra_lai_th")
-      );
+      setError(result.error || t("adminUsermanagement.hide"));
     } finally {
       setIsLoading(false);
     }
@@ -353,10 +340,10 @@ export function MentorRegisterPage() {
           <Card className="border-slate-200/80 bg-white/95 shadow-xl shadow-slate-200/70 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-black/40">
             <CardHeader className="space-y-2 text-center">
               <CardTitle className="text-2xl text-slate-900 dark:text-white">
-                {t("auth_mentorregisterpage.tsx.ang_ky_tro_thanh_mentor")}
+                {t("adminUsermanagement.hide")}
               </CardTitle>
               <CardDescription className="text-slate-600 dark:text-slate-300">
-                {t("auth_mentorregisterpage.tsx.cung_cap_thong_tin_chuyen_mon_va_giay_to")}
+                {t("authMentorregisterpage.provideProfessionalInformationAndVerification")}
               </CardDescription>
             </CardHeader>
 
@@ -375,7 +362,7 @@ export function MentorRegisterPage() {
 
                 <section className="space-y-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    {t("auth_mentorregisterpage.tsx.thong_tin_tai_khoan")}
+                    {t("authMentorregisterpage.accountInformation")}
                   </h3>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -388,7 +375,7 @@ export function MentorRegisterPage() {
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder={t("auth_signuppage.tsx.nguyen_van_a")}
+                        placeholder={t("common.nguyenVanA")}
                         className={inputClass("name")}
                         required
                       />
@@ -414,7 +401,7 @@ export function MentorRegisterPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="password" className="text-slate-700 dark:text-slate-200">
-                        {t("auth_signuppage.tsx.mat_khau")} <span className="text-red-500">*</span>
+                        {t("common.password")} <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="password"
@@ -422,7 +409,7 @@ export function MentorRegisterPage() {
                         type="password"
                         value={formData.password}
                         onChange={handleChange}
-                        placeholder={t("auth_signuppage.tsx.nhap_mat_khau")}
+                        placeholder={t("common.enterPassword")}
                         className={inputClass("password")}
                         required
                       />
@@ -435,8 +422,7 @@ export function MentorRegisterPage() {
                       <Label
                         htmlFor="confirmPassword"
                         className="text-slate-700 dark:text-slate-200">
-                        {t("auth_signuppage.tsx.xac_nhan_mat_khau")}{" "}
-                        <span className="text-red-500">*</span>
+                        {t("common.confirmPassword")} <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="confirmPassword"
@@ -444,7 +430,7 @@ export function MentorRegisterPage() {
                         type="password"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        placeholder={t("auth_signuppage.tsx.nhap_lai_mat_khau")}
+                        placeholder={t("common.reenterThePassword")}
                         className={inputClass("confirmPassword")}
                         required
                       />
@@ -472,7 +458,7 @@ export function MentorRegisterPage() {
                         name="currentCompany"
                         value={formData.currentCompany}
                         onChange={handleChange}
-                        placeholder={t("auth_mentorregisterpage.tsx.ten_cong_ty_hien_tai")}
+                        placeholder={t("authMentorregisterpage.currentCompanyName")}
                         className={inputClass("currentCompany")}
                         required
                       />
@@ -525,7 +511,7 @@ export function MentorRegisterPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="expertise" className="text-slate-700 dark:text-slate-200">
-                      {t("auth_mentorregisterpage.tsx.linh_vuc_chuyen_mon")}{" "}
+                      {t("authMentorregisterpage.areaOfExpertise")}{" "}
                       <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
@@ -533,9 +519,7 @@ export function MentorRegisterPage() {
                       name="expertise"
                       value={formData.expertise}
                       onChange={handleChange}
-                      placeholder={t(
-                        "auth_mentorregisterpage.tsx.vi_du_ai_hoc_may_python_khoa_hoc_du_lieu"
-                      )}
+                      placeholder={t("authMentorregisterpage.exampleExpertise")}
                       className={cn(inputClass("expertise"), "min-h-[90px]")}
                       required
                     />
@@ -553,9 +537,7 @@ export function MentorRegisterPage() {
                       name="bio"
                       value={formData.bio}
                       onChange={handleChange}
-                      placeholder={t(
-                        "auth_mentorregisterpage.tsx.viet_vai_dong_gioi_thieu_ve_kinh_nghiem_"
-                      )}
+                      placeholder={t("authMentorregisterpage.writeBriefIntro")}
                       className={cn(inputClass("bio"), "min-h-[110px]")}
                     />
                     {fieldErrors.bio && <p className={helperTextClass}>{fieldErrors.bio}</p>}
@@ -565,10 +547,10 @@ export function MentorRegisterPage() {
                 <section className="space-y-4 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950/40">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                      {t("auth_mentorregisterpage.tsx.giay_to_chung_minh")}
+                      {t("authMentorregisterpage.proofDocuments")}
                     </h3>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      {t("auth_mentorregisterpage.tsx.tai_len_giay_to_giup_oi_ngu_xac_minh_dan")}
+                      {t("homepageFeatures.in")}
                     </p>
                   </div>
 
@@ -666,9 +648,7 @@ export function MentorRegisterPage() {
                     type="submit"
                     className="flex-1 bg-[#0047AB] text-white hover:bg-[#003A8C] dark:bg-[#005FD1] dark:hover:bg-[#4A90FF]"
                     disabled={isLoading}>
-                    {isLoading
-                      ? t("auth_mentorregisterpage.tsx.ang_gui_ang_ky")
-                      : t("auth_mentorregisterpage.tsx.gui_ang_ky")}
+                    {isLoading ? t("adminUsermanagement.hide") : t("compPost.send")}
                   </Button>
                 </div>
               </form>

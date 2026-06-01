@@ -205,8 +205,7 @@ export function CompanyGridSection() {
                   </div>
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-medium ${colorScheme.bg} ${colorScheme.text}`}>
-                    {company.jobDescriptions?.length || 0}{" "}
-                    {t("enterprise_companysearchpage.tsx.vi_tri")}
+                    {company.jobDescriptions?.length || 0} {t("common.location")}
                   </span>
                 </div>
 
@@ -225,7 +224,7 @@ export function CompanyGridSection() {
                     <div className="h-6 w-6 rounded-full border-2 border-white bg-[#66B2FF] dark:border-slate-800 dark:bg-[#007BFF]/30" />
                   </div>
                   <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    {t("enterprise_companysearchpage.tsx.nhieu_nguoi_a_tham_gia")}
+                    {t("enterpriseCompanysearchpage.manyPeopleJoined")}
                   </span>
                 </div>
               </Link>

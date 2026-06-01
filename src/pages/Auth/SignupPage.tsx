@@ -90,7 +90,7 @@ export function SignupPage() {
       }
       const callbackResult = authManager.consumeGoogleCallbackFromUrl(callbackUrl);
       if (!callbackResult.success || !callbackResult.data?.user || !callbackResult.data.token) {
-        setError(callbackResult.error || t("auth_signuppage.tsx.ang_nhap_google_that_bai"));
+        setError(callbackResult.error || t("adminUsermanagement.hide"));
         return;
       }
       applyAuthState(callbackResult.data);
@@ -111,13 +111,13 @@ export function SignupPage() {
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      setError(t("auth_signuppage.tsx.mat_khau_xac_nhan_khong_khop"));
+      setError(t("authSignuppage.confirmationPasswordDoesNotMatch"));
       return;
     }
 
     // Validate terms agreement
     if (!agreeTerms) {
-      setError(t("auth_signuppage.tsx.vui_long_ong_y_voi_cac_ieu_khoan"));
+      setError(t("authSignuppage.pleaseAgreeToTerms"));
       return;
     }
     setIsLoading(true);
@@ -159,13 +159,13 @@ export function SignupPage() {
         navigate("/login", {
           replace: true,
           state: {
-            message: t("auth_signuppage.tsx.ang_ky_thanh_cong_vui_long_ang_nhap_e_ti"),
+            message: t("adminUsermanagement.hide"),
             prefillEmail: result.data.user.email,
           },
         });
       }
     } else {
-      setError(result.error || t("auth_signuppage.tsx.ang_ky_that_bai"));
+      setError(result.error || t("adminUsermanagement.hide"));
     }
     setIsLoading(false);
   };
@@ -180,12 +180,10 @@ export function SignupPage() {
     <Card className="w-full max-w-md border-slate-200/80 bg-white/95 shadow-xl shadow-slate-200/70 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-black/40">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl text-[#0047AB] dark:text-[#66B2FF]">
-          {role === "user"
-            ? t("auth_signuppage.tsx.ang_ky_tai_khoan_hoc_vien")
-            : t("general.signUp")}
+          {role === "user" ? t("adminUsermanagement.hide") : t("general.signUp")}
         </CardTitle>
         <CardDescription className="text-slate-600 dark:text-slate-300">
-          {t("auth_signuppage.tsx.chao_mung_en_voi_inblue_vui_long_ien_tho")}
+          {t("authSignuppage.welcomeToInbluePleaseFillInfo")}
         </CardDescription>
       </CardHeader>
 
@@ -214,7 +212,7 @@ export function SignupPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          {t("auth_signuppage.tsx.tiep_tuc_voi_google")}
+          {t("common.continueWithGoogle")}
         </Button>
 
         <div className="relative">
@@ -223,7 +221,7 @@ export function SignupPage() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-white px-2 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-              {t("auth_signuppage.tsx.hoac")}
+              {t("common.or")}
             </span>
           </div>
         </div>
@@ -240,7 +238,7 @@ export function SignupPage() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder={t("auth_signuppage.tsx.nguyen_van_a")}
+                placeholder={t("common.nguyenVanA")}
                 required
                 className={inputClassName}
               />
@@ -273,7 +271,7 @@ export function SignupPage() {
                 name="university"
                 value={formData.university}
                 onChange={handleChange}
-                placeholder={t("auth_signuppage.tsx.h_bach_khoa_ha_noi")}
+                placeholder={t("authSignuppage.hust")}
                 required
                 className={inputClassName}
               />
@@ -281,7 +279,7 @@ export function SignupPage() {
 
             <div className="space-y-2">
               <Label htmlFor="major" className="dark:text-slate-300">
-                {t("auth_signuppage.tsx.chuyen_nganh")}
+                {t("authSignuppage.specialized")}
               </Label>
               <Select
                 value={formData.major}
@@ -307,7 +305,7 @@ export function SignupPage() {
 
           <div className="space-y-2">
             <Label htmlFor="password" className="dark:text-slate-300">
-              {t("auth_signuppage.tsx.mat_khau")}
+              {t("common.password")}
             </Label>
             <div className="relative">
               <Input
@@ -316,7 +314,7 @@ export function SignupPage() {
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
-                placeholder={t("auth_signuppage.tsx.nhap_mat_khau")}
+                placeholder={t("common.enterPassword")}
                 required
                 className={passwordInputClassName}
               />
@@ -331,7 +329,7 @@ export function SignupPage() {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="dark:text-slate-300">
-              {t("auth_signuppage.tsx.xac_nhan_mat_khau")}
+              {t("common.confirmPassword")}
             </Label>
             <div className="relative">
               <Input
@@ -340,7 +338,7 @@ export function SignupPage() {
                 type={showConfirmPassword ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder={t("auth_signuppage.tsx.nhap_lai_mat_khau")}
+                placeholder={t("common.reenterThePassword")}
                 required
                 className={passwordInputClassName}
               />
@@ -360,11 +358,11 @@ export function SignupPage() {
               onCheckedChange={(checked) => setAgreeTerms(checked === true)}
             />
             <label htmlFor="agreeTerms" className="text-sm text-slate-600 dark:text-slate-400">
-              {t("auth_signuppage.tsx.toi_ong_y_voi_cac")}{" "}
+              {t("common.dark")}{" "}
               <Link to="#" className="text-[#0047AB] hover:underline dark:text-[#66B2FF]">
-                {t("auth_signuppage.tsx.ieu_khoan")}
+                {t("authSignuppage.terms")}
               </Link>{" "}
-              {t("auth_signuppage.tsx.cua_inblue")}
+              {t("authSignuppage.byInblue")}
             </label>
           </div>
 
@@ -375,19 +373,17 @@ export function SignupPage() {
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t("auth_signuppage.tsx.ang_ang_ky") : t("general.signUp")}
+            {isLoading ? t("adminUsermanagement.hide") : t("general.signUp")}
           </Button>
         </form>
 
         {/* Login Link */}
         <p className="text-center text-sm">
-          <span className="text-slate-600 dark:text-slate-400">
-            {t("auth_signuppage.tsx.ban_a_co_tai_khoan")}{" "}
-          </span>
+          <span className="text-slate-600 dark:text-slate-400">{t("common.friend")} </span>
           <Link
             to="/login"
             className="font-medium text-[#0047AB] hover:underline dark:text-[#66B2FF]">
-            {t("auth_signuppage.tsx.ang_nhap_ngay")}
+            {t("adminUsermanagement.hide")}
           </Link>
         </p>
       </CardContent>

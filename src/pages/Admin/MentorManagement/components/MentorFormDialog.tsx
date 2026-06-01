@@ -343,7 +343,7 @@ export function MentorFormDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">{t("auth_signuppage.tsx.mat_khau")}</Label>
+            <Label htmlFor="password">{t("common.password")}</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -355,7 +355,7 @@ export function MentorFormDialog({
                     password: e.target.value,
                   })
                 }
-                placeholder={t("auth_signuppage.tsx.nhap_mat_khau")}
+                placeholder={t("common.enterPassword")}
                 className="pr-10"
               />
               <button

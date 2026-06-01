@@ -36,9 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="text-muted-foreground mb-4">
               {t("compErrorboundary.theApplicationCrashesPleaseReload")}
             </p>
-            <Button onClick={() => window.location.reload()}>
-              {t("error_serviceunavailablepage.tsx.tai_lai_trang")}
-            </Button>
+            <Button onClick={() => window.location.reload()}>{t("common.reloadThePage")}</Button>
           </div>
         )
       );

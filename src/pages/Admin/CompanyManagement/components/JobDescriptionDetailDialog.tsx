@@ -32,8 +32,7 @@ const formatSalaryRange = (
   salaryMax?: number | null,
   currency?: string | null
 ): string => {
-  if (salaryMin == null && salaryMax == null)
-    return t("enterprise_jobdescriptiondetailpage.tsx.thoa_thuan");
+  if (salaryMin == null && salaryMax == null) return t("common.agree");
   const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
   if (salaryMin != null && salaryMax != null) {
     return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
@@ -134,7 +133,7 @@ export function JobDescriptionDetailDialog({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <InfoRow
                 icon={<Banknote className="h-4 w-4" />}
-                label={t("enterprise_jobdescriptiondetailpage.tsx.muc_luong")}
+                label={t("common.salary")}
                 value={formatSalaryRange(job.salaryMin, job.salaryMax, job.currency)}
               />
               <InfoRow
@@ -168,7 +167,7 @@ export function JobDescriptionDetailDialog({
             />
             <ContentSection
               icon={<ListChecks className="h-4 w-4" />}
-              title={t("enterprise_jobdescriptiondetailpage.tsx.yeu_cau_ung_vien")}
+              title={t("common.candidateRequirements")}
               content={job.requirements}
             />
             <ContentSection
@@ -184,7 +183,7 @@ export function JobDescriptionDetailDialog({
                   <Briefcase className="text-primary h-4 w-4" />
                   <h4 className="text-foreground text-sm font-bold">
                     {t("adminCompanymanagement.interviewRound")}
-                    {rounds.length} {t("enterprise_jobdescriptiondetailpage.tsx.vong")}
+                    {rounds.length} {t("common.ring")}
                   </h4>
                 </div>
                 <div className="flex flex-col gap-2">

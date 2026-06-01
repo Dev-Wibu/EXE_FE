@@ -41,8 +41,7 @@ const formatSalaryRange = (
   salaryMax?: number | null,
   currency?: string | null
 ): string => {
-  if (salaryMin == null && salaryMax == null)
-    return t("enterprise_jobdescriptiondetailpage.tsx.thoa_thuan");
+  if (salaryMin == null && salaryMax == null) return t("common.agree");
   const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
   if (salaryMin != null && salaryMax != null) {
     return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
@@ -113,10 +112,10 @@ export function JobDescriptionTable({
           <TableHead className="w-28">
             {getSortProps ? (
               <SortButton {...getSortProps("deadlineSortValue")}>
-                {t("enterprise_jobdescriptiondetailpage.tsx.han_nop")}
+                {t("common.submissionDeadline")}
               </SortButton>
             ) : (
-              t("enterprise_jobdescriptiondetailpage.tsx.han_nop")
+              t("common.submissionDeadline")
             )}
           </TableHead>
           <TableHead className="w-28">

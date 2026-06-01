@@ -40,7 +40,7 @@ const isAlreadySubscribedError = (error?: string): boolean => {
     normalized.includes("409") ||
     normalized.includes("conflict") ||
     normalized.includes("already") ||
-    normalized.includes(t("payment_paymentsuccesspage.tsx.a_kich_hoat")) ||
+    normalized.includes(t("paymentPaymentsuccesspage.activated")) ||
     normalized.includes("da kich hoat") ||
     normalized.includes("already active") ||
     normalized.includes("already subscribed")
@@ -77,15 +77,15 @@ const markOrderAsActivated = (orderCode: string): void => {
 const getSuccessSubtitle = (purpose?: PaymentPurpose): string => {
   switch (purpose) {
     case "BUY_MEMBERSHIP":
-      return t("payment_paymentsuccesspage.tsx.he_thong_ang_xac_nhan_va_tu_ong_kich_hoa");
+      return t("adminDashboardoverview.system");
     case "MENTOR_INTERVIEW":
-      return t("payment_paymentsuccesspage.tsx.he_thong_ang_cap_nhat_trang_thai_phien_p");
+      return t("adminDashboardoverview.system");
     case "TOP_UP_WALLET":
-      return t("payment_paymentsuccesspage.tsx.he_thong_ang_cap_nhat_so_du_vi_cua_ban");
+      return t("adminDashboardoverview.system");
     case "WITHDRAW_FROM_WALLET":
-      return t("payment_paymentsuccesspage.tsx.yeu_cau_giao_dich_vi_a_uoc_xac_nhan_than");
+      return t("adminCompanymanagement.request");
     default:
-      return t("payment_paymentsuccesspage.tsx.he_thong_ang_xac_nhan_giao_dich_cua_ban");
+      return t("adminDashboardoverview.system");
   }
 };
 const getPrimaryRedirect = (
@@ -104,13 +104,13 @@ const getPrimaryRedirect = (
     case "WITHDRAW_FROM_WALLET":
       return {
         to: "/user?tab=account&subtab=wallet",
-        label: t("payment_paymentsuccesspage.tsx.en_vi_cua_toi"),
+        label: t("paymentPaymentsuccesspage.goToMyWallet"),
       };
     case "BUY_MEMBERSHIP":
     default:
       return {
         to: "/user?tab=account",
-        label: t("payment_paymentsuccesspage.tsx.quay_lai_tai_khoan"),
+        label: t("common.returnToAccount"),
       };
   }
 };
@@ -177,8 +177,7 @@ export function PaymentSuccessPage() {
         return subscriptionResult.data;
       }
       setSubscribeError(
-        subscriptionResult.error ||
-          t("payment_paymentsuccesspage.tsx.goi_a_uoc_kich_hoat_nhung_khong_the_tai_")
+        subscriptionResult.error || t("paymentPaymentsuccesspage.packageActivatedButCannotLoad")
       );
       return null;
     },
@@ -201,7 +200,7 @@ export function PaymentSuccessPage() {
           transactionCode: queryTransactionCode || undefined,
           checkoutToken: callbackCheckoutToken || undefined,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentsuccesspage.tsx.khong_tim_thay_user_session_khi_vao_call"),
+          message: t("paymentPaymentsuccesspage.userSessionNotFoundWhen"),
           payload: {
             source,
             status,
@@ -209,9 +208,7 @@ export function PaymentSuccessPage() {
           },
         });
         setResolveState("unmapped");
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.khong_tim_thay_phien_ang_nhap_vui_long_a")
-        );
+        setResolveError(t("sharedSpeechplaygroundpage.areNot"));
         return;
       }
       const hasAnyIdentifier = Boolean(
@@ -226,7 +223,7 @@ export function PaymentSuccessPage() {
         addPaymentSupportLog({
           userId: currentUserId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentsuccesspage.tsx.callback_success_khong_co_u_inh_danh_e_m"),
+          message: t("paymentPaymentsuccesspage.callbackSuccessNoIdentity"),
           payload: {
             source,
             status,
@@ -234,9 +231,7 @@ export function PaymentSuccessPage() {
           },
         });
         setResolveState("unmapped");
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.khong_nhan_uoc_thong_tin_thanh_toan_hop_")
-        );
+        setResolveError(t("sharedSpeechplaygroundpage.areNot"));
         return;
       }
       setResolveState("checking");
@@ -306,7 +301,7 @@ export function PaymentSuccessPage() {
           checkoutToken: callbackCheckoutToken || undefined,
           userId: currentUserId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentsuccesspage.tsx.khong_tim_thay_recovery_context_cho_call"),
+          message: t("paymentPaymentsuccesspage.noRecoveryContextFoundFor"),
           payload: {
             source,
             status,
@@ -315,9 +310,7 @@ export function PaymentSuccessPage() {
           },
         });
         setResolveState("unmapped");
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.khong_tim_thay_thong_tin_giao_dich_phu_h")
-        );
+        setResolveError(t("paymentPaymentsuccesspage.noMatchingTransactionInformationFound"));
         return;
       }
       const identifierMismatch = getCallbackIdentifierMismatch(
@@ -338,7 +331,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: nextContext.paymentPurpose,
           sessionId: nextContext.sessionId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentsuccesspage.tsx.inh_danh_callback_success_khong_khop_rec"),
+          message: t("paymentPaymentsuccesspage.identityCallbackSuccessMismatch"),
           payload: {
             recoverySource,
             mismatchedKeys: identifierMismatch.mismatchedKeys,
@@ -347,9 +340,7 @@ export function PaymentSuccessPage() {
           },
         });
         setResolveState("unmapped");
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.khong_the_oi_chieu_chinh_xac_thong_tin_t")
-        );
+        setResolveError(t("sharedSpeechplaygroundpage.areNot"));
         return;
       }
       const hasStrongCallbackIdentifier = Boolean(
@@ -365,7 +356,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: nextContext.paymentPurpose,
           sessionId: nextContext.sessionId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentsuccesspage.tsx.callback_success_chi_map_uoc_qua_latest_"),
+          message: t("paymentPaymentsuccesspage.callbackSuccessOnlyMappedLatest"),
           payload: {
             recoverySource,
             source,
@@ -373,9 +364,7 @@ export function PaymentSuccessPage() {
           },
         });
         setResolveState("unmapped");
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.khong_the_oi_chieu_u_tin_cay_cho_giao_di")
-        );
+        setResolveError(t("sharedSpeechplaygroundpage.areNot"));
         return;
       }
       if (nextContext.userId !== currentUserId) {
@@ -388,7 +377,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: nextContext.paymentPurpose,
           sessionId: nextContext.sessionId,
           status: "UNMAPPED_ORDER",
-          message: t("payment_paymentsuccesspage.tsx.giao_dich_callback_khong_thuoc_user_hien"),
+          message: t("adminTransactionpaymentmanagement.transaction"),
           payload: {
             expectedUserId: nextContext.userId,
             actualUserId: currentUserId,
@@ -398,9 +387,7 @@ export function PaymentSuccessPage() {
           },
         });
         setResolveState("unmapped");
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.thong_tin_thanh_toan_khong_thuoc_tai_kho")
-        );
+        setResolveError(t("adminSessionmanagement.paymentInformation"));
         return;
       }
       const resolvedOrderCode = orderCode || nextContext.orderCode;
@@ -434,8 +421,8 @@ export function PaymentSuccessPage() {
         checkoutUrl: nextContext.checkoutUrl,
         status: callbackStatus,
         note: paid
-          ? t("payment_paymentsuccesspage.tsx.callback_success_hop_le")
-          : t("payment_paymentsuccesspage.tsx.callback_tra_ve_status_thanh_toan_khong_"),
+          ? t("paymentPaymentsuccesspage.theSuccessCallbackIsValid")
+          : t("paymentPaymentsuccesspage.callbackReturnsInvalidPaymentStatus"),
       });
       addPaymentSupportLog({
         supportCode: updatedContext.supportCode,
@@ -450,8 +437,8 @@ export function PaymentSuccessPage() {
         sessionId: updatedContext.sessionId,
         status: callbackStatus,
         message: paid
-          ? t("payment_paymentsuccesspage.tsx.a_xac_nhan_callback_thanh_cong")
-          : t("payment_paymentsuccesspage.tsx.callback_co_du_lieu_giao_dich_nhung_stat"),
+          ? t("paymentPaymentsuccesspage.callbackConfirmedSuccessfully")
+          : t("paymentPaymentsuccesspage.theCallbackHasTransactionData"),
         payload: {
           source,
           status,
@@ -484,9 +471,7 @@ export function PaymentSuccessPage() {
           );
           return;
         }
-        setResolveError(
-          t("payment_paymentsuccesspage.tsx.a_xac_nhan_thanh_toan_nhung_chua_tim_tha")
-        );
+        setResolveError(t("paymentPaymentsuccesspage.paymentConfirmedNotFound"));
       }
       if (
         pendingSessionPayment?.sessionId &&
@@ -526,40 +511,30 @@ export function PaymentSuccessPage() {
       return;
     }
     if (!currentUserId) {
-      setSubscribeError(
-        t("payment_paymentsuccesspage.tsx.ban_can_ang_nhap_lai_truoc_khi_kich_hoat")
-      );
+      setSubscribeError(t("common.friend"));
       return;
     }
     if (recoveryContext.userId !== currentUserId) {
-      setSubscribeError(
-        t("payment_paymentsuccesspage.tsx.khong_the_kich_hoat_goi_cho_tai_khoan_hi")
-      );
+      setSubscribeError(t("paymentPaymentsuccesspage.unableToActivatePackageFor"));
       return;
     }
     if (recoveryContext.paymentPurpose !== "BUY_MEMBERSHIP") {
-      setSubscribeError(
-        t("payment_paymentsuccesspage.tsx.giao_dich_nay_khong_ap_dung_cho_goi_than")
-      );
+      setSubscribeError(t("adminTransactionpaymentmanagement.transaction"));
       return;
     }
     if (!recoveryContext.planId) {
-      setSubscribeError(
-        t("payment_paymentsuccesspage.tsx.khong_tim_thay_goi_thanh_vien_can_kich_h")
-      );
+      setSubscribeError(t("paymentPaymentsuccesspage.noMembershipPackageToActivate"));
       return;
     }
     if (!paid) {
-      setSubscribeError(
-        t("payment_paymentsuccesspage.tsx.thanh_toan_chua_uoc_xac_nhan_thanh_cong")
-      );
+      setSubscribeError(t("common.pay"));
       return;
     }
     const activationOrderCode = (recoveryContext.orderCode || "").trim();
     if (resolveState === "subscribed" || (activationOrderCode && isKnownActivatedOrder)) {
       setResolveState("subscribed");
       setSubscribeError("");
-      toast.info(t("payment_paymentsuccesspage.tsx.goi_nay_a_uoc_kich_hoat_truoc_o"));
+      toast.info(t("paymentPaymentsuccesspage.packageActivatedPreviously"));
       await loadActiveSubscription(recoveryContext.userId);
       return;
     }
@@ -585,7 +560,7 @@ export function PaymentSuccessPage() {
           sessionId: recoveryContext.sessionId,
           checkoutUrl: recoveryContext.checkoutUrl,
           status: "SUBSCRIBE_SUCCESS",
-          note: t("payment_paymentsuccesspage.tsx.goi_a_uoc_kich_hoat_truoc_o"),
+          note: t("paymentPaymentsuccesspage.packageActivatedPreviously2"),
         });
         addPaymentSupportLog({
           supportCode: updatedContext.supportCode,
@@ -599,7 +574,7 @@ export function PaymentSuccessPage() {
           paymentPurpose: updatedContext.paymentPurpose,
           sessionId: updatedContext.sessionId,
           status: "SUBSCRIBE_SUCCESS",
-          message: t("payment_paymentsuccesspage.tsx.backend_bao_goi_a_kich_hoat_truoc_o"),
+          message: t("paymentPaymentsuccesspage.backendReportedPackageActivatedPreviously"),
           payload: {
             duplicateSubscribe: true,
             error: subscribeResult.error || null,
@@ -613,7 +588,7 @@ export function PaymentSuccessPage() {
         }
         setResolveState("subscribed");
         setSubscribeError("");
-        toast.info(t("payment_paymentsuccesspage.tsx.goi_nay_a_uoc_kich_hoat_truoc_o"));
+        toast.info(t("paymentPaymentsuccesspage.packageActivatedPreviously"));
         return;
       }
       const updatedContext = upsertPaymentRecoveryContext({
@@ -629,7 +604,7 @@ export function PaymentSuccessPage() {
         sessionId: recoveryContext.sessionId,
         checkoutUrl: recoveryContext.checkoutUrl,
         status: "SUBSCRIBE_FAILED",
-        note: subscribeResult.error || t("payment_paymentsuccesspage.tsx.subscribe_that_bai"),
+        note: subscribeResult.error || t("paymentPaymentsuccesspage.subscribeFailed"),
       });
       addPaymentSupportLog({
         supportCode: updatedContext.supportCode,
@@ -643,7 +618,7 @@ export function PaymentSuccessPage() {
         paymentPurpose: updatedContext.paymentPurpose,
         sessionId: updatedContext.sessionId,
         status: "SUBSCRIBE_FAILED",
-        message: t("payment_paymentsuccesspage.tsx.he_thong_kich_hoat_goi_tu_ong_that_bai_d"),
+        message: t("adminDashboardoverview.system"),
         payload: {
           error: subscribeResult.error || null,
         },
@@ -651,12 +626,9 @@ export function PaymentSuccessPage() {
       setRecoveryContext(updatedContext);
       setResolveState("ready");
       setSubscribeError(
-        subscribeResult.error ||
-          t("payment_paymentsuccesspage.tsx.kich_hoat_goi_that_bai_vui_long_thu_lai")
+        subscribeResult.error || t("paymentPaymentsuccesspage.packageActivationFailedPleaseTry")
       );
-      toast.error(
-        subscribeResult.error || t("payment_paymentsuccesspage.tsx.kich_hoat_goi_that_bai")
-      );
+      toast.error(subscribeResult.error || t("paymentPaymentsuccesspage.packageActivationFailed"));
       return;
     }
     const latestSubscription = await loadActiveSubscription(recoveryContext.userId);
@@ -687,7 +659,7 @@ export function PaymentSuccessPage() {
       paymentPurpose: updatedContext.paymentPurpose,
       sessionId: updatedContext.sessionId,
       status: "SUBSCRIBE_SUCCESS",
-      message: t("payment_paymentsuccesspage.tsx.he_thong_a_kich_hoat_goi_thanh_cong_sau_"),
+      message: t("adminDashboardoverview.system"),
       payload: {
         subscriptionSnapshot: latestSubscription,
       },
@@ -752,7 +724,7 @@ export function PaymentSuccessPage() {
           </div>
           <div>
             <h1 className="font-['Poppins'] text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-              {t("payment_paymentsuccesspage.tsx.thanh_toan_thanh_cong")}
+              {t("paymentPaymentsuccesspage.paymentSuccessful")}
             </h1>
             <p className="font-['Inter'] text-sm text-slate-500 dark:text-slate-400">
               {successSubtitle}
@@ -762,14 +734,14 @@ export function PaymentSuccessPage() {
 
         {!paid && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 font-['Inter'] text-sm text-amber-700 dark:border-amber-800/40 dark:bg-amber-900/10 dark:text-amber-300">
-            {t("payment_paymentsuccesspage.tsx.thanh_toan_chua_uoc_xac_nhan_thanh_cong_")}
+            {t("common.pay")}
           </div>
         )}
 
         {resolveState === "checking" && (
           <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 font-['Inter'] text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <Spinner size="sm" tone="muted" />
-            {t("payment_paymentsuccesspage.tsx.ang_xac_nhan_thanh_toan")}
+            {t("adminUsermanagement.hide")}
           </div>
         )}
 
@@ -777,11 +749,10 @@ export function PaymentSuccessPage() {
           <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/40 dark:bg-rose-950/20">
             <div className="mb-2 flex items-center gap-2 font-['Inter'] text-sm font-semibold text-rose-700 dark:text-rose-300">
               <ShieldAlert className="h-4 w-4" />
-              {t("payment_paymentsuccesspage.tsx.khong_the_xac_nhan_thanh_toan")}
+              {t("paymentPaymentsuccesspage.paymentCouldNotBeConfirmed")}
             </div>
             <p className="font-['Inter'] text-sm text-rose-700/90 dark:text-rose-300/90">
-              {resolveError ||
-                t("payment_paymentsuccesspage.tsx.khong_tim_thay_thong_tin_thanh_toan_hop_")}
+              {resolveError || t("paymentPaymentsuccesspage.noValidPaymentInformationFound")}
             </p>
           </div>
         )}
@@ -805,7 +776,7 @@ export function PaymentSuccessPage() {
         {resolvedPurpose === "BUY_MEMBERSHIP" && isKnownActivatedOrder && (
           <div className="rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-800/40 dark:bg-violet-900/10">
             <p className="font-['Inter'] text-sm text-violet-700 dark:text-violet-300">
-              {t("payment_paymentsuccesspage.tsx.goi_nay_a_uoc_kich_hoat_truoc_o")}
+              {t("paymentPaymentsuccesspage.packageActivatedPreviously")}
             </p>
           </div>
         )}
@@ -821,7 +792,7 @@ export function PaymentSuccessPage() {
             <button
               onClick={() => void handleResolveOrder()}
               className="rounded-xl border border-slate-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-              {t("payment_paymentsuccesspage.tsx.thu_xac_nhan_lai")}
+              {t("paymentPaymentsuccesspage.tryConfirmingAgain")}
             </button>
           )}
 
@@ -829,7 +800,7 @@ export function PaymentSuccessPage() {
             <button
               onClick={() => void handleConfirmSubscribe()}
               className="rounded-xl bg-emerald-600 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white hover:bg-emerald-700">
-              {t("payment_paymentsuccesspage.tsx.thu_kich_hoat_lai")}
+              {t("paymentPaymentsuccesspage.tryActivatingAgain")}
             </button>
           )}
 
@@ -838,7 +809,7 @@ export function PaymentSuccessPage() {
               disabled
               className="flex items-center gap-2 rounded-xl bg-emerald-500/80 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-white">
               <Spinner size="sm" tone="white" />
-              {t("payment_paymentsuccesspage.tsx.ang_kich_hoat_goi")}
+              {t("adminUsermanagement.hide")}
             </button>
           )}
 
@@ -846,7 +817,7 @@ export function PaymentSuccessPage() {
             <Link
               to="/user?tab=account"
               className="rounded-xl border border-slate-300 px-5 py-2.5 font-['Inter'] text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-              {t("payment_paymentsuccesspage.tsx.chon_goi_thanh_vien_khac")}
+              {t("common.chooseAnotherMembershipPackage")}
             </Link>
           )}
         </div>
@@ -854,27 +825,27 @@ export function PaymentSuccessPage() {
         {resolvedPurpose === "BUY_MEMBERSHIP" && resolveState === "subscribed" && (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800/40 dark:bg-emerald-900/10">
             <p className="mb-2 font-['Inter'] text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-              {t("payment_paymentsuccesspage.tsx.a_kich_hoat_goi_thanh_cong")}
+              {t("paymentPaymentsuccesspage.activatedGoiThanhCong")}
             </p>
             {subscription ? (
               <div className="grid grid-cols-1 gap-2 font-['Inter'] text-xs text-emerald-700/90 md:grid-cols-2 dark:text-emerald-300/90">
                 <p>Plan: {subscription.planName || "-"}</p>
                 <p>
-                  {t("payment_paymentsuccesspage.tsx.ai_interview_con_lai")}{" "}
+                  {t("paymentPaymentsuccesspage.aiInterviewRemaining")}{" "}
                   {subscription.aiInterviewRemaining ?? "-"}
                 </p>
                 <p>
-                  {t("payment_paymentsuccesspage.tsx.practice_set_con_lai")}{" "}
+                  {t("paymentPaymentsuccesspage.remainingPracticeSet")}{" "}
                   {subscription.practiceSetRemaining ?? "-"}
                 </p>
                 <p>
-                  {t("payment_paymentsuccesspage.tsx.quiz_set_con_lai")}{" "}
+                  {t("paymentPaymentsuccesspage.remainingQuizSet")}{" "}
                   {subscription.quizSetRemaining ?? "-"}
                 </p>
               </div>
             ) : (
               <p className="font-['Inter'] text-xs text-emerald-700/90 dark:text-emerald-300/90">
-                {t("payment_paymentsuccesspage.tsx.goi_a_uoc_kich_hoat_nhung_chua_tai_uoc_t")}
+                {t("paymentPaymentsuccesspage.packageActivatedButNotLoaded")}
               </p>
             )}
           </div>
