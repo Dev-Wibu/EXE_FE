@@ -39,7 +39,7 @@ describe("error-normalizer", () => {
       "Fallback"
     );
 
-    expect(normalized.message).toBe("Sai mật khẩu.");
+    expect(normalized.message).toBe(t("general.wrongPassword1"));
     expect(normalized.status).toBe(401);
   });
 

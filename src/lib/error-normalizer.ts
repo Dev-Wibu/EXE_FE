@@ -2,22 +2,23 @@ import type { ApiError } from "@/interfaces";
 import i18n from "@/lib/i18n";
 const t = i18n.t.bind(i18n);
 
-const DEFAULT_FALLBACK_MESSAGE = t("general.anErrorHasOccurredPlease");
-
-const HTTP_STATUS_MESSAGES: Record<number, string> = {
-  400: t("general.invalidDataPleaseCheckAgain"),
-  401: t("general.loginSessionExpiredPleaseLog"),
-  403: t("general.youDoNotHavePermission"),
-  404: t("general.requestedDataNotFound"),
-  409: t("general.conflictingDataPleaseTryAgain"),
-  413: t("general.fileIsTooLargePlease"),
-  415: t("general.dataFormatNotSupported"),
-  422: t("general.invalidDataPleaseCheckAgain"),
-  429: t("general.tooManyRequestsPleaseTry"),
-  500: t("general.theSystemIsExperiencingProblems"),
-  502: t("general.theServerIsTemporarilyUnavailable"),
-  503: t("general.serviceIsUnderMaintenancePlease"),
-  504: t("general.theServerRespondsTooSlowly"),
+const getStatusMessage = (status: number): string | undefined => {
+  const messages: Record<number, string> = {
+    400: t("general.invalidDataPleaseCheckAgain"),
+    401: t("general.loginSessionExpiredPleaseLog"),
+    403: t("general.youDoNotHavePermission"),
+    404: t("general.requestedDataNotFound"),
+    409: t("general.conflictingDataPleaseTryAgain"),
+    413: t("general.fileIsTooLargePlease"),
+    415: t("general.dataFormatNotSupported"),
+    422: t("general.invalidDataPleaseCheckAgain"),
+    429: t("general.tooManyRequestsPleaseTry"),
+    500: t("general.theSystemIsExperiencingProblems"),
+    502: t("general.theServerIsTemporarilyUnavailable"),
+    503: t("general.serviceIsUnderMaintenancePlease"),
+    504: t("general.theServerRespondsTooSlowly"),
+  };
+  return messages[status];
 };
 
 const GENERIC_MESSAGES = new Set([
@@ -38,7 +39,7 @@ const GENERIC_MESSAGES = new Set([
   "network error",
 ]);
 
-const KNOWN_ERROR_PATTERNS: Array<{ pattern: RegExp; message: string }> = [
+const getKnownErrorPatterns = (): Array<{ pattern: RegExp; message: string }> => [
   {
     pattern: /(bad credentials|invalid password|wrong password)/i,
     message: t("general.wrongPassword1"),
@@ -234,8 +235,8 @@ const extractMessageFromPayload = (payload: unknown, depth = 0): string | undefi
 };
 
 const extractPayload = (error: unknown): { payload: unknown; source: ErrorSource } => {
-  if (isRecord(error) && isRecord(error.response)) {
-    const response = error.response;
+  if (isRecord(error) && isRecord((error as Record<string, unknown>).response)) {
+    const response = (error as Record<string, unknown>).response as Record<string, unknown>;
     return {
       payload: response.data,
       source: "axios",
@@ -272,9 +273,14 @@ const extractStatus = (error: unknown): number | undefined => {
     return directStatus;
   }
 
-  if (isRecord(error.response)) {
+  if (isRecord((error as Record<string, unknown>).response)) {
     const responseStatus =
-      asFiniteNumber(error.response.status) ?? asFiniteNumber(error.response.statusCode);
+      asFiniteNumber(
+        ((error as Record<string, unknown>).response as Record<string, unknown>).status
+      ) ??
+      asFiniteNumber(
+        ((error as Record<string, unknown>).response as Record<string, unknown>).statusCode
+      );
     if (responseStatus) {
       return responseStatus;
     }
@@ -302,9 +308,27 @@ const extractTraceId = (error: unknown, payload: unknown): string | undefined =>
     return undefined;
   }
 
-  if (isRecord(error.response) && isRecord(error.response.data)) {
+  if (
+    isRecord((error as Record<string, unknown>).response) &&
+    isRecord(((error as Record<string, unknown>).response as Record<string, unknown>).data)
+  ) {
     return (
-      asNonEmptyString(error.response.data.traceId) || asNonEmptyString(error.response.data.traceID)
+      asNonEmptyString(
+        (
+          ((error as Record<string, unknown>).response as Record<string, unknown>).data as Record<
+            string,
+            unknown
+          >
+        ).traceId
+      ) ||
+      asNonEmptyString(
+        (
+          ((error as Record<string, unknown>).response as Record<string, unknown>).data as Record<
+            string,
+            unknown
+          >
+        ).traceID
+      )
     );
   }
 
@@ -342,7 +366,7 @@ const mapKnownMessage = (rawMessage?: string): string | undefined => {
     return undefined;
   }
 
-  for (const rule of KNOWN_ERROR_PATTERNS) {
+  for (const rule of getKnownErrorPatterns()) {
     if (rule.pattern.test(rawMessage)) {
       return rule.message;
     }
@@ -364,13 +388,11 @@ export const resolveStatusErrorMessage = (status?: number): string | undefined =
     return undefined;
   }
 
-  return HTTP_STATUS_MESSAGES[status];
+  return getStatusMessage(status);
 };
 
-export const normalizeApiError = (
-  error: unknown,
-  fallbackMessage = DEFAULT_FALLBACK_MESSAGE
-): NormalizedApiError => {
+export const normalizeApiError = (error: unknown, fallbackMessage?: string): NormalizedApiError => {
+  const actualFallbackMessage = fallbackMessage || t("general.anErrorHasOccurredPlease");
   const { payload, source } = extractPayload(error);
   const status = extractStatus(error);
   const traceId = extractTraceId(error, payload);
@@ -381,7 +403,7 @@ export const normalizeApiError = (
   const knownMessage = mapKnownMessage(rawMessage);
   const statusMessage = resolveStatusErrorMessage(status);
 
-  let message = fallbackMessage;
+  let message = actualFallbackMessage;
 
   if (knownMessage) {
     message = knownMessage;
@@ -408,10 +430,7 @@ export const getNormalizedErrorMessage = (error: unknown, fallbackMessage?: stri
   return normalizeApiError(error, fallbackMessage).message;
 };
 
-export const toAppApiError = (
-  error: unknown,
-  fallbackMessage = DEFAULT_FALLBACK_MESSAGE
-): AppApiError => {
+export const toAppApiError = (error: unknown, fallbackMessage?: string): AppApiError => {
   const normalized = normalizeApiError(error, fallbackMessage);
   const appError = new Error(normalized.message) as AppApiError;
   appError.status = normalized.status;
