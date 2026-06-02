@@ -16,9 +16,6 @@ import { normalizeApiError, toAppApiError } from "@/lib/error-normalizer";
 // Create the fetch client with base configuration
 const fetchClient = createFetchClient<paths>({
   baseUrl: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
   // Provide a custom fetch implementation to add a global 90s timeout
   // This is especially important for slow AI API responses
   fetch: async (request: Request) => {

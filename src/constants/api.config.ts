@@ -410,7 +410,6 @@ const PUBLIC_REGISTRATION_POST_ENDPOINTS = new Set<string>([
 // Public GET endpoints that don't require authentication
 const PUBLIC_GET_ENDPOINTS = new Set<string>([
   API_ENDPOINTS.POSTS.PUBLISHED, // GET /api/posts/published - public blog posts
-  "/api/majors", // GET /api/majors - public majors list
   "/api/companies", // GET /api/companies - public companies
 ]);
 
