@@ -29,8 +29,6 @@ export type { MediaViewerItem, UploadTransportMode, UploadedMediaFile } from "./
 export { MessageBubble } from "./MessageBubble";
 export type { MessageDeliveryStatus } from "./MessageBubble";
 export { PaginationControl } from "./PaginationControl";
-export { PaymentMethodDialog } from "./PaymentMethodDialog";
-export type { PaymentMethod } from "./PaymentMethodDialog";
 export { ProtectedRoute } from "./ProtectedRoute";
 export { PublicOnlyRoute } from "./PublicOnlyRoute";
 export { ReloadButton } from "./ReloadButton";

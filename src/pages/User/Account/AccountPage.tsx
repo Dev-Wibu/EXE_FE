@@ -1,75 +1,46 @@
 import { CVUploadModal } from "@/components/ui/cv-upload-modal";
 import { SpinnerBlock } from "@/components/ui/spinner";
 import { normalizeMajor } from "@/constants/majors";
-import type { TransactionEntity } from "@/interfaces";
-import {
-  addPaymentSupportLog,
-  extractCheckoutTokenFromUrl,
-  extractOrderCodeFromUrl,
-  extractTransactionCodeFromUrl,
-  reconcileWalletBalance,
-  upsertPaymentRecoveryContext,
-} from "@/lib";
 import { formatDate } from "@/lib/formatting";
-import { transactionManager, usersAdminManager } from "@/services";
+import { usersAdminManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
-import { FileText, History, User } from "lucide-react";
+import { FileText, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ProfileTab, TransactionHistoryTab, WalletTab } from "./AccountTabs";
+import { ProfileTab } from "./AccountTabs";
 import type { UserProfileData } from "./AccountTabs/types";
 import { CandidateProfileTab } from "./CandidateProfile";
-import { shouldHideTransactionFromHistory } from "./wallet-mapping";
-type AccountSubTab = "profile" | "wallet" | "transactionHistory" | "candidateProfile";
+
+type AccountSubTab = "profile" | "candidateProfile";
+
 const parseAccountSubTab = (value?: string | null): AccountSubTab | null => {
-  if (
-    value === "profile" ||
-    value === "wallet" ||
-    value === "transactionHistory" ||
-    value === "candidateProfile"
-  ) {
+  if (value === "profile" || value === "candidateProfile") {
     return value as AccountSubTab;
   }
   return null;
 };
-const TOP_UP_MIN_AMOUNT = 10_000;
-const TOP_UP_MAX_AMOUNT = 20_000_000;
-const TOP_UP_STEP = 1_000;
-const TOP_UP_PRESET_AMOUNTS = [50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000];
+
 export function AccountPage() {
   const { t } = useTranslation();
   const { user: authUser, setUser } = useAuthStore();
   const authUserId = authUser?.id;
   const [searchParams, setSearchParams] = useSearchParams();
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<AccountSubTab>(
     parseAccountSubTab(searchParams.get("subtab")) || "profile"
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isWalletLoading, setIsWalletLoading] = useState(false);
-  const [isTopUpLoading, setIsTopUpLoading] = useState(false);
-  const [topUpAmount, setTopUpAmount] = useState<string>(String(TOP_UP_PRESET_AMOUNTS[1]));
-  const topUpInFlightRef = useRef(false);
-  const hasLoadedUserDataRef = useRef(false);
-
-  // Form state for editing
   const [formData, setFormData] = useState<Partial<UserProfileData>>({});
-
-  // File upload state
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
-  // CV Upload Modal state
   const [isCvModalOpen, setIsCvModalOpen] = useState(false);
   const [isCvUploading, setIsCvUploading] = useState(false);
+  const hasLoadedUserDataRef = useRef(false);
 
-  // Fetch user data from backend
   const fetchUserData = useCallback(async () => {
     const currentAuthUser = useAuthStore.getState().user;
     if (!authUserId || !currentAuthUser) {
@@ -93,37 +64,9 @@ export function AccountPage() {
           major: userData.major || "",
           cvUrl: userData.cvUrl || null,
           cv_public_id: userData.cv_public_id || null,
-          createdAt: new Date().toISOString(), // Backend doesn't provide createdAt
+          createdAt: new Date().toISOString(),
         });
-        const transactionResponse = await transactionManager.getByUserId(Number(authUserId));
-        const walletResolution = reconcileWalletBalance({
-          userDetailBalance: userData.walletBalance,
-          transactions: transactionResponse.success ? transactionResponse.data : undefined,
-          authStoreBalance: currentAuthUser.walletBalance,
-        });
-        if (walletResolution.hasMismatch) {
-          console.warn("Wallet balance mismatch detected", {
-            userId: Number(authUserId),
-            userDetailBalance: walletResolution.userDetailBalance,
-            transactionBalance: walletResolution.transactionBalance,
-            authStoreBalance: walletResolution.authStoreBalance,
-          });
-        }
-        const nextWalletBalance =
-          typeof walletResolution.walletBalance === "number"
-            ? walletResolution.walletBalance
-            : typeof currentAuthUser.walletBalance === "number"
-              ? currentAuthUser.walletBalance
-              : 0;
-        setWalletBalance(nextWalletBalance);
-        if (currentAuthUser.walletBalance !== nextWalletBalance) {
-          setUser({
-            ...currentAuthUser,
-            walletBalance: nextWalletBalance,
-          });
-        }
       } else {
-        // Fallback to authUser data if API fails
         setUserProfile({
           id: String(authUserId),
           name: currentAuthUser.name || "",
@@ -136,11 +79,9 @@ export function AccountPage() {
           cv_public_id: null,
           createdAt: new Date().toISOString(),
         });
-        console.warn("Failed to fetch user data, using auth store data");
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
-      // Fallback to authUser data
       if (currentAuthUser) {
         setUserProfile({
           id: String(currentAuthUser.id),
@@ -159,42 +100,17 @@ export function AccountPage() {
       setIsLoading(false);
       hasLoadedUserDataRef.current = true;
     }
-  }, [authUserId, setUser]);
-  const fetchUserTransactions = useCallback(async () => {
-    if (!authUserId) {
-      setTransactions([]);
-      return;
-    }
-    setIsWalletLoading(true);
-    try {
-      const response = await transactionManager.getByUserId(Number(authUserId));
-      if (response.success && response.data) {
-        const visibleTransactions = response.data.filter(
-          (transaction) => !shouldHideTransactionFromHistory(transaction)
-        );
-        const sortedTransactions = [...visibleTransactions].sort((a, b) => {
-          return Date.parse(b.createdAt || "") - Date.parse(a.createdAt || "");
-        });
-        setTransactions(sortedTransactions);
-      }
-    } catch {
-      setTransactions([]);
-    } finally {
-      setIsWalletLoading(false);
-    }
   }, [authUserId]);
 
-  // Load user data on mount
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
-  useEffect(() => {
-    void fetchUserTransactions();
-  }, [fetchUserTransactions]);
+
   useEffect(() => {
     const nextTab = parseAccountSubTab(searchParams.get("subtab")) || "profile";
     setActiveTab((prev) => (prev === nextTab ? prev : nextTab));
   }, [searchParams]);
+
   const handleSwitchTab = useCallback(
     (nextTab: AccountSubTab) => {
       setActiveTab(nextTab);
@@ -204,14 +120,11 @@ export function AccountPage() {
       } else {
         nextParams.set("subtab", nextTab);
       }
-      setSearchParams(nextParams, {
-        replace: true,
-      });
+      setSearchParams(nextParams, { replace: true });
     },
     [searchParams, setSearchParams]
   );
 
-  // Cleanup blob URLs when component unmounts
   useEffect(() => {
     return () => {
       if (avatarPreview?.startsWith("blob:")) {
@@ -219,12 +132,12 @@ export function AccountPage() {
       }
     };
   }, [avatarPreview]);
+
   const handleRefreshData = async () => {
-    await Promise.all([fetchUserData(), fetchUserTransactions()]);
+    await fetchUserData();
     toast.success(t("common.dataUpdated"));
   };
 
-  // Start editing - populate form with current values
   const handleStartEdit = () => {
     if (!userProfile) return;
     setFormData({
@@ -235,7 +148,6 @@ export function AccountPage() {
     setIsEditing(true);
   };
 
-  // Cancel editing
   const handleCancelEdit = () => {
     setFormData({});
     setAvatarFile(null);
@@ -243,7 +155,6 @@ export function AccountPage() {
     setIsEditing(false);
   };
 
-  // Handle avatar file selection
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -256,7 +167,6 @@ export function AccountPage() {
     }
   };
 
-  // Clear avatar selection
   const handleClearAvatar = () => {
     if (avatarPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(avatarPreview);
@@ -265,7 +175,6 @@ export function AccountPage() {
     setAvatarPreview(null);
   };
 
-  // Handle CV upload via dedicated modal
   const handleCvUpload = async (file: File) => {
     if (!userProfile?.id) {
       toast.error(t("userAccount.userIdNotFound"));
@@ -275,7 +184,6 @@ export function AccountPage() {
     try {
       const response = await usersAdminManager.uploadCv(userProfile.id, file);
       if (response.success) {
-        // Refresh data to get updated CV URL
         await fetchUserData();
         toast.success(t("common.uploadCvSuccessfully"));
       } else {
@@ -289,7 +197,6 @@ export function AccountPage() {
     }
   };
 
-  // Save profile changes to backend
   const handleSaveProfile = async () => {
     if (!userProfile?.id) {
       toast.error(t("userAccount.userIdNotFound"));
@@ -297,41 +204,22 @@ export function AccountPage() {
     }
     setIsSaving(true);
     try {
-      // Call backend API to update user (with optional file uploads)
-      // Include public_id and cv_public_id for proper Cloudinary file management
-      // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
-      // Note: CV is now uploaded separately via CVUploadModal using /api/users/upload-cv endpoint
       const response = await usersAdminManager.update(
         userProfile.id,
         {
           name: formData.name,
           university: formData.university,
           major: normalizeMajor(formData.major),
-          // Include Cloudinary public_id for proper file management (only when present)
-          ...(userProfile.public_id
-            ? {
-                public_id: userProfile.public_id,
-              }
-            : {}),
-          ...(userProfile.cv_public_id
-            ? {
-                cv_public_id: userProfile.cv_public_id,
-              }
-            : {}),
+          ...(userProfile.public_id ? { public_id: userProfile.public_id } : {}),
+          ...(userProfile.cv_public_id ? { cv_public_id: userProfile.cv_public_id } : {}),
         },
         avatarFile || undefined,
-        undefined // CV is uploaded separately
+        undefined
       );
       if (response.success) {
-        // Refresh data from backend to get updated URLs
         await fetchUserData();
-
-        // Update auth store with new data if needed
         if (response.data) {
-          setUser({
-            ...authUser,
-            ...response.data,
-          });
+          setUser({ ...authUser, ...response.data });
         }
         toast.success(t("common.updatedInformationSuccessfully"));
         setIsEditing(false);
@@ -348,130 +236,10 @@ export function AccountPage() {
     }
   };
 
-  // Handle form input changes
   const handleInputChange = (field: keyof UserProfileData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const handleTopUpAmountChange = (value: string) => {
-    const normalized = value.replace(/[^\d]/g, "");
-    setTopUpAmount(normalized);
-  };
-  const handleTopUpWallet = async (amount: number) => {
-    if (!authUser?.id) {
-      toast.error(t("userAccount.userAccountNotFound"));
-      return;
-    }
-    if (topUpInFlightRef.current) {
-      return;
-    }
-    if (amount < TOP_UP_MIN_AMOUNT || amount > TOP_UP_MAX_AMOUNT || amount % TOP_UP_STEP !== 0) {
-      toast.error(
-        t("general.depositAmountMustBeBetween", {
-          var_0: TOP_UP_MIN_AMOUNT.toLocaleString("vi-VN"),
-          var_1: TOP_UP_MAX_AMOUNT.toLocaleString("vi-VN"),
-          var_2: TOP_UP_STEP.toLocaleString("vi-VN"),
-        })
-      );
-      return;
-    }
-    topUpInFlightRef.current = true;
-    setIsTopUpLoading(true);
-    try {
-      const response = await transactionManager.transferIn(amount, Number(authUser.id));
-      if (!response.success || !response.data) {
-        addPaymentSupportLog({
-          userId: Number(authUser.id),
-          amount,
-          paymentPurpose: "TOP_UP_WALLET",
-          status: "CREATE_FAILED",
-          message: t("userAccount.creatingWalletDepositLinkFailed"),
-          payload: {
-            error: response.error || null,
-          },
-        });
-        toast.error(response.error || t("userAccount.unableToCreateDepositLink"));
-        return;
-      }
-      const redirectUrl = new URL(response.data, window.location.origin).toString();
-      const orderCode = extractOrderCodeFromUrl(redirectUrl) || undefined;
-      const transactionCode = extractTransactionCodeFromUrl(redirectUrl) || undefined;
-      const checkoutToken = extractCheckoutTokenFromUrl(redirectUrl) || undefined;
-      const createdRecovery = upsertPaymentRecoveryContext({
-        orderCode,
-        transactionCode,
-        checkoutToken,
-        userId: Number(authUser.id),
-        amount,
-        paymentPurpose: "TOP_UP_WALLET",
-        checkoutUrl: redirectUrl,
-        status: "CREATED",
-        note: t("userAccount.createdCheckouturlToTopUp"),
-      });
-      addPaymentSupportLog({
-        supportCode: createdRecovery.supportCode,
-        orderCode,
-        transactionCode,
-        checkoutToken,
-        userId: createdRecovery.userId,
-        amount: createdRecovery.amount,
-        paymentPurpose: "TOP_UP_WALLET",
-        status: "CREATED",
-        message: t("userAccount.createdCheckouturlToTopUp1"),
-        payload: {
-          checkoutUrl: redirectUrl,
-        },
-      });
-      const redirectedRecovery = upsertPaymentRecoveryContext({
-        supportCode: createdRecovery.supportCode,
-        orderCode,
-        transactionCode,
-        checkoutToken,
-        userId: createdRecovery.userId,
-        amount: createdRecovery.amount,
-        paymentPurpose: "TOP_UP_WALLET",
-        checkoutUrl: redirectUrl,
-        status: "REDIRECTED",
-        note: t("userAccount.redirectedToWalletTopUp"),
-      });
-      if (!transactionCode) {
-        addPaymentSupportLog({
-          supportCode: redirectedRecovery.supportCode,
-          orderCode,
-          checkoutToken,
-          userId: redirectedRecovery.userId,
-          amount: redirectedRecovery.amount,
-          paymentPurpose: "TOP_UP_WALLET",
-          status: "UNMAPPED_ORDER",
-          message: t("userAccount.checkoutUrlToDepositWallet"),
-          payload: {
-            orderCode: orderCode || null,
-            checkoutToken: checkoutToken || null,
-            recoveryStrategy: "orderCode-fallback-guarded",
-          },
-        });
-      }
-      toast.success(t("userAccount.depositLinkHasBeenCreated"));
-      window.location.assign(redirectUrl);
-    } catch (error) {
-      addPaymentSupportLog({
-        userId: Number(authUser.id),
-        amount,
-        paymentPurpose: "TOP_UP_WALLET",
-        status: "CREATE_FAILED",
-        message: t("userAccount.exceptionWhenCreatingAWallet"),
-        payload: {
-          error: error instanceof Error ? error.message : "unknown",
-        },
-      });
-      toast.error(t("userAccount.unableToCreateDepositLink"));
-    } finally {
-      topUpInFlightRef.current = false;
-      setIsTopUpLoading(false);
-    }
-  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "profile":
@@ -492,22 +260,6 @@ export function AccountPage() {
             onOpenCvModal={() => setIsCvModalOpen(true)}
           />
         ) : null;
-      case "wallet":
-        return (
-          <WalletTab
-            balance={walletBalance}
-            isTopUpLoading={isTopUpLoading}
-            topUpAmount={topUpAmount}
-            minTopUp={TOP_UP_MIN_AMOUNT}
-            maxTopUp={TOP_UP_MAX_AMOUNT}
-            step={TOP_UP_STEP}
-            presetAmounts={TOP_UP_PRESET_AMOUNTS}
-            onTopUpAmountChange={handleTopUpAmountChange}
-            onTopUp={handleTopUpWallet}
-          />
-        );
-      case "transactionHistory":
-        return <TransactionHistoryTab transactions={transactions} isLoading={isWalletLoading} />;
       case "candidateProfile":
         return <CandidateProfileTab />;
       default:
@@ -530,6 +282,7 @@ export function AccountPage() {
         ) : null;
     }
   };
+
   const tabItems: Array<{
     id: AccountSubTab;
     label: string;
@@ -543,22 +296,18 @@ export function AccountPage() {
       icon: User,
     },
     {
-      id: "transactionHistory",
-      label: t("userAccount.transactionHistory"),
-      description: t("userAccount.viewRecentPayments"),
-      icon: History,
-    },
-    {
       id: "candidateProfile",
       label: t("common.candidateProfile"),
       description: t("userAccount.managePersonalRecruitmentRecords"),
       icon: FileText,
     },
   ];
+
   const summaryAvatar = avatarPreview || userProfile?.avatar || authUser?.avatarUrl || null;
   const summaryName = userProfile?.name || authUser?.name || t("common.account");
   const summaryEmail = userProfile?.email || authUser?.email || "—";
   const summaryJoinedAt = userProfile?.createdAt ? formatDate(userProfile.createdAt) : "—";
+
   return (
     <div className="px-2 pt-6 pb-10">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6">
@@ -591,7 +340,6 @@ export function AccountPage() {
                   </p>
                 </div>
               </div>
-
               <div className="my-4 h-px bg-slate-200 dark:bg-slate-800" />
             </div>
 
@@ -607,9 +355,17 @@ export function AccountPage() {
                     <button
                       key={tab.id}
                       onClick={() => handleSwitchTab(tab.id)}
-                      className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${isActive ? "border-[#0047AB]/40 bg-[#DCEEFF]/60 text-[#0047AB] shadow-sm dark:border-[#66B2FF]/40 dark:bg-[#0047AB]/20 dark:text-[#66B2FF]" : "border-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"}`}>
+                      className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
+                        isActive
+                          ? "border-[#0047AB]/40 bg-[#DCEEFF]/60 text-[#0047AB] shadow-sm dark:border-[#66B2FF]/40 dark:bg-[#0047AB]/20 dark:text-[#66B2FF]"
+                          : "border-transparent text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}>
                       <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-lg ${isActive ? "bg-white text-[#0047AB] dark:bg-slate-900 dark:text-[#66B2FF]" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"}`}>
+                        className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                          isActive
+                            ? "bg-white text-[#0047AB] dark:bg-slate-900 dark:text-[#66B2FF]"
+                            : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"
+                        }`}>
                         <TabIcon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
@@ -637,7 +393,6 @@ export function AccountPage() {
         </div>
       </div>
 
-      {/* CV Upload Modal */}
       <CVUploadModal
         isOpen={isCvModalOpen}
         onOpenChange={setIsCvModalOpen}

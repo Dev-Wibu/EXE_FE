@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
-import { ArrowLeft, Briefcase, Sparkles, Star, Users, Wallet } from "lucide-react";
+import { ArrowLeft, Banknote, Briefcase, Sparkles, Star, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 interface MentorDetailHeroProps {
   mentor: SchemaMentorResponse;
@@ -62,7 +62,7 @@ export function MentorDetailHero({ mentor, ratingText, priceText, onBack }: Ment
               {mentor.yearsOfExperience || 0} {t("userMentordetail.yearsOfExperience")}
             </Badge>
             <Badge className="rounded-full border border-emerald-300/40 bg-emerald-50 text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-400/15 dark:text-emerald-200">
-              <Wallet className="mr-1 h-3.5 w-3.5" />
+              <Banknote className="mr-1 h-3.5 w-3.5" />
               {priceText}
             </Badge>
             <Badge className="rounded-full border border-amber-300/40 bg-amber-50 text-amber-700 dark:border-amber-300/20 dark:bg-amber-400/15 dark:text-amber-200">

@@ -2,7 +2,7 @@ import i18n from "@/lib/i18n";
 const t = i18n.t.bind(i18n);
 /**
  * User Manager
- * Handles user profile and wallet operations
+ * Handles user profile operations
  */
 
 import type { ApiResponse, User, UserSubscriptionResponse } from "@/interfaces";
@@ -12,8 +12,6 @@ import { fetchClient } from "@/lib/api";
 
 type UserProfile = Record<string, unknown>;
 type UserSettings = Record<string, unknown>;
-type Wallet = Record<string, unknown>;
-type Transaction = Record<string, unknown>;
 
 export class UserManager {
   /**
@@ -149,56 +147,6 @@ export class UserManager {
       return {
         success: false,
         error: error instanceof Error ? error.message : t("general.unableToUpdateSettings"),
-      };
-    }
-  }
-
-  /**
-   * Get user wallet
-   */
-  async getWallet(): Promise<ApiResponse<Wallet>> {
-    try {
-      const response = await fetchClient
-        // @ts-expect-error: Backend Swagger schema mismatch
-        .GET("/api/users/wallet", {})
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : t("general.unableToLoadWallet"),
-      };
-    }
-  }
-
-  /**
-   * Deposit to wallet
-   */
-  async depositToWallet(amount: number): Promise<ApiResponse<Transaction>> {
-    try {
-      const response = await fetchClient
-        // @ts-expect-error: Backend Swagger schema mismatch
-        .POST("/api/users/wallet/deposit", { body: { amount } })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : t("general.unableToDepositMoneyInto"),
       };
     }
   }

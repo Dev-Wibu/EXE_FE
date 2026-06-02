@@ -149,12 +149,7 @@ const asPaymentPurpose = (value: unknown): PaymentPurpose | undefined => {
     return undefined;
   }
 
-  const allow: PaymentPurpose[] = [
-    "BUY_MEMBERSHIP",
-    "TOP_UP_WALLET",
-    "WITHDRAW_FROM_WALLET",
-    "MENTOR_INTERVIEW",
-  ];
+  const allow: PaymentPurpose[] = ["BUY_MEMBERSHIP", "MENTOR_INTERVIEW"];
 
   return allow.includes(normalized as PaymentPurpose) ? (normalized as PaymentPurpose) : undefined;
 };

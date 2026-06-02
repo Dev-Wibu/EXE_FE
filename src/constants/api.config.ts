@@ -30,8 +30,6 @@ export const API_ENDPOINTS = {
     UPDATE_PROFILE: "/api/users/me",
     UPDATE_PASSWORD: "/api/users/password",
     SETTINGS: "/api/users/settings",
-    WALLET: "/api/users/wallet",
-    DEPOSIT: "/api/users/wallet/deposit",
     SUBSCRIBE: "/api/users/subscribe",
     ACTIVE_SUBSCRIPTION: "/api/users/:userId/subscription",
     FIND_BY_ID: "/api/users/find-by-id/:userId",
@@ -42,20 +40,9 @@ export const API_ENDPOINTS = {
     TOTAL_USER: "/api/dashboard/total-user",
     TOTAL_MENTOR: "/api/dashboard/total-mentor",
     TOTAL_SESSION: "/api/dashboard/total-session",
-    TOTAL_TRANSACTION: "/api/dashboard/total-transaction",
     TOTAL_INCOME: "/api/dashboard/total-income",
     FEATURE_USAGE_LOGS: "/api/feature-usage-logs",
     FEATURE_USAGE_BY_FEATURE: "/api/feature-usage-logs/by-feature",
-  },
-
-  // Transaction endpoints - schema-first mapping (skeleton phase: constants only)
-  TRANSACTIONS: {
-    LIST: "/api/transactions",
-    DETAIL: "/api/transactions/:transactionCode",
-    BY_USER: "/api/transactions/user/:userId",
-    TRANSFER_IN: "/api/transactions/transfer-in",
-    TRANSFER_OUT: "/api/transactions/transfer-out",
-    DELETE: "/api/transactions/:transactionCode",
   },
 
   // Payment endpoints - schema-first mapping (skeleton phase: constants only)

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { PaymentEntity, TransactionEntity } from "@/interfaces";
+import type { PaymentEntity } from "@/interfaces";
 import {
   formatCurrency,
   formatDayMonth,
@@ -24,7 +24,6 @@ import {
   DollarSign,
   UserCheck,
   Users,
-  Wallet,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -44,13 +43,6 @@ type TrendPoint = {
   amount: number;
 };
 type RangeMode = "7" | "14" | "30" | "custom";
-type RecentRecord =
-  | (PaymentEntity & {
-      source: "INCOME";
-    })
-  | (TransactionEntity & {
-      source: "WALLET";
-    });
 type EffectiveRange = {
   from: Date;
   to: Date;
@@ -196,10 +188,6 @@ export function DashboardOverviewPage() {
     queryKey: ["admin", "total-income"],
     queryFn: () => dashboardAdminManager.getTotalIncome(),
   });
-  const { data: transactionResponse, isLoading: loadingTransactions } = useQuery({
-    queryKey: ["admin", "total-transactions"],
-    queryFn: () => dashboardAdminManager.getTotalTransactions(),
-  });
   const [rangeMode, setRangeMode] = useState<RangeMode>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -272,7 +260,6 @@ export function DashboardOverviewPage() {
     return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
   }, [effectiveRange]);
   const incomeRecords = useMemo(() => incomeResponse?.data ?? [], [incomeResponse?.data]);
-  const walletRecords = useMemo(() => transactionResponse?.data ?? [], [transactionResponse?.data]);
   const filteredIncomeRecords = useMemo(
     () =>
       incomeRecords.filter((record) =>
@@ -280,36 +267,20 @@ export function DashboardOverviewPage() {
       ),
     [effectiveRange, incomeRecords]
   );
-  const filteredWalletRecords = useMemo(
-    () =>
-      walletRecords.filter((record) =>
-        isWithinDateRange(record.createdAt, effectiveRange.fromKey, effectiveRange.toKey)
-      ),
-    [effectiveRange, walletRecords]
-  );
   const stats = useMemo(() => {
     const directRevenue = filteredIncomeRecords
       .filter((payment) => isSuccessPayment(payment.status))
       .reduce((sum, payment) => sum + (payment.amount || 0), 0);
-    const walletDeposits = filteredWalletRecords.reduce(
-      (sum, record) => sum + (record.amount || 0),
-      0
-    );
     return {
       directRevenue,
-      walletDeposits,
     };
-  }, [filteredIncomeRecords, filteredWalletRecords]);
+  }, [filteredIncomeRecords]);
   const incomeTrendData = useMemo(() => {
     const successfulIncome = filteredIncomeRecords.filter((payment) =>
       isSuccessPayment(payment.status)
     );
     return buildTrendData(successfulIncome, effectiveRange.fromKey, effectiveRange.toKey);
   }, [effectiveRange, filteredIncomeRecords]);
-  const walletTrendData = useMemo(
-    () => buildTrendData(filteredWalletRecords, effectiveRange.fromKey, effectiveRange.toKey),
-    [effectiveRange, filteredWalletRecords]
-  );
   const overviewStats = [
     {
       title: t("adminDashboardoverview.totalUsers"),
@@ -332,27 +303,17 @@ export function DashboardOverviewPage() {
       color: "text-violet-600",
       bgColor: "bg-violet-50 dark:bg-violet-900/20",
     },
-    {
-      title: t("adminDashboardoverview.totalWalletTopUp"),
-      value: loadingTransactions ? "..." : formatCurrency(stats.walletDeposits),
-      icon: Wallet,
-      color: "text-sky-600",
-      bgColor: "bg-sky-50 dark:bg-sky-900/20",
-    },
   ];
   const recentTransactions = useMemo(() => {
-    const income: RecentRecord[] = filteredIncomeRecords.map((record) => ({
-      ...record,
-      source: "INCOME",
-    }));
-    const wallet: RecentRecord[] = filteredWalletRecords.map((record) => ({
-      ...record,
-      source: "WALLET",
-    }));
-    return [...income, ...wallet]
+    return filteredIncomeRecords
+      .filter((payment) => isSuccessPayment(payment.status))
       .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
-      .slice(0, 8);
-  }, [filteredIncomeRecords, filteredWalletRecords]);
+      .slice(0, 8)
+      .map((record) => ({
+        ...record,
+        source: "INCOME" as const,
+      }));
+  }, [filteredIncomeRecords]);
   return (
     <div className="min-h-screen bg-gray-50 p-6 dark:bg-slate-950">
       <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -581,77 +542,6 @@ export function DashboardOverviewPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-0 shadow-sm dark:bg-slate-900">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg text-sky-600">
-              <Wallet className="h-5 w-5" />
-              {t("adminDashboardoverview.trendOfDepositingMoneyInto")}
-            </CardTitle>
-            <CardDescription>
-              {t("adminDashboardoverview.fluctuationsInInternalWalletDeposits")} {rangeDays}{" "}
-              {t("adminDashboardoverview.dateByFilter")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={walletTrendData}>
-                  <defs>
-                    <linearGradient id="colorWallet" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0284c7" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#0284c7" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{
-                      fontSize: 10,
-                      fill: "#64748b",
-                    }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{
-                      fontSize: 10,
-                      fill: "#64748b",
-                    }}
-                    tickFormatter={(value: number) => `${(value / 1_000_000).toFixed(1)}M`}
-                  />
-                  <RechartsTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const item = payload[0] as {
-                        value?: number;
-                        payload?: TrendPoint;
-                      };
-                      return (
-                        <div className="rounded-lg border bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                          <p className="text-xs font-bold">{item.payload?.date}</p>
-                          <p className="text-sm font-black text-sky-600">
-                            {formatCurrency(item.value || 0)}
-                          </p>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="amount"
-                    stroke="#0284c7"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorWallet)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Card className="mt-8 border-0 shadow-sm dark:bg-slate-900">
@@ -665,35 +555,21 @@ export function DashboardOverviewPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
-            {!loadingIncome && !loadingTransactions && recentTransactions.length === 0 ? (
+            {!loadingIncome && recentTransactions.length === 0 ? (
               <div className="col-span-2 py-10 text-center text-slate-400">
-                {t("adminDashboardoverview.noTransactionDataAvailable")}
+                {t("adminDashboardoverview.noDataAvailable")}
               </div>
             ) : (
               recentTransactions.map((record, index) => {
-                const statusLabel =
-                  record.source === "INCOME"
-                    ? getPaymentStatusLabel(record.status)
-                    : t("common.completed");
-                const successState =
-                  record.source === "INCOME" ? isSuccessPayment(record.status) : true;
+                const statusLabel = getPaymentStatusLabel(record.status);
+                const successState = isSuccessPayment(record.status);
                 return (
                   <div
-                    key={`${record.source}-${record.id || record.transactionCode || index}`}
+                    key={`${record.id || record.transactionCode || index}`}
                     className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "flex h-10 w-10 items-center justify-center rounded-lg",
-                          record.source === "INCOME"
-                            ? "bg-violet-100 text-violet-600"
-                            : "bg-sky-100 text-sky-600"
-                        )}>
-                        {record.source === "INCOME" ? (
-                          <CreditCard className="h-5 w-5" />
-                        ) : (
-                          <Wallet className="h-5 w-5" />
-                        )}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                        <CreditCard className="h-5 w-5" />
                       </div>
 
                       <div>
@@ -703,14 +579,8 @@ export function DashboardOverviewPage() {
                               record.transactionCode ||
                               t("adminDashboardoverview.noDescriptionAvailable")}
                           </p>
-                          <Badge
-                            className={cn(
-                              "h-3.5 text-[8px]",
-                              record.source === "INCOME" ? "bg-violet-500" : "bg-sky-500"
-                            )}>
-                            {record.source === "INCOME"
-                              ? t("adminDashboardoverview.income")
-                              : t("adminDashboardoverview.topWallet")}
+                          <Badge className="h-3.5 bg-violet-500 text-[8px]">
+                            {t("adminDashboardoverview.income")}
                           </Badge>
                         </div>
                         <p className="text-xs text-slate-500">

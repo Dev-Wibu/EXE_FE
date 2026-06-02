@@ -8,7 +8,6 @@ const t = i18n.t.bind(i18n);
 
 import { FeedbackCard } from "@/components/feedback";
 import { ReviewCard } from "@/components/review";
-import { PaymentMethodDialog } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,6 @@ import { useMentorById } from "@/hooks/useMentor";
 import { useMentorFeedbackBySession } from "@/hooks/useMentorFeedback";
 import { useMentorReviewBySession } from "@/hooks/useMentorReview";
 import { useMakeSessionPayment, useSessionById } from "@/hooks/useSession";
-import { useWalletBalanceReconciliation } from "@/hooks/useWalletBalanceReconciliation";
 import {
   addPaymentSupportLog,
   canRetryPendingSessionPaidStatusSync,
@@ -29,10 +27,9 @@ import {
   markPendingSessionPaidStatusSyncRetried,
   savePendingSessionPaymentContext,
   upsertPaymentRecoveryContext,
-  upsertPendingSessionPaidStatusSync,
 } from "@/lib";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
-import { sessionManager, transactionManager } from "@/services";
+import { sessionManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
 import {
   ArrowLeft,
@@ -97,14 +94,10 @@ export function SessionDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
-  const [isPreparingPaymentDialog, setIsPreparingPaymentDialog] = useState(false);
-  const [isPaymentMethodDialogOpen, setIsPaymentMethodDialogOpen] = useState(false);
   const [isPollingPayment, setIsPollingPayment] = useState(false);
   const [isRecoveringPaidStatus, setIsRecoveringPaidStatus] = useState(false);
   const pollingAttemptsRef = useRef(0);
-  const walletPaymentInFlightRef = useRef(false);
   const payosPaymentInFlightRef = useRef(false);
   const paidStatusSyncInFlightRef = useRef(false);
   const hasHandledCancelledParamRef = useRef(false);
@@ -118,7 +111,6 @@ export function SessionDetailPage() {
   const mentorId = session?.userId2 || 0;
   const { data: mentorInfo } = useMentorById(mentorId);
   const { mutateAsync: makeSessionPayment } = useMakeSessionPayment();
-  const { refreshWalletBalance } = useWalletBalanceReconciliation();
   const { data: myFeedback, isLoading: feedbackLoading } = useMentorFeedbackBySession(
     Number(sessionId)
   );
@@ -264,218 +256,6 @@ export function SessionDetailPage() {
       payosPaymentInFlightRef.current = false;
       setIsCreatingPayment(false);
     }
-  };
-  const handleOpenPaymentMethodDialog = async () => {
-    if (
-      !session?.id ||
-      !user?.id ||
-      isCreatingPayment ||
-      isPollingPayment ||
-      isPreparingPaymentDialog ||
-      isPaymentMethodDialogOpen
-    ) {
-      return;
-    }
-    setIsPreparingPaymentDialog(true);
-    try {
-      const walletRefresh = await refreshWalletBalance(Number(user.id));
-      if (walletRefresh.source === "unavailable") {
-        toast.info(t("userMockinterview.unableToSynchronizeWalletBalance"));
-      }
-    } catch (error) {
-      console.warn(t("userMockinterview.unableToSyncWalletBalance"), error);
-      toast.info(t("common.unableToSyncWalletBalanceYouCanS"));
-    } finally {
-      setIsPreparingPaymentDialog(false);
-    }
-    setIsPaymentMethodDialogOpen(true);
-  };
-  const handlePaySessionWithWallet = async () => {
-    if (!session?.id || !user?.id) {
-      return;
-    }
-    const paymentAmount =
-      typeof session.totalPrice === "number" && session.totalPrice > 0 ? session.totalPrice : 0;
-    if (paymentAmount <= 0) {
-      toast.error(t("common.theInterviewSessionDoesNotHaveAVa"));
-      return;
-    }
-    if (walletPaymentInFlightRef.current) {
-      toast.info(t("common.theSystemIsProcessingTheWalletTran"));
-      return;
-    }
-    walletPaymentInFlightRef.current = true;
-    setIsCreatingPayment(true);
-    try {
-      const walletRefresh = await refreshWalletBalance(Number(user.id));
-      const freshWalletBalance = walletRefresh.walletBalance;
-      if (typeof freshWalletBalance !== "number") {
-        toast.error(t("userMockinterview.unableToSyncWalletBalance2"));
-        return;
-      }
-      if (freshWalletBalance < paymentAmount) {
-        toast.error(t("common.walletBalanceIsNotEnoughPleaseDep"));
-        addPaymentSupportLog({
-          userId: Number(user.id),
-          amount: paymentAmount,
-          paymentPurpose: "MENTOR_INTERVIEW",
-          sessionId: session.id,
-          status: "CREATE_FAILED",
-          message: t("general.walletPaymentFailedDueTo"),
-          payload: {
-            walletBalance: freshWalletBalance,
-          },
-        });
-        return;
-      }
-      addPaymentSupportLog({
-        userId: Number(user.id),
-        amount: paymentAmount,
-        paymentPurpose: "MENTOR_INTERVIEW",
-        sessionId: session.id,
-        status: "CREATED",
-        message: t("general.startedWalletPaymentForInterview"),
-      });
-      const transferOutResult = await transactionManager.transferOut(
-        paymentAmount,
-        Number(user.id),
-        "MENTOR_INTERVIEW"
-      );
-      if (!transferOutResult.success || !transferOutResult.data) {
-        addPaymentSupportLog({
-          userId: Number(user.id),
-          amount: paymentAmount,
-          paymentPurpose: "MENTOR_INTERVIEW",
-          sessionId: session.id,
-          status: "CREATE_FAILED",
-          message: t("userMockinterview.walletPaymentFailedOnSession"),
-          payload: {
-            error: transferOutResult.error || null,
-          },
-        });
-        toast.error(transferOutResult.error || t("common.paymentByWalletIsNotPossibleAtThi"));
-        return;
-      }
-      const transferData = transferOutResult.data;
-      if (typeof transferData.currentBalance === "number") {
-        setUser({
-          ...user,
-          walletBalance: transferData.currentBalance,
-        });
-      }
-      if (transferData.redirectUrl) {
-        const normalizedCheckoutUrl = new URL(
-          transferData.redirectUrl,
-          window.location.origin
-        ).toString();
-        const orderCode = extractOrderCodeFromUrl(normalizedCheckoutUrl) || undefined;
-        const transactionCode =
-          transferData.transactionCode ||
-          extractTransactionCodeFromUrl(normalizedCheckoutUrl) ||
-          undefined;
-        const checkoutToken = extractCheckoutTokenFromUrl(normalizedCheckoutUrl) || undefined;
-        const createdRecovery = upsertPaymentRecoveryContext({
-          orderCode,
-          transactionCode,
-          checkoutToken,
-          userId: Number(user.id),
-          amount: paymentAmount,
-          paymentPurpose: "MENTOR_INTERVIEW",
-          sessionId: session.id,
-          checkoutUrl: normalizedCheckoutUrl,
-          status: "CREATED",
-          note: "Transfer-out tra ve checkoutUrl, fallback sang flow redirect.",
-        });
-        upsertPaymentRecoveryContext({
-          supportCode: createdRecovery.supportCode,
-          orderCode,
-          transactionCode,
-          checkoutToken,
-          userId: Number(user.id),
-          amount: paymentAmount,
-          paymentPurpose: "MENTOR_INTERVIEW",
-          sessionId: session.id,
-          checkoutUrl: normalizedCheckoutUrl,
-          status: "REDIRECTED",
-          note: t("userMockinterview.redirectedToCheckouturlReturnedFrom"),
-        });
-        savePendingSessionPaymentContext({
-          sessionId: session.id,
-          userId: Number(user.id),
-          checkoutUrl: normalizedCheckoutUrl,
-        });
-        toast.success(t("userMockinterview.paymentSessionCreatedChangingDirection"));
-        window.location.assign(normalizedCheckoutUrl);
-        return;
-      }
-      const recoveryContext = upsertPaymentRecoveryContext({
-        transactionCode: transferData.transactionCode,
-        userId: Number(user.id),
-        amount: paymentAmount,
-        paymentPurpose: "MENTOR_INTERVIEW",
-        sessionId: session.id,
-        status: "CALLBACK_SUCCESS",
-        note: transferData.message || t("common.paymentByWalletSuccessful"),
-      });
-      addPaymentSupportLog({
-        supportCode: recoveryContext.supportCode,
-        transactionCode: transferData.transactionCode,
-        userId: Number(user.id),
-        amount: paymentAmount,
-        paymentPurpose: "MENTOR_INTERVIEW",
-        sessionId: session.id,
-        status: "CALLBACK_SUCCESS",
-        message: transferData.message || t("common.paymentByWalletSuccessful"),
-        payload: {
-          currentBalance: transferData.currentBalance,
-          status: transferData.status,
-        },
-      });
-      upsertPendingSessionPaidStatusSync({
-        sessionId: session.id,
-        userId: Number(user.id),
-        transactionCode: transferData.transactionCode,
-      });
-      const synced = await syncSessionPaidStatus(session.id, transferData.transactionCode, {
-        silent: true,
-      });
-      setIsPaymentMethodDialogOpen(false);
-      if (synced) {
-        toast.success(t("userMockinterview.paymentByWalletSuccessfulThe"));
-        navigate(`/user/mock-interview/history/${session.id}`, {
-          replace: true,
-        });
-        return;
-      }
-      toast.info(t("userMockinterview.walletDeductedSuccessfullyTheSystem"));
-      navigate(`/user/mock-interview/history/${session.id}?payment=success`, {
-        replace: true,
-      });
-    } catch (error) {
-      addPaymentSupportLog({
-        userId: Number(user.id),
-        amount: paymentAmount,
-        paymentPurpose: "MENTOR_INTERVIEW",
-        sessionId: session.id,
-        status: "CREATE_FAILED",
-        message: t("userMockinterview.exceptionWhenPayingWithWallet"),
-        payload: {
-          error: error instanceof Error ? error.message : "unknown",
-        },
-      });
-      toast.error(t("common.paymentByWalletIsNotPossibleAtThi1"));
-    } finally {
-      walletPaymentInFlightRef.current = false;
-      setIsCreatingPayment(false);
-    }
-  };
-  const handleConfirmPaymentMethod = async (method: "payos" | "wallet") => {
-    if (method === "wallet") {
-      await handlePaySessionWithWallet();
-      return;
-    }
-    setIsPaymentMethodDialogOpen(false);
-    await handlePaySessionWithPayOS();
   };
   useEffect(() => {
     if (!session?.id || !user?.id) {
@@ -771,22 +551,15 @@ export function SessionDetailPage() {
 
               {canPaySession && (
                 <Button
-                  onClick={handleOpenPaymentMethodDialog}
-                  disabled={
-                    isCreatingPayment ||
-                    isPollingPayment ||
-                    isPreparingPaymentDialog ||
-                    isRecoveringPaidStatus
-                  }
+                  onClick={handlePaySessionWithPayOS}
+                  disabled={isCreatingPayment || isPollingPayment || isRecoveringPaidStatus}
                   className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                   <CreditCard className="h-4 w-4" />
                   {isRecoveringPaidStatus
                     ? t("userMockinterview.synchronizingPaymentStatus")
-                    : isPreparingPaymentDialog
-                      ? t("userMockinterview.syncingWalletBalance")
-                      : isCreatingPayment
-                        ? t("userMockinterview.paymentProcessing")
-                        : t("userMockinterview.paymentForInterviewSession")}
+                    : isCreatingPayment
+                      ? t("userMockinterview.paymentProcessing")
+                      : t("userMockinterview.paymentForInterviewSession")}
                 </Button>
               )}
 
@@ -818,7 +591,7 @@ export function SessionDetailPage() {
 
             {isRecoveringPaidStatus && (
               <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-                {t("general.systemIsSyncingWalletPayment")}
+                {t("userMockinterview.synchronizingPaymentStatus")}
               </div>
             )}
           </div>
@@ -917,19 +690,6 @@ export function SessionDetailPage() {
           )}
         </CardContent>
       </Card>
-
-      <PaymentMethodDialog
-        open={isPaymentMethodDialogOpen}
-        onOpenChange={setIsPaymentMethodDialogOpen}
-        title={t("common.selectSessionPaymentMethod")}
-        description={t("userMockinterview.youCanPayViaPayos")}
-        amount={
-          typeof session.totalPrice === "number" && session.totalPrice > 0 ? session.totalPrice : 0
-        }
-        walletBalance={typeof user?.walletBalance === "number" ? user.walletBalance : undefined}
-        isSubmitting={isCreatingPayment}
-        onConfirm={handleConfirmPaymentMethod}
-      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ const t = i18n.t.bind(i18n);
  * Handles dashboard-specific API operations for administrators
  */
 
-import type { ApiResponse, PaymentEntity, TransactionEntity } from "@/interfaces";
+import type { ApiResponse, PaymentEntity } from "@/interfaces";
 import { fetchClient } from "@/lib/api";
 
 export class DashboardAdminManager {
@@ -93,30 +93,6 @@ export class DashboardAdminManager {
       return {
         success: false,
         error: error instanceof Error ? error.message : t("general.unableToGetSessionData"),
-      };
-    }
-  }
-
-  /**
-   * Get all dashboard transactions
-   */
-  async getTotalTransactions(): Promise<ApiResponse<TransactionEntity[]>> {
-    try {
-      const response = await fetchClient
-        .GET("/api/dashboard/total-transaction", {})
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : t("general.unableToGetTransactionLog"),
       };
     }
   }

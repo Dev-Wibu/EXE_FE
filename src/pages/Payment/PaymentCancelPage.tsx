@@ -19,7 +19,6 @@ import {
 } from "@/lib";
 import i18n from "@/lib/i18n";
 import { paymentManager } from "@/services/payment.manager";
-import { transactionManager } from "@/services/transaction.manager";
 import { useAuthStore } from "@/stores/authStore";
 import { AlertCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -66,12 +65,6 @@ const getCancelPrimaryRedirect = (
       return {
         to: "/user?tab=interviewHistory",
         label: t("common.viewInterviewHistory"),
-      };
-    case "TOP_UP_WALLET":
-    case "WITHDRAW_FROM_WALLET":
-      return {
-        to: "/user?tab=account&subtab=wallet",
-        label: t("paymentPaymentsuccesspage.goToMyWallet"),
       };
     case "BUY_MEMBERSHIP":
     default:
@@ -461,7 +454,7 @@ export function PaymentCancelPage() {
           }
           return;
         }
-        const deleteResult = await transactionManager.delete(resolvedTransactionCode);
+        const deleteResult = await paymentManager.cancel(resolvedTransactionCode);
         const deleteHandled = deleteResult.success || isIdempotentHandledError(deleteResult.error);
         if (!deleteHandled) {
           const log = addPaymentSupportLog({

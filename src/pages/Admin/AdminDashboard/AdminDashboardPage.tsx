@@ -32,7 +32,6 @@ import {
   UserCog,
   Users,
   Video,
-  Wallet,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,7 +50,6 @@ import { QuestionMajorManagementPage } from "../QuestionMajorManagement";
 import { QuizSetManagementPage } from "../QuizSetManagement";
 import { ReviewManagementPage } from "../ReviewManagement";
 import { SessionManagementPage } from "../SessionManagement";
-import { TransactionPaymentManagementPage } from "../TransactionPaymentManagement";
 import { UserManagementPage } from "../UserManagement";
 const t = i18n.t.bind(i18n);
 type TabType =
@@ -69,8 +67,7 @@ type TabType =
   | "quizSets"
   | "posts"
   | "companies"
-  | "candidateProfiles"
-  | "transactionsPayments";
+  | "candidateProfiles";
 
 const VALID_TAB_TYPES: TabType[] = [
   "dashboard",
@@ -88,7 +85,6 @@ const VALID_TAB_TYPES: TabType[] = [
   "posts",
   "companies",
   "candidateProfiles",
-  "transactionsPayments",
 ];
 
 const isValidTabType = (value: string): value is TabType => {
@@ -160,10 +156,6 @@ const getAvailableTabs = (
     type: "candidateProfiles",
     label: t("common.candidateProfile"),
   },
-  {
-    type: "transactionsPayments",
-    label: t("adminAdmindashboard.transactionsPayments"),
-  },
 ];
 const TAB_ICONS: Record<TabType, React.ElementType> = {
   dashboard: LayoutDashboard,
@@ -181,7 +173,6 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   posts: Newspaper,
   companies: Building2,
   candidateProfiles: FileText,
-  transactionsPayments: Wallet,
 };
 const TAB_COLORS: Record<TabType, string> = {
   dashboard: "text-indigo-600",
@@ -199,7 +190,6 @@ const TAB_COLORS: Record<TabType, string> = {
   posts: "text-purple-500",
   companies: "text-sky-600",
   candidateProfiles: "text-teal-600",
-  transactionsPayments: "text-indigo-600",
 };
 const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup[] => [
   {
@@ -309,12 +299,6 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
         label: t("common.candidateProfile"),
         icon: FileText,
         iconColor: "text-teal-600",
-      },
-      {
-        type: "transactionsPayments",
-        label: t("adminAdmindashboard.transactionsPayments"),
-        icon: Wallet,
-        iconColor: "text-indigo-600",
       },
     ],
   },
@@ -427,12 +411,6 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
         icon: FileText,
         label: t("common.candidateProfile"),
         color: "text-teal-600",
-      },
-      {
-        type: "transactionsPayments",
-        icon: Wallet,
-        label: t("adminAdmindashboard.transactionsPayments"),
-        color: "text-indigo-600",
       },
     ],
   },
@@ -626,8 +604,6 @@ export function AdminDashboardPage() {
         return <CompanyManagementPage />;
       case "candidateProfiles":
         return <CandidateProfileManagementPage />;
-      case "transactionsPayments":
-        return <TransactionPaymentManagementPage />;
       default:
         return <div>{t("common.invalidTabType")}</div>;
     }

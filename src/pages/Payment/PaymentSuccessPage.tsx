@@ -80,10 +80,6 @@ const getSuccessSubtitle = (purpose?: PaymentPurpose): string => {
       return t("adminDashboardoverview.system");
     case "MENTOR_INTERVIEW":
       return t("adminDashboardoverview.system");
-    case "TOP_UP_WALLET":
-      return t("adminDashboardoverview.system");
-    case "WITHDRAW_FROM_WALLET":
-      return t("adminCompanymanagement.request");
     default:
       return t("adminDashboardoverview.system");
   }
@@ -99,12 +95,6 @@ const getPrimaryRedirect = (
       return {
         to: "/user?tab=interviewHistory",
         label: t("common.viewInterviewHistory"),
-      };
-    case "TOP_UP_WALLET":
-    case "WITHDRAW_FROM_WALLET":
-      return {
-        to: "/user?tab=account&subtab=wallet",
-        label: t("paymentPaymentsuccesspage.goToMyWallet"),
       };
     case "BUY_MEMBERSHIP":
     default:

@@ -63,7 +63,6 @@ export type UserSubscriptionResponse = {
   practiceSetRemaining?: number | null;
   quizSetRemaining?: number | null;
 };
-export type TransactionEntity = components["schemas"]["Transaction"];
 export type PaymentEntity = components["schemas"]["Payment"];
 export type PaymentPurpose = NonNullable<components["schemas"]["Payment"]["paymentPurpose"]>;
 export type JobDescription = SchemaJobDescription;

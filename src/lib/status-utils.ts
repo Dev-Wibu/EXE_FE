@@ -1,5 +1,4 @@
 import { badgeVariants } from "@/components/ui/badge";
-import type { PaymentPurpose } from "@/interfaces";
 import i18n from "@/lib/i18n";
 import type { VariantProps } from "class-variance-authority";
 const t = i18n.t.bind(i18n);
@@ -150,41 +149,6 @@ export function getMockInterviewStatusBadge(status?: string): StatusBadgeConfig 
     default:
       return {
         label: status || t("general.hollow"),
-        variant: "outline",
-      };
-  }
-}
-export function getTransactionPurposeBadge(
-  purpose?: PaymentPurpose | "UNKNOWN"
-): StatusBadgeConfig {
-  switch (purpose) {
-    case "TOP_UP_WALLET":
-      return {
-        label: t("common.topUpYourWallet"),
-        variant: "default",
-        className: "bg-emerald-600 text-white hover:bg-emerald-600",
-      };
-    case "WITHDRAW_FROM_WALLET":
-      return {
-        label: t("common.takeOutYourWallet"),
-        variant: "default",
-        className: "bg-rose-600 text-white hover:bg-rose-600",
-      };
-    case "BUY_MEMBERSHIP":
-      return {
-        label: t("common.buyPackages"),
-        variant: "default",
-        className: "bg-violet-600 text-white hover:bg-violet-600",
-      };
-    case "MENTOR_INTERVIEW":
-      return {
-        label: t("general.mentorSession"),
-        variant: "default",
-        className: "bg-sky-600 text-white hover:bg-sky-600",
-      };
-    default:
-      return {
-        label: t("common.uncategorized"),
         variant: "outline",
       };
   }

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
+  Banknote,
   CheckCircle2,
   GaugeCircle,
   ShieldCheck,
@@ -8,7 +9,6 @@ import {
   Star,
   Tag,
   Users,
-  Wallet,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 interface MentorHighlightsProps {
@@ -45,7 +45,7 @@ export function MentorHighlights({
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
           <p className="flex items-center text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-            <Wallet className="mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
+            <Banknote className="mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
             {t("userMentordetail.consultingPrice")}
           </p>
           <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">{priceText}</p>

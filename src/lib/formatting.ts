@@ -361,29 +361,3 @@ export function formatCurrency(amount: number): string {
 export function formatShortCurrency(amount: number): string {
   return new Intl.NumberFormat("vi-VN").format(Math.abs(amount)) + t("general.text");
 }
-export function getTransactionTypeLabel(type: string): string {
-  switch (type) {
-    case "deposit":
-      return t("common.depositMoney");
-    case "payment":
-      return t("common.pay");
-    case "refund":
-      return t("general.withdrawMoney");
-    case "unknown":
-      return t("sharedSpeechplaygroundpage.areNot");
-    default:
-      return type;
-  }
-}
-export function getTransactionStatusLabel(status: string): string {
-  switch (status) {
-    case "completed":
-      return t("general.completed");
-    case "pending":
-      return t("common.processing1");
-    case "failed":
-      return t("general.failed1");
-    default:
-      return status;
-  }
-}

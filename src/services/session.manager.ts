@@ -512,7 +512,7 @@ export class SessionManager implements BaseManager<Session> {
   }
 
   /**
-   * Force sync a session to PAID after wallet transfer succeeds.
+   * Force sync a session to PAID.
    * This is a temporary FE-side resilience path while backend has no dedicated confirm-payment endpoint.
    */
   async markSessionAsPaid(
@@ -562,7 +562,7 @@ export class SessionManager implements BaseManager<Session> {
   }
 
   /**
-   * Retry helper for transient failures when syncing PAID status after wallet transfer.
+   * Retry helper for transient failures when syncing PAID status.
    */
   async markSessionAsPaidWithRetry(
     sessionId: number,
