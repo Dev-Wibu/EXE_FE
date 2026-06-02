@@ -204,8 +204,7 @@ export class QuizSetManager {
       const response = await fetchClient
         .POST("/api/quiz-sets/create-full-ai", {
           params: {
-            // @ts-expect-error: Backend Swagger schema mismatch
-            practiceSetId,
+            query: { practiceSetId },
           },
           timeout: 120000,
         })
@@ -263,15 +262,16 @@ export class QuizSetManager {
    */
   async getByPracticeSet(practiceSetId: number): Promise<ApiResponse<QuizSet[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUIZ_SETS.BY_PRACTICE_SET, {
-        practiceSetId,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      const endpoint = "/api/quiz-sets/by-practice-set/{practiceSetId}";
+      const response = await fetchClient
+        .GET(endpoint, {
+          params: { path: { practiceSetId } },
+        })
+        .then((res) => ({
+          data: res.data,
+          status: res.response?.status,
+          headers: res.response?.headers,
+        }));
       return {
         success: true,
         // @ts-expect-error: Backend Swagger schema mismatch

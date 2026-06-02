@@ -92,14 +92,11 @@ export class QuestionMajorManager implements BaseManager<Major> {
         majorName: data.majorName,
         description: data.description || "",
       };
-      const response = await fetchClient
-        // @ts-expect-error: Backend Swagger schema mismatch
-        .POST("/api/majors", { params })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      const response = await fetchClient.POST("/api/majors", { body: params }).then((res) => ({
+        data: res.data,
+        status: res.response?.status,
+        headers: res.response?.headers,
+      }));
       return {
         success: true,
         data: response.data,
@@ -121,14 +118,11 @@ export class QuestionMajorManager implements BaseManager<Major> {
         description: data.description || "",
       };
       // Use PUT method as per schema for update
-      const response = await fetchClient
-        // @ts-expect-error: Backend Swagger schema mismatch
-        .PUT("/api/majors", { params })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      const response = await fetchClient.PUT("/api/majors", { body: params }).then((res) => ({
+        data: res.data,
+        status: res.response?.status,
+        headers: res.response?.headers,
+      }));
       return {
         success: true,
         data: response.data,

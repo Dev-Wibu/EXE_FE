@@ -263,6 +263,17 @@ export class UsersAdminManager implements BaseManager<User> {
       const avatarFile = avatar || updateData.avatar;
       const cvFileToUpload = cvFile || updateData.cvFile;
 
+      // Fetch existing user to preserve fields that aren't included in the update
+      let existingUser: Partial<User> = {};
+      try {
+        const fetchResult = await this.getById(_id);
+        if (fetchResult.success && fetchResult.data) {
+          existingUser = fetchResult.data;
+        }
+      } catch {
+        // Ignore and do best effort
+      }
+
       // Build UserInfo object with fields to update
       // Note: role and isActive are not in official UserInfo schema but we include them
       // Backend may accept these fields since they are part of the User schema
@@ -271,20 +282,24 @@ export class UsersAdminManager implements BaseManager<User> {
       const userInfo: UserInfo = {
         id: Number(_id),
         // Include id for update operation
-        name: _data.name?.trim(),
-        email: _data.email?.trim(),
-        password: _data.password,
-        university: _data.university,
-        major: normalizeMajor(_data.major),
+        name: _data.name?.trim() || existingUser.name,
+        email: _data.email?.trim() || existingUser.email,
+        // Backend ignores empty string password, but wipes if null/missing.
+        // If _data.password is undefined (e.g. from User Site), fall back to existingUser.password
+        password: _data.password ?? existingUser.password,
+        university: _data.university || existingUser.university,
+        major: _data.major ? normalizeMajor(_data.major) : existingUser.major,
         // Include role if provided - backend may accept this even though not in UserInfo schema
-        role: _data.role,
+        role: _data.role || existingUser.role,
         // Include Cloudinary public_id for avatar - required for update/delete operations
         // Use empty string "" as fallback when uploading new file but no existing public_id
         // Error "Missing required parameter - public_id" occurs when this field is missing
-        public_id: _data.public_id ?? (avatarFile ? "" : undefined),
+        public_id:
+          _data.public_id ?? (avatarFile ? "" : existingUser.avatarUrl ? undefined : undefined),
         // Include Cloudinary public_id for CV - required for update/delete operations
         // Use empty string "" as fallback when uploading new file but no existing cv_public_id
-        cv_public_id: _data.cv_public_id ?? (cvFileToUpload ? "" : undefined),
+        cv_public_id:
+          _data.cv_public_id ?? (cvFileToUpload ? "" : existingUser.cvUrl ? undefined : undefined),
       };
 
       // Append the 'data' field as a JSON Blob (same format as create)

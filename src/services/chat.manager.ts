@@ -218,9 +218,10 @@ export class ChatManager {
       const response = await fetchClient
         .GET("/api/messages/contacts", {
           params: {
-            // @ts-expect-error: Backend Swagger schema mismatch
-            myId,
-            role: role.toUpperCase(),
+            query: {
+              myId,
+              role: role.toUpperCase() as "MENTOR" | "ADMIN" | "STAFF" | "USER",
+            },
           },
         })
         .then((res) => ({

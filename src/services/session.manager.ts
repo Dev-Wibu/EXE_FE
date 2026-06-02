@@ -405,7 +405,8 @@ export class SessionManager implements BaseManager<Session> {
    */
   async delete(_id: string | number): Promise<ApiResponse<void>> {
     try {
-      const sessionData: Session = { id: Number(_id), status: "CANCELED" };
+      // Use REJECTED to cancel session and avoid DB constraint violation 'session_status_check'
+      const sessionData: Session = { id: Number(_id), status: "REJECTED" };
       await fetchClient.PUT("/api/sessions", { body: sessionData }).then((res) => ({
         data: res.data,
         status: res.response?.status,
@@ -479,8 +480,8 @@ export class SessionManager implements BaseManager<Session> {
     try {
       const response = await fetchClient
         .GET("/api/sessions/make-payment", {
-          // @ts-expect-error: Backend Swagger schema mismatch
-          params: { sessionId },
+          params: { query: { sessionId } },
+          parseAs: "text",
         })
         .then((res) => ({
           data: res.data,

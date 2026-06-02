@@ -98,7 +98,7 @@ export class JobDescriptionManager {
   async create(data: CreateJobDescriptionRequest): Promise<ApiResponse<JobDescription>> {
     try {
       const response = await fetchClient
-        .POST("/api/job-descriptions", { body: data })
+        .POST("/api/job-descriptions", { body: data as unknown as never })
         .then((res) => ({
           data: res.data,
           status: res.response?.status,

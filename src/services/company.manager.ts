@@ -343,19 +343,15 @@ export class CompanyManager {
     }
   }
   async getJobs(
-    // @ts-expect-error: Backend Swagger schema mismatch
     id: string | number,
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<JobDescription> | JobDescription[]>> {
     try {
       const response = await fetchClient
-        .GET(
+        .GET("/api/job-descriptions/company/{companyId}", {
           // @ts-expect-error: Backend Swagger schema mismatch
-          "/api/job-descriptions/company/{id}",
-          {
-            params,
-          }
-        )
+          params: { path: { companyId: Number(id) }, query: params },
+        })
         .then((res) => ({
           data: res.data,
           status: res.response?.status,

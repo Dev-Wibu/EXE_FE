@@ -104,7 +104,7 @@ export class PostManager implements BaseManager<Post> {
         .POST("/api/posts", {
           ...{
             headers: {
-              "Content-Type": "multipart/form-data",
+              "Content-Type": undefined,
             },
           },
           // @ts-expect-error: Backend Swagger schema mismatch
@@ -621,7 +621,12 @@ export class PostManager implements BaseManager<Post> {
       if (!isNaN(updateAuthorIdNum) && updateAuthorIdNum > 0)
         formData.append("authorId", String(updateAuthorIdNum));
       if (data.majorId) formData.append("majorId", String(data.majorId));
-      if (data.coverImg) formData.append("coverImg", data.coverImg);
+      if (data.coverImg) {
+        formData.append("coverImg", data.coverImg);
+      } else {
+        // Send a placeholder file to avoid NPE in backend file.getBytes()
+        formData.append("coverImg", new File([""], "placeholder.txt", { type: "text/plain" }));
+      }
       if (data.status) formData.append("status", data.status);
       if (data.tags) {
         data.tags.forEach((tag) => formData.append("tags", tag));
@@ -630,7 +635,7 @@ export class PostManager implements BaseManager<Post> {
         .POST("/api/posts", {
           ...{
             headers: {
-              "Content-Type": "multipart/form-data",
+              "Content-Type": undefined,
             },
           },
           // @ts-expect-error: Backend Swagger schema mismatch

@@ -232,31 +232,42 @@ export class MentorManager implements BaseManager<Mentor> {
       // For update, include 'id' in the JSON data field
       const formData = new FormData();
 
+      let existingMentor: Partial<Mentor> = {};
+      try {
+        const fetchResult = await this.getById(_id);
+        if (fetchResult.success && fetchResult.data) {
+          existingMentor = fetchResult.data;
+        }
+      } catch {
+        // Ignore
+      }
+
       // Build MentorInfo payload with id for update
       const mentorInfo: MentorInfo & {
         active?: boolean;
       } = {
         id: Number(_id),
-        name: _data.name?.trim(),
-        email: _data.email?.trim(),
-        bio: _data.bio,
-        expertise: _data.expertise,
-        yearsOfExperience: _data.yearsOfExperience,
-        linkedInUrl: _data.linkedInUrl,
-        currentCompany: _data.currentCompany,
-        pricePerMinute: _data.pricePerMinute,
+        name: _data.name?.trim() || existingMentor.name,
+        email: _data.email?.trim() || existingMentor.email,
+        bio: _data.bio || existingMentor.bio,
+        expertise: _data.expertise || existingMentor.expertise,
+        yearsOfExperience: _data.yearsOfExperience ?? existingMentor.yearsOfExperience,
+        linkedInUrl: _data.linkedInUrl || existingMentor.linkedInUrl,
+        currentCompany: _data.currentCompany || existingMentor.currentCompany,
+        pricePerMinute: _data.pricePerMinute ?? existingMentor.pricePerMinute,
       };
 
-      // Add password only if provided (for password updates)
-      if (_data.password) {
-        mentorInfo.password = _data.password;
-      }
+      // Backend ignores empty string password, but wipes if null/missing.
+      // If _data.password is undefined, fall back to existingMentor.password
+      mentorInfo.password = _data.password ?? existingMentor.password;
 
       // Add active field if provided
       // Note: 'active' is not in MentorInfo schema but BE curl example includes it
       // The BE accepts it for setting mentor active status during update
       if ("active" in _data) {
         mentorInfo.active = Boolean(_data.active);
+      } else if (existingMentor.active !== undefined) {
+        mentorInfo.active = existingMentor.active;
       }
       console.log("Update mentor payload:", JSON.stringify(mentorInfo, null, 2));
 

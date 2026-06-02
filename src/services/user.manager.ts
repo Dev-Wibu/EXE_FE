@@ -44,9 +44,24 @@ export class UserManager {
    */
   async updateProfile(data: Partial<UserProfile>): Promise<ApiResponse<UserProfile>> {
     try {
+      const currentProfile = await this.getProfile();
+      const payload = { ...data };
+
+      if (currentProfile.success && currentProfile.data) {
+        // Prevent "Email đã tồn tại" error by omitting email if it hasn't changed
+        if (data.email && currentProfile.data.email === data.email) {
+          delete payload.email;
+        }
+
+        // Re-inject password if it exists in the current profile to prevent backend from wiping it
+        if (!payload.password && currentProfile.data.password) {
+          payload.password = currentProfile.data.password;
+        }
+      }
+
       const response = await fetchClient
         // @ts-expect-error: Backend Swagger schema mismatch
-        .POST("/api/users/me", { body: data })
+        .POST("/api/users/me", { body: payload })
         .then((res) => ({
           data: res.data,
           status: res.response?.status,
