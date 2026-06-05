@@ -15,7 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { enUS, vi } from "date-fns/locale";
 import { CalendarIcon, Filter as FilterIcon, X } from "lucide-react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -104,7 +104,8 @@ interface DateRangeFilterProps {
   onValueChange: (value: { from: Date | undefined; to: Date | undefined }) => void;
 }
 const DateRangeFilter = ({ option, value, onValueChange }: DateRangeFilterProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "en" ? enUS : vi;
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">{option.label}</label>
@@ -120,7 +121,7 @@ const DateRangeFilter = ({ option, value, onValueChange }: DateRangeFilterProps)
               <CalendarIcon className="mr-2 h-4 w-4" />
               {value.from
                 ? format(value.from, "dd/MM/yyyy", {
-                    locale: vi,
+                    locale: dateLocale,
                   })
                 : t("common.fromDate")}
             </Button>
@@ -135,7 +136,6 @@ const DateRangeFilter = ({ option, value, onValueChange }: DateRangeFilterProps)
                   from: date,
                 })
               }
-              locale={vi}
             />
           </PopoverContent>
         </Popover>
@@ -150,7 +150,7 @@ const DateRangeFilter = ({ option, value, onValueChange }: DateRangeFilterProps)
               <CalendarIcon className="mr-2 h-4 w-4" />
               {value.to
                 ? format(value.to, "dd/MM/yyyy", {
-                    locale: vi,
+                    locale: dateLocale,
                   })
                 : t("common.comeDay")}
             </Button>
@@ -165,7 +165,6 @@ const DateRangeFilter = ({ option, value, onValueChange }: DateRangeFilterProps)
                   to: date,
                 })
               }
-              locale={vi}
             />
           </PopoverContent>
         </Popover>

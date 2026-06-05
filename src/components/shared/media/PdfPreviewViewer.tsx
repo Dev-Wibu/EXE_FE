@@ -49,7 +49,7 @@ export function PdfPreviewViewer({
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const [resolvedSourceKey, setResolvedSourceKey] = useState<string | null>(null);
   const [resolvedFileName, setResolvedFileName] = useState(
-    fileName ?? `${t("mediaFileUtils.document")}.pdf`
+    fileName ?? t("mediaFileUtils.documentPdf")
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);

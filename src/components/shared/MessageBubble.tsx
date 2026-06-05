@@ -7,6 +7,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDateTime, parseBackendDate } from "@/lib/formatting";
+import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -90,7 +91,7 @@ export function MessageBubble({
     }
     return formatDistanceToNow(parsed, {
       addSuffix: true,
-      locale: vi,
+      locale: i18n.language === "en" ? undefined : vi,
     });
   };
 

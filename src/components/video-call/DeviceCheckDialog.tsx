@@ -334,7 +334,8 @@ export function DeviceCheckDialog({
                 <SelectContent>
                   {videoDevices.map((d) => (
                     <SelectItem key={d.deviceId} value={d.deviceId}>
-                      {d.label || `Camera ${videoDevices.indexOf(d) + 1}`}
+                      {d.label ||
+                        t("compVideoCall.cameraN", { number: videoDevices.indexOf(d) + 1 })}
                     </SelectItem>
                   ))}
                 </SelectContent>

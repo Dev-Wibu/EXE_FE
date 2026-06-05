@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { getNotificationTypeConfigFromTitle } from "@/constants/notification-types";
 import { formatDateTime, parseBackendDate } from "@/lib/formatting";
+import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/services/notification.manager";
 import { formatDistanceToNow } from "date-fns";
@@ -36,7 +37,7 @@ export function NotificationItem({
   const timeAgo = parsedCreatedAt
     ? formatDistanceToNow(parsedCreatedAt, {
         addSuffix: true,
-        locale: vi,
+        locale: i18n.language === "en" ? undefined : vi,
       })
     : "";
   const absoluteTime = parsedCreatedAt ? formatDateTime(parsedCreatedAt) : "";
