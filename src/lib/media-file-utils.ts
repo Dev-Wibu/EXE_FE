@@ -267,7 +267,7 @@ export async function resolveSourceToBlobUrl(
     const fileName =
       source instanceof File
         ? source.name
-        : options.fallbackFileName?.trim() || `${t("mediaFileUtils.document")}.pdf`;
+        : options.fallbackFileName?.trim() || t("mediaFileUtils.documentPdf");
 
     return {
       objectUrl: URL.createObjectURL(source),

@@ -310,9 +310,13 @@ export function normalizeDashboardPath(pathname: string): string {
   }
   return pathname;
 }
-function getTabLabel(tabType: string, availableTabs: DashboardTabDefinition[]): string {
+function getTabLabel(
+  tabType: string,
+  availableTabs: DashboardTabDefinition[],
+  t: TFunction
+): string {
   const matchedTab = availableTabs.find((tab) => tab.type === tabType);
-  return matchedTab?.label ?? "Page";
+  return matchedTab?.label ?? t("common.page");
 }
 function getRouteRules(role: DashboardRole, t: TFunction): RouteLabelRule[] {
   return role === "user" ? getUserRouteRules(t) : getMentorRouteRules(t);
@@ -425,7 +429,7 @@ export function buildDashboardBreadcrumbItems({
 }): DashboardBreadcrumbItem[] {
   const roleConfig = getRoleConfig(t)[role];
   const normalizedPath = normalizeDashboardPath(pathname);
-  const activeTabLabel = getTabLabel(activeTab, availableTabs);
+  const activeTabLabel = getTabLabel(activeTab, availableTabs, t);
   const rootHref = `${roleConfig.rootPath}?tab=${roleConfig.defaultTab}`;
   const breadcrumbs: DashboardBreadcrumbItem[] = [
     {

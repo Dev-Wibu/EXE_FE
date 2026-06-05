@@ -1,3 +1,4 @@
+import i18n from "@/lib/i18n";
 import * as React from "react";
 
 export type SortDirection = "asc" | "desc" | "none";
@@ -66,9 +67,9 @@ const getSortIconType = (column: string, sortField: string | null, sortOrder: st
 };
 
 const getAriaLabel = (column: string, sortField: string | null, sortOrder: string) => {
-  if (column !== sortField) return `Sort by ${column}`;
-  if (sortOrder === "asc") return `Sort by ${column} descending`;
-  return `Sort by ${column} ascending`;
+  if (column !== sortField) return i18n.t("compUi.sortByColumn", { column });
+  if (sortOrder === "asc") return i18n.t("compUi.sortByColumnDescending", { column });
+  return i18n.t("compUi.sortByColumnAscending", { column });
 };
 
 /**
