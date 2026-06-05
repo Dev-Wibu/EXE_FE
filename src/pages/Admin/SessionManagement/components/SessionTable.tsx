@@ -63,10 +63,10 @@ export function SessionTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-16">ID</TableHead>
+          <TableHead className="w-16">{t("common.id")}</TableHead>
           <TableHead>{t("common.roomName1")}</TableHead>
           <TableHead className="w-24">{t("general.userId1")}</TableHead>
-          <TableHead className="w-24">ID Mentor</TableHead>
+          <TableHead className="w-24">{t("common.idMentor")}</TableHead>
           <TableHead>
             {getSortProps ? (
               <SortButton {...getSortProps("startTimeSortValue")}>

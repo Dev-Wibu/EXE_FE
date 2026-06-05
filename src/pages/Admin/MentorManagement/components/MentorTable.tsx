@@ -39,7 +39,7 @@ export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorT
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-16">ID</TableHead>
+          <TableHead className="w-16">{t("common.id")}</TableHead>
           <TableHead>
             {getSortProps ? (
               <SortButton {...getSortProps("name")}>{t("common.name")}</SortButton>
@@ -47,7 +47,7 @@ export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorT
               t("common.name")
             )}
           </TableHead>
-          <TableHead>Email</TableHead>
+          <TableHead>{t("common.email")}</TableHead>
           <TableHead>{t("common.expertise")}</TableHead>
           <TableHead className="w-24">
             {getSortProps ? (

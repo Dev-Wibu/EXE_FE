@@ -10,13 +10,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { getJobDescriptionLevelBadge, getJobDescriptionStatusBadge } from "@/lib/status-utils";
 import { cn } from "@/lib/utils";
 import { Edit, Eye, Power, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { JobDescription } from "../types";
-const t = i18n.t.bind(i18n);
 type JobDescriptionSortKey =
   | "idSortValue"
   | "titleSortValue"
@@ -36,26 +34,6 @@ interface JobDescriptionTableProps {
   onView?: (job: JobDescription) => void;
   getSortProps?: (key: JobDescriptionSortKey) => SortProps;
 }
-const formatSalaryRange = (
-  salaryMin?: number | null,
-  salaryMax?: number | null,
-  currency?: string | null
-): string => {
-  if (salaryMin == null && salaryMax == null) return t("common.agree");
-  const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
-  if (salaryMin != null && salaryMax != null) {
-    return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
-  }
-  if (salaryMin != null)
-    return t("general.from2", {
-      var_0: formatCurrency(salaryMin),
-      var_1: currencyNote,
-    });
-  return t("general.to2", {
-    var_0: formatCurrency(salaryMax ?? 0),
-    var_1: currencyNote,
-  });
-};
 export function JobDescriptionTable({
   jobDescriptions,
   onEdit,
@@ -64,6 +42,28 @@ export function JobDescriptionTable({
   getSortProps,
 }: JobDescriptionTableProps) {
   const { t } = useTranslation();
+
+  const formatSalaryRange = (
+    salaryMin?: number | null,
+    salaryMax?: number | null,
+    currency?: string | null
+  ): string => {
+    if (salaryMin == null && salaryMax == null) return t("common.agree");
+    const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
+    if (salaryMin != null && salaryMax != null) {
+      return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
+    }
+    if (salaryMin != null)
+      return t("general.from2", {
+        var_0: formatCurrency(salaryMin),
+        var_1: currencyNote,
+      });
+    return t("general.to2", {
+      var_0: formatCurrency(salaryMax ?? 0),
+      var_1: currencyNote,
+    });
+  };
+
   if (jobDescriptions.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
@@ -77,7 +77,11 @@ export function JobDescriptionTable({
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">
-            {getSortProps ? <SortButton {...getSortProps("idSortValue")}>ID</SortButton> : "ID"}
+            {getSortProps ? (
+              <SortButton {...getSortProps("idSortValue")}>{t("common.id")}</SortButton>
+            ) : (
+              t("common.id")
+            )}
           </TableHead>
           <TableHead>
             {getSortProps ? (

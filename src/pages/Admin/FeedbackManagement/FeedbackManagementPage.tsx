@@ -166,7 +166,7 @@ export function FeedbackManagementPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>5 sao</CardDescription>
+            <CardDescription>{t("common.fiveStars")}</CardDescription>
             <CardTitle className="text-2xl text-[#FFD700]">
               {feedbacks.filter((f: MentorFeedback) => f.rating === 5).length}
             </CardTitle>
@@ -174,7 +174,7 @@ export function FeedbackManagementPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>1-2 sao</CardDescription>
+            <CardDescription>{t("common.oneToTwoStars")}</CardDescription>
             <CardTitle className="text-2xl text-red-500">
               {feedbacks.filter((f: MentorFeedback) => (f.rating || 0) <= 2).length}
             </CardTitle>
@@ -215,11 +215,11 @@ export function FeedbackManagementPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("general.all")}</SelectItem>
-                <SelectItem value="5">5 sao</SelectItem>
-                <SelectItem value="4">4 sao</SelectItem>
-                <SelectItem value="3">3 sao</SelectItem>
-                <SelectItem value="2">2 sao</SelectItem>
-                <SelectItem value="1">1 sao</SelectItem>
+                <SelectItem value="5">{t("common.fiveStars")}</SelectItem>
+                <SelectItem value="4">{t("common.fourStars")}</SelectItem>
+                <SelectItem value="3">{t("common.threeStars")}</SelectItem>
+                <SelectItem value="2">{t("common.twoStars")}</SelectItem>
+                <SelectItem value="1">{t("common.oneStar")}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -266,7 +266,7 @@ export function FeedbackManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
+                    <TableHead>{t("common.id")}</TableHead>
                     <TableHead>{t("common.mentorAccepted")}</TableHead>
                     <TableHead>{t("common.candidateSubmits")}</TableHead>
                     <TableHead>{t("common.session")}</TableHead>

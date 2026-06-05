@@ -57,7 +57,11 @@ export function QuestionCategoryTable({
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">
-            {getSortProps ? <SortButton {...getSortProps("idSortValue")}>ID</SortButton> : "ID"}
+            {getSortProps ? (
+              <SortButton {...getSortProps("idSortValue")}>{t("common.id")}</SortButton>
+            ) : (
+              t("common.id")
+            )}
           </TableHead>
           <TableHead>
             {getSortProps ? (
@@ -100,7 +104,7 @@ export function QuestionCategoryTable({
                   }}
                   className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline">
                   <ExternalLink className="h-3 w-3" />
-                  Link
+                  {t("common.link")}
                 </a>
               ) : category.urlTutorial ? (
                 <span className="text-muted-foreground text-xs" title={category.urlTutorial}>

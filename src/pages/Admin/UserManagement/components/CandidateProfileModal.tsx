@@ -275,7 +275,7 @@ export function CandidateProfileModal({ profile, open, onOpenChange }: Candidate
                     </div>
                     {e.gpa && (
                       <p className="mt-1 text-sm">
-                        GPA: <span className="font-medium">{e.gpa}</span>
+                        {t("common.gpa")}: <span className="font-medium">{e.gpa}</span>
                       </p>
                     )}
                   </div>

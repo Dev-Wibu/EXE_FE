@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency, formatDate } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { getJobDescriptionLevelBadge, getJobDescriptionStatusBadge } from "@/lib/status-utils";
 import { cn } from "@/lib/utils";
 import {
@@ -20,33 +19,13 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { JobDescription } from "../types";
-const t = i18n.t.bind(i18n);
+
 interface JobDescriptionDetailDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   jobDescription: JobDescription | null;
   onEdit?: (job: JobDescription) => void;
 }
-const formatSalaryRange = (
-  salaryMin?: number | null,
-  salaryMax?: number | null,
-  currency?: string | null
-): string => {
-  if (salaryMin == null && salaryMax == null) return t("common.agree");
-  const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
-  if (salaryMin != null && salaryMax != null) {
-    return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
-  }
-  if (salaryMin != null)
-    return t("general.from2", {
-      var_0: formatCurrency(salaryMin),
-      var_1: currencyNote,
-    });
-  return t("general.to2", {
-    var_0: formatCurrency(salaryMax ?? 0),
-    var_1: currencyNote,
-  });
-};
 interface InfoRowProps {
   icon: React.ReactNode;
   label: string;
@@ -91,6 +70,28 @@ export function JobDescriptionDetailDialog({
   onEdit,
 }: JobDescriptionDetailDialogProps) {
   const { t } = useTranslation();
+
+  const formatSalaryRange = (
+    salaryMin?: number | null,
+    salaryMax?: number | null,
+    currency?: string | null
+  ): string => {
+    if (salaryMin == null && salaryMax == null) return t("common.agree");
+    const currencyNote = currency && currency.toUpperCase() !== "VND" ? ` (${currency})` : "";
+    if (salaryMin != null && salaryMax != null) {
+      return `${formatCurrency(salaryMin)} - ${formatCurrency(salaryMax)}${currencyNote}`;
+    }
+    if (salaryMin != null)
+      return t("general.from2", {
+        var_0: formatCurrency(salaryMin),
+        var_1: currencyNote,
+      });
+    return t("general.to2", {
+      var_0: formatCurrency(salaryMax ?? 0),
+      var_1: currencyNote,
+    });
+  };
+
   if (!job) return null;
   const statusConfig = getJobDescriptionStatusBadge(job.status);
   const levelConfig = getJobDescriptionLevelBadge(job.level);

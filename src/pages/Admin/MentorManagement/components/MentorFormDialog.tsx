@@ -11,13 +11,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import i18n from "@/lib/i18n";
 import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import { ExternalLink, Eye, EyeOff, FileText, ImageIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Mentor, MentorFormData } from "../types";
-const t = i18n.t.bind(i18n);
 
 /**
  * Extended form data type to include file uploads
@@ -87,6 +85,7 @@ function FilePreview({
   label,
   fileName,
 }: FilePreviewProps) {
+  const { t } = useTranslation();
   if (!url) return null;
   // Check if the URL points to an image, using fileName for blob URLs
   const isImage =
@@ -109,7 +108,7 @@ function FilePreview({
         <div className="flex h-24 flex-col items-center justify-center">
           <FileText className="h-10 w-10 text-blue-500" />
           <span className="mt-1 max-w-full truncate text-xs text-gray-500">
-            {fileName || "Document"}
+            {fileName || t("adminMentormanagement.document")}
           </span>
         </div>
       )}
@@ -132,7 +131,7 @@ function FilePreview({
             type="button"
             onClick={onOpen}
             className="flex items-center gap-1 bg-transparent p-0 text-xs text-blue-600 hover:underline dark:text-blue-400">
-            <span>Xem</span>
+            <span>{t("common.view")}</span>
             <ExternalLink className="h-2.5 w-2.5" />
           </button>
         )}
@@ -327,7 +326,7 @@ export function MentorFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("common.email")} *</Label>
               <Input
                 id="email"
                 type="email"
@@ -338,7 +337,7 @@ export function MentorFormDialog({
                     email: e.target.value,
                   })
                 }
-                placeholder="mentor@example.com"
+                placeholder={t("common.emailPlaceholder")}
               />
             </div>
           </div>
@@ -457,7 +456,7 @@ export function MentorFormDialog({
                   linkedInUrl: e.target.value,
                 })
               }
-              placeholder="https://www.linkedin.com/in/..."
+              placeholder={t("common.linkedinPlaceholder")}
             />
           </div>
           {/* File Upload Section with Previews */}
@@ -479,7 +478,7 @@ export function MentorFormDialog({
                       file: formData.avatar,
                     })
                   }
-                  label="Avatar"
+                  label={t("common.avatar")}
                   fileName={formData.avatar?.name}
                 />
                 <Input
@@ -512,7 +511,7 @@ export function MentorFormDialog({
                       file: formData.identityFile,
                     })
                   }
-                  label="Identity"
+                  label={t("common.identity")}
                   fileName={formData.identityFile?.name}
                 />
                 <Input
@@ -545,7 +544,7 @@ export function MentorFormDialog({
                       file: formData.degreeFile,
                     })
                   }
-                  label="Degree"
+                  label={t("common.degree")}
                   fileName={formData.degreeFile?.name}
                 />
                 <Input
@@ -578,7 +577,7 @@ export function MentorFormDialog({
                       file: formData.otherFile,
                     })
                   }
-                  label="Other"
+                  label={t("common.other")}
                   fileName={formData.otherFile?.name}
                 />
                 <Input

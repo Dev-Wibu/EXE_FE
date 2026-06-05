@@ -236,7 +236,7 @@ export function CandidateProfileManagementPage() {
                     <SortButton {...getSortProps("nameSortValue")}>{t("common.name")}</SortButton>
                   </TableHead>
                   <TableHead>
-                    <SortButton {...getSortProps("emailSortValue")}>Email</SortButton>
+                    <SortButton {...getSortProps("emailSortValue")}>{t("common.email")}</SortButton>
                   </TableHead>
                   <TableHead>
                     <SortButton {...getSortProps("targetRole")}>{t("common.role")}</SortButton>
@@ -269,7 +269,7 @@ export function CandidateProfileManagementPage() {
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => setSelectedProfile(profile)}>
                         <Eye className="mr-1 h-4 w-4" />
-                        Xem
+                        {t("common.view")}
                       </Button>
                     </TableCell>
                   </TableRow>

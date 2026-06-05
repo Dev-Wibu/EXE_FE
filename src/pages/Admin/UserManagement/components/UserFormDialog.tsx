@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MAJOR_OPTIONS } from "@/constants/majors";
+import { useMajorOptions } from "@/constants/majors";
 import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import { ExternalLink, ImageIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -61,6 +61,7 @@ export function UserFormDialog({
   selectedUser,
 }: UserFormDialogProps) {
   const { t } = useTranslation();
+  const majorOptions = useMajorOptions();
   // State for local file previews (blob URLs for new file uploads)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -165,7 +166,7 @@ export function UserFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("common.email")} *</Label>
               <Input
                 id="email"
                 type="email"
@@ -176,7 +177,7 @@ export function UserFormDialog({
                     email: e.target.value,
                   })
                 }
-                placeholder="user@example.com"
+                placeholder={t("common.emailPlaceholder")}
               />
             </div>
           </div>
@@ -234,7 +235,7 @@ export function UserFormDialog({
                   <SelectValue placeholder={t("common.chooseAMajor")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {MAJOR_OPTIONS.map((option) => (
+                  {majorOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

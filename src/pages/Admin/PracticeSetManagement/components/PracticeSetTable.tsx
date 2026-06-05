@@ -59,7 +59,7 @@ export function PracticeSetTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-16">ID</TableHead>
+          <TableHead className="w-16">{t("common.id")}</TableHead>
           <TableHead>
             {getSortProps ? (
               <SortButton {...getSortProps("practiceSetName")}>{t("common.name")}</SortButton>

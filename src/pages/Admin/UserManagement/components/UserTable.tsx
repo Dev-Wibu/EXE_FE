@@ -60,7 +60,7 @@ export function UserTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-16">ID</TableHead>
+          <TableHead className="w-16">{t("common.id")}</TableHead>
           <TableHead>
             {getSortProps ? (
               <SortButton {...getSortProps("name")}>{t("common.name")}</SortButton>
@@ -68,7 +68,7 @@ export function UserTable({
               t("common.name")
             )}
           </TableHead>
-          <TableHead>Email</TableHead>
+          <TableHead>{t("common.email")}</TableHead>
           <TableHead className="w-24">{t("common.role")}</TableHead>
           <TableHead>{t("common.university")}</TableHead>
           <TableHead>{t("common.specialized")}</TableHead>
@@ -88,7 +88,7 @@ export function UserTable({
               </Badge>
             </TableCell>
             <TableCell className="max-w-xs truncate">{user.university || "-"}</TableCell>
-            <TableCell>{getMajorLabel(user.major || "") || "-"}</TableCell>
+            <TableCell>{getMajorLabel(user.major || "", t) || "-"}</TableCell>
             <TableCell>
               <Badge variant={user.isActive !== false ? "default" : "destructive"}>
                 {user.isActive !== false ? t("common.work") : t("common.shutDown")}
@@ -111,7 +111,7 @@ export function UserTable({
                   size="sm"
                   onClick={() => onUploadCV(user)}
                   className="h-8 w-8 p-0 hover:bg-green-50"
-                  title={user.cvUrl ? t("common.updateCv") : "Upload CV"}>
+                  title={user.cvUrl ? t("common.updateCv") : t("common.uploadCv")}>
                   <FileText
                     className={`h-4 w-4 ${user.cvUrl ? "text-green-600" : "text-gray-400"}`}
                   />

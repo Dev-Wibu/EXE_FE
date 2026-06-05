@@ -11,7 +11,6 @@ import {
   toTimestamp,
   toVietnamDateKey,
 } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { dashboardAdminManager } from "@/services";
 import { useQuery } from "@tanstack/react-query";
@@ -36,7 +35,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-const t = i18n.t.bind(i18n);
+
 type TrendPoint = {
   key: string;
   date: string;
@@ -50,23 +49,6 @@ type EffectiveRange = {
   toKey: string;
 };
 const DEFAULT_RANGE_DAYS = 30;
-const RANGE_OPTIONS: Array<{
-  label: string;
-  value: Exclude<RangeMode, "custom">;
-}> = [
-  {
-    label: t("adminDashboardoverview.7Days"),
-    value: "7",
-  },
-  {
-    label: t("adminDashboardoverview.14Days"),
-    value: "14",
-  },
-  {
-    label: t("adminDashboardoverview.30Days"),
-    value: "30",
-  },
-];
 const isSuccessPayment = (status?: PaymentEntity["status"]) => {
   if (!status) return true;
   const normalized = status.toUpperCase();
@@ -158,7 +140,10 @@ const buildTrendData = (
   });
   return points;
 };
-const getPaymentStatusLabel = (status?: PaymentEntity["status"]) => {
+const getPaymentStatusLabel = (
+  status?: PaymentEntity["status"],
+  t: (key: string) => string = (k) => k
+) => {
   switch (status) {
     case "COMPLETED":
       return t("general.success");
@@ -170,12 +155,29 @@ const getPaymentStatusLabel = (status?: PaymentEntity["status"]) => {
       return t("common.completed");
   }
 };
-const formatTransactionTime = (value?: string) => {
+const formatTransactionTime = (value?: string, t: (key: string) => string = (k) => k) => {
   if (!value) return t("adminDashboardoverview.noTime");
   return formatTimeDayMonth(value, t("adminDashboardoverview.noTime"));
 };
 export function DashboardOverviewPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const RANGE_OPTIONS: Array<{
+    label: string;
+    value: Exclude<RangeMode, "custom">;
+  }> = [
+    {
+      label: t("adminDashboardoverview.7Days"),
+      value: "7",
+    },
+    {
+      label: t("adminDashboardoverview.14Days"),
+      value: "14",
+    },
+    {
+      label: t("adminDashboardoverview.30Days"),
+      value: "30",
+    },
+  ];
   const { data: userCount, isLoading: loadingUsers } = useQuery({
     queryKey: ["admin", "total-users"],
     queryFn: () => dashboardAdminManager.getTotalUsers(),
@@ -284,14 +286,18 @@ export function DashboardOverviewPage() {
   const overviewStats = [
     {
       title: t("adminDashboardoverview.totalUsers"),
-      value: loadingUsers ? "..." : (userCount?.data || 0).toLocaleString("vi-VN"),
+      value: loadingUsers
+        ? "..."
+        : (userCount?.data || 0).toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN"),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
     },
     {
-      title: "Mentor",
-      value: loadingMentors ? "..." : (mentorCount?.data || 0).toLocaleString("vi-VN"),
+      title: t("adminDashboardoverview.mentors"),
+      value: loadingMentors
+        ? "..."
+        : (mentorCount?.data || 0).toLocaleString(i18n.language === "en" ? "en-US" : "vi-VN"),
       icon: UserCheck,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
@@ -561,7 +567,7 @@ export function DashboardOverviewPage() {
               </div>
             ) : (
               recentTransactions.map((record, index) => {
-                const statusLabel = getPaymentStatusLabel(record.status);
+                const statusLabel = getPaymentStatusLabel(record.status, t);
                 const successState = isSuccessPayment(record.status);
                 return (
                   <div
@@ -584,7 +590,7 @@ export function DashboardOverviewPage() {
                           </Badge>
                         </div>
                         <p className="text-xs text-slate-500">
-                          {formatTransactionTime(record.createdAt)}
+                          {formatTransactionTime(record.createdAt, t)}
                         </p>
                       </div>
                     </div>

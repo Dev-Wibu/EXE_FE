@@ -1,6 +1,4 @@
-import i18n from "@/lib/i18n";
 import { useTranslation } from "react-i18next";
-const t = i18n.t.bind(i18n);
 /**
  * Admin Notification Management Page
  * Allows admin to view all notifications and send system notifications.
@@ -79,34 +77,6 @@ interface NotificationTemplate {
   title: string;
   message: string;
 }
-const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
-  {
-    label: t("adminNotificationmanagement.violationWarning"),
-    title: t("adminNotificationmanagement.warningFromTheSystem"),
-    message: t("adminNotificationmanagement.yourAccountHasBeenRecorded"),
-  },
-  {
-    label: t("adminNotificationmanagement.systemUpdate"),
-    title: t("adminNotificationmanagement.systemUpdateNotification"),
-    message: t("adminNotificationmanagement.theSystemWillBeMaintained"),
-  },
-  {
-    label: t("adminNotificationmanagement.welcomeNewMembers"),
-    title: t("adminNotificationmanagement.welcomeToInblueAi"),
-    message: t("adminNotificationmanagement.thankYouForRegisteringAn"),
-  },
-  {
-    label: t("adminNotificationmanagement.paymentReminder"),
-    title: t("adminNotificationmanagement.servicePackagePaymentReminder"),
-    message: t("adminNotificationmanagement.yourServicePackageWillExpire"),
-  },
-  {
-    label: t("adminNotificationmanagement.interviewSessionApproved"),
-    title: t("adminNotificationmanagement.yourInterviewSessionHasBeen"),
-    message: t("adminNotificationmanagement.mentorHasConfirmedTheInterview"),
-  },
-];
-
 // ---------- Recipient combobox ----------
 
 interface RecipientComboboxProps {
@@ -119,6 +89,7 @@ interface RecipientComboboxProps {
   onChange: (value: string) => void;
 }
 function RecipientCombobox({ users, value, onChange }: RecipientComboboxProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const selectedUser = users.find((u) => String(u.id) === value);
   return (
@@ -182,6 +153,7 @@ interface NotificationPreviewProps {
   recipientName?: string;
 }
 function NotificationPreview({ title, message, recipientName }: NotificationPreviewProps) {
+  const { t } = useTranslation();
   if (!title && !message) return null;
   return (
     <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
@@ -217,6 +189,34 @@ function NotificationPreview({ title, message, recipientName }: NotificationPrev
 export function NotificationManagementPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  const NOTIFICATION_TEMPLATES: NotificationTemplate[] = [
+    {
+      label: t("adminNotificationmanagement.violationWarning"),
+      title: t("adminNotificationmanagement.warningFromTheSystem"),
+      message: t("adminNotificationmanagement.yourAccountHasBeenRecorded"),
+    },
+    {
+      label: t("adminNotificationmanagement.systemUpdate"),
+      title: t("adminNotificationmanagement.systemUpdateNotification"),
+      message: t("adminNotificationmanagement.theSystemWillBeMaintained"),
+    },
+    {
+      label: t("adminNotificationmanagement.welcomeNewMembers"),
+      title: t("adminNotificationmanagement.welcomeToInblueAi"),
+      message: t("adminNotificationmanagement.thankYouForRegisteringAn"),
+    },
+    {
+      label: t("adminNotificationmanagement.paymentReminder"),
+      title: t("adminNotificationmanagement.servicePackagePaymentReminder"),
+      message: t("adminNotificationmanagement.yourServicePackageWillExpire"),
+    },
+    {
+      label: t("adminNotificationmanagement.interviewSessionApproved"),
+      title: t("adminNotificationmanagement.yourInterviewSessionHasBeen"),
+      message: t("adminNotificationmanagement.mentorHasConfirmedTheInterview"),
+    },
+  ];
 
   // Fetch all notifications
   const {
@@ -509,7 +509,7 @@ export function NotificationManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
+                    <TableHead>{t("common.id")}</TableHead>
                     <TableHead>{t("general.recipient")}</TableHead>
                     <TableHead>{t("common.title")}</TableHead>
                     <TableHead>{t("common.content")}</TableHead>

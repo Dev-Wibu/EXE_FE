@@ -407,7 +407,7 @@ export function UserManagementPage() {
         currentCvUrl={selectedUser?.cvUrl}
         onUpload={handleCvUpload}
         isUploading={isCvUploading}
-        title="Upload CV"
+        title={t("common.uploadCv")}
         description={t("adminUsermanagement.uploadUserSCvOnly")}
       />
 

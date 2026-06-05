@@ -74,7 +74,7 @@ export function SessionFormDialog({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="userId2">ID Mentor</Label>
+            <Label htmlFor="userId2">{t("common.idMentor")}</Label>
             <Input
               id="userId2"
               type="number"

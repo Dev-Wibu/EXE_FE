@@ -156,10 +156,7 @@ export function CompanyDetailView({ companyId, onCompanyUpdate }: CompanyDetailV
         },
       });
       if (response.success) {
-        const action =
-          nextStatus === "INACTIVE"
-            ? t("adminMentormanagement.disable")
-            : t("adminMentormanagement.activate");
+        const action = nextStatus === "INACTIVE" ? t("common.disable") : t("common.activate");
         toast.success(
           t("general.successfullyCompany", {
             var_0: action,
@@ -369,7 +366,7 @@ export function CompanyDetailView({ companyId, onCompanyUpdate }: CompanyDetailV
           {company?.bannerUrl && (
             <img
               src={company.bannerUrl}
-              alt="Banner"
+              alt={t("common.banner")}
               className="h-full w-full object-cover opacity-80"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
@@ -394,7 +391,7 @@ export function CompanyDetailView({ companyId, onCompanyUpdate }: CompanyDetailV
             {company?.logoUrl ? (
               <img
                 src={company.logoUrl}
-                alt={company.name || "Logo"}
+                alt={company.name || t("common.logo")}
                 className="h-12 w-12 object-contain"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";

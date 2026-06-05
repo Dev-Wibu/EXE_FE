@@ -260,7 +260,7 @@ export function ViewPracticeSetItemsDialog({
             </p>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1">
-                <Label className="text-xs">Easy</Label>
+                <Label className="text-xs">{t("common.easy")}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -271,7 +271,7 @@ export function ViewPracticeSetItemsDialog({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Medium</Label>
+                <Label className="text-xs">{t("common.mediumLevel")}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -282,7 +282,7 @@ export function ViewPracticeSetItemsDialog({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Hard</Label>
+                <Label className="text-xs">{t("common.hard")}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -334,9 +334,9 @@ export function ViewPracticeSetItemsDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("general.all")}</SelectItem>
-                  <SelectItem value="EASY">Easy</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HARD">Hard</SelectItem>
+                  <SelectItem value="EASY">{t("common.easy")}</SelectItem>
+                  <SelectItem value="MEDIUM">{t("common.mediumLevel")}</SelectItem>
+                  <SelectItem value="HARD">{t("common.hard")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -31,7 +31,7 @@ const paymentStatusLabel = (value: string | undefined, t: (key: string) => strin
 
 const paymentPurposeLabel = (value: PaymentPurpose | undefined, t: (key: string) => string) => {
   switch (value) {
-    case "BUY_MEMBERSHIP":
+    case "FULLY_PAID":
       return t("common.buyPackages");
     case "MENTOR_INTERVIEW":
       return t("adminTransactionpaymentmanagement.interviewMentor");
@@ -231,7 +231,7 @@ export function PaymentManagementPage() {
           }}
           className="rounded-lg border border-slate-300 px-3 py-2 font-['Inter'] text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
           <option value="all">{t("adminTransactionpaymentmanagement.allPurpose")}</option>
-          <option value="BUY_MEMBERSHIP">
+          <option value="FULLY_PAID">
             {t("adminTransactionpaymentmanagement.buyMembershipPackage")}
           </option>
           <option value="MENTOR_INTERVIEW">{t("common.payForMentorSessions")}</option>

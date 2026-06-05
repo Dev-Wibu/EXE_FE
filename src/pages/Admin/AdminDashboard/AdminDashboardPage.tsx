@@ -13,7 +13,6 @@ import {
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
-import i18n from "@/lib/i18n";
 import { useSettingsStore } from "@/stores/settingsStore";
 import {
   Bell,
@@ -51,7 +50,6 @@ import { QuizSetManagementPage } from "../QuizSetManagement";
 import { ReviewManagementPage } from "../ReviewManagement";
 import { SessionManagementPage } from "../SessionManagement";
 import { UserManagementPage } from "../UserManagement";
-const t = i18n.t.bind(i18n);
 type TabType =
   | "dashboard"
   | "users"
@@ -98,7 +96,7 @@ const getAvailableTabs = (
 }> => [
   {
     type: "dashboard",
-    label: "Dashboard",
+    label: t("common.dashboard"),
   },
   {
     type: "users",
@@ -196,7 +194,7 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
     items: [
       {
         type: "dashboard",
-        label: "Dashboard",
+        label: t("common.dashboard"),
         icon: LayoutDashboard,
         iconColor: "text-indigo-600",
       },
@@ -310,7 +308,7 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
       {
         type: "dashboard",
         icon: LayoutDashboard,
-        label: "Dashboard",
+        label: t("common.dashboard"),
         color: "text-indigo-600",
       },
       {
@@ -415,24 +413,6 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
     ],
   },
 ];
-const ADMIN_SIDEBAR_LOGO = (
-  <>
-    <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-      <LayoutDashboard className="h-6 w-6 text-white" />
-    </div>
-    <div>
-      <h1 className="font-semibold text-gray-900 dark:text-white">ADMINISTRATOR</h1>
-      <p className="text-xs text-gray-500 dark:text-slate-400">
-        {t("adminAdmindashboard.systemAdministration")}
-      </p>
-    </div>
-  </>
-);
-const ADMIN_SIDEBAR_LOGO_COLLAPSED = (
-  <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-    <LayoutDashboard className="h-6 w-6 text-white" />
-  </div>
-);
 const validateChromeTabsMenuConfiguration = (
   availableTabs: Array<{ type: TabType; label: string }>,
   chromeTabsMenuGroups: ChromeTabMenuGroup[]
@@ -452,6 +432,32 @@ const validateChromeTabsMenuConfiguration = (
 };
 export function AdminDashboardPage() {
   const { t } = useTranslation();
+  const ADMIN_SIDEBAR_LOGO = useMemo(
+    () => (
+      <>
+        <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <LayoutDashboard className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h1 className="font-semibold text-gray-900 dark:text-white">
+            {t("adminAdmindashboard.administrator")}
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            {t("adminAdmindashboard.systemAdministration")}
+          </p>
+        </div>
+      </>
+    ),
+    [t]
+  );
+  const ADMIN_SIDEBAR_LOGO_COLLAPSED = useMemo(
+    () => (
+      <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+        <LayoutDashboard className="h-6 w-6 text-white" />
+      </div>
+    ),
+    []
+  );
   const navigate = useNavigate();
   const { companyId } = useParams();
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);

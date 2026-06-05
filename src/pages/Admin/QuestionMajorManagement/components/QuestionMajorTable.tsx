@@ -51,7 +51,11 @@ export function QuestionMajorTable({
       <TableHeader>
         <TableRow>
           <TableHead className="w-16">
-            {getSortProps ? <SortButton {...getSortProps("idSortValue")}>ID</SortButton> : "ID"}
+            {getSortProps ? (
+              <SortButton {...getSortProps("idSortValue")}>{t("common.id")}</SortButton>
+            ) : (
+              t("common.id")
+            )}
           </TableHead>
           <TableHead>
             {getSortProps ? (

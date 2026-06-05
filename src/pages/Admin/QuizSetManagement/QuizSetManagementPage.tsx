@@ -245,7 +245,7 @@ export function QuizSetManagementPage() {
                             className="gap-1"
                             onClick={() => handleViewItems(quizSet)}>
                             <Eye className="h-4 w-4" />
-                            Xem
+                            {t("common.view")}
                           </Button>
                           <Button
                             variant="outline"

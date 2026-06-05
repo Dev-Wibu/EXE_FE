@@ -297,9 +297,9 @@ export function PracticeQuestionManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("common.allLevels")}</SelectItem>
-              <SelectItem value="EASY">Easy</SelectItem>
-              <SelectItem value="MEDIUM">Medium</SelectItem>
-              <SelectItem value="HARD">Hard</SelectItem>
+              <SelectItem value="EASY">{t("common.easy")}</SelectItem>
+              <SelectItem value="MEDIUM">{t("common.mediumLevel")}</SelectItem>
+              <SelectItem value="HARD">{t("common.hard")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -555,9 +555,9 @@ function QuestionFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EASY">Easy</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HARD">Hard</SelectItem>
+                  <SelectItem value="EASY">{t("common.easy")}</SelectItem>
+                  <SelectItem value="MEDIUM">{t("common.mediumLevel")}</SelectItem>
+                  <SelectItem value="HARD">{t("common.hard")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -122,7 +122,7 @@ export function ViewSessionDialog({ isOpen, onOpenChange, session }: ViewSession
             <h4 className="mb-2 text-sm font-semibold">{t("common.mentorInformation")}</h4>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">ID Mentor</p>
+                <p className="text-sm font-medium text-gray-500">{t("common.idMentor")}</p>
                 <p className="text-sm">{session.userId2 || "-"}</p>
               </div>
               <div>

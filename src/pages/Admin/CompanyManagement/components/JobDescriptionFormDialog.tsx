@@ -207,7 +207,7 @@ export function JobDescriptionFormDialog({
                     currency: e.target.value,
                   })
                 }
-                placeholder="VND"
+                placeholder={t("common.currency")}
               />
             </div>
           </div>
