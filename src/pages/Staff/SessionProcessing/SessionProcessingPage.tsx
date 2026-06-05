@@ -252,11 +252,11 @@ export function SessionProcessingPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">
-                <SortButton {...getSortProps("idSortValue")}>ID</SortButton>
+                <SortButton {...getSortProps("idSortValue")}>{t("common.id")}</SortButton>
               </TableHead>
               <TableHead>{t("common.roomName1")}</TableHead>
               <TableHead>{t("general.userId")}</TableHead>
-              <TableHead>Mentor (ID)</TableHead>
+              <TableHead>{t("staffSessionprocessing.mentorId")}</TableHead>
               <TableHead>
                 <SortButton {...getSortProps("joinTimeSortValue")}>
                   {t("general.joinTime")}
@@ -384,7 +384,7 @@ export function SessionProcessingPage() {
           {viewSession && (
             <div className="grid gap-3 py-4 text-sm">
               <div className="grid grid-cols-[140px_1fr] gap-2">
-                <span className="font-medium text-gray-600">ID:</span>
+                <span className="font-medium text-gray-600">{t("common.id")}:</span>
                 <span>{viewSession.id}</span>
               </div>
               <div className="grid grid-cols-[140px_1fr] gap-2">
@@ -398,7 +398,9 @@ export function SessionProcessingPage() {
                 <span>{viewSession.userId ?? "-"}</span>
               </div>
               <div className="grid grid-cols-[140px_1fr] gap-2">
-                <span className="font-medium text-gray-600">Mentor (ID):</span>
+                <span className="font-medium text-gray-600">
+                  {t("staffSessionprocessing.mentorId")}
+                </span>
                 <span>{viewSession.userId2 ?? "-"}</span>
               </div>
               <div className="grid grid-cols-[140px_1fr] gap-2">

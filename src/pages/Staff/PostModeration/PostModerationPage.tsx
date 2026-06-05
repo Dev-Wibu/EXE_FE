@@ -311,9 +311,7 @@ export function PostModerationPage() {
                 <SortButton {...getSortProps("titleSortValue")}>{t("common.title")}</SortButton>
               </TableHead>
               <TableHead>
-                <SortButton {...getSortProps("authorSortValue")}>
-                  {t("adminPostmanagement.author")}
-                </SortButton>
+                <SortButton {...getSortProps("authorSortValue")}>{t("common.author")}</SortButton>
               </TableHead>
               <TableHead>{t("common.specialized")}</TableHead>
               <TableHead>

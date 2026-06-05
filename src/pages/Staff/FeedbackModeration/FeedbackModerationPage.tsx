@@ -158,14 +158,14 @@ export function FeedbackModerationPage() {
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1 text-red-600">
               <Flag className="h-4 w-4" />
-              1-{LOW_RATING_THRESHOLD} sao
+              {t("common.lowRatingLabel")}
             </CardDescription>
             <CardTitle className="text-2xl text-red-600">{lowRatingFeedbacks}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>3 sao</CardDescription>
+            <CardDescription>{t("common.mediumRatingLabel")}</CardDescription>
             <CardTitle className="text-2xl text-amber-600">
               {feedbacks.filter((f: MentorFeedback) => f.rating === 3).length}
             </CardTitle>
@@ -173,7 +173,7 @@ export function FeedbackModerationPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>{HIGH_RATING_MIN}-5 sao</CardDescription>
+            <CardDescription>{t("common.highRatingLabel")}</CardDescription>
             <CardTitle className="text-2xl text-green-600">
               {feedbacks.filter((f: MentorFeedback) => (f.rating || 0) >= HIGH_RATING_MIN).length}
             </CardTitle>
@@ -223,7 +223,9 @@ export function FeedbackModerationPage() {
                 <SelectItem value="low">
                   ⚠️ 1-{LOW_RATING_THRESHOLD} {t("common.starsNeedToSee")}
                 </SelectItem>
-                <SelectItem value="high">{HIGH_RATING_MIN}-5 sao</SelectItem>
+                <SelectItem value="high">
+                  {HIGH_RATING_MIN}-5 {t("common.stars")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -256,7 +258,7 @@ export function FeedbackModerationPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      <SortButton {...getSortProps("idSortValue")}>ID</SortButton>
+                      <SortButton {...getSortProps("idSortValue")}>{t("common.id")}</SortButton>
                     </TableHead>
                     <TableHead>
                       <SortButton {...getSortProps("mentorNameSortValue")}>

@@ -8,17 +8,15 @@ import {
 } from "@/components/shared";
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
-import i18n from "@/lib/i18n";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { LayoutDashboard, MessageSquare, Newspaper, Star, UserCheck, Video } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FeedbackModerationPage } from "../FeedbackModeration";
 import { MentorApplicationsPage } from "../MentorApplications";
 import { PostModerationPage } from "../PostModeration";
 import { ReviewModerationPage } from "../ReviewModeration";
 import { SessionProcessingPage } from "../SessionProcessing";
-const t = i18n.t.bind(i18n);
 type TabType =
   | "mentorApplications"
   | "sessions"
@@ -31,120 +29,6 @@ interface Tab {
   title: string;
 }
 const generateTabId = () => `tab-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-const getTabTitle = (type: TabType): string => {
-  switch (type) {
-    case "mentorApplications":
-      return t("staffStaffdashboard.browseMentors");
-    case "sessions":
-      return t("common.interviewSession");
-    case "reviewModeration":
-      return t("staffStaffdashboard.moderateYourMentorSReviews");
-    case "feedbackModeration":
-      return t("staffStaffdashboard.moderateResponsesFromCandidates");
-    case "postModeration":
-      return t("staffStaffdashboard.postModeration");
-    default:
-      return t("staffStaffdashboard.newTab");
-  }
-};
-const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = [
-  {
-    items: [
-      {
-        type: "mentorApplications",
-        label: t("staffStaffdashboard.browseMentors"),
-      },
-      {
-        type: "sessions",
-        label: t("common.interviewSession"),
-      },
-    ],
-  },
-  {
-    items: [
-      {
-        type: "reviewModeration",
-        label: t("staffStaffdashboard.moderateYourMentorSReviews"),
-        icon: Star,
-        iconColor: "text-yellow-600",
-      },
-      {
-        type: "feedbackModeration",
-        label: t("staffStaffdashboard.moderateCandidateResponses"),
-        icon: MessageSquare,
-        iconColor: "text-cyan-600",
-      },
-      {
-        type: "postModeration",
-        label: t("staffStaffdashboard.postModeration"),
-        icon: Newspaper,
-        iconColor: "text-purple-600",
-      },
-    ],
-  },
-];
-const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = [
-  {
-    label: t("common.profession"),
-    items: [
-      {
-        type: "mentorApplications",
-        icon: UserCheck,
-        label: t("staffStaffdashboard.browseMentors"),
-        color: "text-green-600",
-        description: t("staffStaffdashboard.processMentorRegistration"),
-      },
-      {
-        type: "sessions",
-        icon: Video,
-        label: t("common.interviewSession"),
-        color: "text-blue-600",
-        description: t("common.manageInterviewSessions"),
-      },
-    ],
-  },
-  {
-    label: t("staffStaffdashboard.censor"),
-    items: [
-      {
-        type: "reviewModeration",
-        icon: Star,
-        label: t("staffStaffdashboard.mentorSReview"),
-        color: "text-yellow-600",
-        description: t("staffStaffdashboard.moderateTheMentorSAssessment"),
-      },
-      {
-        type: "feedbackModeration",
-        icon: MessageSquare,
-        label: t("staffStaffdashboard.candidateResponses"),
-        color: "text-cyan-600",
-        description: t("staffStaffdashboard.moderateCandidatesResponsesToMentors"),
-      },
-      {
-        type: "postModeration",
-        icon: Newspaper,
-        label: t("common.article"),
-        color: "text-purple-600",
-        description: t("staffStaffdashboard.postModeration"),
-      },
-    ],
-  },
-];
-const STAFF_SIDEBAR_LOGO = (
-  <>
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-600">
-      <LayoutDashboard className="h-6 w-6 text-white" />
-    </div>
-    <div>
-      <h1 className="font-semibold text-gray-900 dark:text-white">
-        {t("staffStaffdashboard.coordinationPanel")}
-      </h1>
-      <p className="text-xs text-gray-500 dark:text-slate-400">
-        {t("staffStaffdashboard.permanentProcessing")}
-      </p>
-    </div>
-  </>
-);
 const STAFF_SIDEBAR_LOGO_COLLAPSED = (
   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-600">
     <LayoutDashboard className="h-6 w-6 text-white" />
@@ -152,6 +36,129 @@ const STAFF_SIDEBAR_LOGO_COLLAPSED = (
 );
 export function StaffDashboardPage() {
   const { t } = useTranslation();
+  const getTabTitle = (type: TabType): string => {
+    switch (type) {
+      case "mentorApplications":
+        return t("staffStaffdashboard.browseMentors");
+      case "sessions":
+        return t("common.interviewSession");
+      case "reviewModeration":
+        return t("staffStaffdashboard.moderateYourMentorSReviews");
+      case "feedbackModeration":
+        return t("staffStaffdashboard.moderateResponsesFromCandidates");
+      case "postModeration":
+        return t("staffStaffdashboard.postModeration");
+      default:
+        return t("staffStaffdashboard.newTab");
+    }
+  };
+  const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = useMemo(
+    () => [
+      {
+        items: [
+          {
+            type: "mentorApplications",
+            label: t("staffStaffdashboard.browseMentors"),
+          },
+          {
+            type: "sessions",
+            label: t("common.interviewSession"),
+          },
+        ],
+      },
+      {
+        items: [
+          {
+            type: "reviewModeration",
+            label: t("staffStaffdashboard.moderateYourMentorSReviews"),
+            icon: Star,
+            iconColor: "text-yellow-600",
+          },
+          {
+            type: "feedbackModeration",
+            label: t("staffStaffdashboard.moderateCandidateResponses"),
+            icon: MessageSquare,
+            iconColor: "text-cyan-600",
+          },
+          {
+            type: "postModeration",
+            label: t("staffStaffdashboard.postModeration"),
+            icon: Newspaper,
+            iconColor: "text-purple-600",
+          },
+        ],
+      },
+    ],
+    [t]
+  );
+  const SIDEBAR_MENU_GROUPS: SidebarMenuGroup[] = useMemo(
+    () => [
+      {
+        label: t("common.profession"),
+        items: [
+          {
+            type: "mentorApplications",
+            icon: UserCheck,
+            label: t("staffStaffdashboard.browseMentors"),
+            color: "text-green-600",
+            description: t("staffStaffdashboard.processMentorRegistration"),
+          },
+          {
+            type: "sessions",
+            icon: Video,
+            label: t("common.interviewSession"),
+            color: "text-blue-600",
+            description: t("common.manageInterviewSessions"),
+          },
+        ],
+      },
+      {
+        label: t("staffStaffdashboard.censor"),
+        items: [
+          {
+            type: "reviewModeration",
+            icon: Star,
+            label: t("staffStaffdashboard.mentorSReview"),
+            color: "text-yellow-600",
+            description: t("staffStaffdashboard.moderateTheMentorSAssessment"),
+          },
+          {
+            type: "feedbackModeration",
+            icon: MessageSquare,
+            label: t("staffStaffdashboard.candidateResponses"),
+            color: "text-cyan-600",
+            description: t("staffStaffdashboard.moderateCandidatesResponsesToMentors"),
+          },
+          {
+            type: "postModeration",
+            icon: Newspaper,
+            label: t("common.article"),
+            color: "text-purple-600",
+            description: t("staffStaffdashboard.postModeration"),
+          },
+        ],
+      },
+    ],
+    [t]
+  );
+  const STAFF_SIDEBAR_LOGO = useMemo(
+    () => (
+      <>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-600">
+          <LayoutDashboard className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h1 className="font-semibold text-gray-900 dark:text-white">
+            {t("staffStaffdashboard.coordinationPanel")}
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            {t("staffStaffdashboard.permanentProcessing")}
+          </p>
+        </div>
+      </>
+    ),
+    [t]
+  );
   const sidebarBehavior = useSettingsStore((state) => state.sidebarBehavior);
   const contentRef = useRef<HTMLDivElement>(null);
   const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
@@ -195,15 +202,18 @@ export function StaffDashboardPage() {
     },
     [activeTabId]
   );
-  const handleNewTab = useCallback((type: string) => {
-    const newTab: Tab = {
-      id: generateTabId(),
-      type: type as TabType,
-      title: getTabTitle(type as TabType),
-    };
-    setTabs((prevTabs) => [...prevTabs, newTab]);
-    setActiveTabId(newTab.id);
-  }, []);
+  const handleNewTab = useCallback(
+    (type: string) => {
+      const newTab: Tab = {
+        id: generateTabId(),
+        type: type as TabType,
+        title: getTabTitle(type as TabType),
+      };
+      setTabs((prevTabs) => [...prevTabs, newTab]);
+      setActiveTabId(newTab.id);
+    },
+    [t]
+  );
   const handleSidebarNavigate = useCallback(
     (type: string) => {
       const existingTab = tabs.find((tab) => tab.type === type);

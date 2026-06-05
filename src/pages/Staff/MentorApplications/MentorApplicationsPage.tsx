@@ -246,7 +246,7 @@ export function MentorApplicationsPage() {
                   {t("staffMentorapplications.fullName")}
                 </SortButton>
               </TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>{t("common.email")}</TableHead>
               <TableHead>{t("common.expertise")}</TableHead>
               <TableHead>
                 <SortButton {...getSortProps("yearsOfExperience")}>
