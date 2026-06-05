@@ -12,7 +12,7 @@ import { formatCurrency, formatDateTime, toTimestamp, toVietnamDateKey } from "@
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { format as formatDateFn } from "date-fns";
-import { vi } from "date-fns/locale";
+import { enUS, vi } from "date-fns/locale";
 import {
   Calendar,
   ChevronLeft,
@@ -182,7 +182,7 @@ function CalendarSessionEntry({
   );
 }
 export function MentorOverviewPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const MONTH_NAMES = useMemo(
     () => [
       t("common.january"),
@@ -279,10 +279,11 @@ export function MentorOverviewPage() {
     if (!year || !month || !day) {
       return t("common.selectedDate");
     }
+    const dateFnsLocale = i18n.language === "en" ? enUS : vi;
     return formatDateFn(new Date(year, month - 1, day), "EEEE, dd/MM/yyyy", {
-      locale: vi,
+      locale: dateFnsLocale,
     });
-  }, [selectedDateKey, t]);
+  }, [selectedDateKey, t, i18n]);
   const recentReviews = [...reviews]
     .sort((a, b) => getReviewSortTimestamp(b) - getReviewSortTimestamp(a))
     .slice(0, 4);
@@ -571,7 +572,7 @@ export function MentorOverviewPage() {
                 <Button variant="outline" className="justify-start text-left font-normal">
                   {fromDate
                     ? formatDateFn(fromDate, "dd/MM/yyyy", {
-                        locale: vi,
+                        locale: i18n.language === "en" ? enUS : vi,
                       })
                     : t("common.fromDate")}
                 </Button>
@@ -586,7 +587,6 @@ export function MentorOverviewPage() {
                       setToDate(undefined);
                     }
                   }}
-                  locale={vi}
                 />
               </PopoverContent>
             </Popover>
@@ -596,7 +596,7 @@ export function MentorOverviewPage() {
                 <Button variant="outline" className="justify-start text-left font-normal">
                   {toDate
                     ? formatDateFn(toDate, "dd/MM/yyyy", {
-                        locale: vi,
+                        locale: i18n.language === "en" ? enUS : vi,
                       })
                     : t("common.comeDay")}
                 </Button>
@@ -606,7 +606,6 @@ export function MentorOverviewPage() {
                   mode="single"
                   selected={toDate}
                   onSelect={setToDate}
-                  locale={vi}
                   disabled={(date) => (fromDate ? date < fromDate : false)}
                 />
               </PopoverContent>

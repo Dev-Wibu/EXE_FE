@@ -310,7 +310,9 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                         {edu.degree != null && (
                           <p className="text-zinc-500 dark:text-zinc-400">
                             {String(edu.degree)}
-                            {edu.gpa != null ? ` · ${t("common.gpa")}: ${String(edu.gpa)}` : ""}
+                            {edu.gpa != null
+                              ? ` · ${t("common.gpaWithValue", { value: String(edu.gpa) })}`
+                              : ""}
                           </p>
                         )}
                         {(edu.start_date != null || edu.end_date != null) && (

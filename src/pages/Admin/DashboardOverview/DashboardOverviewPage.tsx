@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { dashboardAdminManager } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfDay, subDays } from "date-fns";
-import { vi } from "date-fns/locale";
 import {
   Activity,
   Calendar as CalendarIcon,
@@ -394,12 +393,7 @@ export function DashboardOverviewPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={customFrom}
-                    onSelect={handleCustomFromChange}
-                    locale={vi}
-                  />
+                  <Calendar mode="single" selected={customFrom} onSelect={handleCustomFromChange} />
                 </PopoverContent>
               </Popover>
 
@@ -417,12 +411,7 @@ export function DashboardOverviewPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={customTo}
-                    onSelect={handleCustomToChange}
-                    locale={vi}
-                  />
+                  <Calendar mode="single" selected={customTo} onSelect={handleCustomToChange} />
                 </PopoverContent>
               </Popover>
 

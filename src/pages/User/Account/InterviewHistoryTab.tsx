@@ -123,7 +123,7 @@ export function InterviewHistoryTab() {
   // Translated constants — inside component for language reactivity
   const INTERVIEW_TYPE_TABS: Array<{ value: InterviewType; label: string }> = [
     { value: "all", label: t("general.all") },
-    { value: "ai", label: "AI" },
+    { value: "ai", label: t("general.ai") },
     { value: "mock", label: t("common.mentor") },
   ];
   const AI_MODE_LABELS: Record<string, string> = {

@@ -9,7 +9,7 @@ import { useUserSessions } from "@/hooks/useSession";
 import { formatDateTime, toVietnamDateKey } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { format as formatDateFn } from "date-fns";
-import { vi } from "date-fns/locale";
+import { enUS, vi } from "date-fns/locale";
 import { Calendar, ChevronLeft, ChevronRight, Clock, Filter, Target, Video } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -213,7 +213,7 @@ function CalendarSessionEntry({
   );
 }
 export function OverviewPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const MONTH_NAMES = [
     t("common.january"),
@@ -325,10 +325,11 @@ export function OverviewPage() {
     if (!year || !month || !day) {
       return t("common.selectedDate");
     }
+    const dateFnsLocale = i18n.language === "en" ? enUS : vi;
     return formatDateFn(new Date(year, month - 1, day), "EEEE, dd/MM/yyyy", {
-      locale: vi,
+      locale: dateFnsLocale,
     });
-  }, [selectedDateKey, t]);
+  }, [selectedDateKey, t, i18n]);
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
   const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
@@ -612,7 +613,7 @@ export function OverviewPage() {
                 <Button variant="outline" className="justify-start text-left font-normal">
                   {fromDate
                     ? formatDateFn(fromDate, "dd/MM/yyyy", {
-                        locale: vi,
+                        locale: i18n.language === "en" ? enUS : vi,
                       })
                     : t("common.fromDate")}
                 </Button>
@@ -627,7 +628,6 @@ export function OverviewPage() {
                       setToDate(undefined);
                     }
                   }}
-                  locale={vi}
                 />
               </PopoverContent>
             </Popover>
@@ -637,7 +637,7 @@ export function OverviewPage() {
                 <Button variant="outline" className="justify-start text-left font-normal">
                   {toDate
                     ? formatDateFn(toDate, "dd/MM/yyyy", {
-                        locale: vi,
+                        locale: i18n.language === "en" ? enUS : vi,
                       })
                     : t("common.comeDay")}
                 </Button>
@@ -647,7 +647,6 @@ export function OverviewPage() {
                   mode="single"
                   selected={toDate}
                   onSelect={setToDate}
-                  locale={vi}
                   disabled={(date) => (fromDate ? date < fromDate : false)}
                 />
               </PopoverContent>
