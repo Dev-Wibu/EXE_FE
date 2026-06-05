@@ -1,6 +1,6 @@
 # EXE_FE — AI Agent Rules
 
-> **@LAST_SYNCED: 2026-06-01**
+> **@LAST_SYNCED: 2026-06-05**
 > Canonical source of truth for all AI agents working on this codebase.
 > Mirrored to `.github/copilot-instructions.md` for GitHub Copilot compatibility.
 
@@ -72,11 +72,6 @@ const isLoggedIn = !!token; // check login ← unnecessary
 | Drawer | `vaul` |
 | OTP input | `input-otp` |
 | Command palette | `cmdk` |
-
-**Dead dependencies** (exist in `package.json` but have zero imports — remove when touching related code):
-
-- ~~`formik`~~ → use `react-hook-form` + `zod`
-- ~~`react-icons`~~ → use `lucide-react`
 
 **Backend**: Spring Boot at `https://api.kdz.asia` · JWT auth · OpenAPI spec at `/v3/api-docs`
 **Infra**: Nx for task caching (`nx.json`, `project.json`) · Vercel deployment (`vercel.json` with SPA rewrites)

@@ -325,40 +325,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/transactions/transfer-out": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Dùng cho giao dịch khi mà mua gói từ ví */
-        post: operations["transferOut"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/transactions/transfer-in": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Tạo giao dịch nạp tiền vào ví, trả về link thanh toán của PayOS để FE redirect người dùng sang trang thanh toán */
-        post: operations["transferIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/test/python-test": {
         parameters: {
             query?: never;
@@ -385,6 +351,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["testFoodHash"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/test/cv-evaluation-test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Đánh giá CV dựa trên tiêu chí và mô tả công việc */
+        post: operations["testCvEvaluation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -865,55 +848,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getUserResponseById"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllTransactions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/transactions/{transactionCode}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getTransactionByTransactionCode"];
-        put?: never;
-        post?: never;
-        /** Nếu FE nhận đc rediect về trang cancelUrl thì gọi API này để xóa transaction đã tạo trước đó */
-        delete: operations["deleteTransaction"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/transactions/user/{userId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getTransactionsByUserId"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1769,22 +1703,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/dashboard/total-transaction": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getTotalTransaction"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/dashboard/total-session": {
         parameters: {
             query?: never;
@@ -2108,8 +2026,6 @@ export interface components {
             major?: "CNTT" | "Marketing";
             cvUrl?: string;
             cv_public_id?: string;
-            /** Format: int64 */
-            walletBalance?: number;
         };
         PracticeSetItem: {
             /** Format: int32 */
@@ -2395,6 +2311,25 @@ export interface components {
             description?: string;
             start_date?: string;
             end_date?: string;
+        };
+        EvaluationCriteria: {
+            /** Format: int32 */
+            maxScore?: number;
+            aiSystemPrompt?: string;
+            extraMetrics?: string[];
+        };
+        JD: {
+            title?: string;
+            description?: string;
+            requirements?: string;
+            level?: string;
+        };
+        CvEvaluationResponse: {
+            /** Format: double */
+            score?: number;
+            extraMetrics?: {
+                [key: string]: unknown;
+            };
         };
         DailyWebHookPayload: {
             payload?: components["schemas"]["PayloadData"];
@@ -2835,22 +2770,6 @@ export interface components {
             cvUrl?: string;
             cv_public_id?: string;
         };
-        Transaction: {
-            /** Format: int32 */
-            id?: number;
-            /** Format: int64 */
-            amount?: number;
-            description?: string;
-            transactionCode?: string;
-            user?: components["schemas"]["User"];
-            /** Format: date-time */
-            createdAt?: string;
-            transactionType?: boolean;
-            /** Format: int64 */
-            currentBalance?: number;
-            /** @enum {string} */
-            paymentPurpose?: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
-        };
         PracticeQuestionDto: {
             /** Format: int32 */
             questionId?: number;
@@ -2936,10 +2855,10 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PostResponse"][];
@@ -2949,12 +2868,12 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
-            /** Format: int32 */
-            pageNumber?: number;
             unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
+            /** Format: int32 */
+            pageNumber?: number;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
@@ -2977,7 +2896,7 @@ export interface components {
             createdAt?: string;
             transactionCode?: string;
             /** @enum {string} */
-            paymentPurpose?: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
+            paymentPurpose?: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "DB_DESIGN" | "AI_INTERVIEW" | "FULLY_PAID" | "MENTOR_INTERVIEW";
         };
         ChatMessage: {
             /** Format: int32 */
@@ -3216,23 +3135,23 @@ export interface components {
             error?: boolean;
         };
         JspConfigDescriptor: {
-            taglibs?: components["schemas"]["TaglibDescriptor"][];
             jspPropertyGroups?: components["schemas"]["JspPropertyGroupDescriptor"][];
+            taglibs?: components["schemas"]["TaglibDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
             trimDirectiveWhitespaces?: string;
-            includePreludes?: string[];
+            deferredSyntaxAllowedAsLiteral?: string;
             includeCodas?: string[];
             errorOnELNotFound?: string;
             pageEncoding?: string;
             scriptingInvalid?: string;
-            deferredSyntaxAllowedAsLiteral?: string;
+            includePreludes?: string[];
             errorOnUndeclaredNamespace?: string;
+            elIgnored?: string;
             isXml?: string;
             defaultContentType?: string;
             urlPatterns?: string[];
             buffer?: string;
-            elIgnored?: string;
         };
         RedirectView: {
             applicationContext?: components["schemas"]["ApplicationContext"];
@@ -3255,20 +3174,22 @@ export interface components {
             expandUriTemplateVariables?: boolean;
             propagateQueryParams?: boolean;
             hosts?: string[];
-            propagateQueryProperties?: boolean;
             redirectView?: boolean;
-            attributesCSV?: string;
+            propagateQueryProperties?: boolean;
             attributesMap?: {
                 [key: string]: unknown;
             };
+            attributesCSV?: string;
             attributes?: {
                 [key: string]: string;
             };
         };
         ServletContext: {
-            /** Format: int32 */
-            sessionTimeout?: number;
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            initParameterNames?: unknown;
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            virtualServerName?: string;
+            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
@@ -3276,6 +3197,9 @@ export interface components {
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
+            serverInfo?: string;
+            /** Format: int32 */
+            sessionTimeout?: number;
             servletRegistrations?: {
                 [key: string]: components["schemas"]["ServletRegistration"];
             };
@@ -3283,12 +3207,7 @@ export interface components {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
-            serverInfo?: string;
-            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            virtualServerName?: string;
-            initParameterNames?: unknown;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             contextPath?: string;
             attributeNames?: unknown;
             classLoader?: {
@@ -3368,9 +3287,9 @@ export interface components {
         SessionCookieConfig: {
             /** Format: int32 */
             maxAge?: number;
-            httpOnly?: boolean;
             secure?: boolean;
             domain?: string;
+            httpOnly?: boolean;
             path?: string;
             name?: string;
             attributes?: {
@@ -4351,53 +4270,6 @@ export interface operations {
             };
         };
     };
-    transferOut: {
-        parameters: {
-            query: {
-                amount: number;
-                userId: number;
-                paymentPurpose: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
-                };
-            };
-        };
-    };
-    transferIn: {
-        parameters: {
-            query: {
-                amount: number;
-                userId: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
-                };
-            };
-        };
-    };
     testPythonApi: {
         parameters: {
             query?: never;
@@ -4448,6 +4320,35 @@ export interface operations {
                 };
                 content: {
                     "*/*": Record<string, never>;
+                };
+            };
+        };
+    };
+    testCvEvaluation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    cvFile: string;
+                    evaluationCriteria: components["schemas"]["EvaluationCriteria"];
+                    jobDescription: components["schemas"]["JD"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CvEvaluationResponse"];
                 };
             };
         };
@@ -4859,7 +4760,7 @@ export interface operations {
             query: {
                 amount: number;
                 userId: number;
-                paymentPurpose: "BUY_MEMBERSHIP" | "TOP_UP_WALLET" | "WITHDRAW_FROM_WALLET" | "MENTOR_INTERVIEW";
+                paymentPurpose: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "DB_DESIGN" | "AI_INTERVIEW" | "FULLY_PAID" | "MENTOR_INTERVIEW";
             };
             header?: never;
             path?: never;
@@ -5192,90 +5093,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["UserResponse"];
-                };
-            };
-        };
-    };
-    getAllTransactions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Transaction"][];
-                };
-            };
-        };
-    };
-    getTransactionByTransactionCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transactionCode: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Transaction"];
-                };
-            };
-        };
-    };
-    deleteTransaction: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                transactionCode: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getTransactionsByUserId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Transaction"][];
                 };
             };
         };
@@ -6535,26 +6352,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": number;
-                };
-            };
-        };
-    };
-    getTotalTransaction: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Transaction"][];
                 };
             };
         };
