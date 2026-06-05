@@ -1,32 +1,9 @@
 import logo from "@/assets/icon.svg";
 import { Badge } from "@/components/ui/badge";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Sparkles, User, Volume2, VolumeX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ChatMessage } from "./types";
-const t = i18n.t.bind(i18n);
-const QUESTION_TYPE_CONFIG: Record<
-  string,
-  {
-    label: string;
-    className: string;
-  }
-> = {
-  BLUEPRINT: {
-    label: t("userAiinterview.mainSentence"),
-    className:
-      "border-indigo-300 bg-indigo-100 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
-  },
-  FOLLOW_UP: {
-    label: t("userAiinterview.nextSentence"),
-    className:
-      "border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-  },
-};
-const ROLE_LABELS: Record<ChatMessage["role"], string> = {
-  ai: "AI Interviewer",
-  user: t("common.friend"),
-};
 export function ChatBubble({
   message,
   userAvatarUrl,
@@ -38,6 +15,25 @@ export function ChatBubble({
   onSpeak?: (_text: string, _id: number) => void;
   speakingId?: string | number | null;
 }) {
+  const { t } = useTranslation();
+
+  const QUESTION_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
+    BLUEPRINT: {
+      label: t("userAiinterview.mainSentence"),
+      className:
+        "border-indigo-300 bg-indigo-100 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+    },
+    FOLLOW_UP: {
+      label: t("userAiinterview.nextSentence"),
+      className:
+        "border-violet-300 bg-violet-100 text-violet-700 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    },
+  };
+  const ROLE_LABELS: Record<ChatMessage["role"], string> = {
+    ai: t("userAiinterview.aiInterviewer"),
+    user: t("common.friend"),
+  };
+
   const isAI = message.role === "ai";
   const isThisSpeaking = speakingId === message.id;
   return (
@@ -51,9 +47,13 @@ export function ChatBubble({
             : "bg-emerald-100 dark:bg-emerald-900/40"
         )}>
         {isAI ? (
-          <img src={logo} alt="AI" className="h-6 w-6 object-contain" />
+          <img src={logo} alt={t("common.ai")} className="h-6 w-6 object-contain" />
         ) : userAvatarUrl ? (
-          <img src={userAvatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+          <img
+            src={userAvatarUrl}
+            alt={t("common.avatar")}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         )}
@@ -135,10 +135,11 @@ export function ChatBubble({
   );
 }
 export function TypingIndicator() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-cyan-600 to-blue-700 shadow-sm">
-        <img src={logo} alt="AI" className="h-6 w-6 object-contain" />
+        <img src={logo} alt={t("common.ai")} className="h-6 w-6 object-contain" />
       </div>
       <div className="rounded-2xl rounded-tl-sm border border-cyan-200/70 bg-linear-to-br from-white via-cyan-50/60 to-blue-50/60 px-4 py-3 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
         <div className="flex items-center gap-1.5">
@@ -151,10 +152,11 @@ export function TypingIndicator() {
   );
 }
 export function EvaluatingIndicator() {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-cyan-600 to-blue-700 shadow-sm">
-        <img src={logo} alt="AI" className="h-6 w-6 object-contain" />
+        <img src={logo} alt={t("common.ai")} className="h-6 w-6 object-contain" />
       </div>
       <div className="rounded-2xl rounded-tl-sm border border-cyan-200/70 bg-cyan-50 px-4 py-3 shadow-sm dark:border-cyan-800/70 dark:bg-cyan-950/30">
         <div className="flex items-center gap-2">

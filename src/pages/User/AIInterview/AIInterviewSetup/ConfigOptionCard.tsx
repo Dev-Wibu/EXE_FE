@@ -3,10 +3,12 @@ import { CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { InterviewConfigOptionItem } from "@/interfaces/schema.types";
 
+import { useTranslation } from "react-i18next";
+
 import {
+  buildCategoryLabels,
   CATEGORY_COLORS,
   CATEGORY_ICONS,
-  CATEGORY_LABELS,
   type ConfigCategoryKey,
 } from "./constants";
 
@@ -56,6 +58,8 @@ export function ConfigSection({
   selectedKey: string | null;
   onSelect: (_key: string) => void;
 }) {
+  const { t } = useTranslation();
+  const categoryLabels = buildCategoryLabels(t);
   const colors = CATEGORY_COLORS[categoryKey];
   const Icon = CATEGORY_ICONS[categoryKey];
   return (
@@ -65,7 +69,7 @@ export function ConfigSection({
           className={`flex h-8 w-8 items-center justify-center rounded-lg ${colors.bg} ${colors.icon}`}>
           {Icon && <Icon className="h-5 w-5" />}
         </div>
-        <h4 className="text-foreground text-sm font-semibold">{CATEGORY_LABELS[categoryKey]}</h4>
+        <h4 className="text-foreground text-sm font-semibold">{categoryLabels[categoryKey]}</h4>
       </div>
       <div
         className={`grid gap-3 ${

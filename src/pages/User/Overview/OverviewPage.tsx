@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserSessions } from "@/hooks/useSession";
 import { formatDateTime, toVietnamDateKey } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { format as formatDateFn } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -22,70 +21,11 @@ import {
   formatCalendarTime,
   groupUserCalendarByDate,
 } from "./userSchedule.utils";
-const t = i18n.t.bind(i18n);
 const MAX_VISIBLE_SESSIONS = 2;
 const MOBILE_VIEW_AGENDA = "agenda";
 const MOBILE_VIEW_CALENDAR = "calendar";
 const WEEK_DAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-const MONTH_NAMES = [
-  t("common.january"),
-  t("common.february"),
-  t("common.march"),
-  t("common.april"),
-  t("common.may"),
-  t("common.june"),
-  t("common.july"),
-  t("common.august"),
-  t("common.september"),
-  t("common.october"),
-  t("common.november"),
-  t("common.december"),
-];
-const statusConfig: Record<
-  string,
-  {
-    label: string;
-    dot: string;
-    badgeClass: string;
-  }
-> = {
-  DRAFT: {
-    label: t("common.waitingForApproval"),
-    dot: "bg-amber-500",
-    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  SCHEDULED: {
-    label: t("common.comingSoon"),
-    dot: "bg-blue-500",
-    badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  PAID: {
-    label: t("common.paid"),
-    dot: "bg-emerald-500",
-    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  },
-  ONGOING: {
-    label: t("common.ongoing"),
-    dot: "bg-green-500",
-    badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    dot: "bg-slate-500",
-    badgeClass: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  },
-  REJECTED: {
-    label: t("common.rejected"),
-    dot: "bg-red-500",
-    badgeClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  },
-  CANCELED: {
-    label: t("common.canceled"),
-    dot: "bg-rose-500",
-    badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
-  },
-};
-const defaultStatusConfig = statusConfig.SCHEDULED;
+
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 };
@@ -121,7 +61,45 @@ function AgendaSessionItem({
   onOpenRoom: (_sessionId?: number) => void;
   onWriteReview: (_sessionId?: number) => void;
 }) {
-  const status = statusConfig[item.session.status || "SCHEDULED"] || defaultStatusConfig;
+  const { t } = useTranslation();
+  const statusConfig: Record<string, { label: string; dot: string; badgeClass: string }> = {
+    DRAFT: {
+      label: t("common.waitingForApproval"),
+      dot: "bg-amber-500",
+      badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    },
+    SCHEDULED: {
+      label: t("common.comingSoon"),
+      dot: "bg-blue-500",
+      badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    },
+    PAID: {
+      label: t("common.paid"),
+      dot: "bg-emerald-500",
+      badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    },
+    ONGOING: {
+      label: t("common.ongoing"),
+      dot: "bg-green-500",
+      badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    },
+    COMPLETED: {
+      label: t("general.completed"),
+      dot: "bg-slate-500",
+      badgeClass: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    },
+    REJECTED: {
+      label: t("common.rejected"),
+      dot: "bg-red-500",
+      badgeClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    },
+    CANCELED: {
+      label: t("common.canceled"),
+      dot: "bg-rose-500",
+      badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+    },
+  };
+  const status = statusConfig[item.session.status || "SCHEDULED"] || statusConfig.SCHEDULED;
   const canJoinRoom =
     (item.session.status === "PAID" || item.session.status === "ONGOING") && !!item.session.roomUrl;
   const canWriteReview = item.session.status === "COMPLETED";
@@ -136,7 +114,7 @@ function AgendaSessionItem({
               })}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Mentor #{item.session.userId2 || "-"}
+            {t("common.mentorWithId", { id: item.session.userId2 || "-" })}
           </p>
         </div>
         <Badge className={cn("border-0", status.badgeClass)}>{status.label}</Badge>
@@ -175,7 +153,45 @@ function CalendarSessionEntry({
   item: UserCalendarSession;
   onOpen: (_sessionId?: number) => void;
 }) {
-  const status = statusConfig[item.session.status || "SCHEDULED"] || defaultStatusConfig;
+  const { t } = useTranslation();
+  const statusConfig: Record<string, { label: string; dot: string; badgeClass: string }> = {
+    DRAFT: {
+      label: t("common.waitingForApproval"),
+      dot: "bg-amber-500",
+      badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    },
+    SCHEDULED: {
+      label: t("common.comingSoon"),
+      dot: "bg-blue-500",
+      badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    },
+    PAID: {
+      label: t("common.paid"),
+      dot: "bg-emerald-500",
+      badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    },
+    ONGOING: {
+      label: t("common.ongoing"),
+      dot: "bg-green-500",
+      badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    },
+    COMPLETED: {
+      label: t("general.completed"),
+      dot: "bg-slate-500",
+      badgeClass: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    },
+    REJECTED: {
+      label: t("common.rejected"),
+      dot: "bg-red-500",
+      badgeClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    },
+    CANCELED: {
+      label: t("common.canceled"),
+      dot: "bg-rose-500",
+      badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+    },
+  };
+  const status = statusConfig[item.session.status || "SCHEDULED"] || statusConfig.SCHEDULED;
   return (
     <button
       onClick={() => onOpen(item.session.id)}
@@ -198,6 +214,61 @@ function CalendarSessionEntry({
 }
 export function OverviewPage() {
   const { t } = useTranslation();
+
+  const MONTH_NAMES = [
+    t("common.january"),
+    t("common.february"),
+    t("common.march"),
+    t("common.april"),
+    t("common.may"),
+    t("common.june"),
+    t("common.july"),
+    t("common.august"),
+    t("common.september"),
+    t("common.october"),
+    t("common.november"),
+    t("common.december"),
+  ];
+
+  const statusConfig: Record<string, { label: string; dot: string; badgeClass: string }> = {
+    DRAFT: {
+      label: t("common.waitingForApproval"),
+      dot: "bg-amber-500",
+      badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    },
+    SCHEDULED: {
+      label: t("common.comingSoon"),
+      dot: "bg-blue-500",
+      badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    },
+    PAID: {
+      label: t("common.paid"),
+      dot: "bg-emerald-500",
+      badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    },
+    ONGOING: {
+      label: t("common.ongoing"),
+      dot: "bg-green-500",
+      badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    },
+    COMPLETED: {
+      label: t("general.completed"),
+      dot: "bg-slate-500",
+      badgeClass: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    },
+    REJECTED: {
+      label: t("common.rejected"),
+      dot: "bg-red-500",
+      badgeClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    },
+    CANCELED: {
+      label: t("common.canceled"),
+      dot: "bg-rose-500",
+      badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+    },
+  };
+  const defaultStatusConfig = statusConfig.SCHEDULED;
+
   const navigate = useNavigate();
   const { data: sessions = [], isLoading: sessionsLoading } = useUserSessions();
   const now = new Date();
@@ -734,7 +805,9 @@ export function OverviewPage() {
             <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               {upcomingInterviews}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">SCHEDULED, PAID, ONGOING</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {t("common.scheduled")}, {t("common.paid")}, {t("common.ongoing")}
+            </p>
           </CardContent>
         </Card>
 

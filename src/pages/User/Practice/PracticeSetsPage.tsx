@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
 import { formatDate, toTimestamp } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { practiceSetManager } from "@/services";
 import type { PracticeSetResponse } from "@/services/practice-set.manager";
@@ -24,7 +23,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-const t = i18n.t.bind(i18n);
 const levelBadgeMap: Record<string, string> = {
   INTERN: "bg-blue-100 text-blue-700",
   FRESHER: "bg-green-100 text-green-700",
@@ -62,6 +60,7 @@ function PracticeSetCard({
   navigate: ReturnType<typeof useNavigate>;
   allSets: PracticeSetResponse[];
 }) {
+  const { t } = useTranslation();
   const goToDetail = () => {
     // Pass the sets for this session via location state so the detail page
     // does NOT need to re-fetch from the API (requirement #9).
@@ -132,6 +131,7 @@ function SessionGroupCard({
   sets: PracticeSetResponse[];
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  const { t } = useTranslation();
   const first = sets[0];
   const sessionId = first.interviewSessionId;
   const dayCount = sets.length;
@@ -424,10 +424,10 @@ export function PracticeSetsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("general.all")}</SelectItem>
-              <SelectItem value="INTERN">Intern</SelectItem>
-              <SelectItem value="FRESHER">Fresher</SelectItem>
-              <SelectItem value="JUNIOR">Junior</SelectItem>
-              <SelectItem value="MIDDLE">Middle</SelectItem>
+              <SelectItem value="INTERN">{t("common.intern")}</SelectItem>
+              <SelectItem value="FRESHER">{t("common.fresher")}</SelectItem>
+              <SelectItem value="JUNIOR">{t("common.junior")}</SelectItem>
+              <SelectItem value="MIDDLE">{t("common.middle")}</SelectItem>
             </SelectContent>
           </Select>
           <ReloadButton

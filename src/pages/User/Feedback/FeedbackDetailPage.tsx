@@ -43,7 +43,9 @@ export function FeedbackDetailPage() {
     review?.situationNote || review?.taskNote || review?.actionNote || review?.resultNote;
   const hasAdditionalNotes = review?.strength || review?.weakness || review?.improve;
   const mentorName =
-    review?.mentor?.name || mentorInfo?.name || (mentorId ? `Mentor #${mentorId}` : "Mentor");
+    review?.mentor?.name ||
+    mentorInfo?.name ||
+    (mentorId ? t("common.mentorWithId", { id: mentorId }) : t("common.mentor"));
   const mentorAvatarUrl = review?.mentor?.avatarUrl || mentorInfo?.avatarUrl;
   const mentorExpertise = review?.mentor?.expertise || mentorInfo?.expertise;
   const mentorCompany = review?.mentor?.currentCompany || mentorInfo?.currentCompany;

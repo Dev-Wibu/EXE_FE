@@ -5,7 +5,6 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { $api } from "@/lib/api";
 import { formatUtcNaiveDateTime } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { practiceSetManager } from "@/services";
 import {
@@ -37,77 +36,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { SelectRoadmapModal } from "./components/SelectRoadmapModal";
-const t = i18n.t.bind(i18n);
-const RESULT_MAP: Record<
-  string,
-  {
-    label: string;
-    color: string;
-    bg: string;
-  }
-> = {
-  STRONG_HIRE: {
-    label: t("common.excellent"),
-    color: "text-emerald-700 dark:text-emerald-300",
-    bg: "bg-emerald-100 dark:bg-emerald-900/40",
-  },
-  HIRE: {
-    label: t("common.obtain"),
-    color: "text-blue-700 dark:text-blue-300",
-    bg: "bg-blue-100 dark:bg-blue-900/40",
-  },
-  CONSIDER: {
-    label: t("common.needToConsider"),
-    color: "text-amber-700 dark:text-amber-300",
-    bg: "bg-amber-100 dark:bg-amber-900/40",
-  },
-  REJECT: {
-    label: t("common.failed"),
-    color: "text-red-700 dark:text-red-300",
-    bg: "bg-red-100 dark:bg-red-900/40",
-  },
-};
-const MODE_LABELS: Record<string, string> = {
-  STANDARD_MOCK: t("common.trialInterview"),
-  THEORY_CHECK: t("common.testTheTheory"),
-  PROJECT_DEFENSE: t("common.projectProtection"),
-};
-const DIFFICULTY_LABELS: Record<string, string> = {
-  FRESHER_BASIC: t("userAiinterview.basicFresher"),
-  FRESHER_ADVANCED: t("userAiinterview.advancedFresher"),
-};
-const LANGUAGE_LABELS: Record<string, string> = {
-  VI: t("common.vietnamese"),
-  EN: "English",
-};
-const DOMAIN_LABELS: Record<string, string> = {
-  IT: t("userAiinterview.informationTechnologyIt"),
-  NON_IT: t("common.outsideOfIt"),
-};
-const STATUS_LABELS: Record<
-  string,
-  {
-    label: string;
-    className: string;
-  }
-> = {
-  CREATED: {
-    label: t("common.created"),
-    className: "bg-blue-100 text-blue-700",
-  },
-  IN_PROGRESS: {
-    label: t("common.ongoing"),
-    className: "bg-amber-100 text-amber-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    className: "bg-emerald-100 text-emerald-700",
-  },
-  CANCELLED: {
-    label: t("common.canceled"),
-    className: "bg-red-100 text-red-700",
-  },
-};
+
 function ResultSkeleton() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -147,6 +76,7 @@ function QACard({
   index: number;
   followUps?: (typeof qa)[];
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const score = qa.score ?? 0;
   const scoreColor =
@@ -266,6 +196,54 @@ function QACard({
 }
 export function AIInterviewResultPage() {
   const { t } = useTranslation();
+
+  // Translated constants — inside component for language reactivity
+  const RESULT_MAP: Record<string, { label: string; color: string; bg: string }> = {
+    STRONG_HIRE: {
+      label: t("common.excellent"),
+      color: "text-emerald-700 dark:text-emerald-300",
+      bg: "bg-emerald-100 dark:bg-emerald-900/40",
+    },
+    HIRE: {
+      label: t("common.obtain"),
+      color: "text-blue-700 dark:text-blue-300",
+      bg: "bg-blue-100 dark:bg-blue-900/40",
+    },
+    CONSIDER: {
+      label: t("common.needToConsider"),
+      color: "text-amber-700 dark:text-amber-300",
+      bg: "bg-amber-100 dark:bg-amber-900/40",
+    },
+    REJECT: {
+      label: t("common.failed"),
+      color: "text-red-700 dark:text-red-300",
+      bg: "bg-red-100 dark:bg-red-900/40",
+    },
+  };
+  const MODE_LABELS: Record<string, string> = {
+    STANDARD_MOCK: t("common.trialInterview"),
+    THEORY_CHECK: t("common.testTheTheory"),
+    PROJECT_DEFENSE: t("common.projectProtection"),
+  };
+  const DIFFICULTY_LABELS: Record<string, string> = {
+    FRESHER_BASIC: t("userAiinterview.basicFresher"),
+    FRESHER_ADVANCED: t("userAiinterview.advancedFresher"),
+  };
+  const LANGUAGE_LABELS: Record<string, string> = {
+    VI: t("common.vietnamese"),
+    EN: t("common.english"),
+  };
+  const DOMAIN_LABELS: Record<string, string> = {
+    IT: t("userAiinterview.informationTechnologyIt"),
+    NON_IT: t("common.outsideOfIt"),
+  };
+  const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+    CREATED: { label: t("common.created"), className: "bg-blue-100 text-blue-700" },
+    IN_PROGRESS: { label: t("common.ongoing"), className: "bg-amber-100 text-amber-700" },
+    COMPLETED: { label: t("general.completed"), className: "bg-emerald-100 text-emerald-700" },
+    CANCELLED: { label: t("common.canceled"), className: "bg-red-100 text-red-700" },
+  };
+
   const navigate = useNavigate();
   const { id } = useParams<{
     id: string;

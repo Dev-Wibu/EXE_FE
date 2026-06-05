@@ -1,13 +1,16 @@
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
-import { STEPS } from "./constants";
+import { buildSteps } from "./constants";
 
 export function StepIndicator({ currentStep }: { currentStep: number }) {
+  const { t } = useTranslation();
+  const steps = buildSteps(t);
   return (
     <div className="flex items-center justify-center gap-2">
-      {STEPS.map((step, index) => {
+      {steps.map((step, index) => {
         const StepIcon = step.icon;
         const isActive = currentStep === step.id;
         const isCompleted = currentStep > step.id;
@@ -25,7 +28,7 @@ export function StepIndicator({ currentStep }: { currentStep: number }) {
               <span className="hidden sm:inline">{step.label}</span>
               <span className="sm:hidden">{step.id}</span>
             </div>
-            {index < STEPS.length - 1 && (
+            {index < steps.length - 1 && (
               <div className={cn("h-0.5 w-8", isCompleted ? "bg-green-400" : "bg-border")} />
             )}
           </div>

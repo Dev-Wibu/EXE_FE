@@ -37,7 +37,7 @@ export function SimilarMentors({ mentors, onViewProfile }: SimilarMentorsProps) 
             className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
             <div className="flex items-start gap-3">
               <Avatar className="h-12 w-12 border border-white shadow-sm dark:border-slate-700">
-                <AvatarImage src={mentor.avatarUrl || ""} alt={mentor.name || "Mentor"} />
+                <AvatarImage src={mentor.avatarUrl || ""} alt={mentor.name || t("common.mentor")} />
                 <AvatarFallback className="bg-slate-200 text-sm font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
                   {mentor.name?.charAt(0) || "M"}
                 </AvatarFallback>
@@ -45,7 +45,7 @@ export function SimilarMentors({ mentors, onViewProfile }: SimilarMentorsProps) 
 
               <div className="min-w-0 flex-1 space-y-1">
                 <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
-                  {mentor.name || "Mentor"}
+                  {mentor.name || t("common.mentor")}
                 </p>
                 <p className="truncate text-xs font-medium text-slate-600 dark:text-slate-300">
                   {mentor.expertise || t("common.professionalMentor")}

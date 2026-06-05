@@ -1,22 +1,12 @@
 import logo from "@/assets/icon.svg";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Bot, Camera, CameraOff, GripVertical, LoaderCircle, Mic, MicOff } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CameraPreviewState } from "./useUserCameraPreview";
-const t = i18n.t.bind(i18n);
-const CAMERA_STATE_LABELS: Record<CameraPreviewState, string> = {
-  idle: t("userAiinterview.cameraIsOff"),
-  requesting: t("userAiinterview.askingForCameraPermission"),
-  granted: t("userAiinterview.cameraIsOn"),
-  denied: t("userAiinterview.cameraPermissionDenied"),
-  unsupported: t("userAiinterview.cameraIsNotSupported"),
-  error: t("userAiinterview.cameraError"),
-};
 const CAMERA_PANEL_MIN_WIDTH = 240;
 const CAMERA_PANEL_MAX_WIDTH = 520;
 const CAMERA_PANEL_DEFAULT_WIDTH = 360;
@@ -39,30 +29,6 @@ interface InterviewStageProps {
   onToggleListening: () => void;
   onToggleCamera: () => void;
 }
-const resolveStageStatus = (params: {
-  interviewFinished: boolean;
-  sessionExpiredMidway: boolean;
-  isEvaluating: boolean;
-  isSubmitting: boolean;
-  isListening: boolean;
-}): string => {
-  if (params.sessionExpiredMidway) {
-    return t("userAiinterview.sessionHasExpiredPleaseCreate");
-  }
-  if (params.interviewFinished) {
-    return t("userAiinterview.interviewCompletedYouCanSee");
-  }
-  if (params.isEvaluating) {
-    return t("userAiinterview.aiIsEvaluatingYourResponses");
-  }
-  if (params.isSubmitting) {
-    return t("userAiinterview.aiIsProcessingTheAnswer");
-  }
-  if (params.isListening) {
-    return t("userAiinterview.recordingYourAnswer");
-  }
-  return t("userAiinterview.pressTheMicToStart");
-};
 export function InterviewStage({
   phaseName,
   questionIndex,
@@ -82,6 +48,30 @@ export function InterviewStage({
   onToggleCamera,
 }: InterviewStageProps) {
   const { t } = useTranslation();
+
+  const CAMERA_STATE_LABELS: Record<CameraPreviewState, string> = {
+    idle: t("userAiinterview.cameraIsOff"),
+    requesting: t("userAiinterview.askingForCameraPermission"),
+    granted: t("userAiinterview.cameraIsOn"),
+    denied: t("userAiinterview.cameraPermissionDenied"),
+    unsupported: t("userAiinterview.cameraIsNotSupported"),
+    error: t("userAiinterview.cameraError"),
+  };
+  const resolveStageStatus = (params: {
+    interviewFinished: boolean;
+    sessionExpiredMidway: boolean;
+    isEvaluating: boolean;
+    isSubmitting: boolean;
+    isListening: boolean;
+  }): string => {
+    if (params.sessionExpiredMidway) return t("userAiinterview.sessionHasExpiredPleaseCreate");
+    if (params.interviewFinished) return t("userAiinterview.interviewCompletedYouCanSee");
+    if (params.isEvaluating) return t("userAiinterview.aiIsEvaluatingYourResponses");
+    if (params.isSubmitting) return t("userAiinterview.aiIsProcessingTheAnswer");
+    if (params.isListening) return t("userAiinterview.recordingYourAnswer");
+    return t("userAiinterview.pressTheMicToStart");
+  };
+
   const [cameraPanelWidth, setCameraPanelWidth] = useState(CAMERA_PANEL_DEFAULT_WIDTH);
   const resizeStartRef = useRef({
     pointerId: -1,
@@ -191,13 +181,13 @@ export function InterviewStage({
           )}
           <img
             src={logo}
-            alt="AI Interview"
+            alt={t("common.aiInterview")}
             className="relative h-20 w-20 object-contain md:h-24 md:w-24"
           />
         </div>
 
         <h2 className="mt-5 text-xl font-semibold tracking-tight text-slate-100 md:text-2xl">
-          AI Interview Assistant
+          {t("userAiinterview.aiInterviewAssistant")}
         </h2>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-300">{stageStatus}</p>
 

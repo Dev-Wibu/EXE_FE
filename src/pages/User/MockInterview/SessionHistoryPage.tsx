@@ -1,10 +1,8 @@
-import i18n from "@/lib/i18n";
-import { useTranslation } from "react-i18next";
-const t = i18n.t.bind(i18n);
 /**
  * Session History Page
  * Displays user's interview sessions with option to join or write reviews
  */
+import { useTranslation } from "react-i18next";
 
 import { PaginationControl } from "@/components/shared/PaginationControl";
 import { ReloadButton } from "@/components/shared/ReloadButton";
@@ -52,51 +50,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-// Status badge mapping
-const statusMap: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-    color: string;
-  }
-> = {
-  DRAFT: {
-    label: t("common.waitingForApproval"),
-    variant: "secondary",
-    color: "bg-amber-100 text-amber-700",
-  },
-  SCHEDULED: {
-    label: t("common.comingSoon"),
-    variant: "secondary",
-    color: "bg-blue-100 text-blue-700",
-  },
-  PAID: {
-    label: t("common.paid"),
-    variant: "secondary",
-    color: "bg-emerald-100 text-emerald-700",
-  },
-  ONGOING: {
-    label: t("common.ongoing"),
-    variant: "default",
-    color: "bg-green-100 text-green-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    variant: "outline",
-    color: "bg-slate-100 text-slate-600",
-  },
-  REJECTED: {
-    label: t("common.rejected"),
-    variant: "destructive",
-    color: "bg-red-100 text-red-600",
-  },
-  CANCELED: {
-    label: t("common.canceled"),
-    variant: "destructive",
-    color: "bg-red-100 text-red-600",
-  },
-};
 type SessionStatusFilter =
   | "all"
   | "DRAFT"
@@ -122,7 +75,48 @@ function SessionCard({
   onWriteFeedback,
   onPaySession,
 }: SessionCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const statusMap: Record<
+    string,
+    { label: string; variant: "default" | "secondary" | "destructive" | "outline"; color: string }
+  > = {
+    DRAFT: {
+      label: t("common.waitingForApproval"),
+      variant: "secondary",
+      color: "bg-amber-100 text-amber-700",
+    },
+    SCHEDULED: {
+      label: t("common.comingSoon"),
+      variant: "secondary",
+      color: "bg-blue-100 text-blue-700",
+    },
+    PAID: {
+      label: t("common.paid"),
+      variant: "secondary",
+      color: "bg-emerald-100 text-emerald-700",
+    },
+    ONGOING: {
+      label: t("common.ongoing"),
+      variant: "default",
+      color: "bg-green-100 text-green-700",
+    },
+    COMPLETED: {
+      label: t("general.completed"),
+      variant: "outline",
+      color: "bg-slate-100 text-slate-600",
+    },
+    REJECTED: {
+      label: t("common.rejected"),
+      variant: "destructive",
+      color: "bg-red-100 text-red-600",
+    },
+    CANCELED: {
+      label: t("common.canceled"),
+      variant: "destructive",
+      color: "bg-red-100 text-red-600",
+    },
+  };
   const status = statusMap[session.status || "SCHEDULED"] || statusMap.SCHEDULED;
   const isCompleted = session.status === "COMPLETED";
   const isScheduled = session.status === "SCHEDULED";
@@ -146,7 +140,7 @@ function SessionCard({
               </CardTitle>
               <CardDescription className="flex items-center gap-2">
                 <User className="h-3 w-3" />
-                Mentor #{session.userId2}
+                {t("common.mentorWithId", { id: session.userId2 })}
               </CardDescription>
             </div>
           </div>
@@ -244,6 +238,7 @@ function SessionCard({
 }
 export function SessionHistoryPage() {
   const { t } = useTranslation();
+
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [searchQuery, setSearchQuery] = useState("");
@@ -317,30 +312,37 @@ export function SessionHistoryPage() {
       ),
     [feedbacks]
   );
-  const filteredSessions = useMemo(
-    () =>
-      [...sessions]
-        .filter((session) => {
-          const normalizedSearch = searchQuery.trim().toLowerCase();
-          const matchesSearch =
-            normalizedSearch.length === 0 ||
-            session.id?.toString().includes(normalizedSearch) ||
-            session.userId2?.toString().includes(normalizedSearch) ||
-            session.roomName?.toLowerCase().includes(normalizedSearch) ||
-            statusMap[session.status || "SCHEDULED"]?.label
-              ?.toLowerCase()
-              .includes(normalizedSearch);
-          if (!matchesSearch) {
-            return false;
-          }
-          if (statusFilter !== "all" && session.status !== statusFilter) {
-            return false;
-          }
-          return true;
-        })
-        .sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
-    [searchQuery, sessions, statusFilter]
-  );
+  const filteredSessions = useMemo(() => {
+    const statusLabels: Record<string, string> = {
+      DRAFT: t("common.waitingForApproval"),
+      SCHEDULED: t("common.comingSoon"),
+      PAID: t("common.paid"),
+      ONGOING: t("common.ongoing"),
+      COMPLETED: t("general.completed"),
+      REJECTED: t("common.rejected"),
+      CANCELED: t("common.canceled"),
+    };
+    return [...sessions]
+      .filter((session) => {
+        const normalizedSearch = searchQuery.trim().toLowerCase();
+        const matchesSearch =
+          normalizedSearch.length === 0 ||
+          session.id?.toString().includes(normalizedSearch) ||
+          session.userId2?.toString().includes(normalizedSearch) ||
+          session.roomName?.toLowerCase().includes(normalizedSearch) ||
+          (statusLabels[session.status || "SCHEDULED"] ?? "")
+            .toLowerCase()
+            .includes(normalizedSearch);
+        if (!matchesSearch) {
+          return false;
+        }
+        if (statusFilter !== "all" && session.status !== statusFilter) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+  }, [t, searchQuery, sessions, statusFilter]);
 
   // Apply sorting
   const { sortedData, getSortProps } = useSortable(filteredSessions);
@@ -652,7 +654,7 @@ export function SessionHistoryPage() {
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t("common.sortBy")}
               </span>
-              <SortButton {...getSortProps("id")}>ID</SortButton>
+              <SortButton {...getSortProps("id")}>{t("common.id")}</SortButton>
               <SortButton {...getSortProps("status")}>{t("common.status")}</SortButton>
             </div>
           </Card>

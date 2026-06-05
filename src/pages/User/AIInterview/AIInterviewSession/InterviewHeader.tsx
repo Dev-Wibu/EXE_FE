@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -12,8 +11,8 @@ import {
   Volume2,
   VolumeOff,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { SpeechLanguageCode } from "./types";
-const t = i18n.t.bind(i18n);
 export function InterviewHeader({
   phaseName,
   questionIndex,
@@ -45,6 +44,7 @@ export function InterviewHeader({
   onToggleMute: () => void;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const progress = totalQuestions > 0 ? (questionIndex / totalQuestions) * 100 : 0;
   const safeProgress = Math.max(0, Math.min(progress, 100));
   return (

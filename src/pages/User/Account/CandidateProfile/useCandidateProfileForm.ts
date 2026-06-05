@@ -4,7 +4,6 @@ import type {
   ProjectDetail,
   WorkExperience,
 } from "@/interfaces/schema.types";
-import i18n from "@/lib/i18n";
 import { queryClient } from "@/lib/queryClient";
 import {
   useCandidateProfile,
@@ -12,26 +11,23 @@ import {
   useUpdateCandidateProfile,
 } from "@/services/candidate-profile.manager";
 import { useAuthStore } from "@/stores/authStore";
+import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-const t = i18n.t.bind(i18n);
 export type SkillField = "technicalSkills" | "softSkills" | "tools";
 export type ListField = SkillField | "certifications" | "achievements";
-export const SKILL_TABS: Array<{
-  key: SkillField;
-  label: string;
-}> = [
+export const buildSkillTabs = (t: TFunction) => [
   {
-    key: "technicalSkills",
+    key: "technicalSkills" as SkillField,
     label: t("common.technicalSkills"),
   },
   {
-    key: "softSkills",
+    key: "softSkills" as SkillField,
     label: t("common.softSkills"),
   },
   {
-    key: "tools",
+    key: "tools" as SkillField,
     label: t("common.tools"),
   },
 ];

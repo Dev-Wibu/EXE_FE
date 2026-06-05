@@ -113,7 +113,11 @@ export function ExperienceSection(props: ExperienceSectionProps) {
                     <p className="text-sm text-gray-600 dark:text-slate-300">
                       {edu.major} — {edu.degree}
                     </p>
-                    {edu.gpa && <p className="text-sm">GPA: {edu.gpa}</p>}
+                    {edu.gpa && (
+                      <p className="text-sm">
+                        {t("common.gpa")}: {edu.gpa}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-gray-400">
                       {edu.start_date} — {edu.end_date || t("common.present")}
                     </p>
@@ -334,7 +338,7 @@ export function ExperienceSection(props: ExperienceSectionProps) {
                   />
                 </div>
                 <div>
-                  <Label>GPA</Label>
+                  <Label>{t("common.gpa")}</Label>
                   <Input
                     value={edu.gpa ?? ""}
                     onChange={(e) => updateEducation(index, "gpa", e.target.value)}

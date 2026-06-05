@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { resolveAutoSendDraft } from "./speech.utils";
-import { SPEECH_LANGUAGE_LABELS, type ChatMessage, type SpeechLanguageCode } from "./types";
+import { buildSpeechLanguageLabels, type ChatMessage, type SpeechLanguageCode } from "./types";
 const normalizeServerTimestamp = (value?: string): string | null => {
   if (!value) {
     return null;
@@ -173,12 +173,13 @@ export function useAIInterviewSession(isSessionActivated = false) {
 
   // chatInputValue là state được lift lên từ ChatInput để callback STT có thể cập nhật trực tiếp
   const [chatInputValue, setChatInputValue] = useState("");
-  const handleSpeechListeningReminder = useCallback((elapsedMs: number) => {
-    const elapsedMinutes = Math.max(1, Math.floor(elapsedMs / 60000));
-    toast.info(
-      `Ban da ghi am ${elapsedMinutes} phut. Bam nut mic o man hinh chinh de dung va gui cau tra loi.`
-    );
-  }, []);
+  const handleSpeechListeningReminder = useCallback(
+    (elapsedMs: number) => {
+      const elapsedMinutes = Math.max(1, Math.floor(elapsedMs / 60000));
+      toast.info(t("userMockinterview.recordingReminder", { var_0: elapsedMinutes }));
+    },
+    [t]
+  );
 
   // Khởi tạo STT (Speech-to-Text) — onFinalTranscript gọi trực tiếp từ native event, không qua useEffect
   const {
@@ -730,7 +731,7 @@ export function useAIInterviewSession(isSessionActivated = false) {
     isMuted,
     toggleMute,
     speechLanguage,
-    speechLanguageLabel: SPEECH_LANGUAGE_LABELS[speechLanguage],
+    speechLanguageLabel: buildSpeechLanguageLabels(t)[speechLanguage],
     hasPreferredLanguageVoice,
     activeVoiceName,
     shouldWarnSpeechFallback,

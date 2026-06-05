@@ -571,7 +571,7 @@ export function useAIInterviewSetup() {
         parseAs: "text",
       });
       if (error || !data) {
-        throw new Error("Create session failed");
+        throw new Error(t("userAiinterview.unableToCreateInterviewSession"));
       }
       const rawKey = (data as string).trim().replace(/^"|"$/g, "");
 

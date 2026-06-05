@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, MessageSquare, Send } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { ChatBubble, EvaluatingIndicator, TypingIndicator } from "./ChatBubble";
 import type { ChatMessage } from "./types";
-const t = i18n.t.bind(i18n);
 
 // ============================================================================
 // ChatInput (local component)
@@ -31,6 +30,7 @@ function ChatInput({
   value: string;
   onValueChange: (_val: string) => void;
 }) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
@@ -179,6 +179,7 @@ export function ChatPanel({
   onChatInputChange: (_val: string) => void;
   speechLanguageLabel: string;
 }) {
+  const { t } = useTranslation();
   const inputDisabled = isSubmitting || isEvaluating || !hasStarted;
   const inputPlaceholder = isEvaluating
     ? t("userAiinterview.aiIsEvaluatingTheInterview")

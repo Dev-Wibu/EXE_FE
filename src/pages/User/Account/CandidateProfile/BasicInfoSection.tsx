@@ -78,7 +78,7 @@ export function BasicInfoSection(props: BasicInfoSectionProps) {
                   targetLevel: e.target.value,
                 }))
               }
-              placeholder="VD: Intern, Fresher, Junior, Middle"
+              placeholder={t("userAiinterview.placeholderLevel")}
             />
           </div>
         </div>

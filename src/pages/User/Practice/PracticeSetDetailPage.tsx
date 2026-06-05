@@ -6,7 +6,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import i18n from "@/lib/i18n";
 import {
   buildPracticeQuizPath,
   buildPracticeQuizResultPath,
@@ -36,7 +35,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-const t = i18n.t.bind(i18n);
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -74,6 +72,7 @@ function PracticeItemCard({
   sessionId,
   lastQuizId,
 }: ItemCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -87,7 +86,7 @@ function PracticeItemCard({
       {isNext && (
         <div className="absolute -top-2.5 right-3">
           <Badge className="bg-[#0047AB] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
-            NEXT
+            {t("common.next")}
           </Badge>
         </div>
       )}
@@ -134,7 +133,7 @@ function PracticeItemCard({
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground flex items-center gap-1 text-xs">
               <Clock className="h-3 w-3" />
-              30 mins
+              {t("common.duration30mins")}
             </span>
 
             {!isLocked && (
@@ -231,6 +230,7 @@ interface SessionItemCardProps {
   status: ItemStatus;
 }
 function SessionQuestionCard({ question, index, status }: SessionItemCardProps) {
+  const { t } = useTranslation();
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const isDone = status === "DONE";
@@ -242,7 +242,7 @@ function SessionQuestionCard({ question, index, status }: SessionItemCardProps) 
       {isNext && (
         <div className="absolute -top-2.5 right-3">
           <Badge className="bg-[#0047AB] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
-            NEXT
+            {t("common.next")}
           </Badge>
         </div>
       )}
@@ -285,7 +285,7 @@ function SessionQuestionCard({ question, index, status }: SessionItemCardProps) 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground flex items-center gap-1 text-xs">
               <Clock className="h-3 w-3" />
-              30 mins
+              {t("common.duration30mins")}
             </span>
 
             {!isLocked && (
@@ -359,6 +359,7 @@ function QuizHistoryPopover({
   routePracticeSetId,
   sessionId,
 }: QuizHistoryPopoverProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const sorted = [...quizHistory].sort((a, b) => (b.quizId ?? 0) - (a.quizId ?? 0));
   const handleNavigateToQuiz = (quiz: QuizSet) => {
@@ -391,7 +392,7 @@ function QuizHistoryPopover({
             className="hover:bg-muted flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition-colors"
             onClick={() => handleNavigateToQuiz(quiz)}>
             <span className="text-foreground truncate text-xs">
-              {quiz.quizName ?? `Quiz #${quiz.quizId}`}
+              {quiz.quizName ?? t("userPractice.quizWithId", { id: quiz.quizId })}
             </span>
             {quiz.submitted ? (
               <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
@@ -419,6 +420,7 @@ interface SessionDayGroupProps {
   onToggle: () => void;
 }
 function SessionDayGroup({ ps, dayNumber, dayStatus, isOpen, onToggle }: SessionDayGroupProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [quizHistory, setQuizHistory] = useState<QuizSet[]>(
     () =>
@@ -455,7 +457,7 @@ function SessionDayGroup({ ps, dayNumber, dayStatus, isOpen, onToggle }: Session
               ...prev,
               {
                 quizId: newQuizId,
-                quizName: `AI Quiz #${newQuizId}`,
+                quizName: t("userPractice.aiQuizWithId", { id: newQuizId }),
                 submitted: false,
               },
             ]);
@@ -654,6 +656,7 @@ function DayGroup({
   isOpen,
   onToggle,
 }: DayGroupProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const handleCreateAiQuiz = async () => {

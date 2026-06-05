@@ -46,17 +46,17 @@ export function UserNotificationsPage() {
   const groupedNotifications = useMemo(() => {
     const groupedMap = new Map<string, Notification[]>();
     for (const notification of filteredNotifications) {
-      const type = inferNotificationType(notification.title);
+      const type = inferNotificationType(notification.title, t);
       const currentGroup = groupedMap.get(type) ?? [];
       currentGroup.push(notification);
       groupedMap.set(type, currentGroup);
     }
     return NOTIFICATION_GROUP_ORDER.map((type) => ({
       type,
-      label: getNotificationTypeConfig(type).label,
+      label: getNotificationTypeConfig(type, t).label,
       notifications: groupedMap.get(type) ?? [],
     })).filter((group) => group.notifications.length > 0);
-  }, [filteredNotifications]);
+  }, [filteredNotifications, t]);
   const handleMarkAllRead = () => {
     if (!unreadNotificationIds.length) {
       return;

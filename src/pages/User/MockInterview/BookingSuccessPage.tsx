@@ -37,7 +37,7 @@ export function BookingSuccessPage() {
               {state.mentorName && (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-amber-600" />
-                  <span className="text-slate-600 dark:text-slate-400">Mentor:</span>
+                  <span className="text-slate-600 dark:text-slate-400">{t("common.mentor")}:</span>
                   <span className="font-medium">{state.mentorName}</span>
                 </div>
               )}

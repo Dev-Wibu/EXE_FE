@@ -196,9 +196,9 @@ export function PracticeQuestionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("general.all")}</SelectItem>
-                <SelectItem value="EASY">Easy</SelectItem>
-                <SelectItem value="MEDIUM">Medium</SelectItem>
-                <SelectItem value="HARD">Hard</SelectItem>
+                <SelectItem value="EASY">{t("common.easy")}</SelectItem>
+                <SelectItem value="MEDIUM">{t("common.mediumLevel")}</SelectItem>
+                <SelectItem value="HARD">{t("common.hard")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

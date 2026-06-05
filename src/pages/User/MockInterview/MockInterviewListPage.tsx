@@ -86,7 +86,9 @@ export function MockInterviewListPage() {
           t("common.sessionVar0", {
             var_0: session.id,
           }),
-        mentorName: `Mentor #${session.userId2 || t("common.noDataAvailable")}`,
+        mentorName: t("common.mentorWithId", {
+          id: session.userId2 || t("common.noDataAvailable"),
+        }),
         date: session.joinTime
           ? formatDate(session.joinTime, t("common.noDataAvailable"))
           : formatDate(session.startTime1, t("common.noDataAvailable")),
@@ -208,7 +210,7 @@ export function MockInterviewListPage() {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t("userMockinterview.arrange")}
             </span>
-            <SortButton {...getSortProps("id")}>ID</SortButton>
+            <SortButton {...getSortProps("id")}>{t("common.id")}</SortButton>
             <SortButton {...getSortProps("sessionSortValue")}>{t("common.time")}</SortButton>
             <SortButton {...getSortProps("statusSortValue")}>{t("common.status")}</SortButton>
           </div>

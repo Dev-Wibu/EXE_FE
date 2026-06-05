@@ -1,6 +1,3 @@
-import i18n from "@/lib/i18n";
-import { useTranslation } from "react-i18next";
-const t = i18n.t.bind(i18n);
 /**
  * MockInterviewSchedulePage.tsx
  * Redesigned "Schedule a New Interview" page
@@ -28,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { useMentors } from "@/hooks/useMentor";
 import { useCreateSession } from "@/hooks/useSession";
 import { formatCurrency, formatDateTime, formatTime, toVietnamDateKey } from "@/lib/formatting";
+import i18n from "@/lib/i18n";
 import { cn, formatToVietnamISOString } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -43,27 +41,9 @@ import {
   Video,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
-// Step definitions
-const STEPS = [
-  {
-    id: 1,
-    label: t("userMockinterview.selectMentor"),
-    icon: Users,
-  },
-  {
-    id: 2,
-    label: t("userMockinterview.chooseTime"),
-    icon: CalendarIcon,
-  },
-  {
-    id: 3,
-    label: t("common.confirm"),
-    icon: Check,
-  },
-] as const;
 
 // Time options for the select dropdown
 const HOUR_OPTIONS = Array.from(
@@ -128,8 +108,9 @@ const buildJoinDateFromVietnamSelection = (
   );
 };
 const formatVietnamDateLabel = (selectedDate: Date) => {
+  const locale = i18n.language === "en" ? "en-US" : "vi-VN";
   const dateInVietnam = buildJoinDateFromVietnamSelection(selectedDate, "00", "00");
-  return dateInVietnam.toLocaleDateString("vi-VN", {
+  return dateInVietnam.toLocaleDateString(locale, {
     timeZone: "Asia/Ho_Chi_Minh",
     weekday: "long",
     year: "numeric",
@@ -142,6 +123,26 @@ type MockInterviewScheduleLocationState = {
 };
 export function MockInterviewSchedulePage() {
   const { t } = useTranslation();
+
+  // Step definitions
+  const STEPS = [
+    {
+      id: 1,
+      label: t("userMockinterview.selectMentor"),
+      icon: Users,
+    },
+    {
+      id: 2,
+      label: t("userMockinterview.chooseTime"),
+      icon: CalendarIcon,
+    },
+    {
+      id: 3,
+      label: t("common.confirm"),
+      icon: Check,
+    },
+  ] as const;
+
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
@@ -310,7 +311,7 @@ export function MockInterviewSchedulePage() {
       // Navigate to confirmation page instead of room (session is DRAFT, needs approval)
       navigate("/user/mock-interview/booking-success", {
         state: {
-          mentorName: selectedMentor?.name || "Mentor",
+          mentorName: selectedMentor?.name || t("common.mentor"),
           joinTime: formatSelectedDateTime(),
           duration: durationMinutes,
           totalPrice,
@@ -426,7 +427,9 @@ export function MockInterviewSchedulePage() {
                             )}
                           </div>
                           <div>
-                            <CardTitle className="text-base">{mentor.name || "Mentor"}</CardTitle>
+                            <CardTitle className="text-base">
+                              {mentor.name || t("common.mentor")}
+                            </CardTitle>
                             <CardDescription>
                               {mentor.currentCompany || t("common.interviewExpert")}
                             </CardDescription>
@@ -465,7 +468,7 @@ export function MockInterviewSchedulePage() {
                           {typeof mentor.pricePerMinute === "number" &&
                             mentor.pricePerMinute > 0 && (
                               <span className="font-medium text-emerald-700">
-                                {formatCurrency(mentor.pricePerMinute)} / phút
+                                {formatCurrency(mentor.pricePerMinute)} / {t("common.perMinute")}
                               </span>
                             )}
                           {(!mentor.pricePerMinute || mentor.pricePerMinute <= 0) && (
@@ -711,7 +714,7 @@ export function MockInterviewSchedulePage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold">{selectedMentor.name || "Mentor"}</p>
+                      <p className="font-semibold">{selectedMentor.name || t("common.mentor")}</p>
                       <p className="text-sm text-slate-500">
                         {selectedMentor.currentCompany || t("common.interviewExpert")}
                       </p>
@@ -777,7 +780,7 @@ export function MockInterviewSchedulePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t("userMockinterview.screenSharing")}</span>
-                    <span className="font-medium text-green-600">{t("common.turnOn")}</span>
+                    <span className="font-medium text-green-600">{t("common.enabled")}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t("common.videoRecording")}</span>

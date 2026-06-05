@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MAJOR_OPTIONS, getMajorLabel } from "@/constants/majors";
+import { useMajorOptions } from "@/constants/majors";
 import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import {
   BookOpen,
@@ -59,6 +59,11 @@ export function ProfileTab({
   onOpenCvModal,
 }: ProfileTabProps) {
   const { t } = useTranslation();
+  const majorOptions = useMajorOptions();
+  const getMajorLabel = (value: string): string => {
+    const major = majorOptions.find((option) => option.value === value);
+    return major?.label || "";
+  };
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerItems, setViewerItems] = useState<MediaViewerItem[]>([]);
   const handlePreviewCurrentCv = () => {
@@ -193,7 +198,7 @@ export function ProfileTab({
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <Mail className="h-4 w-4" />
-                  <Label className="text-sm">Email</Label>
+                  <Label className="text-sm">{t("common.email")}</Label>
                   <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                     {t("common.cannotBeChanged")}
                   </span>
@@ -248,7 +253,7 @@ export function ProfileTab({
                   <SelectValue placeholder={t("common.chooseAMajor")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {MAJOR_OPTIONS.map((option) => (
+                  {majorOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -268,7 +273,7 @@ export function ProfileTab({
               <div>
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <FileText className="h-4 w-4" />
-                  <Label className="text-sm">CV / Resume</Label>
+                  <Label className="text-sm">{t("common.cvResume")}</Label>
                 </div>
                 {userProfile.cvUrl ? (
                   <button
@@ -289,7 +294,7 @@ export function ProfileTab({
               </div>
               <Button variant="outline" size="sm" onClick={onOpenCvModal}>
                 <Upload className="mr-2 h-4 w-4" />
-                {userProfile.cvUrl ? t("common.updateCv") : "Upload CV"}
+                {userProfile.cvUrl ? t("common.updateCv") : t("common.uploadCv")}
               </Button>
             </div>
           </div>

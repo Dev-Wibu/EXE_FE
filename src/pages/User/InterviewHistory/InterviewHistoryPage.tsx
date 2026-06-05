@@ -28,7 +28,6 @@ import {
   formatTime,
   treatZuluAsVietnamLocal,
 } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { sessionManager } from "@/services";
 import { useAuthStore } from "@/stores/authStore";
@@ -51,109 +50,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-const t = i18n.t.bind(i18n);
-
-// ============================================================
-// Constants & Config
-// ============================================================
-
-type InterviewType = "all" | "ai" | "mock";
-const INTERVIEW_TYPE_TABS: Array<{
-  value: InterviewType;
-  label: string;
-}> = [
-  {
-    value: "all",
-    label: t("general.all"),
-  },
-  {
-    value: "ai",
-    label: t("common.aiInterview"),
-  },
-  {
-    value: "mock",
-    label: t("common.mentorInterview"),
-  },
-];
-
-// AI Interview configs
-const AI_MODE_LABELS: Record<string, string> = {
-  STANDARD_MOCK: t("common.trialInterview"),
-  THEORY_CHECK: t("common.testTheTheory"),
-  PROJECT_DEFENSE: t("common.projectProtection"),
-};
-const AI_STATUS_CONFIG: Record<
-  string,
-  {
-    label: string;
-    className: string;
-  }
-> = {
-  CREATED: {
-    label: t("common.created"),
-    className: "bg-blue-100 text-blue-700",
-  },
-  IN_PROGRESS: {
-    label: t("common.ongoing"),
-    className: "bg-amber-100 text-amber-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    className: "bg-emerald-100 text-emerald-700",
-  },
-  CANCELLED: {
-    label: t("common.canceled"),
-    className: "bg-red-100 text-red-700",
-  },
-};
-const AI_RESULT_LABELS: Record<string, string> = {
-  STRONG_HIRE: t("common.excellent"),
-  HIRE: t("common.obtain"),
-  CONSIDER: t("common.needToConsider"),
-  REJECT: t("common.failed"),
-};
-
-// Mock Interview status configs
-const MOCK_STATUS_MAP: Record<
-  string,
-  {
-    label: string;
-    color: string;
-  }
-> = {
-  DRAFT: {
-    label: t("common.waitingForApproval"),
-    color: "bg-amber-100 text-amber-700",
-  },
-  SCHEDULED: {
-    label: t("common.comingSoon"),
-    color: "bg-blue-100 text-blue-700",
-  },
-  PAID: {
-    label: t("common.paid"),
-    color: "bg-emerald-100 text-emerald-700",
-  },
-  ONGOING: {
-    label: t("common.ongoing"),
-    color: "bg-green-100 text-green-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    color: "bg-slate-100 text-slate-600",
-  },
-  REJECTED: {
-    label: t("common.rejected"),
-    color: "bg-red-100 text-red-600",
-  },
-  CANCELED: {
-    label: t("common.canceled"),
-    color: "bg-red-100 text-red-600",
-  },
-};
 
 // ============================================================
 // Types
 // ============================================================
+
+type InterviewType = "all" | "ai" | "mock";
 
 interface BaseHistoryItem {
   id: number;
@@ -255,6 +157,24 @@ function AIInterviewCard({
   session: AIHistoryItem;
   onViewDetails: () => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const AI_MODE_LABELS: Record<string, string> = {
+    STANDARD_MOCK: t("common.trialInterview"),
+    THEORY_CHECK: t("common.testTheTheory"),
+    PROJECT_DEFENSE: t("common.projectProtection"),
+  };
+  const AI_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+    CREATED: { label: t("common.created"), className: "bg-blue-100 text-blue-700" },
+    IN_PROGRESS: { label: t("common.ongoing"), className: "bg-amber-100 text-amber-700" },
+    COMPLETED: { label: t("general.completed"), className: "bg-emerald-100 text-emerald-700" },
+    CANCELLED: { label: t("common.canceled"), className: "bg-red-100 text-red-700" },
+  };
+  const AI_RESULT_LABELS: Record<string, string> = {
+    STRONG_HIRE: t("common.excellent"),
+    HIRE: t("common.obtain"),
+    CONSIDER: t("common.needToConsider"),
+    REJECT: t("common.failed"),
+  };
   const statusConfig = AI_STATUS_CONFIG[session.status ?? ""] ?? {
     label: session.status ?? "",
     className: "bg-gray-100 text-gray-700",
@@ -304,7 +224,11 @@ function AIInterviewCard({
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {session.createdAt ? new Date(session.createdAt).toLocaleDateString("vi-VN") : "—"}
+              {session.createdAt
+                ? new Date(session.createdAt).toLocaleDateString(
+                    i18n.language === "en" ? "en-US" : "vi-VN"
+                  )
+                : "—"}
             </span>
             {session.sessionConfig?.duration_minutes && (
               <span className="flex items-center gap-1">
@@ -315,7 +239,9 @@ function AIInterviewCard({
             {session.sessionConfig?.language && (
               <span className="flex items-center gap-1">
                 <Globe className="h-4 w-4" />
-                {session.sessionConfig.language === "VI" ? t("common.vietnamese") : "English"}
+                {session.sessionConfig.language === "VI"
+                  ? t("common.vietnamese")
+                  : t("common.english")}
               </span>
             )}
           </div>
@@ -373,6 +299,16 @@ function MockInterviewCard({
   isPaying: boolean;
   navigateToSchedule: () => void;
 }) {
+  const { t } = useTranslation();
+  const MOCK_STATUS_MAP: Record<string, { label: string; color: string }> = {
+    DRAFT: { label: t("common.waitingForApproval"), color: "bg-amber-100 text-amber-700" },
+    SCHEDULED: { label: t("common.comingSoon"), color: "bg-blue-100 text-blue-700" },
+    PAID: { label: t("common.paid"), color: "bg-emerald-100 text-emerald-700" },
+    ONGOING: { label: t("common.ongoing"), color: "bg-green-100 text-green-700" },
+    COMPLETED: { label: t("general.completed"), color: "bg-slate-100 text-slate-600" },
+    REJECTED: { label: t("common.rejected"), color: "bg-red-100 text-red-600" },
+    CANCELED: { label: t("common.canceled"), color: "bg-red-100 text-red-600" },
+  };
   const status = MOCK_STATUS_MAP[session.status || "SCHEDULED"] || MOCK_STATUS_MAP.SCHEDULED;
   const isCompleted = session.status === "COMPLETED";
   const isScheduled = session.status === "SCHEDULED";
@@ -396,7 +332,7 @@ function MockInterviewCard({
               </CardTitle>
               <CardDescription className="flex items-center gap-2">
                 <User className="h-3 w-3" />
-                Mentor #{session.userId2}
+                {t("common.mentorWithId", { id: session.userId2 })}
               </CardDescription>
             </div>
           </div>
@@ -493,6 +429,7 @@ function MockInterviewCard({
 // ============================================================
 
 function EmptyHistoryState({ type, onAction }: { type: InterviewType; onAction?: () => void }) {
+  const { t } = useTranslation();
   const config = {
     all: {
       icon: History,
@@ -543,6 +480,28 @@ function EmptyHistoryState({ type, onAction }: { type: InterviewType; onAction?:
 
 export function InterviewHistoryPage() {
   const { t } = useTranslation();
+
+  const INTERVIEW_TYPE_TABS: Array<{ value: InterviewType; label: string }> = [
+    { value: "all", label: t("general.all") },
+    { value: "ai", label: t("common.aiInterview") },
+    { value: "mock", label: t("common.mentorInterview") },
+  ];
+  const MOCK_STATUS_MAP: Record<string, { label: string; color: string }> = {
+    DRAFT: { label: t("common.waitingForApproval"), color: "bg-amber-100 text-amber-700" },
+    SCHEDULED: { label: t("common.comingSoon"), color: "bg-blue-100 text-blue-700" },
+    PAID: { label: t("common.paid"), color: "bg-emerald-100 text-emerald-700" },
+    ONGOING: { label: t("common.ongoing"), color: "bg-green-100 text-green-700" },
+    COMPLETED: { label: t("general.completed"), color: "bg-slate-100 text-slate-600" },
+    REJECTED: { label: t("common.rejected"), color: "bg-red-100 text-red-600" },
+    CANCELED: { label: t("common.canceled"), color: "bg-red-100 text-red-600" },
+  };
+  const AI_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+    CREATED: { label: t("common.created"), className: "bg-blue-100 text-blue-700" },
+    IN_PROGRESS: { label: t("common.ongoing"), className: "bg-amber-100 text-amber-700" },
+    COMPLETED: { label: t("general.completed"), className: "bg-emerald-100 text-emerald-700" },
+    CANCELLED: { label: t("common.canceled"), className: "bg-red-100 text-red-700" },
+  };
+
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
@@ -648,6 +607,21 @@ export function InterviewHistoryPage() {
 
   // Combine and filter history
   const filteredHistory = useMemo(() => {
+    const aiModeLabels: Record<string, string> = {
+      STANDARD_MOCK: t("common.trialInterview"),
+      THEORY_CHECK: t("common.testTheTheory"),
+      PROJECT_DEFENSE: t("common.projectProtection"),
+    };
+    const mockStatusMap: Record<string, { label: string; color: string }> = {
+      DRAFT: { label: t("common.waitingForApproval"), color: "bg-amber-100 text-amber-700" },
+      SCHEDULED: { label: t("common.comingSoon"), color: "bg-blue-100 text-blue-700" },
+      PAID: { label: t("common.paid"), color: "bg-emerald-100 text-emerald-700" },
+      ONGOING: { label: t("common.ongoing"), color: "bg-green-100 text-green-700" },
+      COMPLETED: { label: t("general.completed"), color: "bg-slate-100 text-slate-600" },
+      REJECTED: { label: t("common.rejected"), color: "bg-red-100 text-red-600" },
+      CANCELED: { label: t("common.canceled"), color: "bg-red-100 text-red-600" },
+    };
+
     let items: HistoryItem[] = [];
     if (interviewType === "all" || interviewType === "ai") {
       let filtered = [...aiHistoryItems];
@@ -669,7 +643,7 @@ export function InterviewHistoryPage() {
       const q = searchQuery.toLowerCase();
       items = items.filter((item) => {
         if (item.type === "ai") {
-          const modeLabel = AI_MODE_LABELS[item.mode ?? ""] ?? item.mode ?? "";
+          const modeLabel = aiModeLabels[item.mode ?? ""] ?? item.mode ?? "";
           const role = item.candidateProfile?.targetRole ?? "";
           const jobTitle = item.jobRequirement?.basic_info?.job_title ?? "";
           return (
@@ -679,7 +653,7 @@ export function InterviewHistoryPage() {
           );
         } else {
           const roomName = item.roomName ?? "";
-          const statusLabel = MOCK_STATUS_MAP[item.status]?.label ?? "";
+          const statusLabel = mockStatusMap[item.status]?.label ?? "";
           return (
             roomName.toLowerCase().includes(q) ||
             statusLabel.toLowerCase().includes(q) ||
@@ -697,6 +671,7 @@ export function InterviewHistoryPage() {
     });
     return items;
   }, [
+    t,
     interviewType,
     aiStatusFilter,
     mockStatusFilter,

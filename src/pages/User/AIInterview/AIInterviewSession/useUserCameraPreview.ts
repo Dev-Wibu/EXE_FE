@@ -1,8 +1,8 @@
-import i18n from "@/lib/i18n";
+import type { TFunction } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-const t = i18n.t.bind(i18n);
+
 export type CameraPreviewState =
   | "idle"
   | "requesting"
@@ -11,7 +11,8 @@ export type CameraPreviewState =
   | "unsupported"
   | "error";
 const resolveCameraError = (
-  error: unknown
+  error: unknown,
+  t: TFunction
 ): {
   state: CameraPreviewState;
   message: string;
@@ -48,7 +49,6 @@ const DEFAULT_VIDEO_CONSTRAINTS: MediaTrackConstraints = {
     ideal: 360,
   },
 };
-const FALLBACK_CAMERA_MESSAGE = t("userAiinterview.unableToOpenTheSelected");
 export function useUserCameraPreview(
   autoStart = true,
   preferredVideoDeviceId: string | null = null
@@ -143,7 +143,7 @@ export function useUserCameraPreview(
       setMessage(null);
       return true;
     } catch (error) {
-      const resolved = resolveCameraError(error);
+      const resolved = resolveCameraError(error, t);
       const canFallbackToDefault = !!preferredVideoDeviceId && resolved.state === "error";
       if (!canFallbackToDefault) {
         stopCamera();
@@ -160,15 +160,15 @@ export function useUserCameraPreview(
         if (!attached) {
           return false;
         }
-        setMessage(FALLBACK_CAMERA_MESSAGE);
+        setMessage(t("userAiinterview.unableToOpenTheSelected"));
         if (fallbackToastDeviceIdRef.current !== preferredVideoDeviceId) {
           fallbackToastDeviceIdRef.current = preferredVideoDeviceId;
-          toast.warning(FALLBACK_CAMERA_MESSAGE);
+          toast.warning(t("userAiinterview.unableToOpenTheSelected"));
         }
         return true;
       } catch (fallbackError) {
         stopCamera();
-        const fallbackResolved = resolveCameraError(fallbackError);
+        const fallbackResolved = resolveCameraError(fallbackError, t);
         setState(fallbackResolved.state);
         setMessage(fallbackResolved.message);
         return false;

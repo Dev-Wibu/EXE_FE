@@ -8,7 +8,6 @@ import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
 import { $api } from "@/lib/api";
 import { formatUtcNaiveDateTime, toUtcNaiveTimestamp } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { useAuthStore } from "@/stores/authStore";
 import {
   AlertTriangle,
@@ -29,67 +28,6 @@ import {
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-const t = i18n.t.bind(i18n);
-
-// Map interview mode enum → label tiếng Việt
-const MODE_LABELS: Record<string, string> = {
-  STANDARD_MOCK: t("common.trialInterview"),
-  THEORY_CHECK: t("common.testTheTheory"),
-  PROJECT_DEFENSE: t("common.projectProtection"),
-};
-
-// Map status → Vietnamese + color
-const STATUS_CONFIG: Record<
-  string,
-  {
-    label: string;
-    className: string;
-  }
-> = {
-  CREATED: {
-    label: t("common.created"),
-    className: "bg-blue-100 text-blue-700",
-  },
-  IN_PROGRESS: {
-    label: t("common.ongoing"),
-    className: "bg-amber-100 text-amber-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    className: "bg-emerald-100 text-emerald-700",
-  },
-  CANCELLED: {
-    label: t("common.canceled"),
-    className: "bg-red-100 text-red-700",
-  },
-};
-
-// Map difficulty → label
-const DIFFICULTY_LABELS: Record<string, string> = {
-  FRESHER_BASIC: t("userAiinterview.basic"),
-  FRESHER_ADVANCED: t("userAiinterview.advanced"),
-};
-
-// Map language → label
-const LANGUAGE_LABELS: Record<string, string> = {
-  VI: t("common.vietnamese"),
-  EN: "English",
-};
-
-// Map domain → label
-const DOMAIN_LABELS: Record<string, string> = {
-  IT: "IT",
-  NON_IT: t("common.outsideOfIt"),
-};
-
-// Map result → label
-const RESULT_LABELS: Record<string, string> = {
-  STRONG_HIRE: t("common.excellent"),
-  HIRE: t("common.obtain"),
-  CONSIDER: t("common.needToConsider"),
-  REJECT: t("common.failed"),
-};
-
 // SessionKey hết hạn sau 1 giờ kể từ lúc tạo (backend chỉ cập nhật status CANCELLED lazily)
 const SESSION_EXPIRY_MS = 60 * 60 * 1000;
 const isSessionExpired = (createdAt?: string) => {
@@ -99,6 +37,56 @@ const isSessionExpired = (createdAt?: string) => {
 };
 export function AIInterviewListPage() {
   const { t } = useTranslation();
+
+  // Translated constants — inside component for language reactivity
+  const MODE_LABELS = useMemo<Record<string, string>>(
+    () => ({
+      STANDARD_MOCK: t("common.trialInterview"),
+      THEORY_CHECK: t("common.testTheTheory"),
+      PROJECT_DEFENSE: t("common.projectProtection"),
+    }),
+    [t]
+  );
+  const STATUS_CONFIG = useMemo<Record<string, { label: string; className: string }>>(
+    () => ({
+      CREATED: { label: t("common.created"), className: "bg-blue-100 text-blue-700" },
+      IN_PROGRESS: { label: t("common.ongoing"), className: "bg-amber-100 text-amber-700" },
+      COMPLETED: { label: t("general.completed"), className: "bg-emerald-100 text-emerald-700" },
+      CANCELLED: { label: t("common.canceled"), className: "bg-red-100 text-red-700" },
+    }),
+    [t]
+  );
+  const DIFFICULTY_LABELS = useMemo<Record<string, string>>(
+    () => ({
+      FRESHER_BASIC: t("userAiinterview.basic"),
+      FRESHER_ADVANCED: t("userAiinterview.advanced"),
+    }),
+    [t]
+  );
+  const LANGUAGE_LABELS = useMemo<Record<string, string>>(
+    () => ({
+      VI: t("common.vietnamese"),
+      EN: t("common.english"),
+    }),
+    [t]
+  );
+  const DOMAIN_LABELS = useMemo<Record<string, string>>(
+    () => ({
+      IT: "IT",
+      NON_IT: t("common.outsideOfIt"),
+    }),
+    [t]
+  );
+  const RESULT_LABELS = useMemo<Record<string, string>>(
+    () => ({
+      STRONG_HIRE: t("common.excellent"),
+      HIRE: t("common.obtain"),
+      CONSIDER: t("common.needToConsider"),
+      REJECT: t("common.failed"),
+    }),
+    [t]
+  );
+
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [historyPageSize, setHistoryPageSize] = useHybridPageSize({
@@ -152,7 +140,7 @@ export function AIInterviewListPage() {
       const domain = s.domain ?? "";
       return modeLabel.toLowerCase().includes(q) || domain.toLowerCase().includes(q);
     });
-  }, [allSessions, searchQuery]);
+  }, [allSessions, searchQuery, MODE_LABELS]);
   const sortableHistorySessions = useMemo(() => {
     return historySessions.map((session) => ({
       ...session,
@@ -163,7 +151,7 @@ export function AIInterviewListPage() {
       modeSortValue: (MODE_LABELS[session.mode ?? ""] ?? session.mode ?? "").toLowerCase(),
       statusSortValue: (session.status ?? "").toUpperCase(),
     }));
-  }, [historySessions]);
+  }, [historySessions, MODE_LABELS]);
   const { sortedData: sortedHistorySessions, getSortProps: getHistorySortProps } = useSortable(
     sortableHistorySessions,
     {

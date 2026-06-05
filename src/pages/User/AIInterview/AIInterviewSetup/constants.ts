@@ -4,32 +4,32 @@ import type {
   ProjectDetail,
   WorkExperience,
 } from "@/interfaces/schema.types";
-import i18n from "@/lib/i18n";
+import type { TFunction } from "i18next";
 import { BookOpen, Briefcase, Globe, Layers, Settings, Target, User } from "lucide-react";
 import type { ElementType } from "react";
-const t = i18n.t.bind(i18n);
 
 // ============================================================================
-// Constants
+// Constants (non-translated)
 // ============================================================================
 
-export const STEPS = [
-  {
-    id: 1,
-    label: t("userAiinterview.configuration"),
-    icon: Settings,
-  },
-  {
-    id: 2,
-    label: t("common.candidateProfile"),
-    icon: User,
-  },
-  {
-    id: 3,
-    label: t("userAiinterview.jobRequirements"),
-    icon: Briefcase,
-  },
-] as const;
+export const buildSteps = (t: TFunction) =>
+  [
+    {
+      id: 1,
+      label: t("userAiinterview.configuration"),
+      icon: Settings,
+    },
+    {
+      id: 2,
+      label: t("common.candidateProfile"),
+      icon: User,
+    },
+    {
+      id: 3,
+      label: t("userAiinterview.jobRequirements"),
+      icon: Briefcase,
+    },
+  ] as const;
 
 // Store component references — rendered as <Icon className="h-5 w-5" /> at call site
 export const CATEGORY_ICONS: Record<string, ElementType> = {
@@ -38,12 +38,12 @@ export const CATEGORY_ICONS: Record<string, ElementType> = {
   languages: Globe,
   domains: BookOpen,
 };
-export const CATEGORY_LABELS: Record<string, string> = {
+export const buildCategoryLabels = (t: TFunction): Record<string, string> => ({
   interview_modes: t("common.interviewMode"),
   difficulties: t("userAiinterview.difficultyLevel"),
   languages: t("common.language"),
   domains: t("userAiinterview.field"),
-};
+});
 export const CATEGORY_COLORS: Record<
   string,
   {
@@ -107,21 +107,22 @@ export const INITIAL_CANDIDATE_FORM: CandidateFormData = {
   workExperiences: [],
   educations: [],
 };
-export const DURATION_OPTIONS = [
-  {
-    value: 15,
-    label: t("userAiinterview.15Minutes"),
-  },
-  {
-    value: 30,
-    label: t("userAiinterview.30Minutes"),
-  },
-  {
-    value: 45,
-    label: t("userAiinterview.45Minutes"),
-  },
-  {
-    value: 60,
-    label: t("userAiinterview.60Minutes"),
-  },
-] as const;
+export const buildDurationOptions = (t: TFunction) =>
+  [
+    {
+      value: 15,
+      label: t("userAiinterview.15Minutes"),
+    },
+    {
+      value: 30,
+      label: t("userAiinterview.30Minutes"),
+    },
+    {
+      value: 45,
+      label: t("userAiinterview.45Minutes"),
+    },
+    {
+      value: 60,
+      label: t("userAiinterview.60Minutes"),
+    },
+  ] as const;

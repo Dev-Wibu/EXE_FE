@@ -310,7 +310,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                         {edu.degree != null && (
                           <p className="text-zinc-500 dark:text-zinc-400">
                             {String(edu.degree)}
-                            {edu.gpa != null ? ` · GPA: ${String(edu.gpa)}` : ""}
+                            {edu.gpa != null ? ` · ${t("common.gpa")}: ${String(edu.gpa)}` : ""}
                           </p>
                         )}
                         {(edu.start_date != null || edu.end_date != null) && (
@@ -412,7 +412,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                 <Label htmlFor="targetLevel">{t("common.level")}</Label>
                 <Input
                   id="targetLevel"
-                  placeholder="VD: Intern, Fresher, Junior, Middle"
+                  placeholder={t("userAiinterview.placeholderLevel")}
                   value={candidateForm.targetLevel}
                   onChange={(e) => updateCandidateForm("targetLevel", e.target.value)}
                 />
@@ -575,7 +575,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
               </div>
               <div className="flex gap-2">
                 <Input
-                  placeholder="VD: AWS Solutions Architect, TOEIC 850..."
+                  placeholder={t("userAiinterview.placeholderCertification")}
                   value={certificationInput}
                   onChange={(e) => setCertificationInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -679,7 +679,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                     <div className="space-y-1">
                       <Label className="text-xs">{t("common.role")}</Label>
                       <Input
-                        placeholder="VD: Backend Developer"
+                        placeholder={t("userAiinterview.placeholderProjectRole")}
                         value={project.role ?? ""}
                         onChange={(e) => updateProject(index, "role", e.target.value)}
                       />
@@ -756,7 +756,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                     <div className="space-y-1">
                       <Label className="text-xs">{t("common.company")}</Label>
                       <Input
-                        placeholder="VD: FPT Software"
+                        placeholder={t("userAiinterview.placeholderCompany")}
                         value={exp.company ?? ""}
                         onChange={(e) => updateWorkExperience(index, "company", e.target.value)}
                       />
@@ -764,7 +764,7 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                     <div className="space-y-1">
                       <Label className="text-xs">{t("common.location1")}</Label>
                       <Input
-                        placeholder="VD: .NET Developer"
+                        placeholder={t("userAiinterview.placeholderJobTitle")}
                         value={exp.position ?? ""}
                         onChange={(e) => updateWorkExperience(index, "position", e.target.value)}
                       />
@@ -864,9 +864,9 @@ export function CandidateProfileStep({ hook }: { hook: AIInterviewSetupHook }) {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">GPA</Label>
+                      <Label className="text-xs">{t("common.gpa")}</Label>
                       <Input
-                        placeholder="VD: 3.5"
+                        placeholder={t("userAiinterview.placeholderGpa")}
                         value={edu.gpa ?? ""}
                         onChange={(e) => updateEducation(index, "gpa", e.target.value)}
                       />

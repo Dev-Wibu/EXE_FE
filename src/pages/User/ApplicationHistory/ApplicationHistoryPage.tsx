@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { formatDateTime } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { applicationService, companyManager } from "@/services";
 import type { Application } from "@/services/application.manager";
@@ -24,11 +23,6 @@ import { Briefcase, Clock, FileSearch, Search, Star, XCircle } from "lucide-reac
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-const t = i18n.t.bind(i18n);
-
-// ============================================================
-// Types
-// ============================================================
 
 type ApplicationStatus = "IN_PROGRESS" | "PASSED" | "FAILED" | "SOFT_FAILED";
 interface EnrichedApplication extends Application {
@@ -40,53 +34,27 @@ interface EnrichedApplication extends Application {
 // Constants
 // ============================================================
 
-const APPLICATION_STATUS_CONFIG: Record<
-  ApplicationStatus,
-  {
-    label: string;
-    className: string;
-    dotColor: string;
-    bgClass: string;
-  }
-> = {
-  IN_PROGRESS: {
-    label: t("common.processing1"),
-    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-    dotColor: "bg-yellow-500",
-    bgClass: "border-slate-200 dark:border-slate-700",
-  },
-  PASSED: {
-    label: t("common.obtain"),
-    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    dotColor: "bg-emerald-500",
-    bgClass: "border-slate-200 dark:border-slate-700",
-  },
-  FAILED: {
-    label: t("common.failed"),
-    className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    dotColor: "bg-red-500",
-    bgClass: "border-slate-200 dark:border-slate-700",
-  },
-  SOFT_FAILED: {
-    label: t("userApplicationhistory.needsImprovement"),
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    dotColor: "bg-amber-500",
-    bgClass: "border-slate-200 dark:border-slate-700",
-  },
-};
-const LEVEL_LABELS: Record<string, string> = {
-  INTERN: t("userApplicationhistory.internship"),
-  FRESHER: "Fresher",
-  JUNIOR: "Junior",
-  MIDDLE: "Middle",
-};
-const ROUND_TYPE_LABELS: Record<string, string> = {
-  CV_SCREENING: "CV Screening",
-  EMAIL_SIMULATOR: "Email Simulator",
-  QUIZ: "Quiz",
-  DB_DESIGN: "DB Design",
-  AI_INTERVIEW: "AI Interview",
-};
+// ============================================================
+// Hook for translated round type labels
+// ============================================================
+
+function useRoundTypeLabels(): Record<string, string> {
+  const { t } = useTranslation();
+  return useMemo(
+    () => ({
+      CV_SCREENING: t("userAiinterview.cvScreening"),
+      EMAIL_SIMULATOR: t("userAiinterview.emailSimulator"),
+      QUIZ: "Quiz",
+      DB_DESIGN: t("userAiinterview.dbDesign"),
+      AI_INTERVIEW: t("common.aiInterview"),
+    }),
+    [t]
+  );
+}
+
+// ============================================================
+// Score Ring Component
+// ============================================================
 
 // ============================================================
 // Score Ring Component
@@ -160,6 +128,45 @@ function ApplicationCard({
   application: EnrichedApplication;
   onViewDetails: () => void;
 }) {
+  const { t } = useTranslation();
+  const roundTypeLabels = useRoundTypeLabels();
+
+  const APPLICATION_STATUS_CONFIG: Record<
+    ApplicationStatus,
+    { label: string; className: string; dotColor: string; bgClass: string }
+  > = {
+    IN_PROGRESS: {
+      label: t("common.processing1"),
+      className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      dotColor: "bg-yellow-500",
+      bgClass: "border-slate-200 dark:border-slate-700",
+    },
+    PASSED: {
+      label: t("common.obtain"),
+      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      dotColor: "bg-emerald-500",
+      bgClass: "border-slate-200 dark:border-slate-700",
+    },
+    FAILED: {
+      label: t("common.failed"),
+      className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+      dotColor: "bg-red-500",
+      bgClass: "border-slate-200 dark:border-slate-700",
+    },
+    SOFT_FAILED: {
+      label: t("userApplicationhistory.needsImprovement"),
+      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+      dotColor: "bg-amber-500",
+      bgClass: "border-slate-200 dark:border-slate-700",
+    },
+  };
+  const LEVEL_LABELS: Record<string, string> = {
+    INTERN: t("userApplicationhistory.internship"),
+    FRESHER: t("common.fresher"),
+    JUNIOR: t("common.junior"),
+    MIDDLE: t("common.middle"),
+  };
+
   const jd = application.jobDescription;
   const statusConfig = APPLICATION_STATUS_CONFIG[application.status as ApplicationStatus] ?? {
     label: application.status ?? "—",
@@ -170,7 +177,7 @@ function ApplicationCard({
   const rounds = jd?.rounds ?? [];
   const currentRound = rounds.find((r) => r.roundOrder === application.currentRoundOrder);
   const currentRoundTypeLabel = currentRound?.roundType
-    ? ROUND_TYPE_LABELS[currentRound.roundType] || currentRound.roundType
+    ? roundTypeLabels[currentRound.roundType] || currentRound.roundType
     : null;
   const hasScore = application.overallScore !== undefined && application.overallScore !== null;
   return (

@@ -399,7 +399,7 @@ export function AccountPage() {
         currentCvUrl={userProfile?.cvUrl}
         onUpload={handleCvUpload}
         isUploading={isCvUploading}
-        title="Upload CV"
+        title={t("common.uploadCv")}
         description={t("userAccount.uploadYourCvSoThe")}
       />
     </div>

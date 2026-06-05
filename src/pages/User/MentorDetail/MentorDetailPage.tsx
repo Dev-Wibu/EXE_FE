@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { SchemaMentorResponse } from "@/interfaces/schema.types";
 import { formatCurrency } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import { chatManager } from "@/services/chat.manager";
 import { ArrowLeft, ExternalLink, FileText, ShieldCheck } from "lucide-react";
@@ -18,7 +17,6 @@ import {
   MentorHighlights,
   SimilarMentors,
 } from "./components";
-const t = i18n.t.bind(i18n);
 type MentorDocumentItem = {
   label: string;
   url: string;
@@ -26,7 +24,10 @@ type MentorDocumentItem = {
 function isActiveMentor(mentor: SchemaMentorResponse): boolean {
   return mentor.active === true;
 }
-function documentItems(mentor: SchemaMentorResponse): MentorDocumentItem[] {
+function documentItems(
+  mentor: SchemaMentorResponse,
+  t: (key: string) => string
+): MentorDocumentItem[] {
   return [
     {
       label: t("userMentordetail.identificationDocuments"),
@@ -44,7 +45,10 @@ function documentItems(mentor: SchemaMentorResponse): MentorDocumentItem[] {
     (item): item is MentorDocumentItem => typeof item.url === "string" && item.url.length > 0
   );
 }
-function buildMentorHighlights(mentor: SchemaMentorResponse): string[] {
+function buildMentorHighlights(
+  mentor: SchemaMentorResponse,
+  t: (key: string, opts?: Record<string, unknown>) => string
+): string[] {
   const highlights: string[] = [];
   if (mentor.yearsOfExperience && mentor.yearsOfExperience > 0) {
     highlights.push(
@@ -81,7 +85,7 @@ function buildMentorHighlights(mentor: SchemaMentorResponse): string[] {
   }
   return highlights.slice(0, 4);
 }
-function buildSlaEstimate(mentor: SchemaMentorResponse | null): string {
+function buildSlaEstimate(mentor: SchemaMentorResponse | null, t: (key: string) => string): string {
   if (!mentor) {
     return t("userMentordetail.usuallyRespondsWithin24Hours");
   }
@@ -90,7 +94,7 @@ function buildSlaEstimate(mentor: SchemaMentorResponse | null): string {
   }
   return t("userMentordetail.usuallyRespondsWithin24Hours");
 }
-function buildVerificationTags(mentor: SchemaMentorResponse): string[] {
+function buildVerificationTags(mentor: SchemaMentorResponse, t: (key: string) => string): string[] {
   const tags: string[] = [];
   if (mentor.identityImg) {
     tags.push(t("userMentordetail.identityVerified"));
@@ -192,11 +196,14 @@ export function MentorDetailPage() {
     }
     return raw;
   }, [mentor?.totalSession]);
-  const docs = useMemo(() => (mentor ? documentItems(mentor) : []), [mentor]);
-  const highlights = useMemo(() => (mentor ? buildMentorHighlights(mentor) : []), [mentor]);
-  const verificationTags = useMemo(() => (mentor ? buildVerificationTags(mentor) : []), [mentor]);
+  const docs = useMemo(() => (mentor ? documentItems(mentor, t) : []), [mentor, t]);
+  const highlights = useMemo(() => (mentor ? buildMentorHighlights(mentor, t) : []), [mentor, t]);
+  const verificationTags = useMemo(
+    () => (mentor ? buildVerificationTags(mentor, t) : []),
+    [mentor, t]
+  );
   const expertiseTags = useMemo(() => (mentor ? buildExpertiseTags(mentor) : []), [mentor]);
-  const slaEstimate = useMemo(() => buildSlaEstimate(mentor), [mentor]);
+  const slaEstimate = useMemo(() => buildSlaEstimate(mentor, t), [mentor, t]);
   const similarMentors = useMemo(() => {
     if (!mentor || allMentors.length === 0) {
       return [];

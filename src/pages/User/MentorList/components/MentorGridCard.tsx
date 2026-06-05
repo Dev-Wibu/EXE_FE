@@ -47,7 +47,7 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
           <div className="flex min-w-0 gap-3">
             <div className="relative shrink-0">
               <Avatar className="h-20 w-20 rounded-2xl border-4 border-white shadow-md dark:border-slate-800">
-                <AvatarImage src={mentor.avatarUrl || ""} alt={mentor.name || "Mentor"} />
+                <AvatarImage src={mentor.avatarUrl || ""} alt={mentor.name || t("common.mentor")} />
                 <AvatarFallback className="bg-slate-100 text-xl font-black text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                   {mentor.name?.charAt(0) || "M"}
                 </AvatarFallback>
@@ -114,7 +114,7 @@ export function MentorGridCard({ mentor, onStartChat, onViewProfile }: MentorGri
             variant="secondary"
             className="rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <Briefcase className="mr-1 h-3.5 w-3.5" />
-            {mentor.currentCompany || "Freelance Mentor"}
+            {mentor.currentCompany || t("common.freelanceMentor")}
           </Badge>
           <Badge
             variant="secondary"

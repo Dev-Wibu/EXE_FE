@@ -32,7 +32,7 @@ export function MentorDetailHero({ mentor, ratingText, priceText, onBack }: Ment
 
       <div className="flex flex-col gap-4 md:flex-row md:items-start">
         <Avatar className="h-24 w-24 border-4 border-white shadow-lg dark:border-slate-800">
-          <AvatarImage src={mentor.avatarUrl || ""} alt={mentor.name || "Mentor"} />
+          <AvatarImage src={mentor.avatarUrl || ""} alt={mentor.name || t("common.mentor")} />
           <AvatarFallback className="bg-slate-100 text-3xl font-black text-slate-500 dark:bg-slate-800 dark:text-cyan-100">
             {mentor.name?.charAt(0) || "M"}
           </AvatarFallback>
@@ -41,7 +41,7 @@ export function MentorDetailHero({ mentor, ratingText, priceText, onBack }: Ment
         <div className="min-w-0 flex-1 space-y-3">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl dark:text-white">
-              {mentor.name || "Mentor"}
+              {mentor.name || t("common.mentor")}
             </h1>
             <p className="mt-1 text-sm font-semibold tracking-wider text-blue-700 uppercase dark:text-cyan-200">
               {mentor.expertise || t("userMentordetail.expertiseNotUpdated")}
@@ -51,7 +51,7 @@ export function MentorDetailHero({ mentor, ratingText, priceText, onBack }: Ment
           <div className="flex flex-wrap gap-2">
             <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               <Briefcase className="mr-1 h-3.5 w-3.5" />
-              {mentor.currentCompany || "Freelance Mentor"}
+              {mentor.currentCompany || t("common.freelanceMentor")}
             </Badge>
             <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
               <Users className="mr-1 h-3.5 w-3.5" />

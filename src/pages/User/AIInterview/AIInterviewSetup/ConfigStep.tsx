@@ -2,10 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertCircle, CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ConfigSection, LoadingSkeleton } from "./ConfigOptionCard";
-import { DURATION_OPTIONS } from "./constants";
+import { buildDurationOptions } from "./constants";
 import type { AIInterviewSetupHook } from "./useAIInterviewSetup";
 export function ConfigStep({ hook }: { hook: AIInterviewSetupHook }) {
   const { t } = useTranslation();
+  const durationOptions = buildDurationOptions(t);
   const {
     configOptions,
     configLoading,
@@ -91,7 +92,7 @@ export function ConfigStep({ hook }: { hook: AIInterviewSetupHook }) {
                 </h4>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {DURATION_OPTIONS.map((opt) => (
+                {durationOptions.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setSelectedDuration(opt.value)}

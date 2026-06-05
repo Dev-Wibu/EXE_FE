@@ -7,7 +7,7 @@ import type { CandidateProfile } from "@/interfaces/schema.types";
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ListField, SkillField } from "./useCandidateProfileForm";
-import { SKILL_TABS } from "./useCandidateProfileForm";
+import { buildSkillTabs } from "./useCandidateProfileForm";
 interface SkillsEditProps {
   mode: "edit";
   activeSkillTab: SkillField;
@@ -153,6 +153,7 @@ export function SkillsSection(props: SkillsSectionProps) {
     removeListItem,
   } = props;
   const activeSkills = getSkillList(activeSkillTab);
+  const skillTabs = buildSkillTabs(t);
   const skillCounts: Record<SkillField, number> = {
     technicalSkills: techSkillsInput.filter(Boolean).length,
     softSkills: softSkillsInput.filter(Boolean).length,
@@ -166,7 +167,7 @@ export function SkillsSection(props: SkillsSectionProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {SKILL_TABS.map((tab) => (
+            {skillTabs.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
@@ -184,7 +185,7 @@ export function SkillsSection(props: SkillsSectionProps) {
 
           <div className="rounded-lg border p-3 dark:border-slate-700">
             <div className="mb-2 flex items-center justify-between">
-              <Label>{SKILL_TABS.find((s) => s.key === activeSkillTab)?.label}</Label>
+              <Label>{skillTabs.find((s) => s.key === activeSkillTab)?.label}</Label>
             </div>
 
             <div className="flex flex-wrap gap-2">

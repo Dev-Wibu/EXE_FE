@@ -270,6 +270,7 @@ export function UserDashboardPage() {
     role: "user",
     pathname: location.pathname,
     defaultTab: DEFAULT_TAB,
+    t,
   });
 
   // When on a nested outlet route, derive active tab from the pathname

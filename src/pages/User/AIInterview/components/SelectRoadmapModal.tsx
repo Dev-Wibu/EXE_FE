@@ -8,13 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { BookOpen, Calendar, Zap } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-const t = i18n.t.bind(i18n);
+
 interface RoadmapOption {
   days: number;
   label: string;
@@ -27,40 +26,6 @@ interface RoadmapOption {
   disabledReason?: string;
   recommended?: boolean;
 }
-const roadmapOptions: RoadmapOption[] = [
-  {
-    days: 7,
-    label: t("userAiinterview.7Days"),
-    tag: t("userAiinterview.express"),
-    description: t("userAiinterview.highIntensityFocusingOnThe"),
-    icon: <Zap className="h-8 w-8" />,
-    iconBg: "bg-orange-100 dark:bg-orange-900/40",
-    iconColor: "text-orange-500",
-    disabled: false,
-  },
-  {
-    days: 14,
-    label: t("userAiinterview.14Days"),
-    tag: t("userAiinterview.standard"),
-    description: t("userAiinterview.balanceTheoryAndPracticeEvery"),
-    icon: <Calendar className="h-8 w-8" />,
-    iconBg: "bg-blue-100 dark:bg-blue-900/40",
-    iconColor: "text-[#0047AB]",
-    disabled: false,
-    recommended: true,
-  },
-  {
-    days: 21,
-    label: t("userAiinterview.21Days"),
-    tag: t("userAiinterview.inDepth"),
-    description: t("userAiinterview.perfectAllSkillsFromBasic"),
-    icon: <BookOpen className="h-8 w-8" />,
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
-    iconColor: "text-emerald-600",
-    disabled: true,
-    disabledReason: t("userAiinterview.comingSoon"),
-  },
-];
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -69,6 +34,42 @@ interface Props {
 }
 export function SelectRoadmapModal({ open, onClose, onConfirm, loading = false }: Props) {
   const { t } = useTranslation();
+
+  const roadmapOptions: RoadmapOption[] = [
+    {
+      days: 7,
+      label: t("userAiinterview.7Days"),
+      tag: t("userAiinterview.express"),
+      description: t("userAiinterview.highIntensityFocusingOnThe"),
+      icon: <Zap className="h-8 w-8" />,
+      iconBg: "bg-orange-100 dark:bg-orange-900/40",
+      iconColor: "text-orange-500",
+      disabled: false,
+    },
+    {
+      days: 14,
+      label: t("userAiinterview.14Days"),
+      tag: t("userAiinterview.standard"),
+      description: t("userAiinterview.balanceTheoryAndPracticeEvery"),
+      icon: <Calendar className="h-8 w-8" />,
+      iconBg: "bg-blue-100 dark:bg-blue-900/40",
+      iconColor: "text-[#0047AB]",
+      disabled: false,
+      recommended: true,
+    },
+    {
+      days: 21,
+      label: t("userAiinterview.21Days"),
+      tag: t("userAiinterview.inDepth"),
+      description: t("userAiinterview.perfectAllSkillsFromBasic"),
+      icon: <BookOpen className="h-8 w-8" />,
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
+      iconColor: "text-emerald-600",
+      disabled: true,
+      disabledReason: t("userAiinterview.comingSoon"),
+    },
+  ];
+
   const [selected, setSelected] = useState<number>(14);
   const todayLabel = format(new Date(), "dd/MM/yyyy");
   return (

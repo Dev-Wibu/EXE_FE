@@ -18,7 +18,6 @@ import { useMakeSessionPayment, useUserSessions } from "@/hooks/useSession";
 import type { Session } from "@/interfaces";
 import { $api } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -35,95 +34,7 @@ import {
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-const t = i18n.t.bind(i18n);
-
-// ============================================================
-// Constants
-// ============================================================
-
 type InterviewType = "all" | "ai" | "mock";
-const INTERVIEW_TYPE_TABS: Array<{
-  value: InterviewType;
-  label: string;
-}> = [
-  {
-    value: "all",
-    label: t("general.all"),
-  },
-  {
-    value: "ai",
-    label: "AI",
-  },
-  {
-    value: "mock",
-    label: "Mentor",
-  },
-];
-const AI_MODE_LABELS: Record<string, string> = {
-  STANDARD_MOCK: t("common.trialInterview"),
-  THEORY_CHECK: t("common.testTheTheory"),
-  PROJECT_DEFENSE: t("common.projectProtection"),
-};
-const AI_STATUS_CONFIG: Record<
-  string,
-  {
-    label: string;
-    className: string;
-  }
-> = {
-  CREATED: {
-    label: t("common.created"),
-    className: "bg-blue-100 text-blue-700",
-  },
-  IN_PROGRESS: {
-    label: t("common.ongoing"),
-    className: "bg-amber-100 text-amber-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    className: "bg-emerald-100 text-emerald-700",
-  },
-  CANCELLED: {
-    label: t("common.canceled"),
-    className: "bg-red-100 text-red-700",
-  },
-};
-const MOCK_STATUS_MAP: Record<
-  string,
-  {
-    label: string;
-    color: string;
-  }
-> = {
-  DRAFT: {
-    label: t("common.waitingForApproval"),
-    color: "bg-amber-100 text-amber-700",
-  },
-  SCHEDULED: {
-    label: t("common.comingSoon"),
-    color: "bg-blue-100 text-blue-700",
-  },
-  PAID: {
-    label: t("common.paid"),
-    color: "bg-emerald-100 text-emerald-700",
-  },
-  ONGOING: {
-    label: t("common.ongoing"),
-    color: "bg-green-100 text-green-700",
-  },
-  COMPLETED: {
-    label: t("general.completed"),
-    color: "bg-slate-100 text-slate-600",
-  },
-  REJECTED: {
-    label: t("common.rejected"),
-    color: "bg-red-100 text-red-600",
-  },
-  CANCELED: {
-    label: t("common.canceled"),
-    color: "bg-red-100 text-red-600",
-  },
-};
 type HistoryItem = {
   id: number;
   type: "ai" | "mock";
@@ -208,6 +119,34 @@ function ProgressRing({ score, size = 48 }: { score: number; size?: number }) {
 
 export function InterviewHistoryTab() {
   const { t } = useTranslation();
+
+  // Translated constants — inside component for language reactivity
+  const INTERVIEW_TYPE_TABS: Array<{ value: InterviewType; label: string }> = [
+    { value: "all", label: t("general.all") },
+    { value: "ai", label: "AI" },
+    { value: "mock", label: t("common.mentor") },
+  ];
+  const AI_MODE_LABELS: Record<string, string> = {
+    STANDARD_MOCK: t("common.trialInterview"),
+    THEORY_CHECK: t("common.testTheTheory"),
+    PROJECT_DEFENSE: t("common.projectProtection"),
+  };
+  const AI_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+    CREATED: { label: t("common.created"), className: "bg-blue-100 text-blue-700" },
+    IN_PROGRESS: { label: t("common.ongoing"), className: "bg-amber-100 text-amber-700" },
+    COMPLETED: { label: t("general.completed"), className: "bg-emerald-100 text-emerald-700" },
+    CANCELLED: { label: t("common.canceled"), className: "bg-red-100 text-red-700" },
+  };
+  const MOCK_STATUS_MAP: Record<string, { label: string; color: string }> = {
+    DRAFT: { label: t("common.waitingForApproval"), color: "bg-amber-100 text-amber-700" },
+    SCHEDULED: { label: t("common.comingSoon"), color: "bg-blue-100 text-blue-700" },
+    PAID: { label: t("common.paid"), color: "bg-emerald-100 text-emerald-700" },
+    ONGOING: { label: t("common.ongoing"), color: "bg-green-100 text-green-700" },
+    COMPLETED: { label: t("general.completed"), color: "bg-slate-100 text-slate-600" },
+    REJECTED: { label: t("common.rejected"), color: "bg-red-100 text-red-600" },
+    CANCELED: { label: t("common.canceled"), color: "bg-red-100 text-red-600" },
+  };
+
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
@@ -305,6 +244,12 @@ export function InterviewHistoryTab() {
 
   // Combine and filter
   const filteredHistory = useMemo(() => {
+    const aiModeLabels: Record<string, string> = {
+      STANDARD_MOCK: t("common.trialInterview"),
+      THEORY_CHECK: t("common.testTheTheory"),
+      PROJECT_DEFENSE: t("common.projectProtection"),
+    };
+
     let items: HistoryItem[] = [];
     if (interviewType === "all" || interviewType === "ai") {
       let filtered = [...aiHistoryItems];
@@ -324,7 +269,7 @@ export function InterviewHistoryTab() {
       const q = searchQuery.toLowerCase();
       items = items.filter((item) => {
         if (item.type === "ai") {
-          const modeLabel = AI_MODE_LABELS[item.mode ?? ""] ?? item.mode ?? "";
+          const modeLabel = aiModeLabels[item.mode ?? ""] ?? item.mode ?? "";
           const role = item.candidateProfile?.targetRole ?? "";
           return modeLabel.toLowerCase().includes(q) || role.toLowerCase().includes(q);
         } else {
@@ -340,6 +285,7 @@ export function InterviewHistoryTab() {
     });
     return items;
   }, [
+    t,
     interviewType,
     aiStatusFilter,
     mockStatusFilter,
@@ -661,7 +607,7 @@ export function InterviewHistoryTab() {
                 size="sm"
                 onClick={() => pagination.nextPage()}
                 disabled={pagination.currentPage >= pagination.totalPages}>
-                Sau
+                {t("common.next")}
               </Button>
             </div>
           )}
