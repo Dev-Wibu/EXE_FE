@@ -15,6 +15,7 @@ vi.mock("@/lib/api", () => ({
 import { fetchClient } from "@/lib/api";
 
 const mockFetchPost = fetchClient.POST as ReturnType<typeof vi.fn>;
+const mockFetchGet = fetchClient.GET as ReturnType<typeof vi.fn>;
 
 const toBase64Url = (value: string) => {
   return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
@@ -189,6 +190,213 @@ describe("AuthManager", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe(t("general.wrongEmail"));
+    });
+
+    it("should map 429 rate-limit to too-many-attempts message", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: undefined,
+        error: {
+          status: 429,
+          data: "Too many requests",
+        },
+      });
+
+      const result = await authManager.login({
+        email: "user@test.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("general.youHaveEnteredIncorrectlyToo"));
+    });
+
+    it("should map 403 error to locked message", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: undefined,
+        error: {
+          status: 403,
+          data: "Account is locked",
+        },
+      });
+
+      const result = await authManager.login({
+        email: "locked@test.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("general.accountHasBeenLocked"));
+    });
+
+    it("should return login-data-not-received when data is null", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      });
+
+      const result = await authManager.login({
+        email: "user@test.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("general.loginDataNotReceivedFrom"));
+    });
+
+    it("should return login-data-not-received when data is empty string", async () => {
+      mockFetchPost.mockResolvedValueOnce({
+        data: "   ",
+        error: null,
+      });
+
+      const result = await authManager.login({
+        email: "user@test.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("general.loginDataNotReceivedFrom"));
+    });
+
+    it("should return normalized error on non-Response catch", async () => {
+      mockFetchPost.mockRejectedValueOnce(new TypeError("fetch failed"));
+
+      const result = await authManager.login({
+        email: "user@test.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      expect(typeof result.error).toBe("string");
+      expect(result.error!.length).toBeGreaterThan(0);
+    });
+
+    it("should return error when error is non-Error throw (raw message passed through)", async () => {
+      mockFetchPost.mockRejectedValueOnce("string error");
+
+      const result = await authManager.login({
+        email: "user@test.com",
+        password: "123",
+      });
+
+      expect(result.success).toBe(false);
+      // getNormalizedErrorMessage extracts raw message for non-generic strings
+      expect(result.error).toBe("string error");
+    });
+  });
+
+  describe("getGoogleLoginUrl", () => {
+    it("returns a URL string", () => {
+      const url = authManager.getGoogleLoginUrl();
+      expect(typeof url).toBe("string");
+      expect(url.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("hasGoogleCallbackPayload", () => {
+    it("returns true when URL has token param", () => {
+      expect(authManager.hasGoogleCallbackPayload("http://app.com/callback?token=abc")).toBe(true);
+    });
+
+    it("returns true when URL has error param", () => {
+      expect(authManager.hasGoogleCallbackPayload("http://app.com/callback?error=denied")).toBe(
+        true
+      );
+    });
+
+    it("returns false when URL has no OAuth params", () => {
+      expect(authManager.hasGoogleCallbackPayload("http://app.com/home")).toBe(false);
+    });
+  });
+
+  describe("getGoogleCallbackError", () => {
+    it("extracts error_description from query", () => {
+      const error = authManager.getGoogleCallbackError(
+        "http://app.com/callback?error_description=User+denied+access"
+      );
+      expect(error).toBe("User denied access");
+    });
+
+    it("extracts error from query", () => {
+      const error = authManager.getGoogleCallbackError(
+        "http://app.com/callback?error=access_denied"
+      );
+      expect(error).toBe("access_denied");
+    });
+
+    it("returns undefined when no error params", () => {
+      const error = authManager.getGoogleCallbackError("http://app.com/callback?token=abc");
+      expect(error).toBeUndefined();
+    });
+  });
+
+  describe("consumeGoogleCallbackFromUrl", () => {
+    it("extracts user and token from callback URL", () => {
+      const token = createJwt({ sub: "42", email: "g@test.com", name: "G User", role: "USER" });
+      const url = `http://app.com/callback?token=${token}`;
+
+      const result = authManager.consumeGoogleCallbackFromUrl(url);
+
+      expect(result.success).toBe(true);
+      expect(result.data?.token).toBe(token);
+      expect(result.data?.user.email).toBe("g@test.com");
+    });
+
+    it("returns error when no token in URL", () => {
+      const result = authManager.consumeGoogleCallbackFromUrl(
+        "http://app.com/callback?error=denied"
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("general.googleLoginTokenNotFound"));
+    });
+  });
+
+  describe("logout", () => {
+    it("returns success", async () => {
+      const result = await authManager.logout();
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("checkMentorStatus", () => {
+    it("returns mentor status on success", async () => {
+      const status = { status: "pending", submittedAt: "2026-01-01" };
+      mockFetchGet.mockResolvedValueOnce({ data: status });
+
+      const result = await authManager.checkMentorStatus();
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(status);
+    });
+
+    it("returns error on failure", async () => {
+      mockFetchGet.mockRejectedValueOnce(new Error("fail"));
+
+      const result = await authManager.checkMentorStatus();
+
+      expect(result.success).toBe(false);
+      expect(typeof result.error).toBe("string");
+    });
+  });
+
+  describe("refreshToken", () => {
+    it("returns new token on success", async () => {
+      mockFetchPost.mockResolvedValueOnce({ data: { token: "new.jwt.token" } });
+
+      const result = await authManager.refreshToken();
+
+      expect(result.success).toBe(true);
+      expect(result.data?.token).toBe("new.jwt.token");
+    });
+
+    it("returns error on failure", async () => {
+      mockFetchPost.mockRejectedValueOnce(new Error("fail"));
+
+      const result = await authManager.refreshToken();
+
+      expect(result.success).toBe(false);
+      expect(typeof result.error).toBe("string");
     });
   });
 });
