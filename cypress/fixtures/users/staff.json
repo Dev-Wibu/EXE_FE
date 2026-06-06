@@ -1,0 +1,8 @@
+{
+  "id": 4,
+  "email": "staff@example.com",
+  "fullName": "Staff Member",
+  "role": "STAFF",
+  "avatar": null,
+  "password": "12345"
+}
