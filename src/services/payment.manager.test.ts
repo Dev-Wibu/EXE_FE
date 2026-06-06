@@ -89,7 +89,7 @@ describe("PaymentManager API mode", () => {
     const manager = new PaymentManager();
     const result = await manager.create(0, 1);
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Invalid payment amount.");
+    expect(result.error).toBe(t("general.invalidPaymentAmount"));
     expect(mockApi.POST).not.toHaveBeenCalled();
   });
   it("returns error when API create does not include checkout URL", async () => {
@@ -101,7 +101,7 @@ describe("PaymentManager API mode", () => {
     const manager = new PaymentManager();
     const result = await manager.create(50000, 10);
     expect(result.success).toBe(false);
-    expect(result.error).toContain(t("general.paymentLink"));
+    expect(result.error).toBe(t("general.theBackendDoesNotReturn"));
   });
   it("cancels payment by transaction code", async () => {
     mockApi.GET.mockResolvedValueOnce({
@@ -148,5 +148,55 @@ describe("PaymentManager API mode", () => {
     const result = await manager.getByTransactionCode("TX-2");
     expect(result.success).toBe(true);
     expect(result.data?.id).toBe(2);
+  });
+
+  it("returns error when transaction code not found in list", async () => {
+    mockApi.GET.mockResolvedValueOnce({
+      data: [
+        { id: 1, transactionCode: "TX-1" },
+        { id: 2, transactionCode: "TX-2" },
+      ],
+    });
+    const manager = new PaymentManager();
+    const result = await manager.getByTransactionCode("TX-MISSING");
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(t("general.paymentByTransactioncodeNotFound"));
+  });
+
+  it("handles non-array response in getByTransactionCode", async () => {
+    mockApi.GET.mockResolvedValueOnce({
+      data: { content: [{ id: 1, transactionCode: "TX-1" }] },
+    });
+    const manager = new PaymentManager();
+    const result = await manager.getByTransactionCode("TX-1");
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(t("general.paymentByTransactioncodeNotFound"));
+  });
+
+  it("fetches payment by id", async () => {
+    mockApi.GET.mockResolvedValueOnce({
+      data: { id: 5, transactionCode: "TX-5", amount: 50000 },
+    });
+    const manager = new PaymentManager();
+    const result = await manager.getById(5);
+    expect(result.success).toBe(true);
+    expect(result.data?.id).toBe(5);
+  });
+
+  it("returns error when getById fails", async () => {
+    mockApi.GET.mockRejectedValueOnce(new Error("Not found"));
+    const manager = new PaymentManager();
+    const result = await manager.getById(999);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Not found");
+  });
+
+  it("returns normalized error for non-Error throws in create", async () => {
+    mockApi.POST.mockRejectedValueOnce("string error");
+    const manager = new PaymentManager();
+    const result = await manager.create(50000, 10);
+    expect(result.success).toBe(false);
+    // getNormalizedErrorMessage extracts raw message for non-generic strings
+    expect(result.error).toBe("string error");
   });
 });

@@ -110,8 +110,124 @@ describe("payment-callback helpers", () => {
     expect(mismatch.mismatchedKeys).toEqual(["orderCode", "checkoutToken"]);
   });
 
+  it("reports no mismatch when all identifiers match", () => {
+    const mismatch = getCallbackIdentifierMismatch(
+      { orderCode: "O1", transactionCode: "T1", checkoutToken: "C1" },
+      { orderCode: "O1", transactionCode: "T1", checkoutToken: "C1" }
+    );
+    expect(mismatch.hasMismatch).toBe(false);
+    expect(mismatch.mismatchedKeys).toEqual([]);
+  });
+
+  it("ignores mismatch on keys where callback has empty value", () => {
+    // callback omits checkoutToken → no mismatch even though context has one
+    const mismatch = getCallbackIdentifierMismatch(
+      { orderCode: "O1", transactionCode: "T1" },
+      { orderCode: "O1", transactionCode: "T1", checkoutToken: "C1" }
+    );
+    expect(mismatch.hasMismatch).toBe(false);
+  });
+
+  it("treats '1' and 'true' cancelFlag strings as truthy", () => {
+    expect(isCancelCallbackSignal({ cancelFlag: "1" })).toBe(true);
+    expect(isCancelCallbackSignal({ cancelFlag: "true" })).toBe(true);
+  });
+
+  it("treats 'false', '0', empty string cancelFlag as non-truthy", () => {
+    expect(isCancelCallbackSignal({ cancelFlag: "false" })).toBe(false);
+    expect(isCancelCallbackSignal({ cancelFlag: "0" })).toBe(false);
+    expect(isCancelCallbackSignal({ cancelFlag: "" })).toBe(false);
+  });
+
+  it("treats null cancelFlag as non-truthy", () => {
+    expect(isCancelCallbackSignal({ cancelFlag: null })).toBe(false);
+  });
+
   it("treats latest-user source as low confidence", () => {
     expect(isLowConfidenceRecoverySource("latest-user-recovery")).toBe(true);
     expect(isLowConfidenceRecoverySource("order-code")).toBe(false);
+  });
+
+  // --- Additional edge cases ---
+
+  it("isCancelCallbackSignal returns false when all params are empty", () => {
+    expect(isCancelCallbackSignal({})).toBe(false);
+  });
+
+  it("isCancelCallbackSignal accepts boolean true cancelFlag", () => {
+    expect(isCancelCallbackSignal({ cancelFlag: true })).toBe(true);
+  });
+
+  it("isCancelCallbackSignal accepts 'yes' and 'y' cancelFlag", () => {
+    expect(isCancelCallbackSignal({ cancelFlag: "yes" })).toBe(true);
+    expect(isCancelCallbackSignal({ cancelFlag: "y" })).toBe(true);
+  });
+
+  it("isCancelCallbackSignal recognizes FAILED status", () => {
+    expect(isCancelCallbackSignal({ status: "FAILED" })).toBe(true);
+  });
+
+  it("isCancelCallbackSignal recognizes CANCEL status (without ED)", () => {
+    expect(isCancelCallbackSignal({ status: "CANCEL" })).toBe(true);
+  });
+
+  it("getCallbackIdentifierMismatch returns no mismatch when context is null", () => {
+    const mismatch = getCallbackIdentifierMismatch({ orderCode: "ORDER-1" }, null);
+    expect(mismatch.hasMismatch).toBe(false);
+    expect(mismatch.mismatchedKeys).toEqual([]);
+  });
+
+  it("getCallbackIdentifierMismatch does not flag empty strings as mismatched", () => {
+    const mismatch = getCallbackIdentifierMismatch(
+      { orderCode: "", transactionCode: "" },
+      { orderCode: "ORDER-1", transactionCode: "TX-1" }
+    );
+    expect(mismatch.hasMismatch).toBe(false);
+    expect(mismatch.mismatchedKeys).toEqual([]);
+  });
+
+  it("shouldUseOrderCodeAsTransactionCode returns false when no orderCode", () => {
+    expect(
+      shouldUseOrderCodeAsTransactionCode({
+        callbackCheckoutToken: "token",
+        status: "CANCELLED",
+      })
+    ).toBe(false);
+  });
+
+  it("resolveCancelTransactionCode skips whitespace-only strings", () => {
+    const result = resolveCancelTransactionCode({
+      queryTransactionCode: "   ",
+      contextTransactionCode: "   ",
+      pendingTransactionCode: "   ",
+      orderCode: "ORDER-777",
+      status: "CANCELLED",
+      callbackCheckoutToken: "tok",
+    });
+    expect(result.value).toBe("ORDER-777");
+    expect(result.source).toBe("order-code-fallback");
+  });
+
+  it("resolveCancelTransactionCode returns 'none' when all inputs are empty", () => {
+    const result = resolveCancelTransactionCode({});
+    expect(result.value).toBe("");
+    expect(result.source).toBe("none");
+    expect(result.usedOrderCodeFallback).toBe(false);
+  });
+
+  it("getCallbackIdentifierMismatch only flags keys where BOTH sides have non-empty values", () => {
+    // callback has empty transactionCode — should not be flagged
+    const mismatch = getCallbackIdentifierMismatch(
+      { orderCode: "O1", transactionCode: "" },
+      { orderCode: "DIFFERENT", transactionCode: "T1" }
+    );
+    expect(mismatch.hasMismatch).toBe(true);
+    expect(mismatch.mismatchedKeys).toEqual(["orderCode"]);
+  });
+
+  it("isLowConfidenceRecoverySource returns false for other sources", () => {
+    expect(isLowConfidenceRecoverySource("existing-state")).toBe(false);
+    expect(isLowConfidenceRecoverySource("none")).toBe(false);
+    expect(isLowConfidenceRecoverySource("session-recovery")).toBe(false);
   });
 });
