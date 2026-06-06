@@ -1,0 +1,13 @@
+{
+  "traceId": "mock-trace-id",
+  "data": {
+    "user": {
+      "id": 1,
+      "email": "binhan@gmail.com",
+      "fullName": "Bình An",
+      "role": "USER",
+      "avatar": null
+    },
+    "token": "mock-jwt-token-user"
+  }
+}

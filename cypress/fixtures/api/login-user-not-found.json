@@ -1,0 +1,5 @@
+{
+  "traceId": "mock-trace-id",
+  "status": 404,
+  "message": "User not found with email"
+}

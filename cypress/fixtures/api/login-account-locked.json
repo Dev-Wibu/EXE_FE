@@ -1,0 +1,5 @@
+{
+  "traceId": "mock-trace-id",
+  "status": 423,
+  "message": "Account is locked"
+}
