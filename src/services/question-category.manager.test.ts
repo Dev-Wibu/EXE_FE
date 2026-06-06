@@ -1,4 +1,6 @@
+import i18n from "@/lib/i18n";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+const t = i18n.t.bind(i18n);
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
@@ -136,13 +138,126 @@ describe("QuestionCategoryManager", () => {
     expect(mockApi.DELETE).toHaveBeenCalledWith("/api/question-categories/1", {});
   });
 
-  it("returns error response when request fails", async () => {
-    mockApi.GET.mockRejectedValueOnce(new Error("Not found"));
+  it("returns raw data when response is not an array (paginated)", async () => {
+    const paginatedData = {
+      content: [{ id: 1, lessonName: "Technical", description: "Tech questions" }],
+      totalElements: 1,
+    };
+    mockApi.GET.mockResolvedValueOnce({ data: paginatedData });
 
     const manager = new QuestionCategoryManager();
-    const result = await manager.getById(999);
+    const result = await manager.getAll();
+
+    expect(result.success).toBe(true);
+    // Non-array responses are returned as-is (no mapping)
+    expect(result.data).toEqual(paginatedData);
+  });
+
+  it("returns error on failure", async () => {
+    mockApi.GET.mockRejectedValueOnce(new Error("Network error"));
+
+    const manager = new QuestionCategoryManager();
+    const result = await manager.getAll();
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe("Not found");
+    expect(result.error).toBe("Network error");
+  });
+
+  it("returns i18n fallback for non-Error throws", async () => {
+    mockApi.GET.mockRejectedValueOnce("string error");
+
+    const manager = new QuestionCategoryManager();
+    const result = await manager.getAll();
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(t("general.unableToLoadQuestionList"));
+  });
+
+  describe("getById error handling", () => {
+    it("returns error on failure", async () => {
+      mockApi.GET.mockRejectedValueOnce(new Error("fail"));
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.getById(1);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("fail");
+    });
+
+    it("returns i18n fallback for non-Error throws", async () => {
+      mockApi.GET.mockRejectedValueOnce("string error");
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.getById(1);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("general.unableToLoadQuestionList"));
+    });
+  });
+
+  describe("create error handling", () => {
+    it("returns error on failure", async () => {
+      mockApi.POST.mockRejectedValueOnce(new Error("fail"));
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.create({ categoryName: "X" });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("fail");
+    });
+
+    it("returns i18n fallback for non-Error throws", async () => {
+      mockApi.POST.mockRejectedValueOnce("string error");
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.create({ categoryName: "X" });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("common.unableToCreateQuestionCategory"));
+    });
+  });
+
+  describe("update error handling", () => {
+    it("returns error on failure", async () => {
+      mockApi.PUT.mockRejectedValueOnce(new Error("fail"));
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.update(1, { categoryName: "X" });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("fail");
+    });
+
+    it("returns i18n fallback for non-Error throws", async () => {
+      mockApi.PUT.mockRejectedValueOnce("string error");
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.update(1, { categoryName: "X" });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("common.unableToUpdateQuestionList"));
+    });
+  });
+
+  describe("delete error handling", () => {
+    it("returns error on failure", async () => {
+      mockApi.DELETE.mockRejectedValueOnce(new Error("fail"));
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.delete(1);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("fail");
+    });
+
+    it("returns i18n fallback for non-Error throws", async () => {
+      mockApi.DELETE.mockRejectedValueOnce("string error");
+
+      const manager = new QuestionCategoryManager();
+      const result = await manager.delete(1);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(t("common.cannotDeleteQuestionCategories"));
+    });
   });
 });
