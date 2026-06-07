@@ -1,6 +1,6 @@
 # EXE_FE — AI Agent Rules
 
-> **@LAST_SYNCED: 2026-06-05**
+> **@LAST_SYNCED: 2026-06-06**
 > Canonical source of truth for all AI agents working on this codebase.
 > Mirrored to `.github/copilot-instructions.md` for GitHub Copilot compatibility.
 
@@ -10,7 +10,8 @@
 
 These rules are **non-negotiable**. Violating any of them is a blocking error.
 
-- **Internationalization (i18n)**: All user-facing strings (labels, buttons, toasts, placeholders, validation messages) **must** use `t()` from `react-i18next`. Do not use hardcoded strings in `.tsx` files.
+- **Internationalization (i18n)**: All user-facing strings (labels, buttons, toasts, placeholders, validation messages) **must** use `t()` from `react-i18next`. Do not use hardcoded strings in `.tsx` files. When adding new keys, update `en.json`, `vi.json`, and `ja.json`.
+- **No runtime-emitted TypeScript syntax**: The project's TypeScript configuration enables `erasableSyntaxOnly`. Do NOT use `enum` or `namespace` (which emit runtime JavaScript code). Use union types or `as const` objects instead.
 - **Never edit `schema-from-be.d.ts`**: This file is auto-generated from the backend OpenAPI spec. Regenerate it with `pnpm generate-schema`.
 - **Quality gate**: Run `pnpm validate` before finishing any task. This chains `format:check → lint → typecheck → build`. All steps **must** pass.
 - **Path alias**: `@/` maps to `src/` (configured in `vite.config.ts` and `tsconfig.json`). Always use `@/` imports, never relative `../../`.
@@ -296,8 +297,9 @@ All hooks are barrel-exported from `hooks/index.ts`.
 ### Internationalization (i18n)
 
 All text is translated using `i18next`. The instance is configured in `src/lib/i18n.ts`.
-Translation files are stored in `src/locales/en.json` and `src/locales/vi.json`.
+Translation files are stored in `src/locales/en.json`, `src/locales/vi.json`, and `src/locales/ja.json`.
 Use the `useTranslation` hook inside React components, and `i18n.t()` directly for non-component utilities. Language toggle is handled via `LanguageToggle` component.
+Translation keys must follow the `{namespace}.{descriptiveCamelCaseKey}` convention (e.g., `adminCompanymanagement.createJd`).
 
 ### Video Call Architecture
 
@@ -309,6 +311,19 @@ Supporting components: `VideoCallRoom`, `VideoControls`, `ParticipantGrid`, `Dev
 
 STOMP over SockJS via `@stomp/stompjs` + `sockjs-client`. Managed through `services/socket.manager.ts`.
 Connection state shown via `SocketStatusBadge` component.
+
+### Testing Conventions
+
+**Unit Tests (Vitest)**:
+
+- Co-locate tests with source files (`*.test.ts(x)`).
+
+**E2E Tests (Cypress)**:
+
+- Located in `cypress/e2e/`, grouped by roles (`admin/`, `mentor/`, `staff/`, `user/`) and features (`auth/`, `errors/`, `guards/`, etc.).
+- Use fixtures (`cypress/fixtures/`) to mock API responses and user data.
+- **Auth**: Use the custom `cy.login(role)` command to simulate authentication via `localStorage` state injection. Do not perform actual API logins in tests unless specifically testing the auth flow.
+- **API Mocks**: Use `cy.interceptCommonAPIs()` in `beforeEach` to stub polling (e.g. notifications) and common requests.
 
 ---
 
@@ -371,7 +386,7 @@ Full color map in `constants/colors.ts`. CSS variables defined in `src/index.css
 ## §8 — Adding a New Feature
 
 1. `pnpm generate-schema` — regenerate types if backend changed
-2. Add/update types in `interfaces/schema.types.ts` (or use generated types from `schema-from-be.d.ts` directly)
+2. Add/update types in `interfaces/schema.types.ts` (or use generated types from `schema-from-be.d.ts` directly). Do NOT use `enum` or `namespace` (per `erasableSyntaxOnly` rules).
 3. **New code**: Use `$api.useQuery()` / `$api.useMutation()` directly in a custom hook. **Do NOT create new Axios managers.**
 4. Create hook in `hooks/` wrapping the API calls with business logic
 5. Create page in `pages/<Role>/` following existing folder structure
@@ -379,8 +394,9 @@ Full color map in `constants/colors.ts`. CSS variables defined in `src/index.css
    - **User/Mentor**: nested under their ChromeTabs shell
    - **Admin**: add tab to `AdminDashboardPage` (no new route)
    - **Staff**: add standalone route at `/staff/<feature>`
-7. Export from barrel files (`hooks/index.ts`, etc.)
-8. Run `pnpm validate` — fix all errors before finishing
+7. Add new translation keys to `src/locales/en.json`, `src/locales/vi.json`, and `src/locales/ja.json` following the `namespace.descriptiveKey` convention.
+8. Export from barrel files (`hooks/index.ts`, etc.)
+9. Run `pnpm validate` — fix all errors before finishing
 
 ---
 
@@ -469,6 +485,7 @@ These anti-patterns were catalogued in `docs/error.md`. **Do NOT introduce them 
 - Do NOT use array index as `key` in `.map()` for dynamic lists (add/remove/sort).
 - Do NOT declare heavy functions/objects inside component body without `useMemo` / `useCallback` when passing to child components.
 - Do NOT use `setInterval`, `addEventListener`, or subscriptions in `useEffect` without a cleanup return.
+- Do NOT destructure directly from a Zustand hook like `const { a, b } = useMyStore()` or import the entire store object like `const store = useMyStore()`. This will trigger component re-renders whenever **any** state in that store changes. Always use individual selector hooks (e.g. `const a = useMyStore((state) => state.a)`) to optimize re-renders.
 - ✅ Always return a cleanup function: `return () => { clearInterval(id); }`.
 
 ### ❌ AP-08: Unsafe Async Handling
@@ -514,6 +531,12 @@ These anti-patterns were catalogued in `docs/error.md`. **Do NOT introduce them 
 - Do NOT use `@ts-ignore` or `@ts-expect-error` unless absolutely necessary (e.g., waiting for a third-party library fix), and it MUST be accompanied by an explanatory comment.
 - Do NOT disable strict ESLint rules (like `@typescript-eslint/no-explicit-any` or `react-hooks/exhaustive-deps`) globally or via file headers just to pass CI/CD.
 - Do NOT use non-null assertions (`!`) such as `user.profile!.avatar`. Always use Optional Chaining (`?.`) and handle undefined cases safely.
+
+### ❌ AP-12: Frozen i18n (Module-Level t() Abuse)
+
+- Do NOT declare `const t = i18n.t.bind(i18n)` at module scope for component constants (e.g. `const MODE_LABELS = { STANDARD_MOCK: t("...") }`). This evaluates the translation once at import/load time, causing it to freeze and fail to update when a user switches the app language.
+- Always use the `useTranslation` hook inside the React component and define or look up translated constants inside the component body or within a `useMemo` block.
+- Module-level `t()` is only allowed in non-component utilities (e.g. `error-normalizer.ts` or `formatting.ts`) where translation evaluation occurs inside a function that runs dynamically at call time.
 
 ---
 
@@ -622,8 +645,9 @@ When a trigger is detected:
 
 ## §14 — Changelog
 
-| Date       | Change                                                                                                                                                                                                                                                                                                                                                                        |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-06-01 | Removed Axios completely from the project. Migrated all legacy Service Managers to use `fetchClient` (which wraps `openapi-fetch`). Updated API guidelines to reflect that `createApiInstance` is dead and `$api` is the only supported API client moving forward.                                                                                                            |
-| 2026-05-31 | Migrated the application to full dynamic i18n using `react-i18next`. Extracted all hardcoded Vietnamese text into JSON locales (`en.json`, `vi.json`). Updated Hard Rules to require `t()` translations for all new user-facing strings. Added `i18next` to active stack and defined new i18n architecture under §5.                                                          |
-| 2026-05-30 | Initial creation. Distilled from legacy `.github/copilot-instructions.md` and `docs/error.md`. Corrected inaccurate documentation about Axios JWT handling. Removed dead Homepage Redesign section. Added Auto-Evolution Protocol, Operational Playbook, comprehensive Anti-Patterns, and strict Naming Conventions. Flagged `formik` and `react-icons` as dead dependencies. |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-06 | Documented newly established testing conventions (Unit Testing via Vitest and E2E via Cypress with custom commands/fixtures), added Japanese (`ja.json`) to supported locales, added rules against runtime-emitted TS syntax (e.g. `enum`/`namespace` per `erasableSyntaxOnly` option), i18n key formatting conventions, and documented frozen translation anti-patterns (AP-12) and Zustand selector performance guidelines (AP-07). |
+| 2026-06-01 | Removed Axios completely from the project. Migrated all legacy Service Managers to use `fetchClient` (which wraps `openapi-fetch`). Updated API guidelines to reflect that `createApiInstance` is dead and `$api` is the only supported API client moving forward.                                                                                                                                                                    |
+| 2026-05-31 | Migrated the application to full dynamic i18n using `react-i18next`. Extracted all hardcoded Vietnamese text into JSON locales (`en.json`, `vi.json`). Updated Hard Rules to require `t()` translations for all new user-facing strings. Added `i18next` to active stack and defined new i18n architecture under §5.                                                                                                                  |
+| 2026-05-30 | Initial creation. Distilled from legacy `.github/copilot-instructions.md` and `docs/error.md`. Corrected inaccurate documentation about Axios JWT handling. Removed dead Homepage Redesign section. Added Auto-Evolution Protocol, Operational Playbook, comprehensive Anti-Patterns, and strict Naming Conventions. Flagged `formik` and `react-icons` as dead dependencies.                                                         |
