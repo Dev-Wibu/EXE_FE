@@ -40,13 +40,13 @@ interface UseTabsStateReturn {
   /** List of open tabs */
   openTabs: Tab[];
   /** Change active tab (updates URL) */
-  setActiveTab: (_tabType: string) => void;
+  setActiveTab: (_tabType: string, _preventUrlUpdate?: boolean) => void;
   /** Open a new tab or switch to existing */
   openTab: (_tabType: string) => void;
   /** Close a tab by ID */
   closeTab: (_tabId: string) => void;
   /** Reset open tabs to only one tab */
-  resetTabsTo: (_tabType: string) => void;
+  resetTabsTo: (_tabType: string, _preventUrlUpdate?: boolean) => void;
 }
 
 /**
@@ -167,7 +167,7 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
 
   // Set active tab (updates URL) and ensure tab exists in openTabs
   const setActiveTab = useCallback(
-    (tabType: string) => {
+    (tabType: string, preventUrlUpdate = false) => {
       // Validate tab type
       if (!isValidTabType(tabType, availableTabs)) {
         console.warn(`Invalid tab type: ${tabType}`);
@@ -193,7 +193,9 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
         return prev;
       });
 
-      setSearchParams({ tab: tabType }, { replace: true });
+      if (!preventUrlUpdate) {
+        setSearchParams({ tab: tabType }, { replace: true });
+      }
     },
     [setSearchParams, availableTabs]
   );
@@ -238,7 +240,7 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
   );
 
   const resetTabsTo = useCallback(
-    (tabType: string) => {
+    (tabType: string, preventUrlUpdate = false) => {
       if (!isValidTabType(tabType, availableTabs)) {
         console.warn(`Invalid tab type: ${tabType}`);
         return;
@@ -257,7 +259,9 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
           label: tabConfig.label,
         },
       ]);
-      setSearchParams({ tab: tabType }, { replace: true });
+      if (!preventUrlUpdate) {
+        setSearchParams({ tab: tabType }, { replace: true });
+      }
     },
     [availableTabs, setSearchParams]
   );

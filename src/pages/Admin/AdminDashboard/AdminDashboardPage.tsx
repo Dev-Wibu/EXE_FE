@@ -529,8 +529,10 @@ export function AdminDashboardPage() {
         navigate(`/admin?tab=${tabType}`, {
           replace: true,
         });
+        setActiveTab(tabType, true);
+      } else {
+        setActiveTab(tabType);
       }
-      setActiveTab(tabType);
     },
     [companyId, navigate, setActiveTab]
   );
@@ -560,8 +562,10 @@ export function AdminDashboardPage() {
       navigate("/admin?tab=dashboard", {
         replace: true,
       });
+      resetTabsTo("dashboard", true);
+    } else {
+      resetTabsTo("dashboard");
     }
-    resetTabsTo("dashboard");
   }, [companyId, navigate, resetTabsTo]);
   const closeAllDisabled = openTabs.length === 1 && openTabs[0]?.type === "dashboard";
   const chromeMenuActions = useMemo<ChromeTabMenuAction[]>(
