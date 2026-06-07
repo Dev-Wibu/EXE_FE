@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import i18n from "@/lib/i18n";
 const t = i18n.t.bind(i18n);
 /**
@@ -10,6 +9,7 @@ const t = i18n.t.bind(i18n);
 import { API_ENDPOINTS, buildEndpoint } from "@/constants/api.config";
 import type { ApiResponse, BaseManager, PaginatedResponse, PaginationParams } from "@/interfaces";
 import { fetchClient } from "@/lib/api";
+import type { components } from "../../schema-from-be";
 
 /**
  * QuestionCategory type based on backend schema (QuestionLesson)
@@ -35,16 +35,16 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
    * Map backend QuestionLesson (lessonName) to frontend QuestionCategory (categoryName)
    */
 
-  private mapFromBackend(data: any): QuestionCategory {
+  private mapFromBackend(data: components["schemas"]["QuestionLesson"]): QuestionCategory {
     return {
       id: data.id,
-      categoryName: data.lessonName ?? data.categoryName,
+      categoryName: data.lessonName,
       description: data.description,
       urlTutorial: data.urlTutorial,
     };
   }
 
-  private mapArrayFromBackend(data: any[]): QuestionCategory[] {
+  private mapArrayFromBackend(data: components["schemas"]["QuestionLesson"][]): QuestionCategory[] {
     return data.map((item) => this.mapFromBackend(item));
   }
 
@@ -89,15 +89,15 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DETAIL, {
         id,
       });
-      // @ts-expect-error: Backend Swagger schema mismatch
+      // @ts-expect-error: dynamic endpoint string doesn't match PathsWithMethod<paths,"get"> — schema mismatch for /api/question-categories/{id}
       const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
+        data: res.data as components["schemas"]["QuestionLesson"] | undefined,
         status: res.response?.status,
         headers: res.response?.headers,
       }));
       return {
         success: true,
-        data: this.mapFromBackend(response.data),
+        data: this.mapFromBackend(response.data ?? {}),
       };
     } catch (error) {
       return {
@@ -127,13 +127,13 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       const response = await fetchClient
         .POST("/api/question-categories", { body: categoryPayload })
         .then((res) => ({
-          data: res.data,
+          data: res.data as components["schemas"]["QuestionLesson"] | undefined,
           status: res.response?.status,
           headers: res.response?.headers,
         }));
       return {
         success: true,
-        data: this.mapFromBackend(response.data),
+        data: this.mapFromBackend(response.data ?? {}),
       };
     } catch (error) {
       return {
@@ -162,13 +162,13 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
       const response = await fetchClient
         .PUT("/api/question-categories", { body: categoryData })
         .then((res) => ({
-          data: res.data,
+          data: res.data as components["schemas"]["QuestionLesson"] | undefined,
           status: res.response?.status,
           headers: res.response?.headers,
         }));
       return {
         success: true,
-        data: this.mapFromBackend(response.data),
+        data: this.mapFromBackend(response.data ?? {}),
       };
     } catch (error) {
       return {

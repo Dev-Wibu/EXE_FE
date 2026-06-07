@@ -96,16 +96,9 @@ export function JobDescriptionDetailDialog({
   const statusConfig = getJobDescriptionStatusBadge(job.status);
   const levelConfig = getJobDescriptionLevelBadge(job.level);
 
-  // Safely get rounds/appliedCount from backend response (may not be in types yet)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const jobAny = job as any;
-  const rounds: Array<{
-    id?: number;
-    name?: string;
-    description?: string;
-    roundNumber?: number;
-  }> = Array.isArray(jobAny.rounds) ? jobAny.rounds : [];
-  const appliedCount: number = typeof jobAny.appliedCount === "number" ? jobAny.appliedCount : 0;
+  // rounds and appliedCount are part of the JobDescription schema (schema-from-be.d.ts)
+  const rounds = job.rounds ?? [];
+  const appliedCount: number = job.appliedCount ?? 0;
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl overflow-hidden p-0">
@@ -197,20 +190,15 @@ export function JobDescriptionDetailDialog({
                           "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white",
                           "bg-primary"
                         )}>
-                        {round.roundNumber ?? idx + 1}
+                        {round.roundOrder ?? idx + 1}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-foreground text-sm font-semibold">
                           {round.name ||
                             t("common.roundVar0", {
-                              var_0: round.roundNumber ?? idx + 1,
+                              var_0: round.roundOrder ?? idx + 1,
                             })}
                         </p>
-                        {round.description && (
-                          <p className="text-muted-foreground mt-0.5 text-xs">
-                            {round.description}
-                          </p>
-                        )}
                       </div>
                       <CheckCircle2 className="text-muted-foreground/40 h-4 w-4 shrink-0" />
                     </div>
