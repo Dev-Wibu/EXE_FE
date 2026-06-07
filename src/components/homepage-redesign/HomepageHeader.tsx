@@ -29,7 +29,6 @@ import {
   HelpCircle,
   Lightbulb,
   LogOut,
-  Newspaper,
   Settings,
   Users,
 } from "lucide-react";
@@ -172,18 +171,12 @@ export function HomepageHeader() {
                   {t("common.resources")}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="!left-0">
-                  <ul className="grid w-[480px] grid-cols-2 gap-2 p-3">
+                  <ul className="grid w-[240px] grid-cols-1 gap-2 p-3">
                     <MenuItem
                       to="/resources/faq"
                       icon={<HelpCircle className="h-4 w-4" />}
                       title={t("common.frequentlyAskedQuestions")}
                       description={t("common.answerQuestions")}
-                    />
-                    <MenuItem
-                      to="/resources/blog"
-                      icon={<Newspaper className="h-4 w-4" />}
-                      title={t("common.article")}
-                      description={t("common.interviewKnowledge")}
                     />
                   </ul>
                 </NavigationMenuContent>
