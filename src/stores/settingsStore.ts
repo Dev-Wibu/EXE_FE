@@ -16,7 +16,7 @@ const SETTINGS_SCHEMA_VERSION = 3;
 
 export type FontSize = "small" | "default" | "large";
 export type SidebarBehavior = "always-open" | "auto-collapse";
-export type Language = "vi" | "en";
+export type Language = "vi" | "en" | "ja";
 
 export interface SettingsState {
   /** Internal schema version — used for future migrations */

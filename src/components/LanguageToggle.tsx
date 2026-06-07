@@ -41,7 +41,12 @@ export function LanguageToggle() {
         <DropdownMenuItem
           onClick={() => handleLanguageChange("en")}
           className={language === "en" ? "bg-accent" : ""}>
-          English (EN)
+          {t("settings.englishEn")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleLanguageChange("ja")}
+          className={language === "ja" ? "bg-accent" : ""}>
+          {t("settings.japaneseJa")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

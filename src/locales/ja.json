@@ -2524,7 +2524,8 @@
     "youNeedToLogIn": "パッケージを有効化するには再ログインが必要です。"
   },
   "settings": {
-    "englishEn": "英語 (EN)"
+    "englishEn": "英語 (EN)",
+    "japaneseJa": "日本語 (JA)"
   },
   "sharedMediatoolkitplaygroundpage": {
     "1UniversalUploaderUppy": "1) ユニバーサルアップローダー (Uppy)",

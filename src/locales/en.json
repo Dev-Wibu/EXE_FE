@@ -2497,7 +2497,8 @@
     "youNeedToLogIn": "You need to log in again before activating the package."
   },
   "settings": {
-    "englishEn": "English (EN)"
+    "englishEn": "English (EN)",
+    "japaneseJa": "Japanese (JA)"
   },
   "sharedMediatoolkitplaygroundpage": {
     "1UniversalUploaderUppy": "1) Universal Uploader (Uppy)",

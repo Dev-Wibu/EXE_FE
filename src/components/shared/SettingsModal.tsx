@@ -155,6 +155,11 @@ function AppearancePanel() {
       label: t("settings.englishEn"),
       preview: "EN",
     },
+    {
+      value: "ja",
+      label: t("settings.japaneseJa"),
+      preview: "JA",
+    },
   ];
   return (
     <div className="space-y-6 md:space-y-8">
@@ -202,7 +207,7 @@ function AppearancePanel() {
       {/* Language */}
       <div>
         <SectionTitle>{t("common.language")}</SectionTitle>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {languages.map(({ value, label, preview }) => (
             <OptionCard
               key={value}
