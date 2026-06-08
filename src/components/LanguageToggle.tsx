@@ -5,11 +5,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { type Language, useSettingsStore } from "@/stores/settingsStore";
 import { Globe } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-export function LanguageToggle() {
+
+interface LanguageToggleProps {
+  className?: string;
+}
+
+export function LanguageToggle({ className }: LanguageToggleProps) {
   const { t, i18n } = useTranslation();
   const { language, setLanguage } = useSettingsStore();
 
@@ -26,9 +32,15 @@ export function LanguageToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex h-9 items-center gap-1.5 px-2">
-          <Globe className="text-muted-foreground h-[1.2rem] w-[1.2rem]" />
-          <span className="text-muted-foreground text-xs font-semibold uppercase">{language}</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "flex h-9 items-center gap-1.5 px-2 text-slate-700 hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]",
+            className
+          )}>
+          <Globe className="h-[1.2rem] w-[1.2rem]" />
+          <span className="text-xs font-semibold uppercase">{language}</span>
           <span className="sr-only">{t("common.toggleLanguage")}</span>
         </Button>
       </DropdownMenuTrigger>
