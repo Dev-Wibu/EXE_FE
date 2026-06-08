@@ -58,7 +58,7 @@ export function usePublishedFeed(): UsePublishedFeedReturn {
           pendingRefreshRef.current = false;
           setIsReloading(false);
         } else {
-          setPosts((prev) => [...prev, ...wrapped]);
+          setPosts(wrapped);
         }
         setHasMore(false);
       }
