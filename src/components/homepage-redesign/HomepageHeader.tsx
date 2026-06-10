@@ -266,7 +266,7 @@ export function HomepageHeader() {
                 <Bell className="h-5 w-5" />
               </Button>
               <div className="w-11 shrink-0">
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button className="flex w-full items-center justify-center rounded-full border border-slate-200 bg-white p-1 transition-colors hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
                       <Avatar className="h-8 w-8">

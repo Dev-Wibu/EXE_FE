@@ -136,9 +136,6 @@
     font-size: 18px;
   }
 
-  html {
-    scrollbar-gutter: stable;
-  }
 
   * {
     @apply border-border outline-ring/50;

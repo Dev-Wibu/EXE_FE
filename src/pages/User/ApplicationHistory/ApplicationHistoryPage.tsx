@@ -1,7 +1,12 @@
 import { PaginationControl, ReloadButton } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { LoadingCardList } from "@/components/ui/loading-card";
@@ -17,293 +22,303 @@ import { formatDateTime } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { applicationService, companyManager } from "@/services";
 import type { Application } from "@/services/application.manager";
-import type { Company, JobDescription } from "@/services/company.manager";
+import type { Company, JobDescription, Round } from "@/services/company.manager";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Clock, FileSearch, Search, Star, XCircle } from "lucide-react";
+import { Briefcase, Check, Lock, Search, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-type ApplicationStatus = "IN_PROGRESS" | "PASSED" | "FAILED" | "SOFT_FAILED";
+// ============================================================
+// Types
+// ============================================================
+
+type ApplicationStatus =
+  | "IN_PROGRESS"
+  | "PASSED"
+  | "FAILED"
+  | "SOFT_FAILED";
+
 interface EnrichedApplication extends Application {
   jobDescription?: JobDescription;
   company?: Company;
 }
 
 // ============================================================
-// Constants
+// Status Badge
 // ============================================================
 
-// ============================================================
-// Hook for translated round type labels
-// ============================================================
-
-function useRoundTypeLabels(): Record<string, string> {
+function StatusBadge({ status }: { status: ApplicationStatus }) {
   const { t } = useTranslation();
-  return useMemo(
-    () => ({
-      CV_SCREENING: t("userAiinterview.cvScreening"),
-      EMAIL_SIMULATOR: t("userAiinterview.emailSimulator"),
-      QUIZ: "Quiz",
-      DB_DESIGN: t("userAiinterview.dbDesign"),
-      AI_INTERVIEW: t("common.aiInterview"),
-    }),
-    [t]
-  );
-}
-
-// ============================================================
-// Score Ring Component
-// ============================================================
-
-// ============================================================
-// Score Ring Component
-// ============================================================
-
-function ScoreRing({ score, size = 64 }: { score: number; size?: number }) {
-  const radius = (size - 6) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDasharray = circumference;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const config: Record<
+    ApplicationStatus,
+    { label: string; className: string }
+  > = {
+    IN_PROGRESS: {
+      label: t("userApplicationhistory.statusInterviewing"),
+      className: "bg-blue-100 text-blue-700",
+    },
+    PASSED: {
+      label: t("userApplicationhistory.statusCompleted"),
+      className: "bg-slate-200 text-slate-600",
+    },
+    FAILED: {
+      label: t("userApplicationhistory.statusRejected"),
+      className: "bg-red-100 text-red-700",
+    },
+    SOFT_FAILED: {
+      label: t("userApplicationhistory.needsImprovement"),
+      className: "bg-amber-100 text-amber-700",
+    },
+  };
+  const { label, className } = config[status] ?? {
+    label: status,
+    className: "",
+  };
   return (
-    <div
-      className="relative"
-      style={{
-        width: size,
-        height: size,
-      }}>
-      <svg className="h-full w-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
-        {/* Background circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          className="text-slate-200 dark:text-slate-700"
-        />
-        {/* Progress circle */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeDasharray={strokeDasharray}
-          strokeDashoffset={strokeDashoffset}
-          className={cn(
-            "transition-all duration-500 ease-out",
-            score >= 70 ? "text-emerald-500" : score >= 50 ? "text-amber-500" : "text-red-500"
-          )}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className={cn(
-            "text-xs font-bold",
-            score >= 70
-              ? "text-emerald-600 dark:text-emerald-400"
-              : score >= 50
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-red-600 dark:text-red-400"
-          )}>
-          {score}
-        </span>
-      </div>
-    </div>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+        className
+      )}
+    >
+      {label}
+    </span>
   );
 }
 
 // ============================================================
-// Application Card (Glass Design)
+// Application Card
 // ============================================================
 
 function ApplicationCard({
   application,
-  onViewDetails,
+  isSelected,
+  onClick,
 }: {
   application: EnrichedApplication;
-  onViewDetails: () => void;
+  isSelected: boolean;
+  onClick: () => void;
 }) {
   const { t } = useTranslation();
-  const roundTypeLabels = useRoundTypeLabels();
-
-  const APPLICATION_STATUS_CONFIG: Record<
-    ApplicationStatus,
-    { label: string; className: string; dotColor: string; bgClass: string }
-  > = {
-    IN_PROGRESS: {
-      label: t("common.processing1"),
-      className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-      dotColor: "bg-yellow-500",
-      bgClass: "border-slate-200 dark:border-slate-700",
-    },
-    PASSED: {
-      label: t("common.obtain"),
-      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-      dotColor: "bg-emerald-500",
-      bgClass: "border-slate-200 dark:border-slate-700",
-    },
-    FAILED: {
-      label: t("common.failed"),
-      className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-      dotColor: "bg-red-500",
-      bgClass: "border-slate-200 dark:border-slate-700",
-    },
-    SOFT_FAILED: {
-      label: t("userApplicationhistory.needsImprovement"),
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-      dotColor: "bg-amber-500",
-      bgClass: "border-slate-200 dark:border-slate-700",
-    },
-  };
-  const LEVEL_LABELS: Record<string, string> = {
-    INTERN: t("userApplicationhistory.internship"),
-    FRESHER: t("common.fresher"),
-    JUNIOR: t("common.junior"),
-    MIDDLE: t("common.middle"),
-  };
-
   const jd = application.jobDescription;
-  const statusConfig = APPLICATION_STATUS_CONFIG[application.status as ApplicationStatus] ?? {
-    label: application.status ?? "—",
-    className: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
-    dotColor: "bg-gray-500",
-    bgClass: "border-gray-200 dark:border-gray-700",
-  };
-  const rounds = jd?.rounds ?? [];
-  const currentRound = rounds.find((r) => r.roundOrder === application.currentRoundOrder);
-  const currentRoundTypeLabel = currentRound?.roundType
-    ? roundTypeLabels[currentRound.roundType] || currentRound.roundType
-    : null;
-  const hasScore = application.overallScore !== undefined && application.overallScore !== null;
+
   return (
-    <div
+    <Card
+      onClick={onClick}
       className={cn(
-        "group relative overflow-hidden rounded-xl border bg-white/70 backdrop-blur-sm",
-        "transition-all duration-300 hover:bg-white/90 hover:shadow-lg dark:bg-slate-900/70 dark:hover:bg-slate-900/90",
-        statusConfig.bgClass
-      )}>
-      <div className="flex flex-col gap-4 p-4 md:flex-row">
-        {/* Left: Company Logo & Info */}
-        <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row">
-          {/* Company Logo */}
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-[#0047AB]/10">
-            {application.company?.logoUrl ? (
-              <img
-                src={application.company.logoUrl}
-                alt={application.company.name}
-                className="h-full w-full rounded-xl object-cover"
-              />
-            ) : (
-              <Briefcase className="h-8 w-8 text-[#0047AB]" />
-            )}
+        "cursor-pointer transition-all hover:shadow-md",
+        isSelected &&
+          "border-[#0047AB] bg-[#0047AB]/5 ring-2 ring-[#0047AB]/20"
+      )}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+              {application.company?.logoUrl ? (
+                <img
+                  src={application.company.logoUrl}
+                  alt={application.company.name}
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                <Briefcase className="h-5 w-5 text-[#0047AB]" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="truncate text-sm">
+                {jd?.title ?? t("userApplicationhistory.noTitle")}
+              </CardTitle>
+              <CardDescription className="truncate">
+                {application.company?.name ??
+                  t("userApplicationhistory.company")}
+              </CardDescription>
+            </div>
           </div>
+          <StatusBadge status={application.status as ApplicationStatus} />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-xs text-slate-500">
+            {application.createdAt
+              ? formatDateTime(application.createdAt)
+              : ""}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-          {/* Info */}
-          <div className="min-w-0 flex-1">
-            {/* Title & Status */}
-            <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
-                  {jd?.title ?? t("common.noTitle")}
-                </h3>
-                <p className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-                  <FileSearch className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">
-                    {application.company?.name ?? t("common.company")}
-                  </span>
-                </p>
-              </div>
-              <Badge className={cn("shrink-0 gap-1", statusConfig.className)}>
-                <span className={cn("h-2 w-2 rounded-full", statusConfig.dotColor)} />
-                {statusConfig.label}
-              </Badge>
-            </div>
+// ============================================================
+// Timeline Item
+// ============================================================
 
-            {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm md:grid-cols-4">
-              {jd?.level && (
-                <div className="flex items-center gap-1.5">
-                  <Star className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="truncate text-slate-600 dark:text-slate-400">
-                    {LEVEL_LABELS[jd.level] ?? jd.level}
-                  </span>
-                </div>
-              )}
-              {application.createdAt && (
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="truncate text-slate-600 dark:text-slate-400">
-                    {formatDateTime(application.createdAt)}
-                  </span>
-                </div>
-              )}
-              {currentRoundTypeLabel && (
-                <div className="flex items-center gap-1.5">
-                  <Briefcase className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="truncate text-slate-600 dark:text-slate-400">
-                    {currentRoundTypeLabel}
-                  </span>
-                </div>
-              )}
-              {currentRound?.configData?.timeLimitMinutes && (
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span className="truncate text-slate-600 dark:text-slate-400">
-                    {currentRound.configData.timeLimitMinutes} {t("common.minute")}
-                  </span>
-                </div>
-              )}
-            </div>
+function TimelineItem({
+  round,
+  index,
+  totalRounds,
+  isCompleted,
+  isCurrent,
+  isLocked,
+  score,
+  onEnterRoom,
+}: {
+  round?: Round;
+  index: number;
+  totalRounds: number;
+  isCompleted: boolean;
+  isCurrent: boolean;
+  isLocked: boolean;
+  score?: number;
+  onEnterRoom?: () => void;
+}) {
+  const { t } = useTranslation();
+  const roundName =
+    round?.name ?? `${t("userApplicationhistory.round")} ${index + 1}`;
+  const description = round?.configData?.instruction || "";
 
-            {/* Current Round Progress */}
-            {currentRound && (
-              <div className="mt-2 rounded-md bg-slate-50 px-3 py-1.5 text-xs dark:bg-slate-800/50">
-                <span className="font-medium text-slate-600 dark:text-slate-300">
-                  {t("userApplicationhistory.currentRound")}
-                </span>{" "}
-                <span className="text-slate-500 dark:text-slate-400">{currentRound.name}</span>
-                <span className="ml-1.5 text-slate-400">
-                  ({application.currentRoundOrder}/{rounds.length})
-                </span>
-              </div>
-            )}
+  if (isLocked) {
+    return (
+      <div className="flex gap-4">
+        {/* Connector */}
+        <div className="flex flex-col items-center">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-white dark:bg-slate-800">
+            <Lock className="h-3.5 w-3.5 text-slate-400" />
+          </div>
+          {index < totalRounds - 1 && (
+            <div className="w-0.5 flex-1 bg-slate-200 dark:bg-slate-700 mt-2" />
+          )}
+        </div>
+        {/* Content */}
+        <div className="flex-1 pb-8">
+          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+            <h4 className="text-sm font-medium text-slate-400">
+              {t("userApplicationhistory.nextRound")}
+            </h4>
+            <p className="mt-1 text-xs text-slate-300 dark:text-slate-600">
+              {t("userApplicationhistory.roundInfoLocked")}
+            </p>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Right: Score & Action */}
-        <div className="flex shrink-0 items-center justify-between gap-4 border-t border-slate-200/50 pt-4 md:w-40 md:flex-col md:border-t-0 md:border-l md:pt-0 md:pl-4">
-          {hasScore ? (
-            <div className="flex flex-col items-center gap-1">
-              <ScoreRing score={Math.round(application.overallScore ?? 0)} />
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {t("userApplicationhistory.totalScore")}
-              </span>
+  return (
+    <div className="flex gap-4">
+      {/* Connector */}
+      <div className="flex flex-col items-center">
+        {isCompleted ? (
+          <>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0047AB] ring-4 ring-[#0047AB]/20">
+              <Check className="h-4 w-4 text-white" />
             </div>
-          ) : (
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                <Clock className="h-6 w-6 text-slate-400" />
-              </div>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {t("userApplicationhistory.grading")}
-              </span>
-            </div>
-          )}
-          <Button
-            size="sm"
-            onClick={onViewDetails}
-            className={cn(
-              "w-full gap-1 bg-[#0047AB] hover:bg-[#003d91]",
-              !hasScore && "cursor-not-allowed opacity-50"
+            {index < totalRounds - 1 && (
+              <div className="w-0.5 flex-1 bg-[#0047AB]/30 dark:bg-[#0047AB]/40 mt-2" />
             )}
-            disabled={!hasScore}>
-            {t("common.detail")}
-          </Button>
+          </>
+        ) : isCurrent ? (
+          <>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[#0047AB] bg-white dark:bg-slate-800 shadow-sm">
+              <div className="h-2.5 w-2.5 rounded-full bg-[#0047AB] animate-pulse" />
+            </div>
+            {index < totalRounds - 1 && (
+              <div className="w-0.5 flex-1 bg-slate-200 dark:bg-slate-700 mt-2" />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-xs font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+              {index + 1}
+            </div>
+            {index < totalRounds - 1 && (
+              <div className="w-0.5 flex-1 bg-slate-100 dark:bg-slate-800 mt-2" />
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Content Card */}
+      <div className="flex-1 pb-8">
+        <div
+          className={cn(
+            "rounded-lg border p-4 transition-all",
+            isCompleted &&
+              "border-[#0047AB]/20 bg-[#0047AB]/5 dark:border-[#0047AB]/40 dark:bg-[#0047AB]/10",
+            isCurrent &&
+              "border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800",
+            !isCompleted &&
+              !isCurrent &&
+              "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
+          )}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            {/* Left */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {roundName}
+                </h4>
+                {isCurrent && (
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                    {t("userApplicationhistory.current")}
+                  </span>
+                )}
+              </div>
+              {description && (
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                  {description}
+                </p>
+              )}
+            </div>
+
+            {/* Right */}
+            <div className="flex shrink-0 items-center gap-4">
+              {isCompleted && score !== undefined && (
+                <div className="text-right">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    {t("userApplicationhistory.result")}
+                  </p>
+                  <p className="mt-0.5 text-xl font-bold text-[#0047AB]">
+                    {score}
+                    <span className="text-sm font-normal text-slate-400">
+                      /100
+                    </span>
+                  </p>
+                </div>
+              )}
+              {isCurrent && (
+                <div className="text-right">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    {t("userApplicationhistory.status")}
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {t("userApplicationhistory.noResultYet")}
+                  </p>
+                </div>
+              )}
+              {isCurrent ? (
+                <Button
+                  onClick={onEnterRoom}
+                  size="sm"
+                  className="bg-[#0047AB] hover:bg-[#003d91] text-white shrink-0"
+                >
+                  {t("userApplicationhistory.enterRoom")}
+                </Button>
+              ) : isCompleted ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-[#0047AB] text-[#0047AB] hover:bg-[#0047AB]/5 shrink-0"
+                >
+                  {t("userApplicationhistory.viewDetails")}
+                </Button>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -311,35 +326,130 @@ function ApplicationCard({
 }
 
 // ============================================================
-// Stats Card (Glass Design)
+// Application Detail Panel
 // ============================================================
 
-function GlassStatCard({
-  label,
-  value,
-  colorClass,
+function ApplicationDetail({
+  application,
+  onEnterRoom,
 }: {
-  label: string;
-  value: number;
-  colorClass: string;
+  application: EnrichedApplication;
+  onEnterRoom?: () => void;
 }) {
+  const { t } = useTranslation();
+  const jd = application.jobDescription;
+  const rounds = jd?.rounds ?? [];
+  const currentRoundOrder = application.currentRoundOrder ?? 0;
+
   return (
-    <div className="rounded-xl border border-slate-200/50 bg-white/70 p-4 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/70">
-      <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-      <p className={cn("mt-1 text-2xl font-bold", colorClass)}>{value}</p>
-    </div>
+    <>
+      {/* Header Card */}
+      <Card className="mb-4 overflow-hidden border-0 bg-gradient-to-r from-[#0047AB] via-[#005B9A] to-[#007BFF] py-0">
+        <CardContent className="flex items-center justify-between gap-4 p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white shadow-md ring-1 ring-slate-200">
+              {application.company?.logoUrl ? (
+                <img
+                  src={application.company.logoUrl}
+                  alt={application.company.name}
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                <Briefcase className="h-7 w-7 text-[#0047AB]" />
+              )}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">
+                {jd?.title ?? t("userApplicationhistory.noTitle")}
+              </h2>
+              <p className="mt-0.5 text-sm font-medium text-white/80">
+                {application.company?.name ??
+                  t("userApplicationhistory.company")}
+                {jd?.companyName && ` · ${jd.companyName}`}
+              </p>
+            </div>
+          </div>
+          <div className="hidden text-right text-white sm:block">
+            <p className="text-xs font-medium uppercase tracking-wide text-white/70">
+              {t("userApplicationhistory.overallProgress")}
+            </p>
+            <div className="mt-1 flex items-center justify-end gap-2">
+              <div className="h-2 w-24 rounded-full bg-white/30">
+                <div
+                  className="h-full rounded-full bg-white transition-all"
+                  style={{
+                    width: `${(currentRoundOrder / Math.max(rounds.length, 1)) * 100}%`,
+                  }}
+                />
+              </div>
+              <span className="text-sm font-bold">
+                {currentRoundOrder}/{rounds.length}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Timeline Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">
+            {t("userApplicationhistory.interviewPipeline")}
+          </CardTitle>
+          <CardDescription>
+            {t("userApplicationhistory.pageDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {rounds.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                <Briefcase className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {t("userApplicationhistory.noRoundsAvailable")}
+              </p>
+            </div>
+          ) : (
+            rounds.map((round, index) => {
+              const isCompleted = index < currentRoundOrder;
+              const isCurrent =
+                index === currentRoundOrder - 1 ||
+                (currentRoundOrder === 0 && index === 0);
+              const isLocked = index > currentRoundOrder;
+              return (
+                <TimelineItem
+                  key={round.id ?? index}
+                  round={round}
+                  index={index}
+                  totalRounds={rounds.length}
+                  isCompleted={isCompleted}
+                  isCurrent={isCurrent}
+                  isLocked={isLocked}
+                  score={isCompleted ? application.overallScore : undefined}
+                  onEnterRoom={isCurrent ? onEnterRoom : undefined}
+                />
+              );
+            })
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
 // ============================================================
-// Main Page Component
+// Main Page
 // ============================================================
 
 export function ApplicationHistoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    ApplicationStatus | "all"
+  >("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAppId, setSelectedAppId] = useState<number | null>(null);
 
   // Fetch applications
   const {
@@ -408,24 +518,20 @@ export function ApplicationHistoryPage() {
       return [];
     },
   });
+
   const isLoading = applicationsLoading;
-  const isRefetching = applicationsRefetching || jdRefetching || companiesRefetching;
+  const isRefetching =
+    applicationsRefetching || jdRefetching || companiesRefetching;
 
   // Enrich applications
   const enrichedApplications = useMemo<EnrichedApplication[]>(() => {
     return applicationsResult.map((app) => {
-      // Find job description by jdId
       const jd = jobDescriptionsResult.find((j) => j.id === app.jdId);
-
-      // Try to find company via multiple approaches:
-      // 1. From job description's companyId (if exists)
-      // 2. From company's jobDescriptions array (reverse lookup)
       let company: Company | undefined;
       if (jd?.companyId) {
         company = companiesResult.find((c) => c.id === jd.companyId);
       }
       if (!company) {
-        // Reverse lookup: find company that has this jdId in their jobDescriptions
         company = companiesResult.find((c) =>
           c.jobDescriptions?.some((jdItem) => jdItem.id === app.jdId)
         );
@@ -456,13 +562,16 @@ export function ApplicationHistoryPage() {
     return items;
   }, [enrichedApplications, statusFilter, searchQuery]);
 
-  // Stats
-  const totalCount = enrichedApplications.length;
-  const inProgressCount = enrichedApplications.filter((a) => a.status === "IN_PROGRESS").length;
-  const passedCount = enrichedApplications.filter((a) => a.status === "PASSED").length;
-  const failedCount = enrichedApplications.filter(
-    (a) => a.status === "FAILED" || a.status === "SOFT_FAILED"
-  ).length;
+  // Auto-select first application
+  const selectedApplication = useMemo(() => {
+    if (selectedAppId) {
+      return (
+        filteredApplications.find((app) => app.id === selectedAppId) ??
+        filteredApplications[0]
+      );
+    }
+    return filteredApplications[0] ?? null;
+  }, [filteredApplications, selectedAppId]);
 
   // Pagination
   const [pageSize, setPageSize] = useHybridPageSize({
@@ -474,155 +583,183 @@ export function ApplicationHistoryPage() {
     pageSize,
   });
   const pageData = useMemo(
-    () => filteredApplications.slice(pagination.startIndex, pagination.endIndex + 1),
+    () =>
+      filteredApplications.slice(
+        pagination.startIndex,
+        pagination.endIndex + 1
+      ),
     [filteredApplications, pagination.startIndex, pagination.endIndex]
   );
-  const handleViewDetails = (app: EnrichedApplication) => {
-    if (app.jdId) {
-      navigate(`/enterprise/job/${app.jdId}`);
+
+  const handleEnterRoom = () => {
+    if (selectedApplication?.jdId) {
+      navigate(`/enterprise/job/${selectedApplication.jdId}`);
     }
   };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            {t("common.applicationHistory")}
+            {t("userApplicationhistory.pageTitle")}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("userApplicationhistory.trackTheStatusOfYour")}
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {t("userApplicationhistory.pageDescription")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <ReloadButton
-            onReload={async () => {
-              await Promise.all([
-                refetchApplications(),
-                refetchJobDescriptions(),
-                refetchCompanies(),
-              ]);
-            }}
-            isLoading={isRefetching}
-            tooltip={t("common.reload")}
-          />
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <GlassStatCard
-          label={t("userApplicationhistory.totalOrder")}
-          value={totalCount}
-          colorClass="text-slate-900 dark:text-slate-100"
-        />
-        <GlassStatCard
-          label={t("common.processing1")}
-          value={inProgressCount}
-          colorClass="text-yellow-600 dark:text-yellow-400"
-        />
-        <GlassStatCard
-          label={t("common.obtain")}
-          value={passedCount}
-          colorClass="text-emerald-600 dark:text-emerald-400"
-        />
-        <GlassStatCard
-          label={t("common.failed")}
-          value={failedCount}
-          colorClass="text-red-600 dark:text-red-400"
+        <ReloadButton
+          onReload={async () => {
+            await Promise.all([
+              refetchApplications(),
+              refetchJobDescriptions(),
+              refetchCompanies(),
+            ]);
+          }}
+          isLoading={isRefetching}
+          tooltip={t("userApplicationhistory.reload")}
         />
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200/50 bg-white/70 p-4 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/70">
-        {/* Search */}
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              pagination.goToFirstPage();
-            }}
-            className="pl-9"
-            placeholder={t("userApplicationhistory.searchByLocationCompany")}
-          />
-        </div>
-
-        {/* Status filter */}
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => {
-            setStatusFilter(value as ApplicationStatus | "all");
-            pagination.goToFirstPage();
-          }}>
-          <SelectTrigger className="w-full min-w-[180px]">
-            <SelectValue placeholder={t("common.filterByStatus")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("common.allStatus")}</SelectItem>
-            <SelectItem value="IN_PROGRESS">{t("common.processing1")}</SelectItem>
-            <SelectItem value="PASSED">{t("common.obtain")}</SelectItem>
-            <SelectItem value="FAILED">{t("common.failed")}</SelectItem>
-            <SelectItem value="SOFT_FAILED">
-              {t("userApplicationhistory.needsImprovement")}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Content */}
-      {isLoading ? (
-        <LoadingCardList count={4} />
-      ) : applicationsError ? (
-        <Card className="flex h-48 flex-col items-center justify-center gap-4">
-          <XCircle className="h-8 w-8 text-red-500" />
-          <p className="text-destructive font-medium">
-            {t("userApplicationhistory.unableToDownloadApplicationHistory")}
-          </p>
-          <Button variant="outline" onClick={() => void refetchApplications()}>
-            {t("common.retry")}
-          </Button>
-        </Card>
-      ) : filteredApplications.length === 0 ? (
-        <EmptyState
-          icon={Briefcase}
-          title={t("userApplicationhistory.thereAreNoApplicationsYet")}
-          description={t("userApplicationhistory.findJobsAndApplyTo")}
-          action={
-            <Button
-              onClick={() => navigate("/enterprise/companies")}
-              className="gap-2 bg-[#0047AB] hover:bg-[#003d91]">
-              <Briefcase className="h-4 w-4" />
-              {t("userApplicationhistory.findAJobNow")}
-            </Button>
-          }
-        />
-      ) : (
-        <>
-          <div className="grid gap-4">
-            {pageData.map((app) => (
-              <ApplicationCard
-                key={`app-${app.id}`}
-                application={app}
-                onViewDetails={() => handleViewDetails(app)}
-              />
-            ))}
+      {/* Controls Card */}
+      <Card className="space-y-4 p-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
+          {/* Search */}
+          <div className="relative">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              placeholder={t("userApplicationhistory.searchPlaceholder")}
+            />
           </div>
 
-          {/* Pagination */}
-          {totalCount > pageSize && (
-            <PaginationControl
-              pagination={pagination}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                pagination.goToFirstPage();
-              }}
-              pageSizeOptions={[5, 10, 20, 30]}
+          {/* Filter */}
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              setStatusFilter(value as ApplicationStatus | "all")
+            }
+          >
+            <SelectTrigger className="w-full min-w-[200px]">
+              <SelectValue
+                placeholder={t("userApplicationhistory.filterByStatus")}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t("userApplicationhistory.allStatus")}
+              </SelectItem>
+              <SelectItem value="IN_PROGRESS">
+                {t("userApplicationhistory.statusInterviewing")}
+              </SelectItem>
+              <SelectItem value="PASSED">
+                {t("userApplicationhistory.statusCompleted")}
+              </SelectItem>
+              <SelectItem value="FAILED">
+                {t("userApplicationhistory.statusRejected")}
+              </SelectItem>
+              <SelectItem value="SOFT_FAILED">
+                {t("userApplicationhistory.needsImprovement")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      {/* Main Content Grid */}
+      <div className="grid gap-4 lg:grid-cols-12">
+        {/* Left: Application List */}
+        <div className="lg:col-span-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              {t("userApplicationhistory.applications")} (
+              {filteredApplications.length})
+            </span>
+          </div>
+
+          {isLoading ? (
+            <LoadingCardList count={4} />
+          ) : applicationsError ? (
+            <Card className="flex h-48 flex-col items-center justify-center gap-4 p-6">
+              <XCircle className="h-8 w-8 text-red-500" />
+              <p className="text-center text-sm font-medium text-red-600 dark:text-red-400">
+                {t("userApplicationhistory.unableToDownload")}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetchApplications()}
+              >
+                {t("userApplicationhistory.retry")}
+              </Button>
+            </Card>
+          ) : pageData.length === 0 ? (
+            <EmptyState
+              icon={Briefcase}
+              title={t("userApplicationhistory.noApplicationsYet")}
+              description={t("userApplicationhistory.findJobsDescription")}
+              action={
+                <Button
+                  onClick={() => navigate("/enterprise/companies")}
+                  className="gap-2 bg-[#0047AB] hover:bg-[#003d91]"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  {t("userApplicationhistory.findAJobNow")}
+                </Button>
+              }
             />
+          ) : (
+            <div className="grid gap-3">
+              {pageData.map((app) => (
+                <ApplicationCard
+                  key={`app-${app.id}`}
+                  application={app}
+                  isSelected={selectedApplication?.id === app.id}
+                  onClick={() => setSelectedAppId(app.id ?? null)}
+                />
+              ))}
+            </div>
           )}
-        </>
-      )}
+
+          {/* Pagination — OUTSIDE the grid */}
+          {filteredApplications.length > pageSize && (
+            <div className="mt-4">
+              <PaginationControl
+                pagination={pagination}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  pagination.goToFirstPage();
+                }}
+                pageSizeOptions={[5, 10, 20, 30]}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Right: Detail Panel */}
+        <div className="lg:col-span-8">
+          {selectedApplication ? (
+            <ApplicationDetail
+              application={selectedApplication}
+              onEnterRoom={handleEnterRoom}
+            />
+          ) : (
+            <Card className="flex h-96 items-center justify-center">
+              <div className="text-center">
+                <div className="mb-3 flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                  <Briefcase className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {t("userApplicationhistory.selectApplication")}
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

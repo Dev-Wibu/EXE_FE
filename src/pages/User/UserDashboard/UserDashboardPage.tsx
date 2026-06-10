@@ -9,9 +9,21 @@ import {
   SettingsModal,
 } from "@/components/shared";
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
+import { authManager } from "@/services/auth.manager";
+import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 import { getDashboardTabFromPath } from "@/lib/dashboard-breadcrumb";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -22,15 +34,18 @@ import {
   GraduationCap,
   History,
   LayoutDashboard,
+  LogOut,
   MessageSquare,
   Newspaper,
+  Settings,
   User as UserIcon,
+  UserCircle,
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useOutlet } from "react-router-dom";
-import { AccountPage } from "../Account";
+import { toast } from "sonner";
 import { AIInterviewListPage } from "../AIInterview";
 import { ApplicationHistoryPage } from "../ApplicationHistory";
 import { UserFeedbackListPage } from "../Feedback";
@@ -53,8 +68,7 @@ type TabType =
   | "practice"
   | "practiceQuestions"
   | "notifications"
-  | "messenger"
-  | "account";
+  | "messenger";
 const isValidTabType = (value: string): value is TabType => {
   return [
     "homeFeed",
@@ -69,7 +83,6 @@ const isValidTabType = (value: string): value is TabType => {
     "practiceQuestions",
     "notifications",
     "messenger",
-    "account",
   ].includes(value as TabType);
 };
 const getAvailableTabs = (
@@ -125,10 +138,6 @@ const getAvailableTabs = (
   {
     type: "messenger",
     label: t("common.messages"),
-  },
-  {
-    type: "account",
-    label: t("common.account"),
   },
 ];
 const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] => [
@@ -224,12 +233,6 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
         label: t("common.messages"),
         color: "text-blue-500",
       },
-      {
-        type: "account",
-        icon: UserIcon,
-        label: t("common.account"),
-        color: "text-gray-600",
-      },
     ],
   },
 ];
@@ -312,6 +315,25 @@ export function UserDashboardPage() {
     },
     [outlet, openTab, navigate]
   );
+
+  const handleLogout = useCallback(async () => {
+    await authManager.logout();
+    useAuthStore.getState().clearAuth();
+    toast.success(t("common.loggedOutSuccessfully"));
+    navigate("/login");
+  }, [navigate, t]);
+
+  const user = useAuthStore((state) => state.user);
+
+  function getInitials(name?: string): string {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }
   const renderContent = () => {
     switch (typedActiveTab) {
       case "homeFeed":
@@ -338,8 +360,6 @@ export function UserDashboardPage() {
         return <UserNotificationsPage />;
       case "messenger":
         return <MessengerPage />;
-      case "account":
-        return <AccountPage />;
       default:
         return <div>{t("common.invalidTabType")}</div>;
     }
@@ -404,8 +424,47 @@ export function UserDashboardPage() {
             />
           </div>
           <DashboardBreadcrumb items={breadcrumbItems} className="min-w-0 flex-1" />
-          <div className="shrink-0 pl-3">
+          <div className="flex shrink-0 items-center gap-3 pl-3">
             <NotificationBell notificationsPath="/user?tab=notifications" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full border border-slate-200 p-1 transition-colors hover:bg-slate-100 focus:outline-none dark:border-slate-700 dark:hover:bg-slate-800">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name ?? "User"} />
+                    <AvatarFallback className="bg-[#DCEEFF] text-xs font-semibold text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]">
+                      {getInitials(user?.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden max-w-[100px] truncate text-sm font-medium text-slate-700 dark:text-slate-200 lg:inline">
+                    {user?.name}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium">{user?.name}</p>
+                    <p className="text-muted-foreground text-xs">{user?.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <button
+                    onClick={() => navigate("/user/account")}
+                    className="flex w-full cursor-pointer items-center gap-2">
+                    <UserCircle className="h-4 w-4" />
+                    {t("common.account")}
+                  </button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="flex w-full cursor-pointer items-center gap-2 text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                  onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  {t("common.logout")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div

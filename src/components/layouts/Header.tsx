@@ -246,7 +246,7 @@ export function Header() {
 
           {isLoggedIn && user /* ── Logged-in: avatar dropdown ── */ ? (
             <div className="shrink-0">
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1 transition-colors hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
