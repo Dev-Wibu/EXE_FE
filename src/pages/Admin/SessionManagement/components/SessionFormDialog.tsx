@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { datetimeLocalToVietnamISOString } from "@/lib/utils";
+import { localDatetimeLocalToUtc, utcToLocalDatetimeLocal } from "@/lib/formatting";
 import { useTranslation } from "react-i18next";
 import type { SessionFormData, SessionStatus } from "../types";
 interface SessionFormDialogProps {
@@ -93,13 +93,11 @@ export function SessionFormDialog({
             <Input
               id="joinTime"
               type="datetime-local"
-              value={formData.joinTime ? formData.joinTime.slice(0, 16) : ""}
+              value={utcToLocalDatetimeLocal(formData.joinTime)}
               onChange={(e) =>
                 onFormChange({
                   ...formData,
-                  joinTime: e.target.value
-                    ? datetimeLocalToVietnamISOString(e.target.value)
-                    : undefined,
+                  joinTime: e.target.value ? localDatetimeLocalToUtc(e.target.value) : undefined,
                 })
               }
             />

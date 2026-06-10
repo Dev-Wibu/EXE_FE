@@ -467,3 +467,58 @@ export function formatRelativeTime(value: DateInput, fallback = EMPTY_PLACEHOLDE
   }
   return currentLocale() === "en-US" ? `${month}/${day}` : `${day}/${month}`;
 }
+
+/**
+ * Converts a backend DateInput (UTC or local naive) to a local datetime-local input string (YYYY-MM-DDTHH:mm).
+ */
+export function utcToLocalDatetimeLocal(value: DateInput): string {
+  const parsed = parseBackendDate(value);
+  if (!parsed) {
+    return "";
+  }
+  const dtf = getDateTimeFormatter();
+  const year = getDatePart(parsed, dtf, "year");
+  const month = getDatePart(parsed, dtf, "month");
+  const day = getDatePart(parsed, dtf, "day");
+  const hour = getDatePart(parsed, dtf, "hour");
+  const minute = getDatePart(parsed, dtf, "minute");
+  if (!year || !month || !day || !hour || !minute) {
+    return "";
+  }
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+/**
+ * Converts a local datetime-local value (YYYY-MM-DDTHH:mm) to a UTC ISO-8601 string (ending in Z).
+ */
+export function localDatetimeLocalToUtc(value: string): string {
+  if (!value) {
+    return "";
+  }
+  const [datePart, timePart] = value.split("T");
+  if (!datePart || !timePart) {
+    return "";
+  }
+  const [yearRaw, monthRaw, dayRaw] = datePart.split("-");
+  const [hourRaw, minuteRaw] = timePart.split(":");
+  const year = Number.parseInt(yearRaw, 10);
+  const month = Number.parseInt(monthRaw, 10);
+  const day = Number.parseInt(dayRaw, 10);
+  const hour = Number.parseInt(hourRaw, 10);
+  const minute = Number.parseInt(minuteRaw, 10);
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day) ||
+    Number.isNaN(hour) ||
+    Number.isNaN(minute)
+  ) {
+    return "";
+  }
+
+  // Convert Vietnam (+7) local time to UTC Date
+  const utcDate = new Date(
+    Date.UTC(year, month - 1, day, hour - VIETNAM_OFFSET_HOURS, minute, 0, 0)
+  );
+  return utcDate.toISOString();
+}

@@ -11,12 +11,14 @@ import {
   formatTimeDayMonth,
   formatUtcNaiveDateTime,
   formatUtcNaiveTime,
+  localDatetimeLocalToUtc,
   parseBackendDate,
   parseUtcNaiveDate,
   toTimestamp,
   toUtcNaiveTimestamp,
   toVietnamDateKey,
   treatZuluAsVietnamLocal,
+  utcToLocalDatetimeLocal,
 } from "./formatting";
 
 // ---------------------------------------------------------------------------
@@ -636,5 +638,32 @@ describe("treatZuluAsVietnamLocal + format roundtrip", () => {
   it("keeps non-Z timezone values unchanged for formatting", () => {
     const value = "2026-04-14T21:30:38.869+07:00";
     expect(treatZuluAsVietnamLocal(value)).toBe(value);
+  });
+});
+
+describe("utcToLocalDatetimeLocal", () => {
+  it("converts Z-suffixed UTC date-time string to local Vietnam datetime-local format", () => {
+    expect(utcToLocalDatetimeLocal("2026-06-10T11:58:00Z")).toBe("2026-06-10T18:58");
+  });
+
+  it("converts naive local date-time string to local Vietnam datetime-local format", () => {
+    expect(utcToLocalDatetimeLocal("2026-06-10T18:58:00")).toBe("2026-06-10T18:58");
+  });
+
+  it("returns empty string for null/undefined/invalid inputs", () => {
+    expect(utcToLocalDatetimeLocal(null)).toBe("");
+    expect(utcToLocalDatetimeLocal(undefined)).toBe("");
+    expect(utcToLocalDatetimeLocal("invalid-date")).toBe("");
+  });
+});
+
+describe("localDatetimeLocalToUtc", () => {
+  it("converts local Vietnam YYYY-MM-DDTHH:mm to UTC ISO string with Z suffix", () => {
+    expect(localDatetimeLocalToUtc("2026-06-10T18:58")).toBe("2026-06-10T11:58:00.000Z");
+  });
+
+  it("returns empty string for empty/invalid inputs", () => {
+    expect(localDatetimeLocalToUtc("")).toBe("");
+    expect(localDatetimeLocalToUtc("invalid-date")).toBe("");
   });
 });

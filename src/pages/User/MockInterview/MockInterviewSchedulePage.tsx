@@ -26,7 +26,7 @@ import { useMentors } from "@/hooks/useMentor";
 import { useCreateSession } from "@/hooks/useSession";
 import { formatCurrency, formatDateTime, formatTime, toVietnamDateKey } from "@/lib/formatting";
 import i18n from "@/lib/i18n";
-import { cn, formatToVietnamISOString } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   ArrowLeft,
@@ -223,11 +223,11 @@ export function MockInterviewSchedulePage() {
     return durationMinutes * mentorPricePerMinute;
   }, [durationMinutes, mentorPricePerMinute]);
 
-  // Calculate joinTime in Vietnam timezone (+07:00)
+  // Calculate joinTime in UTC ISO format to send to BE
   const calculateJoinTime = (): string | undefined => {
     if (!selectedDate) return undefined;
     const joinDate = buildJoinDateFromVietnamSelection(selectedDate, selectedHour, selectedMinute);
-    return formatToVietnamISOString(joinDate);
+    return joinDate.toISOString();
   };
 
   // Format selected date/time for display
