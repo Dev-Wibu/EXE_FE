@@ -1,6 +1,6 @@
+import { DateTimePicker } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar as DatePicker } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -608,49 +608,27 @@ export function OverviewPage() {
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start text-left font-normal">
-                  {fromDate
-                    ? formatDateFn(fromDate, "dd/MM/yyyy", {
-                        locale: i18n.language === "en" ? enUS : vi,
-                      })
-                    : t("common.fromDate")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <DatePicker
-                  mode="single"
-                  selected={fromDate}
-                  onSelect={(value) => {
-                    setFromDate(value);
-                    if (value && toDate && value > toDate) {
-                      setToDate(undefined);
-                    }
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
+            <DateTimePicker
+              value={fromDate}
+              onChange={(value) => {
+                setFromDate(value || undefined);
+                if (value && toDate && value > toDate) {
+                  setToDate(undefined);
+                }
+              }}
+              showTime={false}
+              themeVariant="user"
+              placeholder={t("common.fromDate")}
+            />
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start text-left font-normal">
-                  {toDate
-                    ? formatDateFn(toDate, "dd/MM/yyyy", {
-                        locale: i18n.language === "en" ? enUS : vi,
-                      })
-                    : t("common.comeDay")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <DatePicker
-                  mode="single"
-                  selected={toDate}
-                  onSelect={setToDate}
-                  disabled={(date) => (fromDate ? date < fromDate : false)}
-                />
-              </PopoverContent>
-            </Popover>
+            <DateTimePicker
+              value={toDate}
+              onChange={(value) => setToDate(value || undefined)}
+              showTime={false}
+              minDate={fromDate}
+              themeVariant="user"
+              placeholder={t("common.comeDay")}
+            />
           </div>
 
           <Button variant="ghost" size="sm" className="w-fit" onClick={resetFilters}>

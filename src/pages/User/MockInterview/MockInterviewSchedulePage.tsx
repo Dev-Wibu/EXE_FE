@@ -6,14 +6,13 @@
  * BE requirement: User chooses a date/time for meeting start (joinTime). exp defaults to 0.
  */
 
+import { DateTimePicker } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingCardList } from "@/components/ui/loading-card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -24,8 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useMentors } from "@/hooks/useMentor";
 import { useCreateSession } from "@/hooks/useSession";
-import { formatCurrency, formatDateTime, formatTime, toVietnamDateKey } from "@/lib/formatting";
-import i18n from "@/lib/i18n";
+import { formatCurrency, formatDateTime } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -45,79 +43,8 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-// Time options for the select dropdown
-const HOUR_OPTIONS = Array.from(
-  {
-    length: 24,
-  },
-  (_, i) => ({
-    value: String(i).padStart(2, "0"),
-    label: String(i).padStart(2, "0"),
-  })
-);
-
-// All 60 minutes for full flexibility; 5-minute intervals are highlighted
-const MINUTE_OPTIONS = Array.from(
-  {
-    length: 60,
-  },
-  (_, i) => ({
-    value: String(i).padStart(2, "0"),
-    label: String(i).padStart(2, "0"),
-    is5Min: i % 5 === 0,
-  })
-);
-
 // Minimum time offset in milliseconds (1 minute)
 const MIN_FUTURE_OFFSET_MS = 60 * 1000;
-const VIETNAM_UTC_OFFSET_HOURS = 7;
-const parseVietnamDateKey = (dateKey: string): Date => {
-  const [yearRaw, monthRaw, dayRaw] = dateKey.split("-");
-  const year = Number.parseInt(yearRaw, 10);
-  const month = Number.parseInt(monthRaw, 10);
-  const day = Number.parseInt(dayRaw, 10);
-  return new Date(year, month - 1, day);
-};
-const getVietnamTimeParts = (value: Date) => {
-  const [hour = "00", minute = "00"] = formatTime(value, "00:00").split(":");
-  return {
-    hour,
-    minute,
-  };
-};
-const buildJoinDateFromVietnamSelection = (
-  selectedDate: Date,
-  selectedHour: string,
-  selectedMinute: string
-) => {
-  const year = selectedDate.getFullYear();
-  const month = selectedDate.getMonth() + 1;
-  const day = selectedDate.getDate();
-
-  // Convert a Vietnam local date/time selection into a stable UTC instant.
-  return new Date(
-    Date.UTC(
-      year,
-      month - 1,
-      day,
-      Number(selectedHour) - VIETNAM_UTC_OFFSET_HOURS,
-      Number(selectedMinute),
-      0,
-      0
-    )
-  );
-};
-const formatVietnamDateLabel = (selectedDate: Date) => {
-  const locale = i18n.language === "en" ? "en-US" : "vi-VN";
-  const dateInVietnam = buildJoinDateFromVietnamSelection(selectedDate, "00", "00");
-  return dateInVietnam.toLocaleDateString(locale, {
-    timeZone: "Asia/Ho_Chi_Minh",
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
 type MockInterviewScheduleLocationState = {
   preselectedMentorId?: number;
 };
@@ -175,24 +102,13 @@ export function MockInterviewSchedulePage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Step 2: Date/Time selection - preset current time
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedHour, setSelectedHour] = useState(() => getVietnamTimeParts(new Date()).hour);
-  const [selectedMinute, setSelectedMinute] = useState(
-    () => getVietnamTimeParts(new Date()).minute
-  );
+  const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null);
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [recordingMode, setRecordingMode] = useState<string>("cloud");
 
   // helper to quickly fill current time (+small offset to satisfy validation)
   const handleSetNow = () => {
-    const now = new Date(Date.now() + MIN_FUTURE_OFFSET_MS * 2);
-    const vietnamDateKey = toVietnamDateKey(now);
-    const { hour, minute } = getVietnamTimeParts(now);
-    if (vietnamDateKey) {
-      setSelectedDate(parseVietnamDateKey(vietnamDateKey));
-    }
-    setSelectedHour(hour);
-    setSelectedMinute(minute);
+    setSelectedDateTime(new Date(Date.now() + MIN_FUTURE_OFFSET_MS * 2));
   };
 
   // Step 3: Creating
@@ -225,23 +141,20 @@ export function MockInterviewSchedulePage() {
 
   // Calculate joinTime in UTC ISO format to send to BE
   const calculateJoinTime = (): string | undefined => {
-    if (!selectedDate) return undefined;
-    const joinDate = buildJoinDateFromVietnamSelection(selectedDate, selectedHour, selectedMinute);
-    return joinDate.toISOString();
+    if (!selectedDateTime) return undefined;
+    return selectedDateTime.toISOString();
   };
 
   // Format selected date/time for display
   const formatSelectedDateTime = (): string => {
-    if (!selectedDate) return t("common.notSelectedYet");
-    const joinDate = buildJoinDateFromVietnamSelection(selectedDate, selectedHour, selectedMinute);
-    return formatDateTime(joinDate, t("common.notSelectedYet"));
+    if (!selectedDateTime) return t("common.notSelectedYet");
+    return formatDateTime(selectedDateTime, t("common.notSelectedYet"));
   };
 
   // Validation
   const isDateTimeValid = (): boolean => {
-    if (!selectedDate) return false;
-    const joinDate = buildJoinDateFromVietnamSelection(selectedDate, selectedHour, selectedMinute);
-    return joinDate.getTime() > Date.now() + MIN_FUTURE_OFFSET_MS;
+    if (!selectedDateTime) return false;
+    return selectedDateTime.getTime() > Date.now() + MIN_FUTURE_OFFSET_MS;
   };
   const canProceedStep1 = selectedMentorId !== null && hasValidMentorPrice;
   const canProceedStep2 = isDateTimeValid() && durationMinutes > 0 && hasValidMentorPrice;
@@ -521,89 +434,30 @@ export function MockInterviewSchedulePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Date Picker */}
+              {/* Date/Time Picker */}
               <div className="space-y-2">
-                <div className="ju flex items-center">
-                  <Label>{t("common.startDate")}</Label>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal sm:w-[320px]",
-                        !selectedDate && "text-muted-foreground"
-                      )}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate
-                        ? formatVietnamDateLabel(selectedDate)
-                        : t("userMockinterview.selectDate")}
-                    </Button>
-                  </PopoverTrigger>
-                  <Button variant="outline" size="sm" onClick={handleSetNow}>
+                <div className="flex items-center gap-2">
+                  <Label>{t("userMockinterview.startTime")}</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={handleSetNow}
+                    className="h-7 text-xs">
                     {t("userMockinterview.now")}
                   </Button>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      disabled={(date) => {
-                        const todayKey = toVietnamDateKey(new Date());
-                        if (!todayKey) {
-                          return false;
-                        }
-                        const today = parseVietnamDateKey(todayKey);
-                        today.setHours(0, 0, 0, 0);
-                        const selected = new Date(
-                          date.getFullYear(),
-                          date.getMonth(),
-                          date.getDate()
-                        );
-                        return selected < today;
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Time Picker */}
-              <div className="space-y-2">
-                <Label>{t("userMockinterview.startTime")}</Label>
-                <div className="flex items-center gap-2">
-                  <Select value={selectedHour} onValueChange={setSelectedHour}>
-                    <SelectTrigger className="w-24">
-                      <SelectValue placeholder={t("userMockinterview.hour")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {HOUR_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-lg font-bold">:</span>
-                  <Select value={selectedMinute} onValueChange={setSelectedMinute}>
-                    <SelectTrigger className="w-24">
-                      <SelectValue placeholder={t("general.minutes1")} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {MINUTE_OPTIONS.map((opt) => (
-                        <SelectItem
-                          key={opt.value}
-                          value={opt.value}
-                          className={opt.is5Min ? "font-medium" : "text-slate-500"}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
+                <DateTimePicker
+                  value={selectedDateTime}
+                  onChange={setSelectedDateTime}
+                  minDate={new Date()}
+                  themeVariant="user"
+                  className="w-full sm:w-[320px]"
+                />
               </div>
 
               {/* Time Preview */}
-              {selectedDate && (
+              {selectedDateTime && (
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/20">
                   <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
                     <Clock className="h-4 w-4" />
@@ -618,7 +472,7 @@ export function MockInterviewSchedulePage() {
               )}
 
               {/* Warning if date is in the past */}
-              {selectedDate && !isDateTimeValid() && (
+              {selectedDateTime && !isDateTimeValid() && (
                 <p className="text-sm text-red-500">{t("userMockinterview.theStartTimeMustBe")}</p>
               )}
 

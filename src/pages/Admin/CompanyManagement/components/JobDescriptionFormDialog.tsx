@@ -1,3 +1,4 @@
+import { DateTimePicker } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { datetimeLocalToVietnamISOString } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import type { JobDescriptionFormData, JobDescriptionLevel, JobDescriptionStatus } from "../types";
 interface JobDescriptionFormDialogProps {
@@ -214,18 +214,15 @@ export function JobDescriptionFormDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="jd-deadline">{t("adminCompanymanagement.applicationDeadline")}</Label>
-            <Input
-              id="jd-deadline"
-              type="datetime-local"
-              value={formData.deadlineAt ? formData.deadlineAt.slice(0, 16) : ""}
-              onChange={(e) =>
+            <DateTimePicker
+              value={formData.deadlineAt ? new Date(formData.deadlineAt) : null}
+              onChange={(date) =>
                 onFormChange({
                   ...formData,
-                  deadlineAt: e.target.value
-                    ? datetimeLocalToVietnamISOString(e.target.value)
-                    : undefined,
+                  deadlineAt: date ? date.toISOString() : undefined,
                 })
               }
+              themeVariant="admin"
             />
           </div>
         </div>
