@@ -17,6 +17,8 @@ export type {
   SidebarMenuGroup,
   SidebarMenuItem,
 } from "./DashboardSidebar";
+export { DateTimePicker } from "./DateTimePicker";
+export type { DateTimePickerProps, ThemeVariant } from "./DateTimePicker";
 export { Filter } from "./Filter";
 export type { FilterCriteria, FilterGroup, FilterOption, FilterProps } from "./Filter";
 export {

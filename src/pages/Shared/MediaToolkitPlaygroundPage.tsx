@@ -2,9 +2,12 @@ import { FileText, ImageIcon, Link2, UploadCloud } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { addDays } from "date-fns";
+
 import { HomepageHeader } from "@/components/homepage-redesign";
 import { Footer } from "@/components/layouts";
 import {
+  DateTimePicker,
   ImageZoomPreview,
   MediaLightboxDialog,
   PdfPreviewViewer,
@@ -58,6 +61,12 @@ export function MediaToolkitPlaygroundPage() {
 
   const [pdfSource, setPdfSource] = useState<string | File | null>(TEMP_PDF_URL);
   const [pdfRequireAuth, setPdfRequireAuth] = useState(false);
+
+  const [date1, setDate1] = useState<Date | null>(new Date());
+  const [date2, setDate2] = useState<Date | null>(null);
+  const [date3, setDate3] = useState<Date | null>(new Date());
+  const [date4, setDate4] = useState<Date | null>(new Date());
+  const [date5, setDate5] = useState<Date | null>(new Date());
 
   const preferredImageItem = useMemo(
     () => mediaItems.find((item) => (item.kind ?? inferFileKind(item)) === "image" && item.src),
@@ -148,6 +157,105 @@ export function MediaToolkitPlaygroundPage() {
                   multiple
                   onChange={handleAppendLocalFiles}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">
+                Shared DateTime Picker Playground (DEV)
+              </CardTitle>
+              <CardDescription>
+                Test interactive instances of the new premium DateTimePicker component supporting
+                quick presets, scroll wheel time alignment, and role themes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                    1. Standard (24h format)
+                  </Label>
+                  <DateTimePicker
+                    value={date1}
+                    onChange={setDate1}
+                    placeholder="Chọn ngày giờ"
+                    hour12={false}
+                  />
+                  <p className="font-mono text-[11px] text-slate-500">
+                    Value: {date1 ? date1.toISOString() : "null"}
+                  </p>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                    2. 12h Format (with AM/PM)
+                  </Label>
+                  <DateTimePicker
+                    value={date2}
+                    onChange={setDate2}
+                    placeholder="dd/mm/yyyy --:-- --"
+                    hour12={true}
+                  />
+                  <p className="font-mono text-[11px] text-slate-500">
+                    Value: {date2 ? date2.toISOString() : "null"}
+                  </p>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+                  <Label className="text-xs font-bold text-slate-500 uppercase">
+                    3. Date Only Picker
+                  </Label>
+                  <DateTimePicker value={date3} onChange={setDate3} showTime={false} />
+                  <p className="font-mono text-[11px] text-slate-500">
+                    Value: {date3 ? date3.toISOString() : "null"}
+                  </p>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+                  <Label className="text-xs font-bold text-emerald-600 uppercase">
+                    4. Mentor Theme (Green, Step 15)
+                  </Label>
+                  <DateTimePicker
+                    value={date4}
+                    onChange={setDate4}
+                    themeVariant="mentor"
+                    minuteStep={15}
+                  />
+                  <p className="font-mono text-[11px] text-slate-500">
+                    Value: {date4 ? date4.toISOString() : "null"}
+                  </p>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-slate-200 bg-white/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+                  <Label className="text-xs font-bold text-blue-600 uppercase">
+                    5. User Theme (Blue, Limit +7 Days)
+                  </Label>
+                  <DateTimePicker
+                    value={date5}
+                    onChange={setDate5}
+                    themeVariant="user"
+                    minDate={new Date()}
+                    maxDate={addDays(new Date(), 7)}
+                  />
+                  <p className="font-mono text-[11px] text-slate-500">
+                    Value: {date5 ? date5.toISOString() : "null"}
+                  </p>
+                </div>
+
+                <div className="flex flex-col justify-center space-y-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/10">
+                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    💡 Test Tips:
+                  </h4>
+                  <ul className="list-inside list-disc space-y-1 text-[11px] text-slate-500">
+                    <li>
+                      Click the <strong>Month Year</strong> label in the header to select directly.
+                    </li>
+                    <li>Presets on the left allow quick date selections.</li>
+                    <li>Theme variant matches User (Blue) and Mentor (Green) portals.</li>
+                  </ul>
+                </div>
               </div>
             </CardContent>
           </Card>
