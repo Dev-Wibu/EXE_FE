@@ -36,22 +36,25 @@ const STAFF_SIDEBAR_LOGO_COLLAPSED = (
 );
 export function StaffDashboardPage() {
   const { t } = useTranslation();
-  const getTabTitle = (type: TabType): string => {
-    switch (type) {
-      case "mentorApplications":
-        return t("staffStaffdashboard.browseMentors");
-      case "sessions":
-        return t("common.interviewSession");
-      case "reviewModeration":
-        return t("staffStaffdashboard.moderateYourMentorSReviews");
-      case "feedbackModeration":
-        return t("staffStaffdashboard.moderateResponsesFromCandidates");
-      case "postModeration":
-        return t("staffStaffdashboard.postModeration");
-      default:
-        return t("staffStaffdashboard.newTab");
-    }
-  };
+  const getTabTitle = useCallback(
+    (type: TabType): string => {
+      switch (type) {
+        case "mentorApplications":
+          return t("staffStaffdashboard.browseMentors");
+        case "sessions":
+          return t("common.interviewSession");
+        case "reviewModeration":
+          return t("staffStaffdashboard.moderateYourMentorSReviews");
+        case "feedbackModeration":
+          return t("staffStaffdashboard.moderateResponsesFromCandidates");
+        case "postModeration":
+          return t("staffStaffdashboard.postModeration");
+        default:
+          return t("staffStaffdashboard.newTab");
+      }
+    },
+    [t]
+  );
   const CHROME_TABS_MENU_GROUPS: ChromeTabMenuGroup[] = useMemo(
     () => [
       {
@@ -202,6 +205,24 @@ export function StaffDashboardPage() {
     },
     [activeTabId]
   );
+  const handleCloseOtherTabs = useCallback((tabId: string) => {
+    setTabs((prevTabs) => {
+      const targetTab = prevTabs.find((tab) => tab.id === tabId);
+      if (!targetTab) return prevTabs;
+      setActiveTabId(targetTab.id);
+      return [targetTab];
+    });
+  }, []);
+  const handleCloseAllTabs = useCallback(() => {
+    const defaultType: TabType = "mentorApplications";
+    const newTab: Tab = {
+      id: generateTabId(),
+      type: defaultType,
+      title: getTabTitle(defaultType),
+    };
+    setTabs([newTab]);
+    setActiveTabId(newTab.id);
+  }, [getTabTitle]);
   const handleNewTab = useCallback(
     (type: string) => {
       const newTab: Tab = {
@@ -212,7 +233,7 @@ export function StaffDashboardPage() {
       setTabs((prevTabs) => [...prevTabs, newTab]);
       setActiveTabId(newTab.id);
     },
-    [t]
+    [getTabTitle]
   );
   const handleSidebarNavigate = useCallback(
     (type: string) => {
@@ -296,6 +317,8 @@ export function StaffDashboardPage() {
           activeTabId={activeTabId}
           onTabSelect={handleTabSelect}
           onTabClose={handleTabClose}
+          onCloseOtherTabs={handleCloseOtherTabs}
+          onCloseAllTabs={handleCloseAllTabs}
           onNewTab={handleNewTab}
           leftSlot={
             <DashboardSidebarToggle

@@ -46,7 +46,11 @@ interface UseTabsStateReturn {
   /** Close a tab by ID */
   closeTab: (_tabId: string) => void;
   /** Reset open tabs to only one tab */
-  resetTabsTo: (_tabType: string, _preventUrlUpdate?: boolean) => void;
+  resetTabsTo: (tabType: string, preventUrlUpdate?: boolean) => void;
+  /** Close other tabs except the one with tabId */
+  closeOtherTabs: (tabId: string) => void;
+  /** Close all tabs (reset to default tab) */
+  closeAllTabs: () => void;
 }
 
 /**
@@ -266,6 +270,26 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
     [availableTabs, setSearchParams]
   );
 
+  const closeOtherTabs = useCallback(
+    (tabId: string) => {
+      setOpenTabs((prev) => {
+        const targetTab = prev.find((t) => t.id === tabId);
+        if (!targetTab) return prev;
+
+        if (targetTab.type !== activeTab) {
+          pendingActiveTabRef.current = targetTab.type;
+        }
+
+        return [targetTab];
+      });
+    },
+    [activeTab]
+  );
+
+  const closeAllTabs = useCallback(() => {
+    resetTabsTo(defaultTab);
+  }, [resetTabsTo, defaultTab]);
+
   const translatedOpenTabs = useMemo(() => {
     return openTabs.map((tab) => {
       const config = availableTabs.find((t) => t.type === tab.type);
@@ -283,5 +307,7 @@ export function useTabsState(options: UseTabsStateOptions): UseTabsStateReturn {
     openTab,
     closeTab,
     resetTabsTo,
+    closeOtherTabs,
+    closeAllTabs,
   };
 }

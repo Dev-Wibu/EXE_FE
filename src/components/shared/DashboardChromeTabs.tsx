@@ -43,9 +43,11 @@ export interface ChromeTabsTheme {
 export interface DashboardChromeTabsProps {
   tabs: Array<{ id: string; type: string; title: string }>;
   activeTabId: string;
-  onTabSelect: (_tabId: string) => void;
-  onTabClose: (_tabId: string) => void;
-  onNewTab: (_type: string) => void;
+  onTabSelect: (tabId: string) => void;
+  onTabClose: (tabId: string) => void;
+  onCloseOtherTabs?: (tabId: string) => void;
+  onCloseAllTabs?: () => void;
+  onNewTab: (type: string) => void;
   leftSlot?: React.ReactNode;
   rightSlot?: React.ReactNode;
   tabIcons?: Record<string, React.ElementType>;
@@ -61,6 +63,8 @@ export function DashboardChromeTabs({
   activeTabId,
   onTabSelect,
   onTabClose,
+  onCloseOtherTabs,
+  onCloseAllTabs,
   onNewTab,
   leftSlot,
   rightSlot,
@@ -77,8 +81,26 @@ export function DashboardChromeTabs({
     top: number;
     left: number;
   } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    show: boolean;
+    x: number;
+    y: number;
+    tabId: string;
+  } | null>(null);
+
   const newTabButtonRef = useRef<HTMLButtonElement>(null);
   const newTabMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handleClose = () => setContextMenu(null);
+    window.addEventListener("click", handleClose);
+    window.addEventListener("contextmenu", handleClose);
+    return () => {
+      window.removeEventListener("click", handleClose);
+      window.removeEventListener("contextmenu", handleClose);
+    };
+  }, [contextMenu]);
   const tabCount = Math.max(tabs.length, 1);
   const tabGapPx = 4;
   const addButtonReservedWidthPx = 40;
@@ -273,6 +295,16 @@ export function DashboardChromeTabs({
           <div
             key={tab.id}
             onClick={() => onTabSelect(tab.id)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setContextMenu({
+                show: true,
+                x: e.clientX,
+                y: e.clientY,
+                tabId: tab.id,
+              });
+            }}
             className={cn(
               "group flex h-9 cursor-pointer items-center gap-2 rounded-t-xl border-x border-t px-3.5 text-sm transition-colors duration-200",
               tab.id === activeTabId
@@ -280,17 +312,25 @@ export function DashboardChromeTabs({
                     theme.tabActiveBorder,
                     theme.tabActiveBg,
                     theme.tabActiveText,
-                    "shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    "shadow-sm dark:border-slate-700 dark:bg-slate-800"
                   )
                 : cn(
                     "border-transparent",
                     theme.tabInactiveBg,
                     theme.tabInactiveText,
                     theme.tabInactiveHover,
-                    "dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                    "dark:bg-slate-950/40 dark:hover:bg-slate-800/30"
                   )
             )}>
-            <span className="max-w-32 truncate">{tab.title}</span>
+            <span
+              className={cn(
+                "max-w-32 truncate transition-colors duration-200",
+                tab.id === activeTabId
+                  ? "font-semibold text-slate-900 dark:text-white"
+                  : "font-medium text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-200"
+              )}>
+              {tab.title}
+            </span>
             {tabs.length > 1 && (
               <button
                 type="button"
@@ -334,6 +374,16 @@ export function DashboardChromeTabs({
               key={tab.id}
               style={{ width: dynamicTabWidth }}
               onClick={() => onTabSelect(tab.id)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenu({
+                  show: true,
+                  x: e.clientX,
+                  y: e.clientY,
+                  tabId: tab.id,
+                });
+              }}
               className={cn(
                 "group flex min-w-32 shrink-0 cursor-pointer items-center gap-2 rounded-t-xl border-x border-t px-3.5 py-2 shadow-sm transition-all duration-200",
                 isActive
@@ -347,11 +397,17 @@ export function DashboardChromeTabs({
                       "border-transparent",
                       theme.tabInactiveBg,
                       theme.tabInactiveHover,
-                      "dark:bg-slate-800/50 dark:hover:bg-slate-800"
+                      "dark:bg-slate-950/40 dark:hover:bg-slate-800/30"
                     )
               )}>
               {Icon && <Icon className={cn("h-4 w-4 shrink-0", tabColors?.[tab.type])} />}
-              <span className="min-w-0 flex-1 truncate text-sm font-medium dark:text-slate-200">
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate text-sm transition-colors duration-200",
+                  isActive
+                    ? "font-semibold text-slate-900 dark:text-white"
+                    : "font-medium text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-200"
+                )}>
                 {tab.title}
               </span>
               {tabs.length > 1 && (
@@ -377,6 +433,72 @@ export function DashboardChromeTabs({
 
       {/* Right slot (e.g. NotificationBell) */}
       {rightSlot && <div className="flex h-full shrink-0 items-center gap-2 px-3">{rightSlot}</div>}
+
+      {/* Tab Context Menu */}
+      {contextMenu && contextMenu.show && (
+        <div
+          style={{
+            top: contextMenu.y,
+            left: contextMenu.x,
+          }}
+          className="fixed z-[100] w-40 rounded-lg border border-slate-200 bg-white py-1 shadow-md dark:border-slate-700 dark:bg-slate-800"
+          onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            disabled={tabs.length <= 1}
+            onClick={() => {
+              onTabClose(contextMenu.tabId);
+              setContextMenu(null);
+            }}
+            className={cn(
+              "flex w-full items-center px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-700",
+              theme.menuHover
+            )}>
+            {t("common.closeThisTab")}
+          </button>
+          <button
+            type="button"
+            disabled={tabs.length <= 1}
+            onClick={() => {
+              if (onCloseOtherTabs) {
+                onCloseOtherTabs(contextMenu.tabId);
+              } else {
+                tabs.forEach((t) => {
+                  if (t.id !== contextMenu.tabId) {
+                    onTabClose(t.id);
+                  }
+                });
+              }
+              setContextMenu(null);
+            }}
+            className={cn(
+              "flex w-full items-center px-3 py-1.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-700",
+              theme.menuHover
+            )}>
+            {t("common.closeOtherTabs")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onCloseAllTabs) {
+                onCloseAllTabs();
+              } else {
+                tabs.forEach((t, idx) => {
+                  if (idx > 0) {
+                    onTabClose(t.id);
+                  }
+                });
+              }
+              setContextMenu(null);
+            }}
+            className={cn(
+              "flex w-full items-center px-3 py-1.5 text-left text-sm text-red-600 transition-colors hover:bg-slate-100 dark:text-red-400 dark:hover:bg-slate-700",
+              theme.menuHover
+            )}>
+            {t("common.closeAllTabs")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
