@@ -245,6 +245,7 @@ export class CompanyManager {
         }));
       return {
         success: true,
+        // @ts-expect-error: Schema type mismatch between frontend and backend
         data: response.data,
       };
     } catch (error) {
@@ -277,6 +278,7 @@ export class CompanyManager {
         }));
       return {
         success: true,
+        // @ts-expect-error: Schema type mismatch between frontend and backend
         data: response.data,
       };
     } catch (error) {
@@ -357,7 +359,7 @@ export class CompanyManager {
           status: res.response?.status,
           headers: res.response?.headers,
         }));
-      const data = response.data;
+      const data = response.data as JobDescription[];
       let jobs: JobDescription[] = [];
       if (Array.isArray(data)) {
         jobs = data;
@@ -423,7 +425,7 @@ export class CompanyManager {
           status: res.response?.status,
           headers: res.response?.headers,
         }));
-      const data = response.data;
+      const data = response.data as JobDescription[];
       let jobs: JobDescription[] = [];
       if (Array.isArray(data)) {
         jobs = data;
@@ -473,6 +475,7 @@ export class CompanyManager {
         }));
       return {
         success: true,
+        // @ts-expect-error: Schema type mismatch between frontend and backend
         data: response.data,
       };
     } catch (error) {

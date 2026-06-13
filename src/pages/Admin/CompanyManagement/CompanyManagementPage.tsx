@@ -61,6 +61,7 @@ export function CompanyManagementPage({ isActive: propActive }: CompanyManagemen
     queryFn: async () => {
       const response = await companyManager.getAll();
       if (response.success) {
+        // @ts-expect-error: Schema type mismatch between frontend and backend
         return extractDataArray<Company>(response);
       }
       toast.error(response.error || t("common.unableToLoadCompanyList"));

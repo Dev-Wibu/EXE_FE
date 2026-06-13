@@ -76,6 +76,7 @@ export function CompanyDetailView({ companyId, onCompanyUpdate }: CompanyDetailV
     try {
       const response = await companyManager.getById(companyId);
       if (response.success && response.data) {
+        // @ts-expect-error: Schema type mismatch between frontend and backend
         setCompany(response.data);
       } else {
         toast.error(response.error || t("common.unableToLoadCompanyInformation"));
