@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTemplateById"];
+        put: operations["updateTemplate"];
+        post?: never;
+        delete: operations["deleteTemplate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions": {
         parameters: {
             query?: never;
@@ -374,6 +390,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllTemplates"];
+        put?: never;
+        post: operations["createTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/webhooks/dailyco": {
         parameters: {
             query?: never;
@@ -439,6 +471,22 @@ export interface paths {
          * @description json mẫu tạo 1 session họp với mentor(privacy ,enable_recording ko cần cho chọn mà gửi ẩn là public,cloud về, name khỏi cần cho điền cứ gửi như json mẫu, còn lại thì cho người dùng chọn )
          */
         post: operations["createSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rounds/generate-whiteboard-question": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generateQuestion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -756,6 +804,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/coding-problems": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllCodingProblems"];
+        put?: never;
+        post: operations["createCodingProblem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -802,6 +866,22 @@ export interface paths {
          * @description Hỗ trợ nộp text, danh sách đáp án trắc nghiệm hoặc upload file trực tiếp tùy theo loại vòng thi.
          */
         post: operations["submitApplicationDetail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/application-details/hr-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["hrScore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1767,6 +1847,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/coding-problems/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCodingProblemById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/candidate-profiles/{userId}": {
         parameters: {
             query?: never;
@@ -1831,6 +1927,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/application-details/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApplicationDetailById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/application-details/application/{applicationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApplicationDetailsByApplicationId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/posts/likes/{postId}/{userId}": {
         parameters: {
             query?: never;
@@ -1872,6 +2000,63 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CodingProblemSnapshot: {
+            /** Format: int64 */
+            problemId?: number;
+            title?: string;
+            /** @enum {string} */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+            problemStatement?: string;
+            rulesAndConstraints?: string[];
+            visibleExamples?: components["schemas"]["Example"][];
+            /** Format: int32 */
+            executionTimeLimitMs?: number;
+            /** Format: int32 */
+            memoryLimitMb?: number;
+            codeStubs?: {
+                [key: string]: string;
+            };
+        };
+        Example: {
+            input?: string;
+            output?: string;
+            explanation?: string;
+        };
+        QuizQuestion: {
+            questionText?: string;
+            options?: string[];
+            correctAnswer?: string;
+            /** Format: int32 */
+            points?: number;
+        };
+        RoundConfig: {
+            instruction?: string;
+            submissionFormat?: string;
+            /** Format: int32 */
+            timeLimitMinutes?: number;
+            /** Format: int32 */
+            maxScore?: number;
+            aiSystemPrompt?: string;
+            evaluationCriteria?: string;
+            quizQuestions?: components["schemas"]["QuizQuestion"][];
+            codingProblems?: components["schemas"]["CodingProblemSnapshot"][];
+        };
+        TemplateRoundItem: {
+            name: string;
+            /** Format: int32 */
+            roundOrder: number;
+            /** @enum {string} */
+            roundType: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "CODING" | "CODE_REVIEW" | "MENTROR_REVIEW" | "AI_INTERVIEW";
+            /** Format: double */
+            passThreshold?: number;
+            configData?: components["schemas"]["RoundConfig"];
+        };
+        UpsertTemplateRequest: {
+            name: string;
+            category: string;
+            description?: string;
+            rounds: components["schemas"]["TemplateRoundItem"][];
+        };
         Session: {
             /** Format: int32 */
             id?: number;
@@ -1923,26 +2108,20 @@ export interface components {
             aiSystemPrompt?: string;
             evaluationCriteria?: string;
             quizQuestions?: components["schemas"]["QuizQuestionDto"][];
+            codingProblemsId?: number[];
         };
         RoundItemDto: {
             name: string;
             /** Format: int32 */
             roundOrder: number;
             /** @enum {string} */
-            roundType: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "DB_DESIGN" | "AI_INTERVIEW";
+            roundType: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "CODING" | "CODE_REVIEW" | "MENTROR_REVIEW" | "AI_INTERVIEW";
             /** Format: double */
             passThreshold: number;
             configData: components["schemas"]["RoundConfigDto"];
         };
         SetupJdRoundsRequest: {
             rounds: components["schemas"]["RoundItemDto"][];
-        };
-        QuizQuestion: {
-            questionText?: string;
-            options?: string[];
-            correctAnswer?: string;
-            /** Format: int32 */
-            points?: number;
         };
         Round: {
             /** Format: int64 */
@@ -1951,7 +2130,7 @@ export interface components {
             /** Format: int32 */
             roundOrder?: number;
             /** @enum {string} */
-            roundType?: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "DB_DESIGN" | "AI_INTERVIEW";
+            roundType?: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "CODING" | "CODE_REVIEW" | "MENTROR_REVIEW" | "AI_INTERVIEW";
             /** Format: double */
             passThreshold?: number;
             configData?: components["schemas"]["RoundConfig"];
@@ -1961,17 +2140,6 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
-        };
-        RoundConfig: {
-            instruction?: string;
-            submissionFormat?: string;
-            /** Format: int32 */
-            timeLimitMinutes?: number;
-            /** Format: int32 */
-            maxScore?: number;
-            aiSystemPrompt?: string;
-            evaluationCriteria?: string;
-            quizQuestions?: components["schemas"]["QuizQuestion"][];
         };
         UpdateJdRoundRequest: {
             rounds: components["schemas"]["RoundItemDto"][];
@@ -2388,6 +2556,15 @@ export interface components {
             created_at?: string;
             config?: components["schemas"]["RoomConfig"];
         };
+        WhiteboardQuestionDto: {
+            title?: string;
+            difficulty?: string;
+            tags?: string[];
+            problem_statement?: string;
+            rules_and_constraints?: string[];
+            examples?: components["schemas"]["Example"][];
+            suggested_grading_rubric?: string;
+        };
         QuizItem: {
             /** Format: int32 */
             id?: number;
@@ -2494,7 +2671,6 @@ export interface components {
             creationDate?: string;
             /** Format: date-time */
             lastModifiedDate?: string;
-            major?: components["schemas"]["Major"];
             coverImgUrl?: string;
             public_id?: string;
             tags?: string[];
@@ -2666,6 +2842,35 @@ export interface components {
             description?: string;
             status?: string;
         };
+        CodingProblem: {
+            /** Format: int64 */
+            id?: number;
+            title?: string;
+            /** @enum {string} */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+            problemStatement?: string;
+            rulesAndConstraints?: string[];
+            visibleExamples?: components["schemas"]["Example"][];
+            /** Format: int32 */
+            executionTimeLimitMs?: number;
+            /** Format: int32 */
+            memoryLimitMb?: number;
+            codeStubs?: {
+                [key: string]: string;
+            };
+            hiddenTestCases?: components["schemas"]["TestCase"][];
+            isDeleted?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        TestCase: {
+            input?: string;
+            expectedOutput?: string;
+            /** Format: int32 */
+            weightPoints?: number;
+        };
         LoginRequest: {
             email?: string;
             password?: string;
@@ -2721,10 +2926,21 @@ export interface components {
             startedAt?: string;
             /** Format: date-time */
             completedAt?: string;
+            mentorReview?: components["schemas"]["MentorReview"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        CodeReviewSubmission: {
+            generalComment?: string;
+            lineComments?: components["schemas"]["LineComment"][];
+        };
+        LineComment: {
+            fileName?: string;
+            /** Format: int32 */
+            lineNumber?: number;
+            comment?: string;
         };
         QuizAnswer: {
             questionText?: string;
@@ -2733,6 +2949,7 @@ export interface components {
         };
         SubmissionData: {
             textContent?: string;
+            codeReviewContent?: components["schemas"]["CodeReviewSubmission"];
             fileUrl?: string;
             quizAnswers?: components["schemas"]["QuizAnswer"][];
         };
@@ -2769,6 +2986,31 @@ export interface components {
             major?: "CNTT" | "Marketing";
             cvUrl?: string;
             cv_public_id?: string;
+        };
+        SummaryResponse: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            category?: string;
+            description?: string;
+        };
+        DetailResponse: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            category?: string;
+            description?: string;
+            rounds?: components["schemas"]["RoundItem"][];
+        };
+        RoundItem: {
+            name?: string;
+            /** Format: int32 */
+            roundOrder?: number;
+            /** @enum {string} */
+            roundType?: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "CODING" | "CODE_REVIEW" | "MENTROR_REVIEW" | "AI_INTERVIEW";
+            /** Format: double */
+            passThreshold?: number;
+            configData?: components["schemas"]["RoundConfig"];
         };
         PracticeQuestionDto: {
             /** Format: int32 */
@@ -2850,10 +3092,10 @@ export interface components {
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
         PagePostResponse: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
@@ -2868,19 +3110,19 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
-            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
             /** Format: int32 */
             pageNumber?: number;
+            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
         };
         SortObject: {
-            unsorted?: boolean;
             sorted?: boolean;
+            unsorted?: boolean;
             empty?: boolean;
         };
         Payment: {
@@ -3039,7 +3281,7 @@ export interface components {
             /** Format: int64 */
             startupDate?: number;
             autowireCapableBeanFactory?: components["schemas"]["AutowireCapableBeanFactory"];
-            parent?: unknown;
+            parent?: components["schemas"]["ApplicationContext"];
             id?: string;
             displayName?: string;
             environment?: components["schemas"]["Environment"];
@@ -3139,18 +3381,18 @@ export interface components {
             taglibs?: components["schemas"]["TaglibDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
-            trimDirectiveWhitespaces?: string;
-            deferredSyntaxAllowedAsLiteral?: string;
+            elIgnored?: string;
             includeCodas?: string[];
             errorOnELNotFound?: string;
             pageEncoding?: string;
             scriptingInvalid?: string;
             includePreludes?: string[];
+            trimDirectiveWhitespaces?: string;
+            deferredSyntaxAllowedAsLiteral?: string;
             errorOnUndeclaredNamespace?: string;
-            elIgnored?: string;
             isXml?: string;
-            defaultContentType?: string;
             urlPatterns?: string[];
+            defaultContentType?: string;
             buffer?: string;
         };
         RedirectView: {
@@ -3185,7 +3427,9 @@ export interface components {
             };
         };
         ServletContext: {
-            initParameterNames?: unknown;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            /** Format: int32 */
+            sessionTimeout?: number;
             sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
             virtualServerName?: string;
             defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
@@ -3197,9 +3441,6 @@ export interface components {
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
-            serverInfo?: string;
-            /** Format: int32 */
-            sessionTimeout?: number;
             servletRegistrations?: {
                 [key: string]: components["schemas"]["ServletRegistration"];
             };
@@ -3207,7 +3448,8 @@ export interface components {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            serverInfo?: string;
+            initParameterNames?: unknown;
             contextPath?: string;
             attributeNames?: unknown;
             classLoader?: {
@@ -3287,15 +3529,14 @@ export interface components {
         SessionCookieConfig: {
             /** Format: int32 */
             maxAge?: number;
+            httpOnly?: boolean;
             secure?: boolean;
             domain?: string;
-            httpOnly?: boolean;
             path?: string;
             name?: string;
             attributes?: {
                 [key: string]: string;
             };
-            /** @deprecated */
             comment?: string;
         };
         TaglibDescriptor: {
@@ -3311,6 +3552,72 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getTemplateById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DetailResponse"];
+                };
+            };
+        };
+    };
+    updateTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertTemplateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getSessions: {
         parameters: {
             query?: never;
@@ -4353,6 +4660,50 @@ export interface operations {
             };
         };
     };
+    getAllTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SummaryResponse"][];
+                };
+            };
+        };
+    };
+    createTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertTemplateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": number;
+                };
+            };
+        };
+    };
     handleDailyCoWebhook: {
         parameters: {
             query?: never;
@@ -4417,6 +4768,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
+    };
+    generateQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WhiteboardQuestionDto"];
                 };
             };
         };
@@ -4932,6 +5307,50 @@ export interface operations {
             };
         };
     };
+    getAllCodingProblems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CodingProblem"][];
+                };
+            };
+        };
+    };
+    createCodingProblem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodingProblem"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CodingProblem"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -5027,6 +5446,31 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SubmissionResult"];
+                };
+            };
+        };
+    };
+    hrScore: {
+        parameters: {
+            query: {
+                applicationId: number;
+                isPass: boolean;
+                note: string;
+                score: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": Record<string, never>;
                 };
             };
         };
@@ -6460,6 +6904,28 @@ export interface operations {
             };
         };
     };
+    getCodingProblemById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CodingProblem"];
+                };
+            };
+        };
+    };
     getByUserId: {
         parameters: {
             query?: never;
@@ -6540,6 +7006,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Application"][];
+                };
+            };
+        };
+    };
+    getApplicationDetailById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplicationDetail"];
+                };
+            };
+        };
+    };
+    getApplicationDetailsByApplicationId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": Record<string, never>;
                 };
             };
         };
