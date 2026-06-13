@@ -10,7 +10,6 @@ import {
 } from "@/components/shared";
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,10 +21,10 @@ import {
 import { useDashboardBreadcrumb } from "@/hooks/useDashboardBreadcrumb";
 import { useDashboardScrollRestoration } from "@/hooks/useDashboardScrollRestoration";
 import { useTabsState } from "@/hooks/useTabsState";
-import { authManager } from "@/services/auth.manager";
-import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 import { getDashboardTabFromPath } from "@/lib/dashboard-breadcrumb";
 import { cn } from "@/lib/utils";
+import { authManager } from "@/services/auth.manager";
+import { useAuthStore } from "@/stores/authStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import {
   Bot,
@@ -37,9 +36,8 @@ import {
   LogOut,
   MessageSquare,
   Newspaper,
-  Settings,
-  User as UserIcon,
   UserCircle,
+  User as UserIcon,
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -435,7 +433,7 @@ export function UserDashboardPage() {
                       {getInitials(user?.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden max-w-[100px] truncate text-sm font-medium text-slate-700 dark:text-slate-200 lg:inline">
+                  <span className="hidden max-w-[100px] truncate text-sm font-medium text-slate-700 lg:inline dark:text-slate-200">
                     {user?.name}
                   </span>
                 </button>

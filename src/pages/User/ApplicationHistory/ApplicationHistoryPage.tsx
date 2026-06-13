@@ -1,12 +1,6 @@
 import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { LoadingCardList } from "@/components/ui/loading-card";
@@ -33,11 +27,7 @@ import { useNavigate } from "react-router-dom";
 // Types
 // ============================================================
 
-type ApplicationStatus =
-  | "IN_PROGRESS"
-  | "PASSED"
-  | "FAILED"
-  | "SOFT_FAILED";
+type ApplicationStatus = "IN_PROGRESS" | "PASSED" | "FAILED" | "SOFT_FAILED";
 
 interface EnrichedApplication extends Application {
   jobDescription?: JobDescription;
@@ -50,10 +40,7 @@ interface EnrichedApplication extends Application {
 
 function StatusBadge({ status }: { status: ApplicationStatus }) {
   const { t } = useTranslation();
-  const config: Record<
-    ApplicationStatus,
-    { label: string; className: string }
-  > = {
+  const config: Record<ApplicationStatus, { label: string; className: string }> = {
     IN_PROGRESS: {
       label: t("userApplicationhistory.statusInterviewing"),
       className: "bg-blue-100 text-blue-700",
@@ -80,8 +67,7 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
         className
-      )}
-    >
+      )}>
       {label}
     </span>
   );
@@ -108,13 +94,11 @@ function ApplicationCard({
       onClick={onClick}
       className={cn(
         "cursor-pointer transition-all hover:shadow-md",
-        isSelected &&
-          "border-[#0047AB] bg-[#0047AB]/5 ring-2 ring-[#0047AB]/20"
-      )}
-    >
+        isSelected && "border-[#0047AB] bg-[#0047AB]/5 ring-2 ring-[#0047AB]/20"
+      )}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
               {application.company?.logoUrl ? (
                 <img
@@ -131,8 +115,7 @@ function ApplicationCard({
                 {jd?.title ?? t("userApplicationhistory.noTitle")}
               </CardTitle>
               <CardDescription className="truncate">
-                {application.company?.name ??
-                  t("userApplicationhistory.company")}
+                {application.company?.name ?? t("userApplicationhistory.company")}
               </CardDescription>
             </div>
           </div>
@@ -142,9 +125,7 @@ function ApplicationCard({
       <CardContent className="pt-0">
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs text-slate-500">
-            {application.createdAt
-              ? formatDateTime(application.createdAt)
-              : ""}
+            {application.createdAt ? formatDateTime(application.createdAt) : ""}
           </span>
         </div>
       </CardContent>
@@ -176,8 +157,7 @@ function TimelineItem({
   onEnterRoom?: () => void;
 }) {
   const { t } = useTranslation();
-  const roundName =
-    round?.name ?? `${t("userApplicationhistory.round")} ${index + 1}`;
+  const roundName = round?.name ?? `${t("userApplicationhistory.round")} ${index + 1}`;
   const description = round?.configData?.instruction || "";
 
   if (isLocked) {
@@ -189,7 +169,7 @@ function TimelineItem({
             <Lock className="h-3.5 w-3.5 text-slate-400" />
           </div>
           {index < totalRounds - 1 && (
-            <div className="w-0.5 flex-1 bg-slate-200 dark:bg-slate-700 mt-2" />
+            <div className="mt-2 w-0.5 flex-1 bg-slate-200 dark:bg-slate-700" />
           )}
         </div>
         {/* Content */}
@@ -217,16 +197,16 @@ function TimelineItem({
               <Check className="h-4 w-4 text-white" />
             </div>
             {index < totalRounds - 1 && (
-              <div className="w-0.5 flex-1 bg-[#0047AB]/30 dark:bg-[#0047AB]/40 mt-2" />
+              <div className="mt-2 w-0.5 flex-1 bg-[#0047AB]/30 dark:bg-[#0047AB]/40" />
             )}
           </>
         ) : isCurrent ? (
           <>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[#0047AB] bg-white dark:bg-slate-800 shadow-sm">
-              <div className="h-2.5 w-2.5 rounded-full bg-[#0047AB] animate-pulse" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[#0047AB] bg-white shadow-sm dark:bg-slate-800">
+              <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#0047AB]" />
             </div>
             {index < totalRounds - 1 && (
-              <div className="w-0.5 flex-1 bg-slate-200 dark:bg-slate-700 mt-2" />
+              <div className="mt-2 w-0.5 flex-1 bg-slate-200 dark:bg-slate-700" />
             )}
           </>
         ) : (
@@ -235,7 +215,7 @@ function TimelineItem({
               {index + 1}
             </div>
             {index < totalRounds - 1 && (
-              <div className="w-0.5 flex-1 bg-slate-100 dark:bg-slate-800 mt-2" />
+              <div className="mt-2 w-0.5 flex-1 bg-slate-100 dark:bg-slate-800" />
             )}
           </>
         )}
@@ -253,11 +233,10 @@ function TimelineItem({
             !isCompleted &&
               !isCurrent &&
               "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"
-          )}
-        >
+          )}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             {/* Left */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {roundName}
@@ -269,7 +248,7 @@ function TimelineItem({
                 )}
               </div>
               {description && (
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                <p className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
                   {description}
                 </p>
               )}
@@ -279,20 +258,18 @@ function TimelineItem({
             <div className="flex shrink-0 items-center gap-4">
               {isCompleted && score !== undefined && (
                 <div className="text-right">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
                     {t("userApplicationhistory.result")}
                   </p>
                   <p className="mt-0.5 text-xl font-bold text-[#0047AB]">
                     {score}
-                    <span className="text-sm font-normal text-slate-400">
-                      /100
-                    </span>
+                    <span className="text-sm font-normal text-slate-400">/100</span>
                   </p>
                 </div>
               )}
               {isCurrent && (
                 <div className="text-right">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
                     {t("userApplicationhistory.status")}
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-slate-500 dark:text-slate-400">
@@ -304,16 +281,14 @@ function TimelineItem({
                 <Button
                   onClick={onEnterRoom}
                   size="sm"
-                  className="bg-[#0047AB] hover:bg-[#003d91] text-white shrink-0"
-                >
+                  className="shrink-0 bg-[#0047AB] text-white hover:bg-[#003d91]">
                   {t("userApplicationhistory.enterRoom")}
                 </Button>
               ) : isCompleted ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-[#0047AB] text-[#0047AB] hover:bg-[#0047AB]/5 shrink-0"
-                >
+                  className="shrink-0 border-[#0047AB] text-[#0047AB] hover:bg-[#0047AB]/5">
                   {t("userApplicationhistory.viewDetails")}
                 </Button>
               ) : null}
@@ -363,14 +338,13 @@ function ApplicationDetail({
                 {jd?.title ?? t("userApplicationhistory.noTitle")}
               </h2>
               <p className="mt-0.5 text-sm font-medium text-white/80">
-                {application.company?.name ??
-                  t("userApplicationhistory.company")}
+                {application.company?.name ?? t("userApplicationhistory.company")}
                 {jd?.companyName && ` · ${jd.companyName}`}
               </p>
             </div>
           </div>
           <div className="hidden text-right text-white sm:block">
-            <p className="text-xs font-medium uppercase tracking-wide text-white/70">
+            <p className="text-xs font-medium tracking-wide text-white/70 uppercase">
               {t("userApplicationhistory.overallProgress")}
             </p>
             <div className="mt-1 flex items-center justify-end gap-2">
@@ -396,9 +370,7 @@ function ApplicationDetail({
           <CardTitle className="text-base">
             {t("userApplicationhistory.interviewPipeline")}
           </CardTitle>
-          <CardDescription>
-            {t("userApplicationhistory.pageDescription")}
-          </CardDescription>
+          <CardDescription>{t("userApplicationhistory.pageDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           {rounds.length === 0 ? (
@@ -414,8 +386,7 @@ function ApplicationDetail({
             rounds.map((round, index) => {
               const isCompleted = index < currentRoundOrder;
               const isCurrent =
-                index === currentRoundOrder - 1 ||
-                (currentRoundOrder === 0 && index === 0);
+                index === currentRoundOrder - 1 || (currentRoundOrder === 0 && index === 0);
               const isLocked = index > currentRoundOrder;
               return (
                 <TimelineItem
@@ -445,9 +416,7 @@ function ApplicationDetail({
 export function ApplicationHistoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<
-    ApplicationStatus | "all"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null);
 
@@ -520,8 +489,7 @@ export function ApplicationHistoryPage() {
   });
 
   const isLoading = applicationsLoading;
-  const isRefetching =
-    applicationsRefetching || jdRefetching || companiesRefetching;
+  const isRefetching = applicationsRefetching || jdRefetching || companiesRefetching;
 
   // Enrich applications
   const enrichedApplications = useMemo<EnrichedApplication[]>(() => {
@@ -566,8 +534,7 @@ export function ApplicationHistoryPage() {
   const selectedApplication = useMemo(() => {
     if (selectedAppId) {
       return (
-        filteredApplications.find((app) => app.id === selectedAppId) ??
-        filteredApplications[0]
+        filteredApplications.find((app) => app.id === selectedAppId) ?? filteredApplications[0]
       );
     }
     return filteredApplications[0] ?? null;
@@ -583,11 +550,7 @@ export function ApplicationHistoryPage() {
     pageSize,
   });
   const pageData = useMemo(
-    () =>
-      filteredApplications.slice(
-        pagination.startIndex,
-        pagination.endIndex + 1
-      ),
+    () => filteredApplications.slice(pagination.startIndex, pagination.endIndex + 1),
     [filteredApplications, pagination.startIndex, pagination.endIndex]
   );
 
@@ -639,28 +602,17 @@ export function ApplicationHistoryPage() {
           {/* Filter */}
           <Select
             value={statusFilter}
-            onValueChange={(value) =>
-              setStatusFilter(value as ApplicationStatus | "all")
-            }
-          >
+            onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "all")}>
             <SelectTrigger className="w-full min-w-[200px]">
-              <SelectValue
-                placeholder={t("userApplicationhistory.filterByStatus")}
-              />
+              <SelectValue placeholder={t("userApplicationhistory.filterByStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                {t("userApplicationhistory.allStatus")}
-              </SelectItem>
+              <SelectItem value="all">{t("userApplicationhistory.allStatus")}</SelectItem>
               <SelectItem value="IN_PROGRESS">
                 {t("userApplicationhistory.statusInterviewing")}
               </SelectItem>
-              <SelectItem value="PASSED">
-                {t("userApplicationhistory.statusCompleted")}
-              </SelectItem>
-              <SelectItem value="FAILED">
-                {t("userApplicationhistory.statusRejected")}
-              </SelectItem>
+              <SelectItem value="PASSED">{t("userApplicationhistory.statusCompleted")}</SelectItem>
+              <SelectItem value="FAILED">{t("userApplicationhistory.statusRejected")}</SelectItem>
               <SelectItem value="SOFT_FAILED">
                 {t("userApplicationhistory.needsImprovement")}
               </SelectItem>
@@ -675,58 +627,54 @@ export function ApplicationHistoryPage() {
         <div className="lg:col-span-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {t("userApplicationhistory.applications")} (
-              {filteredApplications.length})
+              {t("userApplicationhistory.applications")} ({filteredApplications.length})
             </span>
           </div>
 
-          {isLoading ? (
-            <LoadingCardList count={4} />
-          ) : applicationsError ? (
-            <Card className="flex h-48 flex-col items-center justify-center gap-4 p-6">
-              <XCircle className="h-8 w-8 text-red-500" />
-              <p className="text-center text-sm font-medium text-red-600 dark:text-red-400">
-                {t("userApplicationhistory.unableToDownload")}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void refetchApplications()}
-              >
-                {t("userApplicationhistory.retry")}
-              </Button>
-            </Card>
-          ) : pageData.length === 0 ? (
-            <EmptyState
-              icon={Briefcase}
-              title={t("userApplicationhistory.noApplicationsYet")}
-              description={t("userApplicationhistory.findJobsDescription")}
-              action={
-                <Button
-                  onClick={() => navigate("/enterprise/companies")}
-                  className="gap-2 bg-[#0047AB] hover:bg-[#003d91]"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  {t("userApplicationhistory.findAJobNow")}
+          <div className="max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+            {isLoading ? (
+              <LoadingCardList count={4} />
+            ) : applicationsError ? (
+              <Card className="flex h-48 flex-col items-center justify-center gap-4 p-6">
+                <XCircle className="h-8 w-8 text-red-500" />
+                <p className="text-center text-sm font-medium text-red-600 dark:text-red-400">
+                  {t("userApplicationhistory.unableToDownload")}
+                </p>
+                <Button variant="outline" size="sm" onClick={() => void refetchApplications()}>
+                  {t("userApplicationhistory.retry")}
                 </Button>
-              }
-            />
-          ) : (
-            <div className="grid gap-3">
-              {pageData.map((app) => (
-                <ApplicationCard
-                  key={`app-${app.id}`}
-                  application={app}
-                  isSelected={selectedApplication?.id === app.id}
-                  onClick={() => setSelectedAppId(app.id ?? null)}
-                />
-              ))}
-            </div>
-          )}
+              </Card>
+            ) : pageData.length === 0 ? (
+              <EmptyState
+                icon={Briefcase}
+                title={t("userApplicationhistory.noApplicationsYet")}
+                description={t("userApplicationhistory.findJobsDescription")}
+                action={
+                  <Button
+                    onClick={() => navigate("/enterprise/companies")}
+                    className="gap-2 bg-[#0047AB] hover:bg-[#003d91]">
+                    <Briefcase className="h-4 w-4" />
+                    {t("userApplicationhistory.findAJobNow")}
+                  </Button>
+                }
+              />
+            ) : (
+              <div className="grid gap-3">
+                {pageData.map((app) => (
+                  <ApplicationCard
+                    key={`app-${app.id}`}
+                    application={app}
+                    isSelected={selectedApplication?.id === app.id}
+                    onClick={() => setSelectedAppId(app.id ?? null)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-          {/* Pagination — OUTSIDE the grid */}
+          {/* Pagination — inside scrollable area */}
           {filteredApplications.length > pageSize && (
-            <div className="mt-4">
+            <div className="mt-4 bg-white/80 dark:bg-slate-950/80">
               <PaginationControl
                 pagination={pagination}
                 onPageSizeChange={(size) => {
@@ -742,14 +690,11 @@ export function ApplicationHistoryPage() {
         {/* Right: Detail Panel */}
         <div className="lg:col-span-8">
           {selectedApplication ? (
-            <ApplicationDetail
-              application={selectedApplication}
-              onEnterRoom={handleEnterRoom}
-            />
+            <ApplicationDetail application={selectedApplication} onEnterRoom={handleEnterRoom} />
           ) : (
             <Card className="flex h-96 items-center justify-center">
               <div className="text-center">
-                <div className="mb-3 flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                   <Briefcase className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
