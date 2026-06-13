@@ -104,25 +104,33 @@ export function HomepageHeader() {
   const isHomepage = location.pathname === "/";
   const showScrolledStyle = isScrolled || !isHomepage;
 
+  const headerBgClass = showScrolledStyle
+    ? "border-white/20 bg-white/80 shadow-sm backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/80"
+    : isHomepage
+      ? "border-transparent bg-transparent"
+      : "border-slate-200 bg-white/95 shadow-sm backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/95";
+
   const linkColorClass = showScrolledStyle
     ? "text-slate-800 hover:text-[#0047AB] dark:text-slate-200 dark:hover:text-[#66B2FF]"
-    : "text-white hover:text-white dark:text-slate-200 dark:hover:text-[#66B2FF]";
+    : isHomepage
+      ? "text-white hover:text-[#93C5FD] dark:text-slate-200 dark:hover:text-[#66B2FF]"
+      : "text-slate-800 hover:text-[#0047AB] dark:text-slate-200 dark:hover:text-[#66B2FF]";
 
   const underlineColorClass = showScrolledStyle
     ? "bg-[#0047AB] dark:bg-[#66B2FF]"
-    : "bg-white dark:bg-[#66B2FF]";
+    : isHomepage
+      ? "bg-white dark:bg-[#66B2FF]"
+      : "bg-[#0047AB] dark:bg-[#66B2FF]";
 
   const toggleColorClass = showScrolledStyle
     ? "text-slate-700 hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]"
-    : "text-white hover:text-white dark:text-slate-300 dark:hover:text-[#66B2FF]";
+    : isHomepage
+      ? "text-white hover:text-[#93C5FD] dark:text-slate-300 dark:hover:text-[#66B2FF]"
+      : "text-slate-700 hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]";
 
   return (
     <header
-      className={`fixed top-0 right-0 left-0 isolate z-50 h-16 border-b transition-all duration-300 ${
-        showScrolledStyle
-          ? "border-white/20 bg-white/80 shadow-sm backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-900/80"
-          : "border-transparent bg-transparent"
-      }`}>
+      className={`fixed top-0 right-0 left-0 isolate z-50 h-16 border-b transition-all duration-300 ${headerBgClass}`}>
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
@@ -243,13 +251,13 @@ export function HomepageHeader() {
         </nav>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           {/* Theme & Language Toggles - always visible on header */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <LanguageToggle className={toggleColorClass} />
             <ThemeToggle
               iconOnly
-              className={`transition-colors duration-300 ${toggleColorClass}`}
+              className={`shrink-0 transition-colors duration-300 ${toggleColorClass}`}
             />
           </div>
 
@@ -258,18 +266,20 @@ export function HomepageHeader() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`transition-colors duration-300 ${
+                className={`flex h-9 w-12 shrink-0 items-center justify-center transition-colors duration-300 ${
                   showScrolledStyle
                     ? "text-slate-800 hover:text-[#0047AB] dark:text-slate-200 dark:hover:text-[#66B2FF]"
-                    : "text-white hover:text-white dark:text-slate-200 dark:hover:text-[#66B2FF]"
+                    : isHomepage
+                      ? "text-white hover:text-white dark:text-slate-200 dark:hover:text-[#66B2FF]"
+                      : "text-slate-800 hover:text-[#0047AB] dark:text-slate-200 dark:hover:text-[#66B2FF]"
                 }`}>
                 <Bell className="h-5 w-5" />
               </Button>
-              <div className="w-11 shrink-0">
+              <div className="w-10 shrink-0">
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex w-full items-center justify-center rounded-full border border-slate-200 bg-white p-1 transition-colors hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
-                      <Avatar className="h-8 w-8">
+                    <button className="flex h-10 w-full items-center justify-center rounded-full border border-slate-200 bg-white transition-colors hover:bg-slate-50 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">
+                      <Avatar className="h-9 w-9">
                         <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name ?? "User"} />
                         <AvatarFallback className="bg-[#DCEEFF] text-xs font-semibold text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]">
                           {getInitials(user.name)}
@@ -319,7 +329,9 @@ export function HomepageHeader() {
                 className={`px-2 transition-colors duration-300 sm:px-4 ${
                   showScrolledStyle
                     ? "text-slate-800 hover:text-[#0047AB] dark:text-slate-200 dark:hover:text-[#66B2FF]"
-                    : "text-white hover:text-white dark:text-slate-200 dark:hover:text-[#66B2FF]"
+                    : isHomepage
+                      ? "text-white hover:text-white dark:text-slate-200 dark:hover:text-[#66B2FF]"
+                      : "text-slate-800 hover:text-[#0047AB] dark:text-slate-200 dark:hover:text-[#66B2FF]"
                 }`}
                 asChild>
                 <Link to="/login">
@@ -348,7 +360,9 @@ export function HomepageHeader() {
                   className={`ml-1 transition-colors duration-300 ${
                     showScrolledStyle
                       ? "text-slate-800 dark:text-slate-200"
-                      : "text-white dark:text-slate-200"
+                      : isHomepage
+                        ? "text-white dark:text-slate-200"
+                        : "text-slate-800 dark:text-slate-200"
                   }`}>
                   <Menu className="h-6 w-6" />
                 </Button>

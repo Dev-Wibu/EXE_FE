@@ -30,13 +30,13 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
     i18n.changeLanguage(newLang);
   };
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
           className={cn(
-            "flex h-9 items-center gap-1.5 px-2 text-slate-700 hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]",
+            "flex h-9 w-12 shrink-0 items-center justify-center gap-1.5 px-0 text-slate-700 hover:text-[#0047AB] dark:text-slate-300 dark:hover:text-[#66B2FF]",
             className
           )}>
           <Globe className="h-[1.2rem] w-[1.2rem]" />
@@ -44,20 +44,37 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
           <span className="sr-only">{t("common.toggleLanguage")}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        className="w-48 border border-slate-200 bg-white/95 shadow-lg backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
         <DropdownMenuItem
           onClick={() => handleLanguageChange("vi")}
-          className={language === "vi" ? "bg-accent" : ""}>
+          className={cn(
+            "flex h-9 w-full cursor-pointer items-center px-3 text-sm",
+            language === "vi"
+              ? "bg-[#DCEEFF] text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]"
+              : "text-slate-700 hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#66B2FF]"
+          )}>
           {t("common.vietnameseVi")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleLanguageChange("en")}
-          className={language === "en" ? "bg-accent" : ""}>
+          className={cn(
+            "flex h-9 w-full cursor-pointer items-center px-3 text-sm",
+            language === "en"
+              ? "bg-[#DCEEFF] text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]"
+              : "text-slate-700 hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#66B2FF]"
+          )}>
           {t("settings.englishEn")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleLanguageChange("ja")}
-          className={language === "ja" ? "bg-accent" : ""}>
+          className={cn(
+            "flex h-9 w-full cursor-pointer items-center px-3 text-sm",
+            language === "ja"
+              ? "bg-[#DCEEFF] text-[#0047AB] dark:bg-[#0047AB]/30 dark:text-[#66B2FF]"
+              : "text-slate-700 hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#66B2FF]"
+          )}>
           {t("settings.japaneseJa")}
         </DropdownMenuItem>
       </DropdownMenuContent>
