@@ -3,7 +3,12 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthLayout } from "@/components/layouts";
 import { UserAccountLayout } from "@/components/layouts/UserAccountLayout";
-import { ProtectedRoute, PublicOnlyRoute, ScrollToTop, SessionExpiryGuard } from "@/components/shared";
+import {
+  ProtectedRoute,
+  PublicOnlyRoute,
+  ScrollToTop,
+  SessionExpiryGuard,
+} from "@/components/shared";
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/contexts/QueryProvider";
