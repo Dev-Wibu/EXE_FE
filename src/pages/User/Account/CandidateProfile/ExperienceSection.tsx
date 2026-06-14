@@ -54,7 +54,7 @@ export function ExperienceSection(props: ExperienceSectionProps) {
           </div>
           {(profile.projects ?? []).length > 0 ? (
             <div className="space-y-3">
-              {profile.projects!.map((project, index) => (
+              {profile.projects?.map((project, index) => (
                 <div
                   key={index}
                   className="rounded-xl border border-[rgba(15,23,42,0.08)] bg-white p-4 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#131b2e]">
@@ -101,7 +101,7 @@ export function ExperienceSection(props: ExperienceSectionProps) {
           </div>
           {(profile.workExperiences ?? []).length > 0 ? (
             <div className="space-y-3">
-              {profile.workExperiences!.map((exp, index) => (
+              {profile.workExperiences?.map((exp, index) => (
                 <div
                   key={index}
                   className="rounded-xl border border-[rgba(15,23,42,0.08)] bg-white p-4 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#131b2e]">
@@ -133,7 +133,7 @@ export function ExperienceSection(props: ExperienceSectionProps) {
           </div>
           {(profile.educations ?? []).length > 0 ? (
             <div className="space-y-3">
-              {profile.educations!.map((edu, index) => (
+              {profile.educations?.map((edu, index) => (
                 <div
                   key={index}
                   className="rounded-xl border border-[rgba(15,23,42,0.08)] bg-white p-4 dark:border-[rgba(255,255,255,0.08)] dark:bg-[#131b2e]">

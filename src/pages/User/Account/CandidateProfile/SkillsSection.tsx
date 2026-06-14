@@ -58,7 +58,7 @@ export function SkillsSection(props: SkillsSectionProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(profile.technicalSkills ?? []).length > 0 ? (
-                  profile.technicalSkills!.map((skill) => (
+                  profile.technicalSkills?.map((skill) => (
                     <Badge
                       key={skill}
                       className="rounded-full bg-[#0058be]/10 px-3 py-1 text-xs font-medium text-[#0058be] dark:bg-[#0058be]/30 dark:text-[#66B2FF]">
@@ -76,7 +76,7 @@ export function SkillsSection(props: SkillsSectionProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(profile.softSkills ?? []).length > 0 ? (
-                  profile.softSkills!.map((skill) => (
+                  profile.softSkills?.map((skill) => (
                     <Badge
                       key={skill}
                       variant="outline"
@@ -95,7 +95,7 @@ export function SkillsSection(props: SkillsSectionProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(profile.tools ?? []).length > 0 ? (
-                  profile.tools!.map((tool) => (
+                  profile.tools?.map((tool) => (
                     <Badge
                       key={tool}
                       className="rounded-full bg-[#0058be]/10 px-3 py-1 text-xs font-medium text-[#0058be] dark:bg-[#0058be]/30 dark:text-[#66B2FF]">
@@ -127,7 +127,7 @@ export function SkillsSection(props: SkillsSectionProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(profile.certifications ?? []).length > 0 ? (
-                  profile.certifications!.map((cert) => (
+                  profile.certifications?.map((cert) => (
                     <Badge
                       key={cert}
                       className="rounded-full bg-[#0058be]/10 px-3 py-1 text-xs font-medium text-[#0058be] dark:bg-[#0058be]/30 dark:text-[#66B2FF]">
@@ -145,7 +145,7 @@ export function SkillsSection(props: SkillsSectionProps) {
               </p>
               <div className="flex flex-wrap gap-2">
                 {(profile.achievements ?? []).length > 0 ? (
-                  profile.achievements!.map((ach) => (
+                  profile.achievements?.map((ach) => (
                     <Badge
                       key={ach}
                       variant="outline"
