@@ -83,7 +83,9 @@ export function HomepageHeader() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, user, clearAuth } = useAuthStore();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const user = useAuthStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {

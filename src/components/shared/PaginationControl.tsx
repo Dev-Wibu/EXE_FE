@@ -93,7 +93,7 @@ export function PaginationControl({
             <SelectContent>
               {pageSizeOptions.map((size) => (
                 <SelectItem key={size} value={String(size)}>
-                  {size} / trang
+                  {size} {t("common.perPage")}
                 </SelectItem>
               ))}
             </SelectContent>

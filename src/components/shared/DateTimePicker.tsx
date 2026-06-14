@@ -237,15 +237,15 @@ export function DateTimePicker({
   // Filtered presets based on showTime
   const activePresets = React.useMemo(() => {
     const allPresets = [
-      { id: "plus-15m", labelKey: "plus15Mins", fallback: "+15 Phút", isTime: true },
-      { id: "plus-30m", labelKey: "plus30Mins", fallback: "+30 Phút", isTime: true },
-      { id: "plus-1h", labelKey: "plus1Hour", fallback: "+1 Giờ", isTime: true },
-      { id: "plus-2h", labelKey: "plus2Hours", fallback: "+2 Giờ", isTime: true },
-      { id: "today", labelKey: "today", fallback: "Hôm nay", isTime: false },
-      { id: "tomorrow", labelKey: "tomorrow", fallback: "Ngày mai", isTime: false },
-      { id: "this-weekend", labelKey: "thisWeekend", fallback: "Cuối tuần này", isTime: false },
-      { id: "next-week", labelKey: "nextWeek", fallback: "Đầu tuần sau", isTime: false },
-      { id: "next-month", labelKey: "nextMonthStart", fallback: "Đầu tháng sau", isTime: false },
+      { id: "plus-15m", labelKey: "components.dateTimePicker.add15m", isTime: true },
+      { id: "plus-30m", labelKey: "components.dateTimePicker.add30m", isTime: true },
+      { id: "plus-1h", labelKey: "components.dateTimePicker.add1h", isTime: true },
+      { id: "plus-2h", labelKey: "components.dateTimePicker.add2h", isTime: true },
+      { id: "today", labelKey: "components.dateTimePicker.today", isTime: false },
+      { id: "tomorrow", labelKey: "components.dateTimePicker.tomorrow", isTime: false },
+      { id: "this-weekend", labelKey: "components.dateTimePicker.thisWeekend", isTime: false },
+      { id: "next-week", labelKey: "components.dateTimePicker.nextWeek", isTime: false },
+      { id: "next-month", labelKey: "components.dateTimePicker.nextMonth", isTime: false },
     ] as const;
 
     return allPresets.filter((p) => showTime || !p.isTime);
@@ -741,10 +741,8 @@ export function DateTimePicker({
     setHasInputError(false);
   };
 
-  const translatePreset = (key: string, fallback: string) => {
-    const tKey = `common.${key}`;
-    const result = t(tKey);
-    return result !== tKey ? result : fallback;
+  const translatePreset = (key: string) => {
+    return t(key);
   };
 
   return (
@@ -824,7 +822,7 @@ export function DateTimePicker({
                   type="button"
                   className="shrink-0 rounded-md px-2 py-1.5 text-left text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 md:w-full dark:text-slate-400 dark:hover:bg-slate-900/50"
                   onClick={() => applyPreset(preset.id)}>
-                  {translatePreset(preset.labelKey, preset.fallback)}
+                  {translatePreset(preset.labelKey)}
                 </button>
               ))}
             </div>
@@ -1008,18 +1006,17 @@ export function DateTimePicker({
                     setHasInputError(false);
                     setOpen(false);
                   }}>
-                  {t("common.clear", "Xóa")}
+                  {t("components.dateTimePicker.clear")}
                 </button>
                 <button
                   type="button"
-                  className={cn("text-xs font-semibold hover:underline", theme.text)}
+                  className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus:ring-slate-300"
                   onClick={() => {
-                    onChange(new Date());
-                    setInputValue(format(new Date(), displayFormat, { locale: dateLocale }));
+                    applyPreset("today");
                     setHasInputError(false);
                     setOpen(false);
                   }}>
-                  {t("common.today", "Hôm nay")}
+                  {t("components.dateTimePicker.today")}
                 </button>
               </div>
             </div>
@@ -1100,10 +1097,7 @@ export function DateTimePicker({
       </Popover>
       {hasInputError && !open && (
         <div className="animate-in fade-in slide-in-from-top-1 absolute top-[calc(100%+6px)] left-0 z-50 w-full rounded-lg border border-slate-950 bg-slate-900 px-3.5 py-2.5 text-xs text-white shadow-lg dark:bg-slate-800">
-          {translatePreset(
-            "invalidDate",
-            "Vui lòng nhập một giá trị hợp lệ. Trường không hoàn chỉnh hoặc có giá trị không hợp lệ."
-          )}
+          <p className="text-xs text-red-500">{t("components.dateTimePicker.invalidDate")}</p>
         </div>
       )}
     </div>
