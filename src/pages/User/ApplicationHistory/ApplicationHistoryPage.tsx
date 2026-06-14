@@ -11,21 +11,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useMyApplications } from "@/hooks/useApplication";
+import { useCompanies } from "@/hooks/useCompany";
+import { useSearchJobDescriptions } from "@/hooks/useJobDescription";
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { formatDateTime } from "@/lib/formatting";
 import { cn } from "@/lib/utils";
-import { applicationService, companyManager } from "@/services";
-import type { Application } from "@/services/application.manager";
-import type { Company, JobDescription, Round } from "@/services/company.manager";
-import { useQuery } from "@tanstack/react-query";
 import { Briefcase, Check, Lock, Search, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import type { components } from "../../../../schema-from-be";
 
 // ============================================================
 // Types
 // ============================================================
+
+type Application = components["schemas"]["Application"];
+type JobDescription = components["schemas"]["JobDescription"];
+type Company = components["schemas"]["Company"];
+type Round = components["schemas"]["Round"];
 
 type ApplicationStatus = "IN_PROGRESS" | "PASSED" | "FAILED" | "SOFT_FAILED";
 
@@ -339,7 +344,6 @@ function ApplicationDetail({
               </h2>
               <p className="mt-0.5 text-sm font-medium text-white/80">
                 {application.company?.name ?? t("userApplicationhistory.company")}
-                {jd?.companyName && ` · ${jd.companyName}`}
               </p>
             </div>
           </div>
@@ -422,95 +426,56 @@ export function ApplicationHistoryPage() {
 
   // Fetch applications
   const {
-    data: applicationsResult = [],
+    data: appsResponse,
     isLoading: applicationsLoading,
     isError: applicationsError,
     isRefetching: applicationsRefetching,
     refetch: refetchApplications,
-  } = useQuery({
-    queryKey: ["applications", "me"],
-    queryFn: async () => {
-      const result = await applicationService.getMyApplications();
-      if (result.success && Array.isArray(result.data)) {
-        return result.data as Application[];
-      }
-      return [];
-    },
-  });
+  } = useMyApplications();
 
   // Fetch all job descriptions for enrichment
   const {
-    data: jobDescriptionsResult = [],
+    data: jdResponse,
     isRefetching: jdRefetching,
     refetch: refetchJobDescriptions,
-  } = useQuery({
-    queryKey: ["job-descriptions", "all"],
-    queryFn: async () => {
-      const result = await companyManager.searchJobs({});
-      if (result.success && Array.isArray(result.data)) {
-        return result.data as JobDescription[];
-      }
-      return [];
-    },
-  });
+  } = useSearchJobDescriptions({});
 
   // Fetch companies for enrichment
   const {
-    data: companiesResult = [],
+    data: companiesResponse,
     isRefetching: companiesRefetching,
     refetch: refetchCompanies,
-  } = useQuery({
-    queryKey: ["companies"],
-    queryFn: async () => {
-      const result = await companyManager.getAll();
-      if (result.success) {
-        const data = result.data;
-        if (Array.isArray(data)) return data as Company[];
-        if (
-          data &&
-          "content" in data &&
-          Array.isArray(
-            (
-              data as {
-                content: unknown[];
-              }
-            ).content
-          )
-        ) {
-          return (
-            data as {
-              content: Company[];
-            }
-          ).content;
-        }
-      }
-      return [];
-    },
-  });
+  } = useCompanies();
 
   const isLoading = applicationsLoading;
   const isRefetching = applicationsRefetching || jdRefetching || companiesRefetching;
 
   // Enrich applications
   const enrichedApplications = useMemo<EnrichedApplication[]>(() => {
-    return applicationsResult.map((app) => {
-      const jd = jobDescriptionsResult.find((j) => j.id === app.jdId);
-      let company: Company | undefined;
-      if (jd?.companyId) {
-        company = companiesResult.find((c) => c.id === jd.companyId);
-      }
-      if (!company) {
-        company = companiesResult.find((c) =>
-          c.jobDescriptions?.some((jdItem) => jdItem.id === app.jdId)
-        );
-      }
+    const apps = (appsResponse || []) as Application[];
+    const jds = (jdResponse || []) as JobDescription[];
+    const rawCompanies = companiesResponse;
+    const comps = (
+      Array.isArray(rawCompanies)
+        ? rawCompanies
+        : rawCompanies && typeof rawCompanies === "object" && "content" in rawCompanies
+          ? (rawCompanies as unknown as { content: Company[] }).content
+          : []
+    ) as Company[];
+
+    return apps.map((app) => {
+      const jd = jds.find((j) => j.id === app.jdId);
+      const company = comps.find((c) =>
+        c.jobDescriptions?.some((jdItem) => jdItem.id === app.jdId)
+      );
+
       return {
         ...app,
         jobDescription: jd,
         company,
       };
     });
-  }, [applicationsResult, jobDescriptionsResult, companiesResult]);
+  }, [appsResponse, jdResponse, companiesResponse]);
 
   // Filter
   const filteredApplications = useMemo(() => {
