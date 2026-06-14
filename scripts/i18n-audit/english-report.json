@@ -9,7 +9,7 @@
   },
   {
     "file": "src/components/homepage-redesign/HomepageHeader.tsx",
-    "line": 129,
+    "line": 139,
     "character": 28,
     "type": "JsxAttribute[alt]",
     "category": "english",
@@ -17,7 +17,7 @@
   },
   {
     "file": "src/components/homepage-redesign/HomepageHeader.tsx",
-    "line": 136,
+    "line": 146,
     "character": 13,
     "type": "JsxText",
     "category": "english",
@@ -25,7 +25,7 @@
   },
   {
     "file": "src/components/homepage-redesign/HomepageHeader.tsx",
-    "line": 237,
+    "line": 247,
     "character": 15,
     "type": "JsxText",
     "category": "english",
@@ -33,7 +33,7 @@
   },
   {
     "file": "src/components/homepage-redesign/HomepageHeader.tsx",
-    "line": 359,
+    "line": 377,
     "character": 38,
     "type": "JsxAttribute[alt]",
     "category": "english",
@@ -41,7 +41,7 @@
   },
   {
     "file": "src/components/homepage-redesign/HomepageHeader.tsx",
-    "line": 360,
+    "line": 378,
     "character": 84,
     "type": "JsxText",
     "category": "english",
@@ -49,7 +49,7 @@
   },
   {
     "file": "src/components/homepage-redesign/HomepageHeader.tsx",
-    "line": 435,
+    "line": 453,
     "character": 29,
     "type": "JsxText",
     "category": "english",
@@ -57,7 +57,7 @@
   },
   {
     "file": "src/components/layouts/Header.tsx",
-    "line": 125,
+    "line": 132,
     "character": 28,
     "type": "JsxAttribute[alt]",
     "category": "english",
@@ -65,7 +65,7 @@
   },
   {
     "file": "src/components/layouts/Header.tsx",
-    "line": 127,
+    "line": 134,
     "character": 13,
     "type": "JsxText",
     "category": "english",
@@ -73,7 +73,7 @@
   },
   {
     "file": "src/components/layouts/Header.tsx",
-    "line": 228,
+    "line": 235,
     "character": 15,
     "type": "JsxText",
     "category": "english",
@@ -81,7 +81,7 @@
   },
   {
     "file": "src/components/layouts/Header.tsx",
-    "line": 337,
+    "line": 346,
     "character": 38,
     "type": "JsxAttribute[alt]",
     "category": "english",
@@ -89,7 +89,7 @@
   },
   {
     "file": "src/components/layouts/Header.tsx",
-    "line": 338,
+    "line": 347,
     "character": 84,
     "type": "JsxText",
     "category": "english",
@@ -97,7 +97,7 @@
   },
   {
     "file": "src/components/layouts/Header.tsx",
-    "line": 413,
+    "line": 422,
     "character": 29,
     "type": "JsxText",
     "category": "english",
@@ -481,7 +481,7 @@
   },
   {
     "file": "src/pages/User/UserDashboard/UserDashboardPage.tsx",
-    "line": 238,
+    "line": 239,
     "character": 22,
     "type": "JsxAttribute[alt]",
     "category": "english",
@@ -489,7 +489,7 @@
   },
   {
     "file": "src/pages/User/UserDashboard/UserDashboardPage.tsx",
-    "line": 239,
+    "line": 240,
     "character": 72,
     "type": "JsxText",
     "category": "english",
@@ -497,7 +497,7 @@
   },
   {
     "file": "src/pages/User/UserDashboard/UserDashboardPage.tsx",
-    "line": 243,
+    "line": 244,
     "character": 20,
     "type": "JsxAttribute[alt]",
     "category": "english",
