@@ -274,7 +274,6 @@ export function JobDescriptionRoundsDialog({
 
   // Drag and drop states
   const [activeDragType, setActiveDragType] = useState<RoundType | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [dragOverGap, setDragOverGap] = useState<number | null>(null);
 
   // Zoom level for pipeline canvas
@@ -292,6 +291,7 @@ export function JobDescriptionRoundsDialog({
   // State for moving a card via pointer drag
   const [movingCardIdx, setMovingCardIdx] = useState<number | null>(null);
   const [moveOffset, setMoveOffset] = useState({ x: 0, y: 0 });
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
 
   // Sync positions array length whenever rounds count changes
   useEffect(() => {
@@ -309,13 +309,48 @@ export function JobDescriptionRoundsDialog({
   const handleZoomOut = () => setZoomLevel((z) => Math.max(0.4, parseFloat((z - 0.15).toFixed(2))));
   const handleZoomReset = () => setZoomLevel(1.0);
 
-  const handleCanvasWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      if (e.deltaY < 0) handleZoomIn();
-      else handleZoomOut();
-    }
-  };
+  // Register wheel handler natively to allow preventDefault (non-passive)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheelNative = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+
+        // Calculate zoom direction
+        const zoomFactor = 1.15;
+        let newZoom = zoomLevel;
+        if (e.deltaY < 0) {
+          newZoom = Math.min(2.0, parseFloat((zoomLevel * zoomFactor).toFixed(2)));
+        } else {
+          newZoom = Math.max(0.4, parseFloat((zoomLevel / zoomFactor).toFixed(2)));
+        }
+
+        if (newZoom === zoomLevel) return;
+
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Position on canvas before zoom
+        const canvasX = (mouseX + container.scrollLeft) / zoomLevel;
+        const canvasY = (mouseY + container.scrollTop) / zoomLevel;
+
+        // Set new zoom level
+        setZoomLevel(newZoom);
+
+        // Adjust scroll position to keep cursor centered
+        container.scrollLeft = canvasX * newZoom - mouseX;
+        container.scrollTop = canvasY * newZoom - mouseY;
+      }
+    };
+
+    container.addEventListener("wheel", handleWheelNative, { passive: false });
+    return () => {
+      container.removeEventListener("wheel", handleWheelNative);
+    };
+  }, [zoomLevel, rounds.length]);
 
   // Panning handlers on the canvas background
   const handleBgPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -496,7 +531,7 @@ export function JobDescriptionRoundsDialog({
     const pos = positions[idx] ?? { x: 0, y: 0 };
     setMovingCardIdx(idx);
     setMoveOffset({ x: e.clientX / zoomLevel - pos.x, y: e.clientY / zoomLevel - pos.y });
-    setIsDragging(true);
+    setDragStartPos({ x: e.clientX, y: e.clientY });
   };
 
   const handleCardPointerMove = (e: React.PointerEvent<HTMLDivElement>, idx: number) => {
@@ -515,47 +550,58 @@ export function JobDescriptionRoundsDialog({
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     setMovingCardIdx(null);
 
-    // Check overlap with other cards to swap order
-    const myPos = positions[idx];
-    if (myPos) {
-      const CARD_W = 208;
-      const CARD_H = 130;
-      let overlapIdx = -1;
+    // Calculate distance moved
+    const startX = dragStartPos.x;
+    const startY = dragStartPos.y;
+    const endX = e.clientX;
+    const endY = e.clientY;
+    const dist = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
 
-      for (let i = 0; i < positions.length; i++) {
-        if (i === idx) continue;
-        const otherPos = positions[i];
-        if (otherPos) {
-          const isOverlapping =
-            myPos.x < otherPos.x + CARD_W &&
-            myPos.x + CARD_W > otherPos.x &&
-            myPos.y < otherPos.y + CARD_H &&
-            myPos.y + CARD_H > otherPos.y;
-          if (isOverlapping) {
-            overlapIdx = i;
-            break;
+    if (dist < 4) {
+      // It's a simple click! Open the config modal immediately
+      setSelectedRoundIndex(idx);
+      setConfigModalOpen(true);
+    } else {
+      // Check overlap with other cards to swap order
+      const myPos = positions[idx];
+      if (myPos) {
+        const CARD_W = 208;
+        const CARD_H = 130;
+        let overlapIdx = -1;
+
+        for (let i = 0; i < positions.length; i++) {
+          if (i === idx) continue;
+          const otherPos = positions[i];
+          if (otherPos) {
+            const isOverlapping =
+              myPos.x < otherPos.x + CARD_W &&
+              myPos.x + CARD_W > otherPos.x &&
+              myPos.y < otherPos.y + CARD_H &&
+              myPos.y + CARD_H > otherPos.y;
+            if (isOverlapping) {
+              overlapIdx = i;
+              break;
+            }
           }
         }
-      }
 
-      if (overlapIdx !== -1) {
-        const newRounds = [...rounds];
-        const tempRound = newRounds[idx];
-        newRounds[idx] = newRounds[overlapIdx];
-        newRounds[overlapIdx] = tempRound;
+        if (overlapIdx !== -1) {
+          const newRounds = [...rounds];
+          const tempRound = newRounds[idx];
+          newRounds[idx] = newRounds[overlapIdx];
+          newRounds[overlapIdx] = tempRound;
 
-        const newPositions = [...positions];
-        const tempPos = newPositions[idx];
-        newPositions[idx] = newPositions[overlapIdx];
-        newPositions[overlapIdx] = tempPos;
+          const newPositions = [...positions];
+          const tempPos = newPositions[idx];
+          newPositions[idx] = newPositions[overlapIdx];
+          newPositions[overlapIdx] = tempPos;
 
-        setRounds(newRounds.map((r, i) => ({ ...r, roundOrder: i + 1 })));
-        setPositions(newPositions);
-        toast.success(`Đã đổi vị trí vòng ${idx + 1} và vòng ${overlapIdx + 1}`);
+          setRounds(newRounds.map((r, i) => ({ ...r, roundOrder: i + 1 })));
+          setPositions(newPositions);
+          toast.success(`Đã đổi vị trí vòng ${idx + 1} và vòng ${overlapIdx + 1}`);
+        }
       }
     }
-
-    setTimeout(() => setIsDragging(false), 80);
   };
 
   const handleRemoveRound = (index: number, e: React.MouseEvent) => {
@@ -816,7 +862,6 @@ export function JobDescriptionRoundsDialog({
                     )}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleCanvasDrop}
-                    onWheel={handleCanvasWheel}
                     onPointerDown={handleBgPointerDown}
                     onPointerMove={handleBgPointerMove}
                     onPointerUp={handleBgPointerUp}>
@@ -925,13 +970,7 @@ export function JobDescriptionRoundsDialog({
                                   )}
                                   onPointerDown={(e) => handleCardPointerDown(e, idx)}
                                   onPointerMove={(e) => handleCardPointerMove(e, idx)}
-                                  onPointerUp={(e) => handleCardPointerUp(e, idx)}
-                                  onClick={() => {
-                                    if (!isDragging) {
-                                      setSelectedRoundIndex(idx);
-                                      setConfigModalOpen(true);
-                                    }
-                                  }}>
+                                  onPointerUp={(e) => handleCardPointerUp(e, idx)}>
                                   {/* Step number badge */}
                                   <div className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-800 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                                     {idx + 1}
@@ -1008,7 +1047,9 @@ export function JobDescriptionRoundsDialog({
                     setConfigModalOpen(open);
                     if (!open) setSelectedRoundIndex(null);
                   }}>
-                  <DialogContent className="flex max-h-[85vh] w-[640px] max-w-[96vw] flex-col gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
+                  <DialogContent
+                    showCloseButton={false}
+                    className="flex max-h-[85vh] w-[640px] max-w-[96vw] flex-col gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
                     {/* Modal header */}
                     <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/30">
                       <div className="flex items-center gap-2.5">
