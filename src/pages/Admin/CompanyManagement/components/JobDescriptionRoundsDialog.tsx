@@ -24,12 +24,15 @@ import {
   FileText,
   HelpCircle,
   Mail,
-  Plus,
+  Minus,
   PlusCircle,
+  RotateCcw,
   Save,
   Settings,
   Trash2,
   UserCheck,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -197,6 +200,24 @@ export function JobDescriptionRoundsDialog({
   // Drag and drop states
   const [activeDragType, setActiveDragType] = useState<RoundType | null>(null);
   const [activeDragIndex, setActiveDragIndex] = useState<number | null>(null);
+  // Index of the arrow gap being hovered during drag (-1 = before first, 0 = after index 0, etc.)
+  const [dragOverGap, setDragOverGap] = useState<number | null>(null);
+
+  // Zoom level for pipeline canvas
+  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const COLS = 3; // cards per row
+
+  const handleZoomIn = () => setZoomLevel((z) => Math.min(2.0, parseFloat((z + 0.15).toFixed(2))));
+  const handleZoomOut = () => setZoomLevel((z) => Math.max(0.4, parseFloat((z - 0.15).toFixed(2))));
+  const handleZoomReset = () => setZoomLevel(1.0);
+
+  const handleCanvasWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) handleZoomIn();
+      else handleZoomOut();
+    }
+  };
 
   // Load detailed JD information (including all rounds) and available round types
   useEffect(() => {
@@ -488,145 +509,301 @@ export function JobDescriptionRoundsDialog({
 
               {/* Workspace: Canvas + Right Panel */}
               <div className="flex min-h-0 flex-1 overflow-hidden bg-slate-100 dark:bg-slate-950">
-                {/* 2. CENTER PANEL: Pipeline Workflow */}
+                {/* 2. CENTER PANEL: Pipeline Workflow Canvas */}
                 <div
-                  className={cn(
-                    "relative flex flex-1 flex-col overflow-hidden bg-slate-100 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] dark:bg-slate-950 dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)]"
-                  )}>
-                  {/* Canvas controls */}
-                  <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
-                    <span className="dark:border-slate-750 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold text-slate-600 uppercase shadow-md dark:bg-slate-800 dark:text-slate-300 dark:shadow-lg">
-                      Quy trình hiện tại ({rounds.length} vòng)
+                  className="relative flex flex-1 flex-col overflow-hidden bg-slate-100 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:18px_18px] dark:bg-slate-950 dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)]"
+                  onWheel={handleCanvasWheel}>
+                  {/* Top bar: round count + zoom controls */}
+                  <div className="absolute top-3 right-4 z-20 flex items-center gap-2">
+                    <span className="rounded-full border border-slate-200 bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-600 uppercase shadow dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-300">
+                      {rounds.length} vòng
                     </span>
+                    <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white/90 px-1.5 py-1 shadow dark:border-slate-700 dark:bg-slate-800/90">
+                      <button
+                        onClick={handleZoomOut}
+                        title="Thu nhỏ (Ctrl+Scroll)"
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
+                        <ZoomOut className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="min-w-[38px] text-center text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                        {Math.round(zoomLevel * 100)}%
+                      </span>
+                      <button
+                        onClick={handleZoomIn}
+                        title="Phóng to (Ctrl+Scroll)"
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
+                        <ZoomIn className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={handleZoomReset}
+                        title="Đặt lại zoom"
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
+                        <RotateCcw className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Horizontal drag & drop lane */}
-                  <div className="w-full flex-1 overflow-x-auto overflow-y-hidden select-none">
-                    <div className="flex h-full min-w-max items-center gap-2 px-8 pt-6 pb-8">
-                      {/* Initial Dropzone */}
-                      <div
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => {
-                          if (activeDragType) handleDropFromToolbox(activeDragType, 0);
-                          else if (activeDragIndex !== null) handleReorder(activeDragIndex, 0);
-                        }}
-                        className={cn(
-                          "border-slate-350 flex h-40 w-12 items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-300 dark:border-slate-800",
-                          (activeDragType || activeDragIndex !== null) &&
-                            "border-primary/50 bg-primary/5 w-24 scale-102"
-                        )}>
-                        <Plus className="dark:text-slate-650 h-5 w-5 animate-pulse text-slate-400" />
-                      </div>
-
-                      {/* Flow Nodes list */}
-                      {rounds.map((round, index) => {
-                        const template = AVAILABLE_ROUNDS_TEMPLATES.find(
-                          (t) => t.type === round.roundType
-                        );
-                        const isSelected = selectedRoundIndex === index;
-
-                        return (
-                          <div key={index} className="flex items-center gap-2">
-                            {/* Node Card wrapper */}
-                            <div
-                              draggable
-                              onDragStart={() => setActiveDragIndex(index)}
-                              onDragEnd={() => setActiveDragIndex(null)}
-                              onClick={() => setSelectedRoundIndex(index)}
-                              className={cn(
-                                "group relative w-60 shrink-0 cursor-grab rounded-2xl border bg-white p-4 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:cursor-grabbing dark:bg-slate-900/80 dark:shadow-lg dark:hover:shadow-xl",
-                                isSelected
-                                  ? "border-primary ring-primary/20 scale-[1.03] bg-white ring-1 dark:bg-slate-900"
-                                  : "border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700",
-                                template?.bgColor
-                              )}>
-                              {/* Round Step bubble */}
-                              <div className="dark:border-slate-750 absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-800 shadow-md dark:bg-slate-800 dark:text-white">
-                                {index + 1}
-                              </div>
-
-                              {/* Close/Delete button */}
-                              <button
-                                onClick={(e) => handleRemoveRound(index, e)}
-                                className="dark:border-slate-750 absolute -top-2.5 -right-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 opacity-0 shadow-md transition-all group-hover:opacity-100 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:bg-slate-800 dark:hover:border-red-800 dark:hover:bg-red-950 dark:hover:text-red-400"
-                                title="Xóa vòng">
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-
-                              {/* Node Content */}
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={cn(
-                                    "rounded-xl bg-slate-100 p-2 dark:bg-black/40",
-                                    template?.color
-                                  )}>
-                                  {template?.icon}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <h4 className="truncate text-sm font-bold text-slate-800 dark:text-slate-200">
-                                    {round.name}
-                                  </h4>
-                                  <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                                    {template?.title}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Quick Config preview */}
-                              <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500 dark:border-slate-800/40 dark:text-slate-400">
-                                <div className="flex items-center gap-1.5">
-                                  <Clock className="h-3.5 w-3.5 opacity-60" />
-                                  <span>
-                                    {round.configData?.timeLimitMinutes
-                                      ? `${round.configData.timeLimitMinutes}p`
-                                      : "Không giới hạn"}
-                                  </span>
-                                </div>
-                                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                  Đạt: {Math.round((round.passThreshold ?? 0.8) * 100)}%
-                                </span>
-                              </div>
-
-                              {/* Setup state check */}
-                              {round.roundType === "QUIZ" &&
-                                (!round.configData?.quizQuestions ||
-                                  round.configData.quizQuestions.length === 0) && (
-                                  <div className="mt-2 flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-1.5 text-[10px] font-medium text-amber-500">
-                                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                    <span>Chưa cấu hình câu hỏi</span>
-                                  </div>
-                                )}
-                            </div>
-
-                            {/* Dropzone between nodes */}
-                            <div
-                              onDragOver={(e) => e.preventDefault()}
-                              onDrop={() => {
-                                if (activeDragType)
-                                  handleDropFromToolbox(activeDragType, index + 1);
-                                else if (activeDragIndex !== null)
-                                  handleReorder(activeDragIndex, index + 1);
-                              }}
-                              className={cn(
-                                "border-slate-350 flex h-40 w-12 items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-300 dark:border-slate-800",
-                                (activeDragType || activeDragIndex !== null) &&
-                                  "border-primary/50 bg-primary/5 w-24 scale-102"
-                              )}>
-                              <Plus className="dark:text-slate-650 h-5 w-5 animate-pulse text-slate-400" />
-                            </div>
+                  {/* Scrollable canvas area */}
+                  <div className="h-full w-full overflow-auto select-none">
+                    {/* Zoom wrapper */}
+                    <div
+                      style={{
+                        transform: `scale(${zoomLevel})`,
+                        transformOrigin: "top left",
+                        width: `${100 / zoomLevel}%`,
+                        minHeight: `${100 / zoomLevel}%`,
+                        paddingBottom: "60px",
+                      }}>
+                      {rounds.length === 0 ? (
+                        /* Empty state drop zone */
+                        <div
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverGap(0);
+                          }}
+                          onDragLeave={() => setDragOverGap(null)}
+                          onDrop={() => {
+                            setDragOverGap(null);
+                            if (activeDragType) handleDropFromToolbox(activeDragType, 0);
+                          }}
+                          className={cn(
+                            "mx-auto mt-24 flex h-52 w-96 flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 text-center transition-all duration-300",
+                            dragOverGap === 0
+                              ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
+                              : "border-slate-300 bg-white/60 dark:border-slate-700 dark:bg-slate-900/20"
+                          )}>
+                          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
+                            <ArrowRight className="h-6 w-6 text-slate-400 dark:text-slate-500" />
                           </div>
-                        );
-                      })}
-
-                      {rounds.length === 0 && (
-                        <div className="flex h-40 w-80 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-md dark:border-slate-800/80 dark:bg-slate-900/30 dark:shadow-none">
-                          <ArrowRight className="mb-2 h-8 w-8 animate-bounce text-slate-400 dark:text-slate-600" />
                           <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400">
                             Quy trình trống
                           </h4>
-                          <p className="mt-1 max-w-[200px] text-xs text-slate-400 dark:text-slate-500">
-                            Hãy kéo các vòng từ bên trái thả vào đây
+                          <p className="mt-1.5 max-w-[200px] text-xs leading-relaxed text-slate-400 dark:text-slate-500">
+                            Kéo các vòng từ danh sách bên trái và thả vào đây để bắt đầu
                           </p>
+                        </div>
+                      ) : (
+                        /* Grid pipeline layout */
+                        <div className="p-8">
+                          {/* Build rows of COLS cards each */}
+                          {Array.from({ length: Math.ceil(rounds.length / COLS) }, (_, rowIdx) => {
+                            const rowStart = rowIdx * COLS;
+                            const rowItems = rounds.slice(rowStart, rowStart + COLS);
+                            const isEvenRow = rowIdx % 2 === 0; // flow direction: even = L→R, odd = R→L
+                            const displayItems = isEvenRow ? rowItems : [...rowItems].reverse();
+                            return (
+                              <div key={rowIdx}>
+                                {/* Row of cards with arrow connectors */}
+                                <div className="flex items-center">
+                                  {displayItems.map((round, colIdx) => {
+                                    // real index in rounds array
+                                    const realIdx = isEvenRow
+                                      ? rowStart + colIdx
+                                      : rowStart + rowItems.length - 1 - colIdx;
+
+                                    const template = AVAILABLE_ROUNDS_TEMPLATES.find(
+                                      (t) => t.type === round.roundType
+                                    );
+                                    const isSelected = selectedRoundIndex === realIdx;
+                                    // gap index = position where drop inserts (before this card)
+                                    const gapIdx = isEvenRow
+                                      ? rowStart + colIdx
+                                      : rowStart + rowItems.length - colIdx;
+
+                                    return (
+                                      <div key={realIdx} className="flex items-center">
+                                        {/* Arrow drop-zone connector (before each card except the first of the whole pipeline) */}
+                                        {(realIdx > 0 || colIdx > 0) && (
+                                          <div
+                                            onDragOver={(e) => {
+                                              e.preventDefault();
+                                              setDragOverGap(gapIdx);
+                                            }}
+                                            onDragLeave={() => setDragOverGap(null)}
+                                            onDrop={() => {
+                                              setDragOverGap(null);
+                                              if (activeDragType)
+                                                handleDropFromToolbox(activeDragType, gapIdx);
+                                              else if (activeDragIndex !== null)
+                                                handleReorder(activeDragIndex, gapIdx);
+                                            }}
+                                            className={cn(
+                                              "group relative mx-1 flex h-16 items-center justify-center transition-all duration-200",
+                                              dragOverGap === gapIdx ? "w-20" : "w-10"
+                                            )}>
+                                            {dragOverGap === gapIdx ? (
+                                              /* Highlighted drop zone */
+                                              <div className="flex h-12 w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-blue-400 bg-blue-50 text-blue-500 dark:border-blue-500 dark:bg-blue-950/40">
+                                                <Minus className="h-3.5 w-3.5" />
+                                              </div>
+                                            ) : (
+                                              /* Arrow connector SVG */
+                                              <svg
+                                                width="40"
+                                                height="24"
+                                                viewBox="0 0 40 24"
+                                                fill="none"
+                                                className="overflow-visible">
+                                                <defs>
+                                                  <marker
+                                                    id={`arrow-${rowIdx}-${colIdx}`}
+                                                    markerWidth="6"
+                                                    markerHeight="6"
+                                                    refX="5"
+                                                    refY="3"
+                                                    orient="auto">
+                                                    <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8" />
+                                                  </marker>
+                                                </defs>
+                                                <line
+                                                  x1="2"
+                                                  y1="12"
+                                                  x2="34"
+                                                  y2="12"
+                                                  stroke="#94a3b8"
+                                                  strokeWidth="1.5"
+                                                  strokeDasharray="4 3"
+                                                  markerEnd={`url(#arrow-${rowIdx}-${colIdx})`}
+                                                />
+                                              </svg>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {/* Round Card */}
+                                        <div
+                                          draggable
+                                          onDragStart={() => setActiveDragIndex(realIdx)}
+                                          onDragEnd={() => {
+                                            setActiveDragIndex(null);
+                                            setDragOverGap(null);
+                                          }}
+                                          onClick={() => setSelectedRoundIndex(realIdx)}
+                                          onDragOver={(e) => {
+                                            e.preventDefault();
+                                            if (
+                                              activeDragIndex !== null &&
+                                              activeDragIndex !== realIdx
+                                            ) {
+                                              setDragOverGap(-realIdx - 100); // unique marker for card-over-card
+                                            }
+                                          }}
+                                          onDrop={(e) => {
+                                            e.stopPropagation();
+                                            setDragOverGap(null);
+                                            if (activeDragType)
+                                              handleDropFromToolbox(activeDragType, realIdx);
+                                            else if (activeDragIndex !== null)
+                                              handleReorder(activeDragIndex, realIdx);
+                                          }}
+                                          className={cn(
+                                            "group relative w-52 shrink-0 cursor-grab rounded-2xl border bg-white p-4 shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:cursor-grabbing dark:bg-slate-900/80 dark:shadow-lg",
+                                            isSelected
+                                              ? "scale-[1.03] border-blue-400 ring-2 ring-blue-400/30 dark:border-blue-500"
+                                              : "border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-600",
+                                            activeDragIndex !== null &&
+                                              activeDragIndex !== realIdx &&
+                                              dragOverGap === -realIdx - 100
+                                              ? "border-blue-400 bg-blue-50/60 dark:bg-blue-950/20"
+                                              : ""
+                                          )}>
+                                          {/* Step number bubble */}
+                                          <div className="absolute -top-3 -left-3 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-bold text-slate-800 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                            {realIdx + 1}
+                                          </div>
+
+                                          {/* Delete button */}
+                                          <button
+                                            onClick={(e) => handleRemoveRound(realIdx, e)}
+                                            className="absolute -top-2.5 -right-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 opacity-0 shadow-md transition-all group-hover:opacity-100 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-red-800 dark:hover:bg-red-950 dark:hover:text-red-400"
+                                            title="Xóa vòng">
+                                            <Trash2 className="h-3 w-3" />
+                                          </button>
+
+                                          {/* Card content */}
+                                          <div className="flex items-center gap-3">
+                                            <div
+                                              className={cn(
+                                                "rounded-xl p-2",
+                                                template?.bgColor,
+                                                template?.color
+                                              )}>
+                                              {template?.icon}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <h4 className="truncate text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                {round.name}
+                                              </h4>
+                                              <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                                                {template?.title}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {/* Stats footer */}
+                                          <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5 text-[11px] text-slate-500 dark:border-slate-800/40 dark:text-slate-400">
+                                            <div className="flex items-center gap-1">
+                                              <Clock className="h-3 w-3 opacity-60" />
+                                              <span>
+                                                {round.configData?.timeLimitMinutes
+                                                  ? `${round.configData.timeLimitMinutes}p`
+                                                  : "∞"}
+                                              </span>
+                                            </div>
+                                            <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                              Đạt {Math.round((round.passThreshold ?? 0.8) * 100)}%
+                                            </span>
+                                          </div>
+
+                                          {/* Quiz warning */}
+                                          {round.roundType === "QUIZ" &&
+                                            (!round.configData?.quizQuestions ||
+                                              round.configData.quizQuestions.length === 0) && (
+                                              <div className="mt-2 flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-1.5 text-[10px] font-medium text-amber-500">
+                                                <AlertTriangle className="h-3 w-3 shrink-0" />
+                                                <span>Chưa có câu hỏi</span>
+                                              </div>
+                                            )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Row-break connector: curved arrow from last card of this row to first of next */}
+                                {rowIdx < Math.ceil(rounds.length / COLS) - 1 && (
+                                  <div className="my-1 flex items-center justify-end pr-2">
+                                    <svg width="60" height="48" viewBox="0 0 60 48" fill="none">
+                                      <defs>
+                                        <marker
+                                          id={`bend-arrow-${rowIdx}`}
+                                          markerWidth="6"
+                                          markerHeight="6"
+                                          refX="5"
+                                          refY="3"
+                                          orient="auto">
+                                          <path d="M0,0 L0,6 L6,3 z" fill="#94a3b8" />
+                                        </marker>
+                                      </defs>
+                                      {/* L-shaped connector: right side going down then left to next row start */}
+                                      <path
+                                        d={
+                                          isEvenRow
+                                            ? "M 8 4 Q 52 4 52 24 Q 52 44 8 44"
+                                            : "M 52 4 Q 8 4 8 24 Q 8 44 52 44"
+                                        }
+                                        stroke="#94a3b8"
+                                        strokeWidth="1.5"
+                                        strokeDasharray="4 3"
+                                        fill="none"
+                                        markerEnd={`url(#bend-arrow-${rowIdx})`}
+                                      />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
