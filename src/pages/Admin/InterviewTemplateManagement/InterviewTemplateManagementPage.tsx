@@ -1498,7 +1498,7 @@ export function InterviewTemplateManagementPage() {
             </div>
 
             {/* Scrollable Form Body - Side by Side layout */}
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-12">
                 {/* Left Column: General Configuration (col-span-5) */}
                 <div className="space-y-5 lg:col-span-5">
@@ -1524,6 +1524,79 @@ export function InterviewTemplateManagementPage() {
                       />
                     </div>
 
+                    {/* Điểm tối đa & Điểm đạt — always on the same row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          Điểm tối đa (Max Score)
+                        </Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={selectedRound.configData?.maxScore ?? 100}
+                          onChange={(e) =>
+                            updateRoundConfigField(
+                              selectedRoundIndex,
+                              "maxScore",
+                              Number(e.target.value)
+                            )
+                          }
+                          className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          Điểm đạt tối thiểu (Pass)
+                        </Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={selectedRound.configData?.maxScore ?? 100}
+                          value={Math.round(
+                            (selectedRound.passThreshold ?? 0.8) *
+                              (selectedRound.configData?.maxScore ?? 100)
+                          )}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            const max = selectedRound.configData?.maxScore ?? 100;
+                            updateRoundField(
+                              selectedRoundIndex,
+                              "passThreshold",
+                              max > 0 ? val / max : 0.8
+                            );
+                          }}
+                          className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Thời gian làm bài (only for rounds that need it) */}
+                    {selectedRound.roundType !== "CV_SCREENING" &&
+                      selectedRound.roundType !== "EMAIL_SIMULATOR" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            Thời gian làm bài (Phút)
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min={0}
+                              value={selectedRound.configData?.timeLimitMinutes ?? 0}
+                              onChange={(e) =>
+                                updateRoundConfigField(
+                                  selectedRoundIndex,
+                                  "timeLimitMinutes",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="w-28 border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                            />
+                            <span className="text-xs text-slate-400">(0 = không giới hạn)</span>
+                          </div>
+                        </div>
+                      )}
+
                     {/* Định dạng nộp hồ sơ (only if CV_SCREENING) */}
                     {selectedRound.roundType === "CV_SCREENING" && (
                       <div className="space-y-1.5">
@@ -1546,76 +1619,6 @@ export function InterviewTemplateManagementPage() {
                         </Select>
                       </div>
                     )}
-
-                    {/* Điểm tối đa & Thời gian */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          Điểm tối đa (Max Score)
-                        </Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={selectedRound.configData?.maxScore ?? 100}
-                          onChange={(e) =>
-                            updateRoundConfigField(
-                              selectedRoundIndex,
-                              "maxScore",
-                              Number(e.target.value)
-                            )
-                          }
-                          className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                        />
-                      </div>
-
-                      {selectedRound.roundType !== "CV_SCREENING" &&
-                        selectedRound.roundType !== "EMAIL_SIMULATOR" && (
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                              Thời gian làm bài (Phút)
-                            </Label>
-                            <Input
-                              type="number"
-                              min={0}
-                              value={selectedRound.configData?.timeLimitMinutes ?? 0}
-                              onChange={(e) =>
-                                updateRoundConfigField(
-                                  selectedRoundIndex,
-                                  "timeLimitMinutes",
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                            />
-                          </div>
-                        )}
-                    </div>
-
-                    {/* Ngưỡng điểm đạt (Pass Threshold) */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Điểm đạt tối thiểu (Passing Score)
-                      </Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={selectedRound.configData?.maxScore ?? 100}
-                        value={Math.round(
-                          (selectedRound.passThreshold ?? 0.8) *
-                            (selectedRound.configData?.maxScore ?? 100)
-                        )}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          const max = selectedRound.configData?.maxScore ?? 100;
-                          updateRoundField(
-                            selectedRoundIndex,
-                            "passThreshold",
-                            max > 0 ? val / max : 0.8
-                          );
-                        }}
-                        className="w-28 border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      />
-                    </div>
                   </div>
 
                   {/* Lời Hướng dẫn cho ứng viên */}
@@ -1977,7 +1980,7 @@ export function InterviewTemplateManagementPage() {
                   )}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
 
             {!isEditorOpen && (
               <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900/50">

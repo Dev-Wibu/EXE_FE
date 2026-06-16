@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -1305,7 +1304,7 @@ export function JobDescriptionRoundsDialog({
                   }}>
                   <DialogContent
                     showCloseButton={false}
-                    className="flex max-h-[85vh] w-[640px] max-w-[96vw] flex-col gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
+                    className="flex max-h-[85vh] w-[900px] max-w-[96vw] flex-col gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
                     {/* Modal header */}
                     <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/30">
                       <div className="flex items-center gap-2.5">
@@ -1350,12 +1349,12 @@ export function JobDescriptionRoundsDialog({
                       </Button>
                     </div>
 
-                    <ScrollArea className="flex-1 p-5">
+                    <div className="flex-1 overflow-y-auto p-5">
                       <div className="space-y-5 pb-6">
                         {/* General Settings */}
                         <div className="space-y-4">
                           <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-300">
+                            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                               Tên vòng tuyển dụng
                             </Label>
                             <Input
@@ -1368,57 +1367,80 @@ export function JobDescriptionRoundsDialog({
                             />
                           </div>
 
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                              Ngưỡng điểm đạt (Pass Threshold)
-                            </Label>
-                            <div className="flex items-center gap-3">
+                          {/* Điểm tối đa & Điểm đạt — same row */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                Điểm tối đa (Max Score)
+                              </Label>
                               <Input
                                 type="number"
-                                min={0}
-                                max={1}
-                                step={0.05}
-                                value={selectedRound.passThreshold ?? 0.8}
-                                onChange={(e) =>
-                                  updateRoundField(
-                                    selectedRoundIndex,
-                                    "passThreshold",
-                                    Number(e.target.value)
-                                  )
-                                }
-                                className="w-24 border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                              />
-                              <span className="text-xs text-slate-400">
-                                (Tương đương:{" "}
-                                {Math.round((selectedRound.passThreshold ?? 0.8) * 100)}% số điểm
-                                tối đa)
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                              Thời gian làm bài (Phút)
-                            </Label>
-                            <div className="flex items-center gap-3">
-                              <Input
-                                type="number"
-                                min={0}
-                                value={selectedRound.configData?.timeLimitMinutes ?? 0}
+                                min={1}
+                                value={selectedRound.configData?.maxScore ?? 100}
                                 onChange={(e) =>
                                   updateRoundConfigField(
                                     selectedRoundIndex,
-                                    "timeLimitMinutes",
+                                    "maxScore",
                                     Number(e.target.value)
                                   )
                                 }
-                                className="w-24 border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                                className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                               />
-                              <span className="text-xs text-slate-400">
-                                (0 = không giới hạn thời gian)
-                              </span>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                Điểm đạt tối thiểu (Pass)
+                              </Label>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={selectedRound.configData?.maxScore ?? 100}
+                                value={Math.round(
+                                  (selectedRound.passThreshold ?? 0.8) *
+                                    (selectedRound.configData?.maxScore ?? 100)
+                                )}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  const max = selectedRound.configData?.maxScore ?? 100;
+                                  updateRoundField(
+                                    selectedRoundIndex,
+                                    "passThreshold",
+                                    max > 0 ? val / max : 0.8
+                                  );
+                                }}
+                                className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                              />
                             </div>
                           </div>
+
+                          {/* Thời gian làm bài (hidden for CV & EMAIL) */}
+                          {selectedRound.roundType !== "CV_SCREENING" &&
+                            selectedRound.roundType !== "EMAIL_SIMULATOR" && (
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                  Thời gian làm bài (Phút)
+                                </Label>
+                                <div className="flex items-center gap-3">
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    value={selectedRound.configData?.timeLimitMinutes ?? 0}
+                                    onChange={(e) =>
+                                      updateRoundConfigField(
+                                        selectedRoundIndex,
+                                        "timeLimitMinutes",
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className="w-24 border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                                  />
+                                  <span className="text-xs text-slate-400">
+                                    (0 = không giới hạn thời gian)
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                         </div>
 
                         {/* Specific features depending on Round Type */}
@@ -1739,7 +1761,7 @@ export function JobDescriptionRoundsDialog({
                           </div>
                         </div>
                       </div>
-                    </ScrollArea>
+                    </div>
                   </DialogContent>
                 </Dialog>
               )}
