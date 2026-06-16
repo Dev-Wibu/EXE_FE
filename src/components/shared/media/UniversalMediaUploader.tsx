@@ -1,280 +1,158 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuthStore } from "@/stores/authStore";
-import Uppy, { type UploadResult, type UppyFile } from "@uppy/core";
+import { cn } from "@/lib/utils";
 import "@uppy/core/css/style.min.css";
 import "@uppy/dashboard/css/style.min.css";
-import ImageEditor from "@uppy/image-editor";
 import "@uppy/image-editor/css/style.min.css";
 import Dashboard from "@uppy/react/dashboard";
-import XHRUpload from "@uppy/xhr-upload";
-import { useEffect, useId, useMemo } from "react";
+import "@uppy/screen-capture/css/style.min.css";
+import "@uppy/webcam/css/style.min.css";
+import { FileText, ImageIcon, Upload, X } from "lucide-react";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import type { UploadTransportMode, UploadedMediaFile } from "./types";
-type UploadMeta = Record<string, never>;
-type UploadBody = Record<string, unknown>;
+import type {
+  InitialFileItem,
+  UploadedMediaFile,
+  UploaderDisplayMode,
+  UploaderPreset,
+  UploaderThemeVariant,
+  UploadTransportMode,
+} from "./types";
+import { resolvePresetConfig } from "./uploader-presets";
+import "./uploader-themes.css";
+import { useUppyInstance } from "./useUppyInstance";
+
 export interface UniversalMediaUploaderProps {
+  // ── Identity
   id?: string;
-  title?: string;
-  description?: string;
+  className?: string;
+
+  // ── Display
+  displayMode?: UploaderDisplayMode;
+  height?: number;
+  note?: string;
+
+  // ── Preset (sets defaults for acceptedFileTypes, maxNumberOfFiles, etc.)
+  preset?: UploaderPreset;
+
+  // ── Restrictions (override preset when provided)
+  acceptedFileTypes?: string[];
+  maxFileSizeMB?: number;
+  maxNumberOfFiles?: number;
+
+  // ── Transport
   transportMode?: UploadTransportMode;
   endpoint?: string;
   headers?: Record<string, string>;
   multipartFieldName?: string;
-  acceptedFileTypes?: string[];
-  maxFileSizeMB?: number;
-  maxNumberOfFiles?: number;
+
+  // ── Upload behaviour
   autoProceed?: boolean;
   sequentialUpload?: boolean;
   bundleUpload?: boolean;
-  height?: number;
-  note?: string;
+
+  // ── Plugin toggles (override preset defaults when provided)
+  enableImageEditor?: boolean;
+  enableCompressor?: boolean;
+  enableWebcam?: boolean;
+  enableScreenCapture?: boolean;
+
+  // ── Theme
+  themeVariant?: UploaderThemeVariant;
+
+  // ── Data
+  initialFiles?: InitialFileItem[];
+
+  // ── Callbacks
   onFilesChange?: (_files: File[]) => void;
   onUploadComplete?: (_files: UploadedMediaFile[]) => void;
   onUploadError?: (_message: string) => void;
 }
-function mapUploadedFile(file: UppyFile<UploadMeta, UploadBody>): UploadedMediaFile {
-  return {
-    id: file.id,
-    name: file.name,
-    size: file.size ?? 0,
-    type: file.type ?? "application/octet-stream",
-    uploadUrl: typeof file.response?.uploadURL === "string" ? file.response.uploadURL : undefined,
-  };
-}
-async function runMockSingleUpload(
-  uppy: Uppy<UploadMeta, UploadBody>,
-  fileId: string,
-  delayPerStepMs: number
-): Promise<void> {
-  const initialFile = uppy.getFile(fileId);
-  if (!initialFile) {
-    return;
-  }
-  const totalBytes = initialFile.size && initialFile.size > 0 ? initialFile.size : 1;
-  for (let step = 1; step <= 8; step += 1) {
-    await new Promise((resolve) => {
-      setTimeout(resolve, delayPerStepMs);
-    });
-    const currentFile = uppy.getFile(fileId);
-    if (!currentFile) {
-      return;
-    }
-    const bytesUploaded = Math.round((totalBytes * step) / 8);
-    uppy.emit(
-      "upload-progress",
-      currentFile as never,
-      {
-        uploader: "mock-uploader",
-        bytesUploaded,
-        bytesTotal: totalBytes,
-      } as never
-    );
-  }
-  const finishedFile = uppy.getFile(fileId);
-  if (!finishedFile) {
-    return;
-  }
-  uppy.emit(
-    "upload-success",
-    finishedFile as never,
-    {
-      status: 200,
-      body: {
-        mock: true,
-      },
-      uploadURL: `mock://${encodeURIComponent(finishedFile.name)}`,
-    } as never
-  );
-}
+
+/**
+ * UniversalMediaUploader — the project's single entry-point for all file uploads.
+ *
+ * Three display modes:
+ *  - "dashboard" — Full Uppy Dashboard (drag-drop, paste, progress, editor tabs)
+ *  - "dropzone"  — Compact drag-drop zone suitable for embedding in forms/dialogs
+ *  - "compact"   — Minimal file-button + selected-file list for tight spaces
+ *
+ * Use presets for common use-cases instead of wiring every restriction prop:
+ *  preset="single-image" | "multi-image" | "single-pdf" | "multi-pdf" | "mixed"
+ *
+ * The component does NOT wrap itself in a <Card>; the caller decides the container.
+ */
 export function UniversalMediaUploader({
   id,
-  title: titleProp,
-  description: descriptionProp,
+  className,
+  displayMode = "dashboard",
+  height = 460,
+  note,
+  preset,
+  acceptedFileTypes: acceptedFileTypesProp,
+  maxFileSizeMB: maxFileSizeMBProp,
+  maxNumberOfFiles: maxNumberOfFilesProp,
   transportMode = "mock",
   endpoint,
   headers,
   multipartFieldName = "file",
-  acceptedFileTypes = ["image/*", ".pdf", "application/pdf"],
-  maxFileSizeMB = 25,
-  maxNumberOfFiles = 20,
   autoProceed = false,
   sequentialUpload = true,
   bundleUpload = false,
-  height = 460,
-  note: noteProp,
+  enableImageEditor: enableImageEditorProp,
+  enableCompressor: enableCompressorProp,
+  enableWebcam = false,
+  enableScreenCapture = false,
+  themeVariant = "default",
+  initialFiles,
   onFilesChange,
   onUploadComplete,
   onUploadError,
 }: UniversalMediaUploaderProps) {
   const { t } = useTranslation();
-  const token = useAuthStore((state) => state.token);
 
-  const title = titleProp ?? t("compShared.downloadPhotosAndDocuments");
-  const description = descriptionProp ?? t("compShared.dragAndDropCopyPaste");
-  const note = noteProp ?? t("compShared.supportsPhotosAndPdfsYou");
+  // Resolve preset → merge with any explicit prop overrides
+  const resolved = resolvePresetConfig(preset, {
+    acceptedFileTypes: acceptedFileTypesProp,
+    maxNumberOfFiles: maxNumberOfFilesProp,
+    enableImageEditor: enableImageEditorProp,
+    enableCompressor: enableCompressorProp,
+  });
 
-  const UPLOADER_STRINGS = useMemo(
-    () => ({
-      closeModal: t("compShared.closeTheFileDownloadWindow"),
-      addMoreFiles: t("compShared.addFiles"),
-      addingMoreFiles: t("compShared.addingFiles"),
-      dashboardWindowTitle: t("compShared.fileDownloadTable"),
-      dashboardTitle: t("compShared.fileDownloadTable"),
-      copyLinkToClipboardSuccess: t("compShared.linkCopied"),
-      copyLinkToClipboardFallback: t("compShared.copyTheLinkBelow"),
-      copyLink: t("compShared.copyLink"),
-      back: t("general.back"),
-      removeFile: t("compShared.deleteFiles"),
-      editFile: t("compShared.editFiles"),
-      saveChanges: t("common.saveChanges"),
-      myDevice: t("compShared.myDevice"),
-      dropHint: t("compShared.dropFilesHere"),
-      uploadComplete: t("compShared.uploadComplete"),
-      uploadPaused: t("compShared.paused"),
-      resumeUpload: t("general.continue"),
-      pauseUpload: t("compShared.pause"),
-      retryUpload: t("common.retry"),
-      cancelUpload: t("compShared.cancelUpload"),
-      xFilesSelected: {
-        0: t("compShared.smartCountSelectedFiles"),
-        1: t("compShared.smartCountSelectedFiles"),
-      },
-      uploadingXFiles: {
-        0: t("compShared.loadingSmartCountFile"),
-        1: t("compShared.loadingSmartCountFile"),
-      },
-      processingXFiles: {
-        0: t("compShared.processingSmartCountFile"),
-        1: t("compShared.processingSmartCountFile"),
-      },
-      addMore: t("common.more"),
-      save: t("general.save"),
-      cancel: t("general.cancel"),
-      dropPasteFiles: t("compShared.dropFilesOrBrowsefiles"),
-      dropPasteBoth: t("compShared.dropFilesOrBrowsefiles"),
-      browseFiles: t("compShared.selectFile"),
-      browseFolders: t("compShared.selectFolder"),
-      done: t("common.completed"),
-    }),
-    [t]
-  );
-  const reactId = useId();
-  const uploaderId = id ?? `universal-media-uploader-${reactId.replace(/:/g, "")}`;
-  const uppy = useMemo(() => {
-    const uploader = new Uppy<UploadMeta, UploadBody>({
-      id: uploaderId,
-      autoProceed,
-      allowMultipleUploadBatches: true,
-      restrictions: {
-        maxFileSize: maxFileSizeMB * 1024 * 1024,
-        maxNumberOfFiles,
-        allowedFileTypes: acceptedFileTypes,
-      },
-      locale: {
-        strings: UPLOADER_STRINGS,
-      } as never,
-    });
-    uploader.use(ImageEditor, {
-      quality: 0.92,
-      cropperOptions: {
-        viewMode: 1,
-        background: false,
-        autoCropArea: 1,
-      },
-    });
-    if (transportMode === "xhr" && endpoint) {
-      const requestHeaders: Record<string, string> = {
-        ...(headers ?? {}),
-      };
-      const normalizedToken = token?.replace(/^Bearer\s+/i, "").trim();
-      if (normalizedToken) {
-        requestHeaders.Authorization = `Bearer ${normalizedToken}`;
-      }
-      uploader.use(XHRUpload, {
-        endpoint,
-        method: "POST",
-        formData: true,
-        fieldName: multipartFieldName,
-        bundle: bundleUpload,
-        limit: sequentialUpload ? 1 : 5,
-        headers: requestHeaders,
-      });
-    } else {
-      uploader.addUploader(async (fileIds) => {
-        if (sequentialUpload) {
-          for (const fileId of fileIds) {
-            await runMockSingleUpload(uploader, fileId, 220);
-          }
-          return;
-        }
-        await Promise.all(fileIds.map((fileId) => runMockSingleUpload(uploader, fileId, 220)));
-      });
-    }
-    return uploader;
-  }, [
-    acceptedFileTypes,
-    autoProceed,
-    bundleUpload,
+  const maxFileSizeMB = maxFileSizeMBProp ?? 25;
+  const resolvedNote = note ?? t(resolved.noteKey);
+
+  const uppy = useUppyInstance({
+    id,
+    acceptedFileTypes: resolved.acceptedFileTypes,
+    maxFileSizeMB,
+    maxNumberOfFiles: resolved.maxNumberOfFiles,
+    transportMode,
     endpoint,
     headers,
-    maxFileSizeMB,
-    maxNumberOfFiles,
     multipartFieldName,
+    enableImageEditor: resolved.enableImageEditor,
+    enableCompressor: resolved.enableCompressor,
+    enableWebcam,
+    enableScreenCapture,
+    autoProceed,
     sequentialUpload,
-    token,
-    transportMode,
-    uploaderId,
-    UPLOADER_STRINGS,
-  ]);
-  useEffect(() => {
-    return () => {
-      uppy.cancelAll();
-      uppy.destroy();
-    };
-  }, [uppy]);
-  useEffect(() => {
-    const handleFilesAdded = (files: UppyFile<UploadMeta, UploadBody>[]) => {
-      if (!onFilesChange) {
-        return;
-      }
-      const selectedFiles = files
-        .map((item) => item.data)
-        .filter((item): item is File => item instanceof File);
-      onFilesChange(selectedFiles);
-    };
-    const handleComplete = (result: UploadResult<UploadMeta, UploadBody>) => {
-      if (transportMode === "mock") {
-        toast.success(t("compShared.theFileDownloadSimulationWas"));
-      }
-      onUploadComplete?.((result.successful ?? []).map(mapUploadedFile));
-    };
-    const handleError = (error: Error) => {
-      const message = error.message || t("compShared.couldNotLoadFilePlease");
-      toast.error(message);
-      onUploadError?.(message);
-    };
-    uppy.on("files-added", handleFilesAdded);
-    uppy.on("complete", handleComplete);
-    uppy.on("error", handleError);
-    return () => {
-      uppy.off("files-added", handleFilesAdded);
-      uppy.off("complete", handleComplete);
-      uppy.off("error", handleError);
-    };
-  }, [onFilesChange, onUploadComplete, onUploadError, transportMode, uppy, t]);
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    bundleUpload,
+    initialFiles,
+    onFilesChange,
+    onUploadComplete,
+    onUploadError,
+  });
+
+  const themeClass = `uploader-theme-${themeVariant}`;
+
+  // ── Dashboard mode ───────────────────────────────────────────────────────
+  if (displayMode === "dashboard") {
+    return (
+      <div className={cn(themeClass, className)}>
         <Dashboard
           uppy={uppy}
           width="100%"
           height={height}
-          note={note}
+          note={resolvedNote}
           proudlyDisplayPoweredByUppy={false}
           hideProgressDetails={false}
           showSelectedFiles
@@ -284,7 +162,234 @@ export function UniversalMediaUploader({
             uppy.clear();
           }}
         />
-      </CardContent>
-    </Card>
+      </div>
+    );
+  }
+
+  // ── Dropzone mode ────────────────────────────────────────────────────────
+  if (displayMode === "dropzone") {
+    return <DropzoneMode uppy={uppy} themeClass={themeClass} className={className} t={t} />;
+  }
+
+  // ── Compact mode ─────────────────────────────────────────────────────────
+  return (
+    <CompactMode
+      uppy={uppy}
+      themeClass={themeClass}
+      className={className}
+      t={t}
+      resolved={resolved}
+    />
+  );
+}
+
+// ── Dropzone sub-component ───────────────────────────────────────────────────
+
+interface SubModeProps {
+  uppy: ReturnType<typeof useUppyInstance>;
+  themeClass: string;
+  className?: string;
+  t: (_key: string) => string;
+  resolved?: ReturnType<typeof resolvePresetConfig>;
+}
+
+function DropzoneMode({ uppy, themeClass, className, t }: SubModeProps) {
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [files, setFiles] = React.useState<Array<{ id: string; name: string; size: number }>>([]);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const handleFilesAdded = () => {
+      const uppyFiles = Object.values(uppy.getState().files);
+      setFiles(uppyFiles.map((f) => ({ id: f.id, name: f.name, size: f.size ?? 0 })));
+    };
+    const handleFileRemoved = () => {
+      const uppyFiles = Object.values(uppy.getState().files);
+      setFiles(uppyFiles.map((f) => ({ id: f.id, name: f.name, size: f.size ?? 0 })));
+    };
+    uppy.on("files-added", handleFilesAdded);
+    uppy.on("file-removed", handleFileRemoved);
+    return () => {
+      uppy.off("files-added", handleFilesAdded);
+      uppy.off("file-removed", handleFileRemoved);
+    };
+  }, [uppy]);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    for (const file of droppedFiles) {
+      try {
+        uppy.addFile({ name: file.name, type: file.type, data: file, source: "dropzone" });
+      } catch {
+        // Uppy restriction errors are shown via the error event handler in the hook
+      }
+    }
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files ?? []);
+    for (const file of selectedFiles) {
+      try {
+        uppy.addFile({ name: file.name, type: file.type, data: file, source: "dropzone" });
+      } catch {
+        // Uppy restriction errors are shown via the error event handler in the hook
+      }
+    }
+    e.target.value = "";
+  };
+
+  return (
+    <div className={cn(themeClass, "space-y-2", className)}>
+      <div
+        className={cn(
+          "cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all",
+          "hover:border-primary hover:bg-primary/5",
+          isDragging && "border-primary bg-primary/10 scale-[1.01]"
+        )}
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
+        onPaste={(e) => {
+          const pastedFiles = Array.from(e.clipboardData.files);
+          for (const file of pastedFiles) {
+            try {
+              uppy.addFile({ name: file.name, type: file.type, data: file, source: "paste" });
+            } catch {
+              // Ignore
+            }
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+        }}>
+        <Upload className="mx-auto mb-2 h-8 w-8 text-slate-400" />
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          {t("compShared.dropFilesOrBrowsefiles").replace(
+            "%{browseFiles}",
+            t("compShared.selectFile")
+          )}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">{t("compShared.supportsPhotosAndPdfsYou")}</p>
+        <input ref={inputRef} type="file" multiple className="hidden" onChange={handleFileInput} />
+      </div>
+
+      {files.length > 0 && (
+        <ul className="space-y-1.5">
+          {files.map((file) => (
+            <li
+              key={file.id}
+              className="flex items-center justify-between rounded-lg border bg-slate-50 px-3 py-2 dark:bg-slate-900">
+              <div className="flex min-w-0 items-center gap-2">
+                <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+                <span className="truncate text-sm">{file.name}</span>
+                <span className="shrink-0 text-xs text-slate-400">
+                  {(file.size / 1024).toFixed(0)} KB
+                </span>
+              </div>
+              <button
+                type="button"
+                className="ml-2 shrink-0 rounded p-0.5 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                onClick={() => uppy.removeFile(file.id)}
+                aria-label={t("compShared.deleteFiles")}>
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ── Compact sub-component ────────────────────────────────────────────────────
+
+function CompactMode({ uppy, themeClass, className, t, resolved }: SubModeProps) {
+  const [files, setFiles] = React.useState<
+    Array<{ id: string; name: string; size: number; type: string }>
+  >([]);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const isImageOnly =
+    resolved?.acceptedFileTypes.length === 1 && resolved.acceptedFileTypes[0] === "image/*";
+
+  React.useEffect(() => {
+    const syncFiles = () => {
+      const uppyFiles = Object.values(uppy.getState().files);
+      setFiles(
+        uppyFiles.map((f) => ({ id: f.id, name: f.name, size: f.size ?? 0, type: f.type ?? "" }))
+      );
+    };
+    uppy.on("files-added", syncFiles);
+    uppy.on("file-removed", syncFiles);
+    return () => {
+      uppy.off("files-added", syncFiles);
+      uppy.off("file-removed", syncFiles);
+    };
+  }, [uppy]);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files ?? []);
+    for (const file of selectedFiles) {
+      try {
+        uppy.addFile({ name: file.name, type: file.type, data: file, source: "compact" });
+      } catch {
+        // Uppy restriction errors are shown via the error event handler in the hook
+      }
+    }
+    e.target.value = "";
+  };
+
+  return (
+    <div className={cn(themeClass, "space-y-2", className)}>
+      <button
+        type="button"
+        className="hover:border-primary hover:text-primary inline-flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors dark:text-slate-400"
+        onClick={() => inputRef.current?.click()}
+        onPaste={(e) => {
+          const pastedFiles = Array.from(e.clipboardData.files);
+          for (const file of pastedFiles) {
+            try {
+              uppy.addFile({ name: file.name, type: file.type, data: file, source: "paste" });
+            } catch {
+              // Ignore
+            }
+          }
+        }}>
+        {isImageOnly ? <ImageIcon className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
+        {t("compShared.selectFile")}
+        <input ref={inputRef} type="file" multiple className="hidden" onChange={handleFileInput} />
+      </button>
+
+      {files.length > 0 && (
+        <ul className="space-y-1">
+          {files.map((file) => (
+            <li
+              key={file.id}
+              className="flex items-center gap-2 rounded-md px-2 py-1 text-sm text-slate-700 dark:text-slate-300">
+              <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span className="min-w-0 flex-1 truncate">{file.name}</span>
+              <span className="shrink-0 text-xs text-slate-400">
+                {(file.size / 1024).toFixed(0)} KB
+              </span>
+              <button
+                type="button"
+                className="shrink-0 rounded p-0.5 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                onClick={() => uppy.removeFile(file.id)}
+                aria-label={t("compShared.deleteFiles")}>
+                <X className="h-3 w-3" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

@@ -22,12 +22,23 @@ export type { DateTimePickerProps, ThemeVariant } from "./DateTimePicker";
 export { Filter } from "./Filter";
 export type { FilterCriteria, FilterGroup, FilterOption, FilterProps } from "./Filter";
 export {
+  FormMediaUploader,
   ImageZoomPreview,
   MediaLightboxDialog,
   PdfPreviewViewer,
   UniversalMediaUploader,
 } from "./media";
-export type { MediaViewerItem, UploadTransportMode, UploadedMediaFile } from "./media";
+export type {
+  FormMediaUploaderProps,
+  InitialFileItem,
+  MediaViewerItem,
+  UniversalMediaUploaderProps,
+  UploadTransportMode,
+  UploadedMediaFile,
+  UploaderDisplayMode,
+  UploaderPreset,
+  UploaderThemeVariant,
+} from "./media";
 export { MessageBubble } from "./MessageBubble";
 export type { MessageDeliveryStatus } from "./MessageBubble";
 export { PaginationControl } from "./PaginationControl";

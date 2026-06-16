@@ -1,0 +1,87 @@
+/*
+ * uploader-themes.css
+ *
+ * Overrides Uppy Dashboard CSS custom properties to match the project's
+ * role-based color system (same palette used by DateTimePicker).
+ * Applied via a wrapper div: <div className="uploader-theme-user"> ... </div>
+ *
+ * Uppy Dashboard exposes these custom properties on .uppy-Dashboard-inner:
+ *   --uppy-accent-color  (browse link, focus ring, active states)
+ * We also target specific Uppy elements that do not use the variable.
+ */
+
+/* ─── User theme — #007BFF blue ──────────────────────────────────────────── */
+.uploader-theme-user .uppy-Dashboard-AddFiles-title button,
+.uploader-theme-user .uppy-u-reset.uppy-Dashboard-browse {
+  color: #007bff;
+}
+
+.uploader-theme-user .uppy-StatusBar-actionBtn--upload,
+.uploader-theme-user .uppy-DashboardContent-addMore {
+  background-color: #007bff;
+}
+
+.uploader-theme-user .uppy-StatusBar-actionBtn--upload:hover {
+  background-color: #0056b3;
+}
+
+.uploader-theme-user .uppy-Dashboard-inner {
+  --uppy-accent-color: #007bff;
+}
+
+/* ─── Mentor theme — emerald-600 (#059669) ───────────────────────────────── */
+.uploader-theme-mentor .uppy-Dashboard-AddFiles-title button,
+.uploader-theme-mentor .uppy-u-reset.uppy-Dashboard-browse {
+  color: #059669;
+}
+
+.uploader-theme-mentor .uppy-StatusBar-actionBtn--upload,
+.uploader-theme-mentor .uppy-DashboardContent-addMore {
+  background-color: #059669;
+}
+
+.uploader-theme-mentor .uppy-StatusBar-actionBtn--upload:hover {
+  background-color: #047857;
+}
+
+.uploader-theme-mentor .uppy-Dashboard-inner {
+  --uppy-accent-color: #059669;
+}
+
+/* ─── Admin theme — indigo-600 (#4f46e5) ────────────────────────────────── */
+.uploader-theme-admin .uppy-Dashboard-AddFiles-title button,
+.uploader-theme-admin .uppy-u-reset.uppy-Dashboard-browse {
+  color: #4f46e5;
+}
+
+.uploader-theme-admin .uppy-StatusBar-actionBtn--upload,
+.uploader-theme-admin .uppy-DashboardContent-addMore {
+  background-color: #4f46e5;
+}
+
+.uploader-theme-admin .uppy-StatusBar-actionBtn--upload:hover {
+  background-color: #4338ca;
+}
+
+.uploader-theme-admin .uppy-Dashboard-inner {
+  --uppy-accent-color: #4f46e5;
+}
+
+/* ─── Default theme — #0047AB navy ──────────────────────────────────────── */
+.uploader-theme-default .uppy-Dashboard-AddFiles-title button,
+.uploader-theme-default .uppy-u-reset.uppy-Dashboard-browse {
+  color: #0047ab;
+}
+
+.uploader-theme-default .uppy-StatusBar-actionBtn--upload,
+.uploader-theme-default .uppy-DashboardContent-addMore {
+  background-color: #0047ab;
+}
+
+.uploader-theme-default .uppy-StatusBar-actionBtn--upload:hover {
+  background-color: #003380;
+}
+
+.uploader-theme-default .uppy-Dashboard-inner {
+  --uppy-accent-color: #0047ab;
+}
