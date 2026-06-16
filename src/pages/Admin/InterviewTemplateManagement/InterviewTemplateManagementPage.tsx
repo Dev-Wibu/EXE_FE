@@ -714,7 +714,6 @@ export function InterviewTemplateManagementPage() {
     setZoomLevel(1.0);
     setSelectedRoundIndex(sortedIndex !== -1 ? sortedIndex : 0);
     setConfigModalOpen(true);
-    setIsEditorOpen(true);
   };
 
   const handleSaveTemplate = async () => {
@@ -804,6 +803,8 @@ export function InterviewTemplateManagementPage() {
             : "Cập nhật mẫu quy trình thành công!"
         );
         setIsEditorOpen(false);
+        setConfigModalOpen(false);
+        setSelectedRoundIndex(null);
         loadTemplates();
         if (editorMode === "create" && typeof res.data === "number") {
           setSelectedTemplateId(res.data);
@@ -1857,6 +1858,26 @@ export function InterviewTemplateManagementPage() {
                 </div>
               </div>
             </ScrollArea>
+
+            {!isEditorOpen && (
+              <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+                <Button
+                  variant="outline"
+                  className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+                  onClick={() => {
+                    setConfigModalOpen(false);
+                    setSelectedRoundIndex(null);
+                  }}>
+                  Hủy
+                </Button>
+                <Button
+                  onClick={handleSaveTemplate}
+                  disabled={isSaving}
+                  className="bg-indigo-600 font-bold text-white shadow-md hover:bg-indigo-700">
+                  {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                </Button>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}
