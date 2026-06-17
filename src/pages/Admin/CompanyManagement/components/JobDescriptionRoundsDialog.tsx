@@ -1355,135 +1355,38 @@ export function JobDescriptionRoundsDialog({
                       </Button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-5">
+                    <div
+                      className={cn(
+                        "flex-1 overflow-hidden",
+                        selectedRound.roundType !== "QUIZ" && "overflow-y-auto p-5"
+                      )}>
                       {selectedRound.roundType === "QUIZ" ? (
-                        <div className="space-y-6">
-                          {/* General settings in a compact grid at the top */}
-                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/10">
-                            <h4 className="mb-3 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                              Cấu hình chung vòng trắc nghiệm
-                            </h4>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                              {/* Tên vòng */}
-                              <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  Tên vòng tuyển dụng
-                                </Label>
-                                <Input
-                                  value={selectedRound.name || ""}
-                                  onChange={(e) =>
-                                    updateRoundField(selectedRoundIndex, "name", e.target.value)
-                                  }
-                                  placeholder="Nhập tên vòng..."
-                                  className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                                />
-                              </div>
-
-                              {/* Điểm tối đa */}
-                              <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  Điểm tối đa (Max Score)
-                                </Label>
-                                <ScoreInput
-                                  value={selectedRound.configData?.maxScore ?? 100}
-                                  min={1}
-                                  max={500}
-                                  step={5}
-                                  accent="indigo"
-                                  variant="simple"
-                                  onChange={(v) =>
-                                    updateRoundConfigField(selectedRoundIndex, "maxScore", v)
-                                  }
-                                />
-                              </div>
-
-                              {/* Điểm đạt tối thiểu */}
-                              <div className="flex flex-col items-center space-y-1.5">
-                                <Label className="self-start text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  Điểm đạt tối thiểu (Pass)
-                                </Label>
-                                <ScoreInput
-                                  value={Math.round(
-                                    (selectedRound.passThreshold ?? 0.8) *
-                                      (selectedRound.configData?.maxScore ?? 100)
-                                  )}
-                                  min={0}
-                                  max={selectedRound.configData?.maxScore ?? 100}
-                                  step={1}
-                                  accent="emerald"
-                                  variant="circular"
-                                  onChange={(val) => {
-                                    const max = selectedRound.configData?.maxScore ?? 100;
-                                    updateRoundField(
-                                      selectedRoundIndex,
-                                      "passThreshold",
-                                      max > 0 ? val / max : 0.8
-                                    );
-                                  }}
-                                />
-                              </div>
-
-                              {/* Thời gian làm bài */}
-                              <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  Thời gian làm bài (Phút)
-                                </Label>
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    value={selectedRound.configData?.timeLimitMinutes ?? 0}
-                                    onChange={(e) =>
-                                      updateRoundConfigField(
-                                        selectedRoundIndex,
-                                        "timeLimitMinutes",
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className="w-full border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                                  />
-                                  <span className="shrink-0 text-[10px] text-slate-400">
-                                    (0 = không giới hạn)
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Lời hướng dẫn */}
-                            <div className="mt-4 space-y-1.5">
-                              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                Lời Hướng dẫn cho ứng viên
-                              </Label>
-                              <Textarea
-                                value={selectedRound.configData?.instruction || ""}
-                                onChange={(e) =>
-                                  updateRoundConfigField(
-                                    selectedRoundIndex,
-                                    "instruction",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Hướng dẫn ứng viên làm bài..."
-                                rows={2}
-                                className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Quiz Editor full width */}
-                          <div className="border-t border-slate-100 pt-4 dark:border-slate-800/40">
-                            <QuizEditor
-                              questions={selectedRound.configData?.quizQuestions || []}
-                              onChange={(questions) =>
-                                updateRoundConfigField(
-                                  selectedRoundIndex,
-                                  "quizQuestions",
-                                  questions
-                                )
-                              }
-                            />
-                          </div>
-                        </div>
+                        <QuizEditor
+                          questions={selectedRound.configData?.quizQuestions || []}
+                          onChange={(questions) =>
+                            updateRoundConfigField(selectedRoundIndex, "quizQuestions", questions)
+                          }
+                          roundName={selectedRound.name || ""}
+                          onRoundNameChange={(val) =>
+                            updateRoundField(selectedRoundIndex, "name", val)
+                          }
+                          maxScore={selectedRound.configData?.maxScore ?? 100}
+                          onMaxScoreChange={(v) =>
+                            updateRoundConfigField(selectedRoundIndex, "maxScore", v)
+                          }
+                          passThreshold={selectedRound.passThreshold ?? 0.8}
+                          onPassThresholdChange={(v) =>
+                            updateRoundField(selectedRoundIndex, "passThreshold", v)
+                          }
+                          timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
+                          onTimeLimitMinutesChange={(v) =>
+                            updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
+                          }
+                          instruction={selectedRound.configData?.instruction || ""}
+                          onInstructionChange={(v) =>
+                            updateRoundConfigField(selectedRoundIndex, "instruction", v)
+                          }
+                        />
                       ) : (
                         <div className="space-y-5 pb-6">
                           {/* General Settings */}
