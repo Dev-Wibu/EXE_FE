@@ -245,22 +245,54 @@ export function CodingEditor({
               Ngân hàng bài tập
             </Button>
 
-            {/* Boxes Grid */}
-            <div className="flex flex-wrap gap-2">
+            {/* Horizontal Cards list */}
+            <div className="flex flex-col gap-2">
               {codingProblemsId.map((id, idx) => {
                 const isActive = selectedIndex === idx && rightView === "view";
+                const problem = codingProblems[idx] || {};
                 return (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleSelectProblem(idx)}
                     className={cn(
-                      "group relative flex h-10 w-10 items-center justify-center rounded-lg border text-xs font-bold transition-all",
+                      "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-all",
                       isActive
-                        ? "border-indigo-500 bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
+                        ? "border-indigo-500 bg-indigo-50/50 shadow-sm dark:border-indigo-600 dark:bg-indigo-950/20"
+                        : "hover:border-slate-350 border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/20 dark:hover:border-slate-700"
                     )}>
-                    {idx + 1}
+                    <span
+                      className={cn(
+                        "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold ring-1 ring-inset",
+                        isActive
+                          ? "bg-indigo-600 text-white ring-indigo-600"
+                          : "bg-slate-50 text-slate-500 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800"
+                      )}>
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="dark:text-slate-250 truncate text-xs font-semibold text-slate-800">
+                        {problem.title || `Bài tập #${id}`}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold ring-1 ring-inset",
+                            problem.difficulty === "EASY" &&
+                              "bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-950/20 dark:text-green-400",
+                            problem.difficulty === "MEDIUM" &&
+                              "bg-amber-50 text-amber-700 ring-amber-600/10 dark:bg-amber-950/20 dark:text-amber-400",
+                            problem.difficulty === "HARD" &&
+                              "bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-950/20 dark:text-red-400"
+                          )}>
+                          {problem.difficulty === "EASY"
+                            ? "Dễ"
+                            : problem.difficulty === "MEDIUM"
+                              ? "Trung bình"
+                              : "Khó"}
+                        </span>
+                      </div>
+                    </div>
                   </button>
                 );
               })}
