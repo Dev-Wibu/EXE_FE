@@ -1,6 +1,16 @@
 "use client";
 
-import { Check, Code2, FolderOpen, Search, Timer, Trash2 } from "lucide-react";
+import {
+  Check,
+  Code2,
+  FolderOpen,
+  Loader2,
+  Plus,
+  Search,
+  Timer,
+  Trash2,
+  Wand2,
+} from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,7 +37,7 @@ interface CodingEditorProps {
   onTimeLimitMinutesChange: (_val: number) => void;
 }
 
-type RightPaneView = "idle" | "view" | "bank";
+type RightPaneView = "idle" | "view" | "bank" | "create";
 
 export function CodingEditor({
   codingProblemsId = [],
@@ -52,6 +62,148 @@ export function CodingEditor({
   const [bankDifficulty, setBankDifficulty] = React.useState<"ALL" | "EASY" | "MEDIUM" | "HARD">(
     "ALL"
   );
+
+  // Create problem form states
+  const [newProblem, setNewProblem] = React.useState<{
+    title: string;
+    difficulty: "EASY" | "MEDIUM" | "HARD";
+    problemStatement: string;
+    rulesAndConstraints: string[];
+    paramTypes: string[];
+    returnType: string;
+    executionTimeLimitMs: number;
+    memoryLimitMb: number;
+    visibleExamples: { inputs: string[]; output: string; explanation: string }[];
+    hiddenTestCases: { inputs: string[]; expectedOutput: string; weightPoints: number }[];
+    codeStubs: Record<string, string>;
+  }>({
+    title: "",
+    difficulty: "EASY",
+    problemStatement: "",
+    rulesAndConstraints: [],
+    paramTypes: [],
+    returnType: "",
+    executionTimeLimitMs: 1000,
+    memoryLimitMb: 256,
+    visibleExamples: [{ inputs: [""], output: "", explanation: "" }],
+    hiddenTestCases: [{ inputs: [""], expectedOutput: "", weightPoints: 10 }],
+    codeStubs: { java: "", python: "" },
+  });
+
+  // AI generation states
+  const [showAiGen, setShowAiGen] = React.useState(false);
+  const [aiTopic, setAiTopic] = React.useState("");
+  const [aiLevel, setAiLevel] = React.useState("Junior");
+  const [aiDifficulty, setAiDifficulty] = React.useState<"EASY" | "MEDIUM" | "HARD">("EASY");
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const openCreate = () => {
+    setRightView("create");
+    setSelectedIndex(null);
+    setNewProblem({
+      title: "",
+      difficulty: "EASY",
+      problemStatement: "",
+      rulesAndConstraints: [],
+      paramTypes: [],
+      returnType: "",
+      executionTimeLimitMs: 1000,
+      memoryLimitMb: 256,
+      visibleExamples: [{ inputs: [""], output: "", explanation: "" }],
+      hiddenTestCases: [{ inputs: [""], expectedOutput: "", weightPoints: 10 }],
+      codeStubs: { java: "", python: "" },
+    });
+    setShowAiGen(false);
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiTopic.trim()) {
+      toast.warning("Vui lòng nhập chủ đề bài toán để AI sinh đề");
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const res = await codingProblemManager.generate({
+        topic: aiTopic,
+        difficulty: aiDifficulty,
+        targetLevel: aiLevel,
+        context: {
+          jobTitle: "Software Engineer",
+          requirement: "Cơ bản và thực tế",
+        },
+      });
+      if (res.success && res.data) {
+        const gen = res.data;
+        setNewProblem({
+          title: gen.title || "",
+          difficulty: (gen.difficulty as "EASY" | "MEDIUM" | "HARD") || aiDifficulty,
+          problemStatement: gen.problemStatement || "",
+          rulesAndConstraints: gen.rulesAndConstraints || [],
+          paramTypes: gen.paramTypes || [],
+          returnType: gen.returnType || "",
+          executionTimeLimitMs: gen.executionTimeLimitMs || 1000,
+          memoryLimitMb: gen.memoryLimitMb || 256,
+          visibleExamples: gen.visibleExamples?.map((ex) => ({
+            inputs: ex.inputs || [],
+            output: ex.output || "",
+            explanation: ex.explanation || "",
+          })) || [{ inputs: [""], output: "", explanation: "" }],
+          hiddenTestCases: gen.hiddenTestCases?.map((tc) => ({
+            inputs: tc.inputs || [],
+            expectedOutput: tc.expectedOutput || "",
+            weightPoints: tc.weightPoints || 10,
+          })) || [{ inputs: [""], expectedOutput: "", weightPoints: 10 }],
+          codeStubs: gen.codeStubs || { java: "", python: "" },
+        });
+        toast.success("AI đã sinh đề bài thành công!");
+        setShowAiGen(false);
+      } else {
+        toast.error(res.error || "Không thể sinh đề bài tự động");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Lỗi khi sinh đề bằng AI");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSaveProblem = async () => {
+    if (!newProblem.title.trim()) {
+      toast.warning("Vui lòng nhập tiêu đề bài tập");
+      return;
+    }
+    if (!newProblem.problemStatement.trim()) {
+      toast.warning("Vui lòng nhập mô tả bài tập");
+      return;
+    }
+
+    try {
+      const res = await codingProblemManager.create(newProblem);
+      if (res.success && res.data) {
+        toast.success("Tạo bài tập lập trình thành công!");
+        await fetchProblemBank();
+        const createdId = res.data.id;
+        const newIds = [...codingProblemsId, createdId];
+        const newProblems = [
+          ...codingProblems,
+          {
+            problemId: createdId,
+            title: res.data.title,
+            difficulty: res.data.difficulty,
+          },
+        ];
+        onChange(newIds, newProblems);
+        setSelectedIndex(newIds.length - 1);
+        setRightView("view");
+      } else {
+        toast.error(res.error || "Không thể lưu bài tập mới");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Lỗi khi lưu bài tập");
+    }
+  };
 
   // Inline editing for time
   const [editingTime, setEditingTime] = React.useState(false);
@@ -230,20 +382,36 @@ export function CodingEditor({
               </h4>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={disabled}
-              onClick={openBank}
-              className={cn(
-                "h-7 w-full justify-start border-slate-200 text-[11px] font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900",
-                rightView === "bank" &&
-                  "border-indigo-500 bg-indigo-50/50 text-indigo-600 dark:border-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400"
-              )}>
-              <FolderOpen className="mr-1.5 h-3 w-3 text-indigo-500" />
-              Ngân hàng bài tập
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={disabled}
+                onClick={openBank}
+                className={cn(
+                  "h-7 flex-1 justify-start border-slate-200 text-[11px] font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900",
+                  rightView === "bank" &&
+                    "border-indigo-500 bg-indigo-50/50 text-indigo-600 dark:border-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400"
+                )}>
+                <FolderOpen className="mr-1.5 h-3 w-3 text-indigo-500" />
+                Ngân hàng đề
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={disabled}
+                onClick={openCreate}
+                className={cn(
+                  "h-7 flex-1 justify-start border-slate-200 text-[11px] font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900",
+                  rightView === "create" &&
+                    "border-emerald-500 bg-emerald-50/50 text-emerald-600 dark:border-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
+                )}>
+                <Plus className="mr-1.5 h-3 w-3 text-emerald-500" />
+                Tạo đề bài
+              </Button>
+            </div>
 
             {/* Horizontal Cards list */}
             <div className="flex flex-col gap-2">
@@ -602,6 +770,363 @@ export function CodingEditor({
                   className="h-8 bg-indigo-600 px-4 text-xs text-white hover:bg-indigo-700">
                   Thêm{selectedBankIds.length > 0 ? ` (${selectedBankIds.length})` : ""} vào vòng
                   thi
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* --- CREATE STATE --- */}
+          {rightView === "create" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800/60">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-emerald-500" />
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Tạo đề bài lập trình mới
+                  </h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAiGen(!showAiGen)}
+                  className="h-8 border-indigo-200 text-xs text-indigo-600 hover:bg-indigo-50 dark:border-indigo-900 dark:text-indigo-400 dark:hover:bg-indigo-950/30">
+                  <Wand2 className="mr-1.5 h-3.5 w-3.5 animate-pulse text-indigo-500" />
+                  Tự động sinh bằng AI
+                </Button>
+              </div>
+
+              {/* AI generator block */}
+              {showAiGen && (
+                <div className="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 dark:border-indigo-950/20 dark:bg-indigo-950/5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-400">
+                    <Wand2 className="h-4 w-4" />
+                    AI Assistant: Sinh đề bài tự động
+                  </div>
+                  <div className="grid grid-cols-12 gap-3">
+                    <div className="col-span-6 space-y-1">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                        Chủ đề bài tập
+                      </Label>
+                      <Input
+                        value={aiTopic}
+                        onChange={(e) => setAiTopic(e.target.value)}
+                        placeholder="Ví dụ: Two sum, tìm kiếm nhị phân, cây nhị phân..."
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                    <div className="col-span-3 space-y-1">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                        Độ khó
+                      </Label>
+                      <select
+                        value={aiDifficulty}
+                        onChange={(e) =>
+                          setAiDifficulty(e.target.value as "EASY" | "MEDIUM" | "HARD")
+                        }
+                        className="dark:border-slate-850 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 focus-visible:outline-none dark:bg-slate-950 dark:text-slate-200">
+                        <option value="EASY">Dễ</option>
+                        <option value="MEDIUM">Trung bình</option>
+                        <option value="HARD">Khó</option>
+                      </select>
+                    </div>
+                    <div className="col-span-3 space-y-1">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                        Cấp độ ứng viên
+                      </Label>
+                      <select
+                        value={aiLevel}
+                        onChange={(e) => setAiLevel(e.target.value)}
+                        className="dark:border-slate-850 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 focus-visible:outline-none dark:bg-slate-950 dark:text-slate-200">
+                        <option value="Intern">Intern</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Senior">Senior</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isGenerating}
+                      onClick={handleAiGenerate}
+                      className="h-8 bg-indigo-600 px-4 text-xs text-white hover:bg-indigo-700 disabled:opacity-60">
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          Đang sinh đề...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+                          Sinh đề với AI
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Form fields */}
+              <div className="max-h-[380px] space-y-4 overflow-y-auto pr-1">
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-8 space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Tiêu đề bài tập
+                    </Label>
+                    <Input
+                      value={newProblem.title}
+                      onChange={(e) => setNewProblem({ ...newProblem, title: e.target.value })}
+                      placeholder="Nhập tiêu đề bài toán"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="col-span-4 space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase">Độ khó</Label>
+                    <select
+                      value={newProblem.difficulty}
+                      onChange={(e) =>
+                        setNewProblem({
+                          ...newProblem,
+                          difficulty: e.target.value as "EASY" | "MEDIUM" | "HARD",
+                        })
+                      }
+                      className="dark:border-slate-850 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 focus-visible:outline-none dark:bg-slate-950 dark:text-slate-200">
+                      <option value="EASY">Dễ</option>
+                      <option value="MEDIUM">Trung bình</option>
+                      <option value="HARD">Khó</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                    Mô tả chi tiết đề bài
+                  </Label>
+                  <textarea
+                    value={newProblem.problemStatement}
+                    onChange={(e) =>
+                      setNewProblem({ ...newProblem, problemStatement: e.target.value })
+                    }
+                    rows={4}
+                    placeholder="Mô tả bài toán, các ví dụ và hướng dẫn giải..."
+                    className="dark:border-slate-850 flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 focus-visible:outline-none dark:bg-slate-950 dark:text-slate-200"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Giới hạn thời gian (ms)
+                    </Label>
+                    <Input
+                      type="number"
+                      value={newProblem.executionTimeLimitMs}
+                      onChange={(e) =>
+                        setNewProblem({
+                          ...newProblem,
+                          executionTimeLimitMs: Number(e.target.value),
+                        })
+                      }
+                      placeholder="1000"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Giới hạn bộ nhớ (MB)
+                    </Label>
+                    <Input
+                      type="number"
+                      value={newProblem.memoryLimitMb}
+                      onChange={(e) =>
+                        setNewProblem({ ...newProblem, memoryLimitMb: Number(e.target.value) })
+                      }
+                      placeholder="256"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Param Types & Return Type */}
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-8 space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Kiểu dữ liệu tham số (Param Types - e.g. int[], int)
+                    </Label>
+                    <Input
+                      value={newProblem.paramTypes.join(", ")}
+                      onChange={(e) =>
+                        setNewProblem({
+                          ...newProblem,
+                          paramTypes: e.target.value
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      placeholder="Ví dụ: int[], int"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                  <div className="col-span-4 space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Kiểu trả về (Return Type)
+                    </Label>
+                    <Input
+                      value={newProblem.returnType}
+                      onChange={(e) => setNewProblem({ ...newProblem, returnType: e.target.value })}
+                      placeholder="Ví dụ: int"
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Rules & Constraints */}
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                    Ràng buộc (Constraints)
+                  </Label>
+                  <Input
+                    value={newProblem.rulesAndConstraints.join("; ")}
+                    onChange={(e) =>
+                      setNewProblem({
+                        ...newProblem,
+                        rulesAndConstraints: e.target.value
+                          .split(";")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                    placeholder="Ví dụ: nums.length <= 1000; Mỗi số nằm trong khoảng [-10^9, 10^9]"
+                    className="h-9 text-xs"
+                  />
+                  <p className="text-[9px] text-slate-400 italic">
+                    Các ràng buộc cách nhau bằng dấu chấm phẩy (;)
+                  </p>
+                </div>
+
+                {/* Visible Examples */}
+                <div className="space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800/40">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                    Ví dụ mẫu (Visible Example)
+                  </Label>
+                  <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[9px] text-slate-500">
+                          Đầu vào (cách nhau bởi dấu phẩy)
+                        </Label>
+                        <Input
+                          value={newProblem.visibleExamples[0]?.inputs?.join(", ") || ""}
+                          onChange={(e) => {
+                            const list = [...newProblem.visibleExamples];
+                            list[0] = {
+                              ...list[0],
+                              inputs: e.target.value
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean),
+                            };
+                            setNewProblem({ ...newProblem, visibleExamples: list });
+                          }}
+                          placeholder="Ví dụ: [2, 7, 11, 15], 9"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[9px] text-slate-500">Đầu ra mong đợi</Label>
+                        <Input
+                          value={newProblem.visibleExamples[0]?.output || ""}
+                          onChange={(e) => {
+                            const list = [...newProblem.visibleExamples];
+                            list[0] = { ...list[0], output: e.target.value };
+                            setNewProblem({ ...newProblem, visibleExamples: list });
+                          }}
+                          placeholder="Ví dụ: [0, 1]"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[9px] text-slate-500">Giải thích ví dụ</Label>
+                      <Input
+                        value={newProblem.visibleExamples[0]?.explanation || ""}
+                        onChange={(e) => {
+                          const list = [...newProblem.visibleExamples];
+                          list[0] = { ...list[0], explanation: e.target.value };
+                          setNewProblem({ ...newProblem, visibleExamples: list });
+                        }}
+                        placeholder="Giải thích vì sao có kết quả này..."
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hidden Testcases */}
+                <div className="space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800/40">
+                  <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                    Test Case ẩn để chấm điểm (Hidden Test Case)
+                  </Label>
+                  <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-950/20">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[9px] text-slate-500">Đầu vào ẩn</Label>
+                        <Input
+                          value={newProblem.hiddenTestCases[0]?.inputs?.join(", ") || ""}
+                          onChange={(e) => {
+                            const list = [...newProblem.hiddenTestCases];
+                            list[0] = {
+                              ...list[0],
+                              inputs: e.target.value
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean),
+                            };
+                            setNewProblem({ ...newProblem, hiddenTestCases: list });
+                          }}
+                          placeholder="Ví dụ: [3, 2, 4], 6"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[9px] text-slate-500">Đầu ra ẩn</Label>
+                        <Input
+                          value={newProblem.hiddenTestCases[0]?.expectedOutput || ""}
+                          onChange={(e) => {
+                            const list = [...newProblem.hiddenTestCases];
+                            list[0] = { ...list[0], expectedOutput: e.target.value };
+                            setNewProblem({ ...newProblem, hiddenTestCases: list });
+                          }}
+                          placeholder="Ví dụ: [1, 2]"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-800/60">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRightView("idle");
+                    setSelectedIndex(null);
+                  }}
+                  className="h-8 border-slate-200 text-xs dark:border-slate-800">
+                  Hủy
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveProblem}
+                  className="h-8 bg-emerald-600 px-4 text-xs text-white hover:bg-emerald-700">
+                  Lưu & Thêm vào vòng thi
                 </Button>
               </div>
             </div>
