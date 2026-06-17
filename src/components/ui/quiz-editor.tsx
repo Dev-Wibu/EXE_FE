@@ -1,6 +1,16 @@
 "use client";
 
-import { Check, Edit2, FolderOpen, HelpCircle, Plus, Search, Sparkles, Trash2 } from "lucide-react";
+import {
+  Check,
+  Edit2,
+  FolderOpen,
+  HelpCircle,
+  Plus,
+  Search,
+  Sparkles,
+  Timer,
+  Trash2,
+} from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 export interface QuizQuestion {
@@ -29,16 +38,12 @@ interface QuizEditorProps {
   onChange: (questions: QuizQuestion[]) => void;
   disabled?: boolean;
   // General Settings Props
-  roundName: string;
-  onRoundNameChange: (val: string) => void;
   maxScore: number;
   onMaxScoreChange: (val: number) => void;
   passThreshold: number;
   onPassThresholdChange: (val: number) => void;
   timeLimitMinutes: number;
   onTimeLimitMinutesChange: (val: number) => void;
-  instruction: string;
-  onInstructionChange: (val: string) => void;
 }
 
 const MOCK_QUESTION_BANK = [
@@ -131,16 +136,12 @@ export function QuizEditor({
   questions = [],
   onChange,
   disabled = false,
-  roundName,
-  onRoundNameChange,
   maxScore,
   onMaxScoreChange,
   passThreshold,
   onPassThresholdChange,
   timeLimitMinutes,
   onTimeLimitMinutesChange,
-  instruction,
-  onInstructionChange,
 }: QuizEditorProps) {
   // Right pane state
   const [rightView, setRightView] = React.useState<RightPaneView>("idle");
@@ -158,6 +159,9 @@ export function QuizEditor({
   const [selectedBankIndexes, setSelectedBankIndexes] = React.useState<number[]>([]);
   const [bankSearch, setBankSearch] = React.useState("");
   const [bankCategory, setBankCategory] = React.useState("All");
+
+  // Time edit inline
+  const [editingTime, setEditingTime] = React.useState(false);
 
   const categories = ["All", "JavaScript", "CSS", "React", "SQL", "OOP"];
 
@@ -266,89 +270,76 @@ export function QuizEditor({
     <div className="grid h-full grid-cols-12 gap-0">
       {/* ==================== LEFT COLUMN ==================== */}
       <div className="col-span-4 flex flex-col border-r border-slate-100 dark:border-slate-800/60">
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          {/* --- General Settings --- */}
+        <div className="flex-1 space-y-3 overflow-y-auto p-4">
+          {/* --- Score Settings Compact --- */}
           <div className="space-y-3">
-            <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
-              Cấu hình chung
-            </h4>
-
-            {/* Tên vòng */}
-            <div className="space-y-1">
-              <Label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                Tên vòng
-              </Label>
-              <Input
-                value={roundName}
-                onChange={(e) => onRoundNameChange(e.target.value)}
-                placeholder="Nhập tên vòng..."
-                className="h-8 border-slate-200 bg-white text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-              />
-            </div>
-
-            {/* Điểm tối đa */}
-            <div className="space-y-1">
-              <Label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                Điểm tối đa
-              </Label>
-              <ScoreInput
-                value={maxScore}
-                min={1}
-                max={500}
-                step={5}
-                accent="indigo"
-                variant="simple"
-                onChange={onMaxScoreChange}
-              />
-            </div>
-
-            {/* Điểm đạt tối thiểu */}
-            <div className="space-y-1">
-              <Label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                Điểm đạt tối thiểu
-              </Label>
-              <ScoreInput
-                value={passScore}
-                min={0}
-                max={maxScore}
-                step={1}
-                accent="emerald"
-                variant="circular"
-                onChange={(val) => {
-                  onPassThresholdChange(maxScore > 0 ? val / maxScore : 0.8);
-                }}
-              />
-            </div>
-
-            {/* Thời gian */}
-            <div className="space-y-1">
-              <Label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                Thời gian (phút)
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={0}
-                  value={timeLimitMinutes}
-                  onChange={(e) => onTimeLimitMinutesChange(Number(e.target.value))}
-                  className="h-8 w-full border-slate-200 bg-white text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            {/* Max Score + Time in one row */}
+            <div className="flex items-start gap-4">
+              <div className="w-[55%] space-y-1">
+                <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                  Điểm tối đa
+                </Label>
+                <ScoreInput
+                  value={maxScore}
+                  min={1}
+                  max={500}
+                  step={5}
+                  accent="indigo"
+                  variant="simple"
+                  onChange={onMaxScoreChange}
                 />
-                <span className="shrink-0 text-[9px] text-slate-400">(0 = ∞)</span>
+              </div>
+
+              {/* Time - compact badge style */}
+              <div className="w-[45%] space-y-1">
+                <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                  Thời gian
+                </Label>
+                {editingTime ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      min={0}
+                      autoFocus
+                      value={timeLimitMinutes}
+                      onChange={(e) => onTimeLimitMinutesChange(Number(e.target.value))}
+                      onBlur={() => setEditingTime(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditingTime(false)}
+                      className="h-11 w-full border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    />
+                    <span className="shrink-0 text-[9px] text-slate-400">phút</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTime(true)}
+                    className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400">
+                    <Timer className="h-4 w-4 text-slate-400" />
+                    {timeLimitMinutes > 0 ? `${timeLimitMinutes} phút` : "Không hạn chế"}
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Hướng dẫn */}
+            {/* Pass Score - circular */}
             <div className="space-y-1">
-              <Label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                Hướng dẫn
+              <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Điểm đạt tối thiểu
               </Label>
-              <Textarea
-                value={instruction}
-                onChange={(e) => onInstructionChange(e.target.value)}
-                placeholder="Hướng dẫn ứng viên..."
-                rows={2}
-                className="border-slate-200 bg-white text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-              />
+              <div className="flex justify-center">
+                <ScoreInput
+                  value={passScore}
+                  min={0}
+                  max={maxScore}
+                  step={1}
+                  accent="emerald"
+                  variant="circular"
+                  size="sm"
+                  onChange={(val) => {
+                    onPassThresholdChange(maxScore > 0 ? val / maxScore : 0.8);
+                  }}
+                />
+              </div>
             </div>
           </div>
 
@@ -374,11 +365,11 @@ export function QuizEditor({
               disabled={disabled}
               onClick={openBank}
               className={cn(
-                "h-8 w-full justify-start border-slate-200 text-xs font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900",
+                "h-7 w-full justify-start border-slate-200 text-[11px] font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900",
                 rightView === "bank" &&
                   "border-indigo-500 bg-indigo-50/50 text-indigo-600 dark:border-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400"
               )}>
-              <FolderOpen className="mr-1.5 h-3.5 w-3.5 text-indigo-500" />
+              <FolderOpen className="mr-1.5 h-3 w-3 text-indigo-500" />
               Ngân hàng câu hỏi
             </Button>
 
@@ -394,14 +385,14 @@ export function QuizEditor({
                     type="button"
                     onClick={() => handleSelectQuestion(idx)}
                     className={cn(
-                      "group relative flex h-9 w-9 items-center justify-center rounded-lg border text-xs font-bold transition-all",
+                      "group relative flex h-8 w-8 items-center justify-center rounded-lg border text-[11px] font-bold transition-all",
                       isActive
                         ? "border-indigo-500 bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
                         : "border-slate-200 bg-white text-slate-600 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:border-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
                     )}>
                     {idx + 1}
                     {hasCode && (
-                      <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-400" />
+                      <div className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-amber-400" />
                     )}
                   </button>
                 );
@@ -412,8 +403,8 @@ export function QuizEditor({
                 <button
                   type="button"
                   onClick={handleAddNew}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 text-slate-400 transition-all hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 dark:border-slate-800 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400">
-                  <Plus className="h-4 w-4" />
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 text-slate-400 transition-all hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 dark:border-slate-800 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/20 dark:hover:text-emerald-400">
+                  <Plus className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
@@ -796,7 +787,7 @@ export function QuizEditor({
                   disabled={selectedBankIndexes.length === 0}
                   onClick={addSelectedFromBank}
                   className="h-8 bg-indigo-600 px-4 text-xs text-white hover:bg-indigo-700">
-                  Thêm {selectedBankIndexes.length > 0 ? `(${selectedBankIndexes.length})` : ""} vào
+                  Thêm{selectedBankIndexes.length > 0 ? ` (${selectedBankIndexes.length})` : ""} vào
                   vòng thi
                 </Button>
               </div>

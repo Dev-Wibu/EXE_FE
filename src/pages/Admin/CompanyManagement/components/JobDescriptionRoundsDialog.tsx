@@ -423,17 +423,28 @@ export function JobDescriptionRoundsDialog({
             const sortedRounds = [...fetchedRounds].sort(
               (a, b) => (a.roundOrder ?? 0) - (b.roundOrder ?? 0)
             );
-            const uiRounds: UIRound[] = sortedRounds.map((r) => ({
-              ...r,
-              roundType: r.roundType as RoundType,
-              configData: {
-                ...r.configData,
-                codingProblemsId:
-                  r.configData?.codingProblems
-                    ?.map((cp) => cp.problemId)
-                    .filter((id): id is number => id !== undefined) ?? [],
-              },
-            }));
+            const uiRounds: UIRound[] = sortedRounds.map((r) => {
+              let parsedConfig = r.configData;
+              if (typeof r.configData === "string") {
+                try {
+                  parsedConfig = JSON.parse(r.configData);
+                } catch (e) {
+                  console.error("Failed to parse configData:", e);
+                }
+              }
+              const configObj = (parsedConfig || {}) as UIRoundConfig;
+              return {
+                ...r,
+                roundType: r.roundType as RoundType,
+                configData: {
+                  ...configObj,
+                  codingProblemsId:
+                    configObj.codingProblems
+                      ?.map((cp) => cp.problemId)
+                      .filter((id): id is number => id !== undefined) ?? [],
+                },
+              };
+            });
             setRounds(uiRounds);
             setHasExistingRounds(fetchedRounds.length > 0);
 
@@ -1331,9 +1342,18 @@ export function JobDescriptionRoundsDialog({
                           }
                         </div>
                         <div>
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                            Vòng {selectedRoundIndex + 1}: {selectedRound.name || "Chưa đặt tên"}
-                          </h3>
+                          <div className="flex items-center gap-1 text-sm font-bold text-slate-900 dark:text-slate-100">
+                            <span>Vòng {selectedRoundIndex + 1}:</span>
+                            <input
+                              type="text"
+                              value={selectedRound.name || ""}
+                              onChange={(e) =>
+                                updateRoundField(selectedRoundIndex, "name", e.target.value)
+                              }
+                              className="-ml-1 w-48 rounded border-b border-transparent bg-transparent px-1 py-0.5 font-bold text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
+                              placeholder="Tên vòng tuyển dụng"
+                            />
+                          </div>
                           <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                             {
                               AVAILABLE_ROUNDS_TEMPLATES.find(
@@ -1366,10 +1386,6 @@ export function JobDescriptionRoundsDialog({
                           onChange={(questions) =>
                             updateRoundConfigField(selectedRoundIndex, "quizQuestions", questions)
                           }
-                          roundName={selectedRound.name || ""}
-                          onRoundNameChange={(val) =>
-                            updateRoundField(selectedRoundIndex, "name", val)
-                          }
                           maxScore={selectedRound.configData?.maxScore ?? 100}
                           onMaxScoreChange={(v) =>
                             updateRoundConfigField(selectedRoundIndex, "maxScore", v)
@@ -1382,29 +1398,11 @@ export function JobDescriptionRoundsDialog({
                           onTimeLimitMinutesChange={(v) =>
                             updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
                           }
-                          instruction={selectedRound.configData?.instruction || ""}
-                          onInstructionChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "instruction", v)
-                          }
                         />
                       ) : (
                         <div className="space-y-5 pb-6">
                           {/* General Settings */}
                           <div className="space-y-4">
-                            <div className="space-y-1.5">
-                              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                Tên vòng tuyển dụng
-                              </Label>
-                              <Input
-                                value={selectedRound.name || ""}
-                                onChange={(e) =>
-                                  updateRoundField(selectedRoundIndex, "name", e.target.value)
-                                }
-                                placeholder="Nhập tên vòng..."
-                                className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                              />
-                            </div>
-
                             {/* Điểm tối đa */}
                             <div className="space-y-1.5">
                               <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">

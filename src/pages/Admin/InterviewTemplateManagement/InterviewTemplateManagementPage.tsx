@@ -1476,9 +1476,16 @@ export function InterviewTemplateManagementPage() {
                   {AVAILABLE_ROUNDS_TEMPLATES.find((t) => t.type === selectedRound.roundType)?.icon}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    Vòng {selectedRoundIndex + 1}: {selectedRound.name || "Chưa đặt tên"}
-                  </h3>
+                  <div className="flex items-center gap-1 text-sm font-bold text-slate-900 dark:text-slate-100">
+                    <span>Vòng {selectedRoundIndex + 1}:</span>
+                    <input
+                      type="text"
+                      value={selectedRound.name || ""}
+                      onChange={(e) => updateRoundField(selectedRoundIndex, "name", e.target.value)}
+                      className="-ml-1 w-48 rounded border-b border-transparent bg-transparent px-1 py-0.5 font-bold text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
+                      placeholder="Tên vòng tuyển dụng"
+                    />
+                  </div>
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     {
                       AVAILABLE_ROUNDS_TEMPLATES.find((t) => t.type === selectedRound.roundType)
@@ -1511,8 +1518,6 @@ export function InterviewTemplateManagementPage() {
                   onChange={(questions) =>
                     updateRoundConfigField(selectedRoundIndex, "quizQuestions", questions)
                   }
-                  roundName={selectedRound.name || ""}
-                  onRoundNameChange={(val) => updateRoundField(selectedRoundIndex, "name", val)}
                   maxScore={selectedRound.configData?.maxScore ?? 100}
                   onMaxScoreChange={(v) =>
                     updateRoundConfigField(selectedRoundIndex, "maxScore", v)
@@ -1524,10 +1529,6 @@ export function InterviewTemplateManagementPage() {
                   timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
                   onTimeLimitMinutesChange={(v) =>
                     updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
-                  }
-                  instruction={selectedRound.configData?.instruction || ""}
-                  onInstructionChange={(v) =>
-                    updateRoundConfigField(selectedRoundIndex, "instruction", v)
                   }
                 />
               ) : (
@@ -1541,21 +1542,6 @@ export function InterviewTemplateManagementPage() {
                     </div>
 
                     <div className="space-y-4">
-                      {/* Tên vòng tuyển dụng */}
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          Tên vòng tuyển dụng
-                        </Label>
-                        <Input
-                          value={selectedRound.name || ""}
-                          onChange={(e) =>
-                            updateRoundField(selectedRoundIndex, "name", e.target.value)
-                          }
-                          placeholder="Nhập tên vòng..."
-                          className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                        />
-                      </div>
-
                       {/* Điểm tối đa */}
                       <div className="space-y-1.5">
                         <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">

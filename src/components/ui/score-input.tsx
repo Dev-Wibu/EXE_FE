@@ -16,6 +16,7 @@ interface ScoreInputProps {
   className?: string;
   disabled?: boolean;
   variant?: "simple" | "circular";
+  size?: "sm" | "md" | "lg";
 }
 
 const ACCENT_MAP = {
@@ -77,6 +78,7 @@ export function ScoreInput({
   className,
   disabled = false,
   variant = "simple",
+  size = "md",
 }: ScoreInputProps) {
   const [editing, setEditing] = React.useState(false);
   const [raw, setRaw] = React.useState(String(value));
@@ -172,10 +174,16 @@ export function ScoreInput({
 
     const activeStroke = colors.stroke;
 
+    const sizeClasses = {
+      sm: "h-24 w-24",
+      md: "h-28 w-28",
+      lg: "h-36 w-36",
+    }[size];
+
     return (
-      <div className={cn("flex flex-col items-center justify-center gap-3 py-2", className)}>
+      <div className={cn("flex flex-col items-center justify-center gap-1.5 py-1", className)}>
         {/* Circular Slider Container */}
-        <div className="relative h-36 w-36 select-none">
+        <div className={cn("relative select-none", sizeClasses)}>
           {/* Inner Input Area */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             {editing ? (
@@ -192,7 +200,8 @@ export function ScoreInput({
                   if (e.key === "Escape") setEditing(false);
                 }}
                 className={cn(
-                  "pointer-events-auto h-10 w-16 rounded-md text-center text-xl font-extrabold tabular-nums",
+                  "pointer-events-auto h-8 w-14 rounded-md text-center font-extrabold tabular-nums",
+                  size === "sm" ? "text-sm" : size === "md" ? "text-base" : "text-xl",
                   "border border-slate-300 bg-white text-slate-900 shadow-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white",
                   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 )}
@@ -207,13 +216,14 @@ export function ScoreInput({
                   setEditing(true);
                 }}
                 className={cn(
-                  "pointer-events-auto text-center text-2xl font-black tracking-tight tabular-nums transition-transform hover:scale-105 focus:outline-none active:scale-95",
+                  "pointer-events-auto text-center font-black tracking-tight tabular-nums transition-transform hover:scale-105 focus:outline-none active:scale-95",
+                  size === "sm" ? "text-lg" : size === "md" ? "text-xl" : "text-2xl",
                   colors.text
                 )}>
                 {value}
               </button>
             )}
-            <span className="mt-0.5 text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+            <span className="mt-0.5 text-[9px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
               /{max}
             </span>
           </div>
@@ -283,30 +293,32 @@ export function ScoreInput({
         </div>
 
         {/* Stepper buttons underneath for accessibility/precision */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             disabled={disabled || value <= min}
             onClick={stepDown}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400",
+              "flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400",
+              size === "sm" ? "h-6 w-6" : "h-7 w-7",
               "disabled:cursor-not-allowed disabled:opacity-30",
               "hover:border-slate-300 dark:hover:border-slate-700",
               colors.btn
             )}>
-            <Minus className="h-4 w-4" />
+            <Minus className={size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5"} />
           </button>
           <button
             type="button"
             disabled={disabled || value >= max}
             onClick={stepUp}
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400",
+              "flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400",
+              size === "sm" ? "h-6 w-6" : "h-7 w-7",
               "disabled:cursor-not-allowed disabled:opacity-30",
               "hover:border-slate-300 dark:hover:border-slate-700",
               colors.btn
             )}>
-            <Plus className="h-4 w-4" />
+            <Plus className={size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5"} />
           </button>
         </div>
       </div>
