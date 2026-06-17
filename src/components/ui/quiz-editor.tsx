@@ -305,7 +305,7 @@ export function QuizEditor({
                       onChange={(e) => onTimeLimitMinutesChange(Number(e.target.value))}
                       onBlur={() => setEditingTime(false)}
                       onKeyDown={(e) => e.key === "Enter" && setEditingTime(false)}
-                      className="h-11 w-full border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      className="h-11 w-full [appearance:textfield] border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
                     <span className="shrink-0 text-[9px] text-slate-400">phút</span>
                   </div>
