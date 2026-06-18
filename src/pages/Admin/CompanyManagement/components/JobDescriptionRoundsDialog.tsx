@@ -871,6 +871,17 @@ export function JobDescriptionRoundsDialog({
               points: Number(q.points ?? 0),
             })),
             codingProblemsId: r.configData?.codingProblemsId || [],
+            codingProblems:
+              r.configData?.codingProblemsId?.map((id) => {
+                const cp = r.configData?.codingProblems?.find(
+                  (problem) => problem.problemId === id
+                );
+                return {
+                  problemId: id,
+                  title: cp?.title || `Bài tập #${id}`,
+                  difficulty: (cp?.difficulty as "EASY" | "MEDIUM" | "HARD") || "MEDIUM",
+                };
+              }) ?? [],
           },
         })),
       };
