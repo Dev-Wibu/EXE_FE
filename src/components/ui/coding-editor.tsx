@@ -2,6 +2,7 @@
 
 import {
   Check,
+  ChevronDown,
   Code2,
   FolderOpen,
   Loader2,
@@ -10,6 +11,7 @@ import {
   Timer,
   Trash2,
   Wand2,
+  X,
 } from "lucide-react";
 import * as React from "react";
 
@@ -38,6 +40,72 @@ interface CodingEditorProps {
 }
 
 type RightPaneView = "idle" | "view" | "bank" | "create";
+
+// Common Java/Python primitive types for dropdowns
+const PARAM_TYPE_OPTIONS = [
+  "int",
+  "int[]",
+  "int[][]",
+  "long",
+  "long[]",
+  "double",
+  "double[]",
+  "String",
+  "String[]",
+  "boolean",
+  "boolean[]",
+  "char",
+  "char[]",
+  "List<Integer>",
+  "List<String>",
+  "List<List<Integer>>",
+  "TreeNode",
+  "ListNode",
+];
+
+const RETURN_TYPE_OPTIONS = [
+  "int",
+  "int[]",
+  "int[][]",
+  "long",
+  "double",
+  "String",
+  "String[]",
+  "boolean",
+  "boolean[]",
+  "char",
+  "List<Integer>",
+  "List<String>",
+  "List<List<Integer>>",
+  "TreeNode",
+  "ListNode",
+  "void",
+];
+
+// Reusable styled select
+function StyledSelect({
+  value,
+  onChange,
+  children,
+  className,
+}: {
+  value: string;
+  onChange: (_v: string) => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative", className)}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 w-full appearance-none rounded-md border border-slate-200 bg-white py-1 pr-8 pl-3 text-xs shadow-sm transition-colors focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+        {children}
+      </select>
+      <ChevronDown className="pointer-events-none absolute top-2.5 right-2.5 h-3.5 w-3.5 text-slate-400" />
+    </div>
+  );
+}
 
 export function CodingEditor({
   codingProblemsId = [],
@@ -94,14 +162,17 @@ export function CodingEditor({
   const [aiTopic, setAiTopic] = React.useState("");
   const [aiLevel, setAiLevel] = React.useState("Junior");
   const [aiDifficulty, setAiDifficulty] = React.useState<"EASY" | "MEDIUM" | "HARD">("EASY");
+  const [aiRequirement, setAiRequirement] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [creationMode, setCreationMode] = React.useState<"ai" | "manual">("ai");
   const [aiGeneratedLoaded, setAiGeneratedLoaded] = React.useState(false);
-  const [aiContext, setAiContext] = React.useState({
-    jobTitle: "",
-    requirement: "",
-    prompting: "",
-  });
+
+  // Constraint input state
+  const [constraintInput, setConstraintInput] = React.useState("");
+
+  // Param type dropdown state
+  const [customParamType, setCustomParamType] = React.useState("");
+  const [customReturnType, setCustomReturnType] = React.useState("");
 
   const handleAddExample = () => {
     setNewProblem((prev) => ({
@@ -134,6 +205,39 @@ export function CodingEditor({
     }));
   };
 
+  const handleAddConstraint = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed && !newProblem.rulesAndConstraints.includes(trimmed)) {
+      setNewProblem((prev) => ({
+        ...prev,
+        rulesAndConstraints: [...prev.rulesAndConstraints, trimmed],
+      }));
+    }
+    setConstraintInput("");
+  };
+
+  const handleRemoveConstraint = (index: number) => {
+    setNewProblem((prev) => ({
+      ...prev,
+      rulesAndConstraints: prev.rulesAndConstraints.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddParamType = (type: string) => {
+    const trimmed = type.trim();
+    if (trimmed && !newProblem.paramTypes.includes(trimmed)) {
+      setNewProblem((prev) => ({ ...prev, paramTypes: [...prev.paramTypes, trimmed] }));
+    }
+    setCustomParamType("");
+  };
+
+  const handleRemoveParamType = (index: number) => {
+    setNewProblem((prev) => ({
+      ...prev,
+      paramTypes: prev.paramTypes.filter((_, i) => i !== index),
+    }));
+  };
+
   const openCreate = () => {
     setRightView("create");
     setSelectedIndex(null);
@@ -153,11 +257,10 @@ export function CodingEditor({
       codeStubs: { java: "", python: "" },
     });
     setAiTopic("");
-    setAiContext({
-      jobTitle: "",
-      requirement: "",
-      prompting: "",
-    });
+    setAiRequirement("");
+    setConstraintInput("");
+    setCustomParamType("");
+    setCustomReturnType("");
   };
 
   const handleAiGenerate = async () => {
@@ -172,9 +275,9 @@ export function CodingEditor({
         difficulty: aiDifficulty,
         targetLevel: aiLevel,
         context: {
-          jobTitle: aiContext.jobTitle || "Software Engineer",
-          requirement: aiContext.requirement || "Cơ bản và thực tế",
-          prompting: aiContext.prompting || "",
+          jobTitle: "",
+          requirement: aiRequirement.trim() || "Cơ bản và thực tế",
+          prompting: "",
         },
       });
       if (res.success && res.data) {
@@ -357,6 +460,25 @@ export function CodingEditor({
       ? bankProblems.find((p) => p.id === codingProblemsId[selectedIndex])
       : null;
 
+  const difficultyBadge = (diff?: string) => {
+    const map: Record<string, string> = { EASY: "Dễ", MEDIUM: "Trung bình", HARD: "Khó" };
+    const colorMap: Record<string, string> = {
+      EASY: "bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-950/20 dark:text-green-400",
+      MEDIUM:
+        "bg-amber-50 text-amber-700 ring-amber-600/10 dark:bg-amber-950/20 dark:text-amber-400",
+      HARD: "bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-950/20 dark:text-red-400",
+    };
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold ring-1 ring-inset",
+          colorMap[diff || "EASY"]
+        )}>
+        {map[diff || "EASY"] || diff}
+      </span>
+    );
+  };
+
   return (
     <div className="grid h-full grid-cols-12 gap-0">
       {/* ==================== LEFT COLUMN ==================== */}
@@ -502,22 +624,7 @@ export function CodingEditor({
                         {problem.title || `Bài tập #${id}`}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold ring-1 ring-inset",
-                            problem.difficulty === "EASY" &&
-                              "bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-950/20 dark:text-green-400",
-                            problem.difficulty === "MEDIUM" &&
-                              "bg-amber-50 text-amber-700 ring-amber-600/10 dark:bg-amber-950/20 dark:text-amber-400",
-                            problem.difficulty === "HARD" &&
-                              "bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-950/20 dark:text-red-400"
-                          )}>
-                          {problem.difficulty === "EASY"
-                            ? "Dễ"
-                            : problem.difficulty === "MEDIUM"
-                              ? "Trung bình"
-                              : "Khó"}
-                        </span>
+                        {difficultyBadge(problem.difficulty)}
                       </div>
                     </div>
                   </button>
@@ -567,22 +674,7 @@ export function CodingEditor({
                         `Bài tập #${codingProblemsId[selectedIndex]}`}
                     </h3>
                     <div className="mt-0.5 flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold ring-1 ring-inset",
-                          codingProblems[selectedIndex]?.difficulty === "EASY" &&
-                            "bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-950/20 dark:text-green-400",
-                          codingProblems[selectedIndex]?.difficulty === "MEDIUM" &&
-                            "bg-amber-50 text-amber-700 ring-amber-600/10 dark:bg-amber-950/20 dark:text-amber-400",
-                          codingProblems[selectedIndex]?.difficulty === "HARD" &&
-                            "bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-950/20 dark:text-red-400"
-                        )}>
-                        {codingProblems[selectedIndex]?.difficulty === "EASY"
-                          ? "Dễ"
-                          : codingProblems[selectedIndex]?.difficulty === "MEDIUM"
-                            ? "Trung bình"
-                            : "Khó"}
-                      </span>
+                      {difficultyBadge(codingProblems[selectedIndex]?.difficulty)}
                     </div>
                   </div>
                 </div>
@@ -798,22 +890,7 @@ export function CodingEditor({
                         </div>
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span
-                              className={cn(
-                                "inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold ring-1 ring-inset",
-                                p.difficulty === "EASY" &&
-                                  "bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-950/20 dark:text-green-400",
-                                p.difficulty === "MEDIUM" &&
-                                  "bg-amber-50 text-amber-700 ring-amber-600/10 dark:bg-amber-950/20 dark:text-amber-400",
-                                p.difficulty === "HARD" &&
-                                  "bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-950/20 dark:text-red-400"
-                              )}>
-                              {p.difficulty === "EASY"
-                                ? "Dễ"
-                                : p.difficulty === "MEDIUM"
-                                  ? "Trung bình"
-                                  : "Khó"}
-                            </span>
+                            {difficultyBadge(p.difficulty)}
                             <span className="text-slate-850 text-xs font-semibold dark:text-slate-200">
                               {p.title}
                             </span>
@@ -869,188 +946,147 @@ export function CodingEditor({
           {rightView === "create" && (
             <div className="flex h-full flex-col space-y-4">
               {/* Header & Mode Select */}
-              <div className="flex flex-col gap-3 border-b border-slate-100 pb-3 dark:border-slate-800/60">
-                <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800/60">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <Plus className="h-4 w-4 text-emerald-500" />
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       Tạo đề bài lập trình mới
                     </h3>
                   </div>
-                </div>
 
-                {/* Tabs to switch mode */}
-                <div className="w-fit rounded-lg bg-slate-100 p-1 dark:bg-slate-900">
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCreationMode("ai");
-                      }}
-                      className={cn(
-                        "rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all",
-                        creationMode === "ai"
-                          ? "text-indigo-650 bg-white shadow-sm dark:bg-slate-800 dark:text-indigo-400"
-                          : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
-                      )}>
-                      Sinh đề bằng AI
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCreationMode("manual");
-                        setAiGeneratedLoaded(false);
-                      }}
-                      className={cn(
-                        "rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all",
-                        creationMode === "manual"
-                          ? "text-indigo-650 bg-white shadow-sm dark:bg-slate-800 dark:text-indigo-400"
-                          : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
-                      )}>
-                      Tạo đề thủ công
-                    </button>
+                  {/* Tabs to switch mode */}
+                  <div className="w-fit rounded-lg bg-slate-100 p-0.5 dark:bg-slate-900">
+                    <div className="flex gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setCreationMode("ai")}
+                        className={cn(
+                          "rounded px-3 py-1.5 text-xs font-semibold transition-all",
+                          creationMode === "ai"
+                            ? "text-indigo-650 bg-white shadow-sm dark:bg-slate-800 dark:text-indigo-400"
+                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                        )}>
+                        ✨ Sinh bằng AI
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCreationMode("manual");
+                          setAiGeneratedLoaded(false);
+                        }}
+                        className={cn(
+                          "rounded px-3 py-1.5 text-xs font-semibold transition-all",
+                          creationMode === "manual"
+                            ? "text-indigo-650 bg-white shadow-sm dark:bg-slate-800 dark:text-indigo-400"
+                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                        )}>
+                        ✏️ Thủ công
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* Generate button top-right (only in AI mode and not loaded) */}
+                {creationMode === "ai" && !aiGeneratedLoaded && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={isGenerating}
+                    onClick={handleAiGenerate}
+                    className="bg-indigo-650 h-8 px-4 text-xs text-white hover:bg-indigo-700 disabled:opacity-60">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        Đang sinh...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+                        Sinh đề với AI
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
 
-              {/* View 1: AI Input (Only shown if mode is AI and AI hasn't loaded yet) */}
+              {/* View 1: AI Input — No scroll, compact, fits in one view */}
               {creationMode === "ai" && !aiGeneratedLoaded && (
-                <div className="flex flex-1 flex-col space-y-4 overflow-y-auto pr-1">
-                  <div className="space-y-4 rounded-xl border border-indigo-100 bg-indigo-50/20 p-5 dark:border-indigo-950/20 dark:bg-indigo-950/5">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-400">
+                <div className="flex flex-col gap-4">
+                  <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-violet-50/40 p-5 dark:border-indigo-950/30 dark:from-indigo-950/10 dark:to-violet-950/10">
+                    <div className="mb-4 flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-400">
                       <Wand2 className="h-4 w-4 animate-pulse" />
-                      Nhập thông tin yêu cầu để AI tự động sinh đề
+                      Nhập thông tin để AI tự động sinh đề bài
                     </div>
 
-                    <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                        Chủ đề bài tập
+                    {/* Row 1: Topic full width */}
+                    <div className="mb-4 space-y-1.5">
+                      <Label className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
+                        Chủ đề bài tập <span className="text-red-400">*</span>
                       </Label>
                       <Input
                         value={aiTopic}
                         onChange={(e) => setAiTopic(e.target.value)}
-                        placeholder="Ví dụ: Tìm số lớn thứ hai trong mảng, Đảo ngược danh sách liên kết..."
+                        onKeyDown={(e) => e.key === "Enter" && handleAiGenerate()}
+                        placeholder="Ví dụ: Tìm số lớn thứ hai trong mảng, Đảo ngược chuỗi..."
                         className="h-10 bg-white text-xs dark:bg-slate-950"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                          Độ khó mong muốn
+                    {/* Row 2: Difficulty + Level */}
+                    <div className="mb-4 grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
+                          Độ khó
                         </Label>
-                        <select
+                        <StyledSelect
                           value={aiDifficulty}
-                          onChange={(e) =>
-                            setAiDifficulty(e.target.value as "EASY" | "MEDIUM" | "HARD")
-                          }
-                          className="dark:border-slate-850 flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 dark:bg-slate-950 dark:text-slate-200">
-                          <option value="EASY">Dễ (Easy)</option>
-                          <option value="MEDIUM">Trung bình (Medium)</option>
-                          <option value="HARD">Khó (Hard)</option>
-                        </select>
+                          onChange={(v) => setAiDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
+                          <option value="EASY">🟢 Dễ (Easy)</option>
+                          <option value="MEDIUM">🟡 Trung bình (Medium)</option>
+                          <option value="HARD">🔴 Khó (Hard)</option>
+                        </StyledSelect>
                       </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
                           Cấp độ ứng viên
                         </Label>
-                        <select
-                          value={aiLevel}
-                          onChange={(e) => setAiLevel(e.target.value)}
-                          className="dark:border-slate-850 flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 dark:bg-slate-950 dark:text-slate-200">
-                          <option value="Intern">Intern</option>
-                          <option value="Junior">Junior</option>
-                          <option value="Senior">Senior</option>
-                        </select>
+                        <StyledSelect value={aiLevel} onChange={setAiLevel}>
+                          <option value="Intern">🌱 Intern</option>
+                          <option value="Junior">⚡ Junior</option>
+                          <option value="Senior">🔥 Senior</option>
+                        </StyledSelect>
                       </div>
                     </div>
 
-                    <div className="dark:border-slate-850 my-2 border-t border-slate-100" />
-
-                    <div className="space-y-3">
-                      <h4 className="text-[11px] font-bold tracking-wider text-slate-500 uppercase">
-                        Ngữ cảnh bổ sung
-                      </h4>
-
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                          Vị trí công việc (Job Title)
-                        </Label>
-                        <Input
-                          value={aiContext.jobTitle}
-                          onChange={(e) => setAiContext({ ...aiContext, jobTitle: e.target.value })}
-                          placeholder="Ví dụ: Backend Developer (Java), Frontend Developer (React)..."
-                          className="h-9 bg-white text-xs dark:bg-slate-950"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                          Yêu cầu đặc biệt (Requirement)
-                        </Label>
-                        <Input
-                          value={aiContext.requirement}
-                          onChange={(e) =>
-                            setAiContext({ ...aiContext, requirement: e.target.value })
-                          }
-                          placeholder="Ví dụ: Không dùng thư viện sort sẵn có, tối ưu O(N)..."
-                          className="h-9 bg-white text-xs dark:bg-slate-950"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                          Gợi ý prompt (Prompting)
-                        </Label>
-                        <textarea
-                          value={aiContext.prompting}
-                          onChange={(e) =>
-                            setAiContext({ ...aiContext, prompting: e.target.value })
-                          }
-                          rows={2}
-                          placeholder="Bổ sung thêm hướng dẫn hoặc mô tả phong cách ra đề của bạn..."
-                          className="dark:border-slate-850 flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 dark:bg-slate-950 dark:text-slate-200"
-                        />
-                      </div>
+                    {/* Row 3: Requirement */}
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
+                        Yêu cầu đặc biệt (tuỳ chọn)
+                      </Label>
+                      <Input
+                        value={aiRequirement}
+                        onChange={(e) => setAiRequirement(e.target.value)}
+                        placeholder="Ví dụ: Không dùng sort, độ phức tạp O(N log N)..."
+                        className="h-9 bg-white text-xs dark:bg-slate-950"
+                      />
                     </div>
                   </div>
 
-                  {/* AI Generation action */}
-                  <div className="flex justify-end gap-2 border-t border-slate-100 pt-2 dark:border-slate-800">
+                  <div className="flex justify-end">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setRightView("idle");
-                      }}
-                      className="h-9 border-slate-200 text-xs dark:border-slate-800">
+                      onClick={() => setRightView("idle")}
+                      className="h-8 text-xs text-slate-400 hover:text-slate-600">
                       Hủy
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={isGenerating}
-                      onClick={handleAiGenerate}
-                      className="bg-indigo-650 h-9 px-5 text-xs text-white hover:bg-indigo-700 disabled:opacity-60">
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                          AI đang sinh đề bài...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="mr-1.5 h-3.5 w-3.5" />
-                          Sinh đề với AI
-                        </>
-                      )}
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* View 2: Redesigned Grouped Form (Shown if manual mode, or AI mode and AI response is loaded) */}
+              {/* View 2: Redesigned Grouped Form */}
               {(creationMode === "manual" || (creationMode === "ai" && aiGeneratedLoaded)) && (
                 <div className="flex min-h-0 flex-1 flex-col space-y-4">
                   {creationMode === "ai" && aiGeneratedLoaded && (
@@ -1071,12 +1107,13 @@ export function CodingEditor({
                   )}
 
                   {/* Form Scroll Area */}
-                  <div className="flex-1 space-y-5 overflow-y-auto pr-1">
+                  <div className="flex-1 space-y-4 overflow-y-auto pr-1">
                     {/* SECTION 1: THÔNG TIN CHUNG */}
-                    <div className="dark:border-slate-850 space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:bg-slate-950/20">
-                      <h4 className="text-indigo-650 dark:border-slate-850 border-b border-slate-100 pb-1.5 text-xs font-bold tracking-wider uppercase dark:text-indigo-400">
+                    <div className="space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/20">
+                      <h4 className="border-b border-slate-100 pb-2 text-[11px] font-bold tracking-wider text-indigo-600 uppercase dark:border-slate-800 dark:text-indigo-400">
                         1. Thông tin chung
                       </h4>
+
                       <div className="grid grid-cols-12 gap-3">
                         <div className="col-span-8 space-y-1">
                           <Label className="text-[10px] font-bold text-slate-400 uppercase">
@@ -1095,19 +1132,18 @@ export function CodingEditor({
                           <Label className="text-[10px] font-bold text-slate-400 uppercase">
                             Độ khó
                           </Label>
-                          <select
+                          <StyledSelect
                             value={newProblem.difficulty}
-                            onChange={(e) =>
+                            onChange={(v) =>
                               setNewProblem({
                                 ...newProblem,
-                                difficulty: e.target.value as "EASY" | "MEDIUM" | "HARD",
+                                difficulty: v as "EASY" | "MEDIUM" | "HARD",
                               })
-                            }
-                            className="dark:border-slate-850 flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 dark:bg-slate-950 dark:text-slate-200">
-                            <option value="EASY">Dễ</option>
-                            <option value="MEDIUM">Trung bình</option>
-                            <option value="HARD">Khó</option>
-                          </select>
+                            }>
+                            <option value="EASY">🟢 Dễ</option>
+                            <option value="MEDIUM">🟡 Trung bình</option>
+                            <option value="HARD">🔴 Khó</option>
+                          </StyledSelect>
                         </div>
                       </div>
 
@@ -1122,137 +1158,213 @@ export function CodingEditor({
                           }
                           rows={4}
                           placeholder="Mô tả bài toán, quy tắc, hướng dẫn..."
-                          className="dark:border-slate-850 flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-sans text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-indigo-500 dark:bg-slate-950 dark:text-slate-200"
+                          className="flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-sans text-xs shadow-sm transition-colors focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
                         />
                       </div>
                     </div>
 
-                    {/* SECTION 2: CHỮ KÝ HÀM & GIỚI HẠN */}
-                    <div className="dark:border-slate-850 space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:bg-slate-950/20">
-                      <h4 className="text-indigo-650 dark:border-slate-850 border-b border-slate-100 pb-1.5 text-xs font-bold tracking-wider uppercase dark:text-indigo-400">
-                        2. Cấu hình & Giới hạn chạy
+                    {/* SECTION 2: CẤU HÌNH & GIỚI HẠN */}
+                    <div className="space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/20">
+                      <h4 className="border-b border-slate-100 pb-2 text-[11px] font-bold tracking-wider text-indigo-600 uppercase dark:border-slate-800 dark:text-indigo-400">
+                        2. Cấu hình & Giới hạn
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                            Kiểu dữ liệu tham số (Param Types)
-                          </Label>
-                          <Input
-                            value={newProblem.paramTypes.join(", ")}
-                            onChange={(e) =>
-                              setNewProblem({
-                                ...newProblem,
-                                paramTypes: e.target.value
-                                  .split(",")
-                                  .map((s) => s.trim())
-                                  .filter(Boolean),
-                              })
-                            }
-                            placeholder="Ví dụ: int[], int"
-                            className="h-9 text-xs"
-                          />
-                          <p className="text-[9px] text-slate-400 italic">Cách nhau bởi dấu phẩy</p>
-                        </div>
 
-                        <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                            Kiểu trả về (Return Type)
-                          </Label>
-                          <Input
-                            value={newProblem.returnType}
-                            onChange={(e) =>
-                              setNewProblem({ ...newProblem, returnType: e.target.value })
-                            }
-                            placeholder="Ví dụ: int[]"
-                            className="h-9 text-xs"
-                          />
+                      {/* Param types as tags */}
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                          Kiểu dữ liệu tham số đầu vào (Param Types)
+                        </Label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {newProblem.paramTypes.map((pt, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-indigo-200 ring-inset dark:bg-indigo-950/30 dark:text-indigo-300 dark:ring-indigo-800">
+                              {pt}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveParamType(i)}
+                                className="ml-0.5 rounded hover:text-red-500">
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <StyledSelect
+                            value=""
+                            onChange={(v) => v && handleAddParamType(v)}
+                            className="flex-1">
+                            <option value="">+ Chọn kiểu từ danh sách...</option>
+                            {PARAM_TYPE_OPTIONS.filter(
+                              (t) => !newProblem.paramTypes.includes(t)
+                            ).map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </StyledSelect>
+                          <div className="flex gap-1.5">
+                            <Input
+                              value={customParamType}
+                              onChange={(e) => setCustomParamType(e.target.value)}
+                              onKeyDown={(e) =>
+                                e.key === "Enter" && handleAddParamType(customParamType)
+                              }
+                              placeholder="Tuỳ chỉnh..."
+                              className="h-9 w-32 text-xs"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAddParamType(customParamType)}
+                              className="h-9 px-2 text-xs">
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
+                      {/* Return type dropdown */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] font-bold text-slate-400 uppercase">
+                          Kiểu trả về (Return Type)
+                        </Label>
+                        <div className="flex gap-2">
+                          <StyledSelect
+                            value={
+                              RETURN_TYPE_OPTIONS.includes(newProblem.returnType)
+                                ? newProblem.returnType
+                                : ""
+                            }
+                            onChange={(v) => {
+                              if (v) setNewProblem({ ...newProblem, returnType: v });
+                            }}
+                            className="flex-1">
+                            <option value="">Chọn kiểu trả về...</option>
+                            {RETURN_TYPE_OPTIONS.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </StyledSelect>
+                          <Input
+                            value={customReturnType}
+                            onChange={(e) => {
+                              setCustomReturnType(e.target.value);
+                              setNewProblem({ ...newProblem, returnType: e.target.value });
+                            }}
+                            placeholder="Hoặc nhập tuỳ chỉnh..."
+                            className="h-9 w-40 text-xs"
+                          />
+                        </div>
+                        {newProblem.returnType && (
+                          <p className="text-[10px] text-slate-400">
+                            Đã chọn:{" "}
+                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                              {newProblem.returnType}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Execution limits */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <Label className="text-[10px] font-bold text-slate-400 uppercase">
                             Giới hạn thời gian (ms)
                           </Label>
-                          <Input
-                            type="number"
-                            value={newProblem.executionTimeLimitMs}
-                            onChange={(e) =>
+                          <StyledSelect
+                            value={String(newProblem.executionTimeLimitMs)}
+                            onChange={(v) =>
                               setNewProblem({
                                 ...newProblem,
-                                executionTimeLimitMs: Number(e.target.value),
+                                executionTimeLimitMs: Number(v),
                               })
-                            }
-                            placeholder="1000"
-                            className="h-9 text-xs"
-                          />
+                            }>
+                            <option value="500">500 ms</option>
+                            <option value="1000">1,000 ms</option>
+                            <option value="2000">2,000 ms</option>
+                            <option value="3000">3,000 ms</option>
+                            <option value="5000">5,000 ms</option>
+                          </StyledSelect>
                         </div>
-
                         <div className="space-y-1">
                           <Label className="text-[10px] font-bold text-slate-400 uppercase">
                             Giới hạn bộ nhớ (MB)
                           </Label>
-                          <Input
-                            type="number"
-                            value={newProblem.memoryLimitMb}
-                            onChange={(e) =>
-                              setNewProblem({
-                                ...newProblem,
-                                memoryLimitMb: Number(e.target.value),
-                              })
-                            }
-                            placeholder="256"
-                            className="h-9 text-xs"
-                          />
+                          <StyledSelect
+                            value={String(newProblem.memoryLimitMb)}
+                            onChange={(v) =>
+                              setNewProblem({ ...newProblem, memoryLimitMb: Number(v) })
+                            }>
+                            <option value="128">128 MB</option>
+                            <option value="256">256 MB</option>
+                            <option value="512">512 MB</option>
+                            <option value="1024">1,024 MB</option>
+                          </StyledSelect>
                         </div>
                       </div>
 
-                      <div className="space-y-1">
+                      {/* Constraints as tags */}
+                      <div className="space-y-2">
                         <Label className="text-[10px] font-bold text-slate-400 uppercase">
-                          Ràng buộc & Quy tắc (Constraints)
+                          Ràng buộc & Quy tắc
                         </Label>
-                        <Input
-                          value={newProblem.rulesAndConstraints.join("; ")}
-                          onChange={(e) =>
-                            setNewProblem({
-                              ...newProblem,
-                              rulesAndConstraints: e.target.value
-                                .split(";")
-                                .map((s) => s.trim())
-                                .filter(Boolean),
-                            })
-                          }
-                          placeholder="Ví dụ: nums.length <= 10^4; target <= 10^9"
-                          className="h-9 text-xs"
-                        />
-                        <p className="text-[9px] text-slate-400 italic">
-                          Cách nhau bằng dấu chấm phẩy (;)
-                        </p>
                         {newProblem.rulesAndConstraints.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {newProblem.rulesAndConstraints.map((constraint, idx) => (
+                          <div className="flex flex-wrap gap-1.5">
+                            {newProblem.rulesAndConstraints.map((c, i) => (
                               <span
-                                key={idx}
-                                className="inline-flex items-center rounded-md bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-500/10 ring-inset dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800">
-                                {constraint}
+                                key={i}
+                                className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-700 ring-1 ring-slate-200 ring-inset dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700">
+                                {c}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveConstraint(i)}
+                                  className="rounded hover:text-red-500">
+                                  <X className="h-2.5 w-2.5" />
+                                </button>
                               </span>
                             ))}
                           </div>
                         )}
+                        <div className="flex gap-2">
+                          <Input
+                            value={constraintInput}
+                            onChange={(e) => setConstraintInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddConstraint(constraintInput);
+                              }
+                            }}
+                            placeholder="Ví dụ: nums.length <= 10^4 (Enter để thêm)"
+                            className="h-9 flex-1 text-xs"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddConstraint(constraintInput)}
+                            className="h-9 px-3 text-xs">
+                            <Plus className="mr-1 h-3 w-3" />
+                            Thêm
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
                     {/* SECTION 3: VÍ DỤ MẪU */}
-                    <div className="dark:border-slate-850 space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:bg-slate-950/20">
-                      <div className="dark:border-slate-850 flex items-center justify-between border-b border-slate-100 pb-1.5">
-                        <h4 className="text-indigo-650 text-xs font-bold tracking-wider uppercase dark:text-indigo-400">
+                    <div className="space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/20">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                        <h4 className="text-[11px] font-bold tracking-wider text-indigo-600 uppercase dark:text-indigo-400">
                           3. Ví dụ mẫu ({newProblem.visibleExamples.length})
                         </h4>
                         <Button
                           type="button"
                           variant="ghost"
                           onClick={handleAddExample}
-                          className="h-6 text-[10px] text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                          className="h-6 text-[10px] text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400">
                           <Plus className="mr-1 h-3 w-3" />
                           Thêm ví dụ
                         </Button>
@@ -1262,23 +1374,22 @@ export function CodingEditor({
                         {newProblem.visibleExamples.map((ex, idx) => (
                           <div
                             key={idx}
-                            className="relative space-y-2 rounded-lg border border-slate-100 bg-slate-50/40 p-3.5 dark:border-slate-800 dark:bg-slate-900/20">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveExample(idx)}
-                              className="absolute top-2.5 right-2.5 text-slate-400 hover:text-red-500"
-                              title="Xóa ví dụ">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-
-                            <div className="text-[10px] font-bold text-slate-500 uppercase">
-                              Ví dụ #{idx + 1}
+                            className="relative rounded-lg border border-slate-100 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-900/20">
+                            <div className="mb-2.5 flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                Ví dụ #{idx + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveExample(idx)}
+                                className="rounded p-0.5 text-slate-300 hover:bg-red-50 hover:text-red-500 dark:text-slate-600">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
                             </div>
-
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <Label className="text-[9px] font-semibold text-slate-400">
-                                  Đầu vào (inputs)
+                                <Label className="text-[9px] font-bold text-slate-400 uppercase">
+                                  Input
                                 </Label>
                                 <Input
                                   value={ex.inputs?.join(", ") || ""}
@@ -1293,13 +1404,13 @@ export function CodingEditor({
                                     };
                                     setNewProblem({ ...newProblem, visibleExamples: list });
                                   }}
-                                  placeholder="Ví dụ: [2, 7], 9"
-                                  className="h-8 bg-white text-xs dark:bg-slate-950"
+                                  placeholder="[2, 7], 9"
+                                  className="h-8 bg-white font-mono text-xs dark:bg-slate-950"
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label className="text-[9px] font-semibold text-slate-400">
-                                  Đầu ra (output)
+                                <Label className="text-[9px] font-bold text-slate-400 uppercase">
+                                  Output
                                 </Label>
                                 <Input
                                   value={ex.output}
@@ -1308,15 +1419,14 @@ export function CodingEditor({
                                     list[idx] = { ...list[idx], output: e.target.value };
                                     setNewProblem({ ...newProblem, visibleExamples: list });
                                   }}
-                                  placeholder="Ví dụ: [0, 1]"
-                                  className="h-8 bg-white text-xs dark:bg-slate-950"
+                                  placeholder="[0, 1]"
+                                  className="h-8 bg-white font-mono text-xs dark:bg-slate-950"
                                 />
                               </div>
                             </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-[9px] font-semibold text-slate-400">
-                                Giải thích (Explanation)
+                            <div className="mt-2 space-y-1">
+                              <Label className="text-[9px] font-bold text-slate-400 uppercase">
+                                Giải thích
                               </Label>
                               <Input
                                 value={ex.explanation}
@@ -1334,97 +1444,106 @@ export function CodingEditor({
                       </div>
                     </div>
 
-                    {/* SECTION 4: TESTCASES ẨN */}
-                    <div className="dark:border-slate-850 space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:bg-slate-950/20">
-                      <div className="dark:border-slate-850 flex items-center justify-between border-b border-slate-100 pb-1.5">
-                        <h4 className="text-indigo-650 text-xs font-bold tracking-wider uppercase dark:text-indigo-400">
-                          4. Bộ Test Case ẩn chấm điểm ({newProblem.hiddenTestCases.length})
+                    {/* SECTION 4: TEST CASES ẨN */}
+                    <div className="space-y-3 rounded-xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/20">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                        <h4 className="text-[11px] font-bold tracking-wider text-indigo-600 uppercase dark:text-indigo-400">
+                          4. Test Cases ẩn chấm điểm ({newProblem.hiddenTestCases.length})
                         </h4>
                         <Button
                           type="button"
                           variant="ghost"
                           onClick={handleAddTestCase}
-                          className="h-6 text-[10px] text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                          className="h-6 text-[10px] text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400">
                           <Plus className="mr-1 h-3 w-3" />
-                          Thêm Test Case
+                          Thêm TC
                         </Button>
                       </div>
 
-                      <div className="space-y-2.5">
+                      {/* Compact table-like layout */}
+                      <div className="overflow-hidden rounded-lg border border-slate-100 dark:border-slate-800">
+                        {/* Header */}
+                        <div className="grid grid-cols-12 gap-0 border-b border-slate-100 bg-slate-50 px-3 py-2 text-[9px] font-bold tracking-wider text-slate-400 uppercase dark:border-slate-800 dark:bg-slate-900">
+                          <div className="col-span-1">#</div>
+                          <div className="col-span-5">Input</div>
+                          <div className="col-span-4">Expected Output</div>
+                          <div className="col-span-1 text-center">Pts</div>
+                          <div className="col-span-1"></div>
+                        </div>
+
                         {newProblem.hiddenTestCases.map((tc, idx) => (
                           <div
                             key={idx}
-                            className="relative space-y-2.5 rounded-lg border border-slate-100 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/20">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveTestCase(idx)}
-                              className="absolute top-2.5 right-2.5 text-slate-400 hover:text-red-500"
-                              title="Xóa Test Case">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-
-                            <div className="text-[10px] font-bold text-slate-500 uppercase">
-                              Test Case #{idx + 1}
+                            className={cn(
+                              "grid grid-cols-12 items-center gap-0 px-3 py-2",
+                              idx % 2 === 0
+                                ? "bg-white dark:bg-slate-950/20"
+                                : "bg-slate-50/60 dark:bg-slate-900/20"
+                            )}>
+                            <div className="col-span-1 text-[10px] font-bold text-slate-400">
+                              {idx + 1}
                             </div>
-
-                            <div className="grid grid-cols-12 items-end gap-3">
-                              <div className="col-span-5 space-y-1">
-                                <Label className="text-[9px] font-semibold text-slate-400">
-                                  Đầu vào ẩn (inputs)
-                                </Label>
-                                <Input
-                                  value={tc.inputs?.join(", ") || ""}
-                                  onChange={(e) => {
-                                    const list = [...newProblem.hiddenTestCases];
-                                    list[idx] = {
-                                      ...list[idx],
-                                      inputs: e.target.value
-                                        .split(",")
-                                        .map((s) => s.trim())
-                                        .filter(Boolean),
-                                    };
-                                    setNewProblem({ ...newProblem, hiddenTestCases: list });
-                                  }}
-                                  placeholder="Ví dụ: [3, 2, 4], 6"
-                                  className="h-8 bg-white text-xs dark:bg-slate-950"
-                                />
-                              </div>
-                              <div className="col-span-5 space-y-1">
-                                <Label className="text-[9px] font-semibold text-slate-400">
-                                  Đầu ra ẩn (expectedOutput)
-                                </Label>
-                                <Input
-                                  value={tc.expectedOutput}
-                                  onChange={(e) => {
-                                    const list = [...newProblem.hiddenTestCases];
-                                    list[idx] = { ...list[idx], expectedOutput: e.target.value };
-                                    setNewProblem({ ...newProblem, hiddenTestCases: list });
-                                  }}
-                                  placeholder="Ví dụ: [1, 2]"
-                                  className="h-8 bg-white text-xs dark:bg-slate-950"
-                                />
-                              </div>
-                              <div className="col-span-2 space-y-1">
-                                <Label className="text-[9px] font-semibold text-slate-400">
-                                  Điểm số
-                                </Label>
-                                <Input
-                                  type="number"
-                                  value={tc.weightPoints}
-                                  onChange={(e) => {
-                                    const list = [...newProblem.hiddenTestCases];
-                                    list[idx] = {
-                                      ...list[idx],
-                                      weightPoints: Number(e.target.value),
-                                    };
-                                    setNewProblem({ ...newProblem, hiddenTestCases: list });
-                                  }}
-                                  className="h-8 bg-white text-center text-xs dark:bg-slate-950"
-                                />
-                              </div>
+                            <div className="col-span-5 pr-2">
+                              <Input
+                                value={tc.inputs?.join(", ") || ""}
+                                onChange={(e) => {
+                                  const list = [...newProblem.hiddenTestCases];
+                                  list[idx] = {
+                                    ...list[idx],
+                                    inputs: e.target.value
+                                      .split(",")
+                                      .map((s) => s.trim())
+                                      .filter(Boolean),
+                                  };
+                                  setNewProblem({ ...newProblem, hiddenTestCases: list });
+                                }}
+                                placeholder="[3, 2, 4], 6"
+                                className="h-7 bg-white font-mono text-[11px] dark:bg-slate-950"
+                              />
+                            </div>
+                            <div className="col-span-4 pr-2">
+                              <Input
+                                value={tc.expectedOutput}
+                                onChange={(e) => {
+                                  const list = [...newProblem.hiddenTestCases];
+                                  list[idx] = { ...list[idx], expectedOutput: e.target.value };
+                                  setNewProblem({ ...newProblem, hiddenTestCases: list });
+                                }}
+                                placeholder="[1, 2]"
+                                className="h-7 bg-white font-mono text-[11px] dark:bg-slate-950"
+                              />
+                            </div>
+                            <div className="col-span-1 pr-1">
+                              <Input
+                                type="number"
+                                value={tc.weightPoints}
+                                onChange={(e) => {
+                                  const list = [...newProblem.hiddenTestCases];
+                                  list[idx] = {
+                                    ...list[idx],
+                                    weightPoints: Number(e.target.value),
+                                  };
+                                  setNewProblem({ ...newProblem, hiddenTestCases: list });
+                                }}
+                                className="h-7 [appearance:textfield] bg-white text-center text-[11px] dark:bg-slate-950 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                              />
+                            </div>
+                            <div className="col-span-1 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveTestCase(idx)}
+                                className="rounded p-0.5 text-slate-300 hover:bg-red-50 hover:text-red-500 dark:text-slate-600">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
                             </div>
                           </div>
                         ))}
+
+                        {newProblem.hiddenTestCases.length === 0 && (
+                          <div className="py-6 text-center text-[11px] text-slate-400 italic">
+                            Chưa có test case. Nhấn &quot;Thêm TC&quot; để thêm.
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
