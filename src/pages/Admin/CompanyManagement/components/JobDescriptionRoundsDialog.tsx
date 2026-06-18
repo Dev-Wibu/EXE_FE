@@ -273,6 +273,7 @@ export function JobDescriptionRoundsDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasExistingRounds, setHasExistingRounds] = useState(false);
+  const codingEditorRef = useRef<{ saveCurrentProblem: () => Promise<boolean> }>(null);
 
   // Unsaved changes tracking states
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -1428,6 +1429,7 @@ export function JobDescriptionRoundsDialog({
                         />
                       ) : selectedRound.roundType === "CODING" ? (
                         <CodingEditor
+                          ref={codingEditorRef}
                           codingProblemsId={selectedRound.configData?.codingProblemsId || []}
                           codingProblems={selectedRound.configData?.codingProblems || []}
                           onChange={(ids, problems) => {
@@ -1630,6 +1632,21 @@ export function JobDescriptionRoundsDialog({
                           </div>
                         </div>
                       )}
+                    </div>
+                    <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+                      <Button
+                        type="button"
+                        className="h-9 bg-indigo-600 px-4 text-xs font-bold text-white shadow-md hover:bg-indigo-700"
+                        onClick={async () => {
+                          if (codingEditorRef.current) {
+                            const saved = await codingEditorRef.current.saveCurrentProblem();
+                            if (!saved) return;
+                          }
+                          setConfigModalOpen(false);
+                          setSelectedRoundIndex(null);
+                        }}>
+                        Xác nhận thiết lập vòng
+                      </Button>
                     </div>
                   </DialogContent>
                 </Dialog>

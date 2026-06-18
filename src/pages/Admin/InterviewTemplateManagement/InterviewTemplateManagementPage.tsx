@@ -273,6 +273,7 @@ export function InterviewTemplateManagementPage() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [isSaving, setIsSaving] = useState(false);
+  const codingEditorRef = useRef<{ saveCurrentProblem: () => Promise<boolean> }>(null);
 
   // Unsaved changes tracking states
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -1581,6 +1582,7 @@ export function InterviewTemplateManagementPage() {
                 />
               ) : selectedRound.roundType === "CODING" ? (
                 <CodingEditor
+                  ref={codingEditorRef}
                   codingProblemsId={selectedRound.configData?.codingProblemsId || []}
                   codingProblems={selectedRound.configData?.codingProblems || []}
                   onChange={(ids, problems) => {
@@ -1872,7 +1874,11 @@ export function InterviewTemplateManagementPage() {
               <Button
                 type="button"
                 className="h-9 bg-indigo-600 px-4 text-xs font-bold text-white shadow-md hover:bg-indigo-700"
-                onClick={() => {
+                onClick={async () => {
+                  if (codingEditorRef.current) {
+                    const saved = await codingEditorRef.current.saveCurrentProblem();
+                    if (!saved) return;
+                  }
                   setConfigModalOpen(false);
                   setSelectedRoundIndex(null);
                 }}>
