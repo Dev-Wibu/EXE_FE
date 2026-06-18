@@ -276,9 +276,9 @@ export function JobDescriptionRoundsDialog({
 
   // Unsaved changes tracking states
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const initialRoundsRef = React.useRef<string>("");
+  const initialRoundsRef = useRef<string>("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       initialRoundsRef.current = JSON.stringify(rounds);
     }

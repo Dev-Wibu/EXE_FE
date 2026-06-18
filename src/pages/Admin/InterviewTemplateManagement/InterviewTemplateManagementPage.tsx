@@ -276,7 +276,7 @@ export function InterviewTemplateManagementPage() {
 
   // Unsaved changes tracking states
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const initialDataRef = React.useRef<{
+  const initialDataRef = useRef<{
     rounds: string;
     name: string;
     category: string;
@@ -288,7 +288,7 @@ export function InterviewTemplateManagementPage() {
     desc: "",
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isEditorOpen) {
       initialDataRef.current = {
         rounds: JSON.stringify(rounds),
