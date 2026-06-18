@@ -274,6 +274,39 @@ export function InterviewTemplateManagementPage() {
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Unsaved changes tracking states
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const initialDataRef = React.useRef<{
+    rounds: string;
+    name: string;
+    category: string;
+    desc: string;
+  }>({
+    rounds: "",
+    name: "",
+    category: "",
+    desc: "",
+  });
+
+  React.useEffect(() => {
+    if (isEditorOpen) {
+      initialDataRef.current = {
+        rounds: JSON.stringify(rounds),
+        name: templateName,
+        category: templateCategory,
+        desc: templateDescription,
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditorOpen]);
+
+  const hasUnsavedChanges =
+    isEditorOpen &&
+    (JSON.stringify(rounds) !== initialDataRef.current.rounds ||
+      templateName !== initialDataRef.current.name ||
+      templateCategory !== initialDataRef.current.category ||
+      templateDescription !== initialDataRef.current.desc);
+
   // Drag and drop states
   const [activeDragType, setActiveDragType] = useState<RoundType | null>(null);
   const [dragOverGap, setDragOverGap] = useState<number | null>(null);
@@ -1104,8 +1137,17 @@ export function InterviewTemplateManagementPage() {
         )}
       </main>
 
-      {/* 3. PREMIUM CANVAS DRAG AND DROP EDITOR DIALOG */}
-      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+      <Dialog
+        open={isEditorOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (hasUnsavedChanges) {
+              setShowExitConfirm(true);
+            } else {
+              setIsEditorOpen(false);
+            }
+          }
+        }}>
         <DialogContent
           showCloseButton={false}
           className="flex h-[95vh] max-h-[95vh] w-[98vw] max-w-[98vw] flex-row gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
@@ -1429,7 +1471,13 @@ export function InterviewTemplateManagementPage() {
               <Button
                 variant="outline"
                 className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
-                onClick={() => setIsEditorOpen(false)}>
+                onClick={() => {
+                  if (hasUnsavedChanges) {
+                    setShowExitConfirm(true);
+                  } else {
+                    setIsEditorOpen(false);
+                  }
+                }}>
                 Hủy
               </Button>
               <Button
@@ -1820,25 +1868,59 @@ export function InterviewTemplateManagementPage() {
               )}
             </div>
 
-            {!isEditorOpen && (
-              <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900/50">
-                <Button
-                  variant="outline"
-                  className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
-                  onClick={() => {
-                    setConfigModalOpen(false);
-                    setSelectedRoundIndex(null);
-                  }}>
-                  Hủy
-                </Button>
-                <Button
-                  onClick={handleSaveTemplate}
-                  disabled={isSaving}
-                  className="bg-indigo-600 font-bold text-white shadow-md hover:bg-indigo-700">
-                  {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
-                </Button>
-              </div>
-            )}
+            <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900/50">
+              <Button
+                type="button"
+                className="h-9 bg-indigo-600 px-4 text-xs font-bold text-white shadow-md hover:bg-indigo-700"
+                onClick={() => {
+                  setConfigModalOpen(false);
+                  setSelectedRoundIndex(null);
+                }}>
+                Xác nhận thiết lập vòng
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {showExitConfirm && (
+        <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+          <DialogContent className="max-w-md border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              Thay đổi chưa được lưu
+            </h3>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Bạn có các thay đổi chưa được lưu trong quy trình tuyển dụng này. Bạn có muốn lưu lại
+              thiết lập phỏng vấn trước khi thoát không?
+            </p>
+            <div className="mt-5 flex justify-end gap-2.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                onClick={() => setShowExitConfirm(false)}>
+                Quay lại
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hover:bg-red-55 hover:text-red-650 h-8 border-red-200 text-xs text-red-500 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  setIsEditorOpen(false);
+                }}>
+                Không lưu
+              </Button>
+              <Button
+                size="sm"
+                className="bg-indigo-650 h-8 px-3.5 text-xs text-white hover:bg-indigo-700"
+                onClick={async () => {
+                  setShowExitConfirm(false);
+                  await handleSaveTemplate();
+                }}>
+                Lưu và Thoát
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       )}

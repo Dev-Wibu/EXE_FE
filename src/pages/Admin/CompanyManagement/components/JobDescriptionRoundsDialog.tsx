@@ -273,6 +273,19 @@ export function JobDescriptionRoundsDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasExistingRounds, setHasExistingRounds] = useState(false);
+
+  // Unsaved changes tracking states
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const initialRoundsRef = React.useRef<string>("");
+
+  React.useEffect(() => {
+    if (isOpen) {
+      initialRoundsRef.current = JSON.stringify(rounds);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  const hasUnsavedChanges = isOpen && JSON.stringify(rounds) !== initialRoundsRef.current;
   const [availableTypes, setAvailableTypes] = useState<RoundType[]>([]);
 
   // Templates management states
@@ -890,7 +903,17 @@ export function JobDescriptionRoundsDialog({
   const selectedRound = selectedRoundIndex !== null ? rounds[selectedRoundIndex] : null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          if (hasUnsavedChanges) {
+            setShowExitConfirm(true);
+          } else {
+            onOpenChange(false);
+          }
+        }
+      }}>
       <DialogContent
         showCloseButton={false}
         className="flex h-[95vh] max-h-[95vh] w-[98vw] max-w-[98vw] flex-row gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
@@ -1692,7 +1715,13 @@ export function JobDescriptionRoundsDialog({
                 <Button
                   variant="outline"
                   className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
-                  onClick={() => onOpenChange(false)}>
+                  onClick={() => {
+                    if (hasUnsavedChanges) {
+                      setShowExitConfirm(true);
+                    } else {
+                      onOpenChange(false);
+                    }
+                  }}>
                   Hủy
                 </Button>
                 <Button
@@ -1707,6 +1736,48 @@ export function JobDescriptionRoundsDialog({
           </>
         )}
       </DialogContent>
+
+      {showExitConfirm && (
+        <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+          <DialogContent className="max-w-md border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              Thay đổi chưa được lưu
+            </h3>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Bạn có các thay đổi chưa được lưu trong quy trình tuyển dụng này. Bạn có muốn lưu lại
+              thiết lập trước khi thoát không?
+            </p>
+            <div className="mt-5 flex justify-end gap-2.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                onClick={() => setShowExitConfirm(false)}>
+                Quay lại
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hover:bg-red-55 hover:text-red-655 h-8 border-red-200 text-xs text-red-500 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  onOpenChange(false);
+                }}>
+                Không lưu
+              </Button>
+              <Button
+                size="sm"
+                className="bg-indigo-650 h-8 px-3.5 text-xs text-white hover:bg-indigo-700"
+                onClick={async () => {
+                  setShowExitConfirm(false);
+                  await handleSave();
+                }}>
+                Lưu và Thoát
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }

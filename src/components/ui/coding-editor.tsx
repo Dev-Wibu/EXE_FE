@@ -174,6 +174,19 @@ export function CodingEditor({
   // Edit and Custom Dropdown states
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [isReturnDropdownOpen, setIsReturnDropdownOpen] = React.useState(false);
+  const returnDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (returnDropdownRef.current && !returnDropdownRef.current.contains(event.target as Node)) {
+        setIsReturnDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleAddExample = () => {
     setNewProblem((prev) => ({
@@ -1307,7 +1320,7 @@ export function CodingEditor({
                           Kiểu trả về (Return Type)
                         </Label>
 
-                        <div className="relative">
+                        <div ref={returnDropdownRef} className="relative">
                           <button
                             type="button"
                             onClick={() => setIsReturnDropdownOpen(!isReturnDropdownOpen)}
@@ -1335,37 +1348,31 @@ export function CodingEditor({
                           </button>
 
                           {isReturnDropdownOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-40"
-                                onClick={() => setIsReturnDropdownOpen(false)}
-                              />
-                              <div className="animate-in fade-in-50 slide-in-from-top-1 absolute top-full right-0 left-0 z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                                <div className="grid grid-cols-2 gap-1">
-                                  {RETURN_TYPE_OPTIONS.map((t) => {
-                                    const selected = newProblem.returnType === t;
-                                    return (
-                                      <button
-                                        key={t}
-                                        type="button"
-                                        onClick={() => {
-                                          setNewProblem({ ...newProblem, returnType: t });
-                                          setIsReturnDropdownOpen(false);
-                                        }}
-                                        className={cn(
-                                          "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11px] font-medium transition-all",
-                                          selected
-                                            ? "bg-emerald-500 text-white shadow-sm"
-                                            : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-900/60"
-                                        )}>
-                                        <span>{t}</span>
-                                        {selected && <Check className="h-3 w-3" />}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
+                            <div className="animate-in fade-in-50 slide-in-from-top-1 absolute top-full right-0 left-0 z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-950">
+                              <div className="grid grid-cols-2 gap-1">
+                                {RETURN_TYPE_OPTIONS.map((t) => {
+                                  const selected = newProblem.returnType === t;
+                                  return (
+                                    <button
+                                      key={t}
+                                      type="button"
+                                      onClick={() => {
+                                        setNewProblem({ ...newProblem, returnType: t });
+                                        setIsReturnDropdownOpen(false);
+                                      }}
+                                      className={cn(
+                                        "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11px] font-medium transition-all",
+                                        selected
+                                          ? "bg-emerald-500 text-white shadow-sm"
+                                          : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-900/60"
+                                      )}>
+                                      <span>{t}</span>
+                                      {selected && <Check className="h-3 w-3" />}
+                                    </button>
+                                  );
+                                })}
                               </div>
-                            </>
+                            </div>
                           )}
                         </div>
                       </div>
