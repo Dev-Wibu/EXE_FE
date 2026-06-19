@@ -750,96 +750,6 @@ export const CodeReviewEditor = React.forwardRef<
                     </div>
                   </div>
                 )}
-
-                {/* AI Creation mode (AI input prompt) */}
-                {creationMode === "ai" && !aiGeneratedLoaded && (
-                  <div className="space-y-3.5 border-t border-slate-100 pt-3 dark:border-slate-800">
-                    <div className="flex items-center gap-1.5 font-sans text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                      <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
-                      Sinh đề bằng AI
-                    </div>
-
-                    <div className="space-y-3 font-sans text-xs">
-                      <div>
-                        <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                          Chủ đề/Lỗi bảo mật *
-                        </Label>
-                        <Input
-                          value={aiTopic}
-                          onChange={(e) => setAiTopic(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && handleAiGenerate()}
-                          placeholder="Ví dụ: SQL Injection, N+1 Query..."
-                          className="mt-1 h-8 border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-1.5">
-                        <div>
-                          <Label className="font-sans text-[9px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                            Độ khó
-                          </Label>
-                          <StyledSelect
-                            value={aiDifficulty}
-                            className="mt-1"
-                            onChange={(v) => setAiDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
-                            <option value="EASY">Dễ</option>
-                            <option value="MEDIUM">T.Bình</option>
-                            <option value="HARD">Khó</option>
-                          </StyledSelect>
-                        </div>
-                        <div>
-                          <Label className="font-sans text-[9px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                            N.Ngữ
-                          </Label>
-                          <StyledSelect
-                            value={aiLanguage}
-                            className="mt-1"
-                            onChange={setAiLanguage}>
-                            <option value="Java">Java</option>
-                            <option value="Javascript">JS</option>
-                            <option value="TypeScript">TS</option>
-                            <option value="Python">Py</option>
-                            <option value="C#">C#</option>
-                            <option value="SQL">SQL</option>
-                            <option value="Go">Go</option>
-                          </StyledSelect>
-                        </div>
-                        <div>
-                          <Label className="font-sans text-[9px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                            Cấp độ
-                          </Label>
-                          <StyledSelect value={aiLevel} className="mt-1" onChange={setAiLevel}>
-                            <option value="Intern">Intern</option>
-                            <option value="Junior">Junior</option>
-                            <option value="Senior">Senior</option>
-                          </StyledSelect>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                          Ngữ cảnh đặc biệt
-                        </Label>
-                        <textarea
-                          value={aiRequirement}
-                          onChange={(e) => setAiRequirement(e.target.value)}
-                          rows={4}
-                          placeholder="Mô tả context dự án hoặc hướng dẫn đặc biệt cho AI..."
-                          className="mt-1 flex max-h-[120px] w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
-                        />
-                      </div>
-
-                      <Button
-                        type="button"
-                        disabled={isGenerating}
-                        onClick={handleAiGenerate}
-                        className="mt-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 font-sans text-xs font-bold text-white shadow-sm hover:bg-indigo-700">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Bắt đầu sinh đề bài
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -1274,21 +1184,106 @@ export const CodeReviewEditor = React.forwardRef<
               <div className="flex flex-1 overflow-hidden">
                 {/* Mode AI View */}
                 {creationMode === "ai" && !aiGeneratedLoaded ? (
-                  <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-slate-900 p-6 text-center font-sans text-slate-100">
-                    <div className="max-w-md space-y-4">
-                      <div className="relative inline-flex items-center justify-center rounded-2xl border border-indigo-800/40 bg-indigo-950/40 p-4 text-indigo-400 shadow-inner">
-                        <Sparkles className="h-10 w-10 animate-pulse" />
-                        <Wand2 className="absolute -top-1 -right-1 h-5 w-5 text-emerald-400" />
+                  <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-slate-900 p-6 font-sans text-slate-100">
+                    <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950/40 p-8 shadow-2xl backdrop-blur-sm">
+                      <div className="mb-8 flex flex-col items-center space-y-4 text-center">
+                        <div className="relative inline-flex items-center justify-center rounded-2xl border border-indigo-800/40 bg-indigo-950/40 p-4 text-indigo-400 shadow-inner">
+                          <Sparkles className="h-10 w-10 animate-pulse text-indigo-400" />
+                          <Wand2 className="absolute -top-1 -right-1 h-5 w-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold tracking-wide text-white">
+                            Thiết Kế Đề Bài Bằng Trí Tuệ Nhân Tạo (AI)
+                          </h3>
+                          <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-400">
+                            Nhập các tham số thiết kế bên dưới. AI sẽ tự động tạo cấu trúc các file
+                            source code chứa lỗi logic/bảo mật, đồng thời thiết lập các bình luận
+                            chỉ định lỗi review mẫu.
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-slate-200">
-                          AI Sẵn Sàng Thiết Kế Mã Nguồn
-                        </h3>
-                        <p className="mt-2 font-sans text-xs leading-relaxed text-slate-400">
-                          Hãy cấu hình chủ đề, ngôn ngữ, độ khó và ngữ cảnh đặc biệt ở cột cấu hình
-                          bên trái, sau đó bấm <strong>"Bắt đầu sinh đề bài"</strong>. AI sẽ tự động
-                          tạo các file chứa lỗi và thiết lập lỗi mẫu tương ứng cho bạn.
-                        </p>
+
+                      <div className="space-y-4 text-left">
+                        <div>
+                          <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                            Chủ đề / Lỗi bảo mật cần review *
+                          </Label>
+                          <Input
+                            value={aiTopic}
+                            onChange={(e) => setAiTopic(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleAiGenerate()}
+                            placeholder="Ví dụ: Rò rỉ thông tin qua log, SQL Injection, N+1 Query..."
+                            className="mt-1.5 h-10 border-slate-800 bg-slate-950/60 px-3 text-xs text-white focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                              Độ khó bài tập
+                            </Label>
+                            <StyledSelect
+                              value={aiDifficulty}
+                              className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
+                              onChange={(v) => setAiDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
+                              <option value="EASY">Dễ</option>
+                              <option value="MEDIUM">Trung bình</option>
+                              <option value="HARD">Khó</option>
+                            </StyledSelect>
+                          </div>
+                          <div>
+                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                              Ngôn ngữ
+                            </Label>
+                            <StyledSelect
+                              value={aiLanguage}
+                              className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
+                              onChange={setAiLanguage}>
+                              <option value="Java">Java</option>
+                              <option value="Javascript">Javascript</option>
+                              <option value="TypeScript">TypeScript</option>
+                              <option value="Python">Python</option>
+                              <option value="C#">C#</option>
+                              <option value="SQL">SQL</option>
+                              <option value="Go">Go</option>
+                            </StyledSelect>
+                          </div>
+                          <div>
+                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                              Cấp độ ứng viên
+                            </Label>
+                            <StyledSelect
+                              value={aiLevel}
+                              className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
+                              onChange={setAiLevel}>
+                              <option value="Intern">Intern</option>
+                              <option value="Junior">Junior</option>
+                              <option value="Senior">Senior</option>
+                            </StyledSelect>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                            Ngữ cảnh đặc biệt / Yêu cầu bổ sung
+                          </Label>
+                          <textarea
+                            value={aiRequirement}
+                            onChange={(e) => setAiRequirement(e.target.value)}
+                            rows={4}
+                            placeholder="Mô tả context dự án hoặc hướng dẫn đặc biệt cho AI..."
+                            className="border-slate-850 mt-1.5 flex w-full rounded-md border bg-slate-950/60 px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                          />
+                        </div>
+
+                        <Button
+                          type="button"
+                          disabled={isGenerating || !aiTopic}
+                          onClick={handleAiGenerate}
+                          className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 font-sans text-xs font-bold text-white shadow-lg transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
+                          <Sparkles className="h-4 w-4" />
+                          Bắt đầu sinh đề bài với AI
+                        </Button>
                       </div>
                     </div>
                   </div>
