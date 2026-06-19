@@ -1471,11 +1471,6 @@ export const CodeReviewEditor = React.forwardRef<
                                       const lines = (activeFile.content || "").split("\n");
                                       return (
                                         <div className="w-full">
-                                          <div className="mb-3 rounded-lg border border-indigo-900/40 bg-indigo-950/20 p-3 font-sans text-xs text-indigo-300">
-                                            📍 <strong>Chế độ Design Lỗi:</strong> Di chuột vào dòng
-                                            code, bấm nút <strong>+ Lỗi</strong> hoặc{" "}
-                                            <strong>Sửa lỗi</strong> ở bên trái để thiết lập.
-                                          </div>
                                           {lines.map((lineText, lineIdx) => {
                                             const currentLineNum = lineIdx + 1;
                                             const lineIssues = newProblem.expectedIssues.filter(
