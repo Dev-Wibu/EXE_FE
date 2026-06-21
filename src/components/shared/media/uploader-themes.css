@@ -10,19 +10,24 @@
  * We also target specific Uppy elements that do not use the variable.
  */
 
+/* Hide the main upload button since we are in client-side mode and the parent form handles submission */
+.uppy-StatusBar-actionBtn--upload {
+  display: none !important;
+}
+
+/* Fix Dashboard Modal getting clipped or hidden under headers on long scrolling pages */
+.uppy-Dashboard--modal {
+  z-index: 99999 !important;
+}
+
 /* ─── User theme — #007BFF blue ──────────────────────────────────────────── */
 .uploader-theme-user .uppy-Dashboard-AddFiles-title button,
 .uploader-theme-user .uppy-u-reset.uppy-Dashboard-browse {
   color: #007bff;
 }
 
-.uploader-theme-user .uppy-StatusBar-actionBtn--upload,
 .uploader-theme-user .uppy-DashboardContent-addMore {
   background-color: #007bff;
-}
-
-.uploader-theme-user .uppy-StatusBar-actionBtn--upload:hover {
-  background-color: #0056b3;
 }
 
 .uploader-theme-user .uppy-Dashboard-inner {
@@ -35,13 +40,8 @@
   color: #059669;
 }
 
-.uploader-theme-mentor .uppy-StatusBar-actionBtn--upload,
 .uploader-theme-mentor .uppy-DashboardContent-addMore {
   background-color: #059669;
-}
-
-.uploader-theme-mentor .uppy-StatusBar-actionBtn--upload:hover {
-  background-color: #047857;
 }
 
 .uploader-theme-mentor .uppy-Dashboard-inner {
@@ -54,13 +54,8 @@
   color: #4f46e5;
 }
 
-.uploader-theme-admin .uppy-StatusBar-actionBtn--upload,
 .uploader-theme-admin .uppy-DashboardContent-addMore {
   background-color: #4f46e5;
-}
-
-.uploader-theme-admin .uppy-StatusBar-actionBtn--upload:hover {
-  background-color: #4338ca;
 }
 
 .uploader-theme-admin .uppy-Dashboard-inner {
@@ -73,15 +68,24 @@
   color: #0047ab;
 }
 
-.uploader-theme-default .uppy-StatusBar-actionBtn--upload,
 .uploader-theme-default .uppy-DashboardContent-addMore {
   background-color: #0047ab;
 }
 
-.uploader-theme-default .uppy-StatusBar-actionBtn--upload:hover {
-  background-color: #003380;
-}
-
 .uploader-theme-default .uppy-Dashboard-inner {
   --uppy-accent-color: #0047ab;
+}
+
+/* ─── Mobile specific overrides ─────────────────────────────────────────── */
+/* Shrink the modal on mobile so it looks like a dialog instead of full-screen */
+@media (max-width: 768px) {
+  .uppy-Dashboard-inner {
+    width: 90vw !important;
+    height: 80vh !important;
+    max-height: 600px !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: 12px !important;
+  }
 }

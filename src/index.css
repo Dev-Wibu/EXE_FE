@@ -450,3 +450,8 @@
   outline: 3px solid rgba(0, 123, 255, 0.18);
   outline-offset: 4px;
 }
+
+/* Hide ScreenCapture Video Button when video is restricted */
+.hide-screen-capture-video .uppy-ScreenCapture-button--video {
+  display: none !important;
+}

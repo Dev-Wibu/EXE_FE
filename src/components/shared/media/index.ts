@@ -6,11 +6,9 @@ export { PdfPreviewViewer } from "./PdfPreviewViewer";
 export type {
   InitialFileItem,
   MediaViewerItem,
-  UploadTransportMode,
   UploadedMediaFile,
   UploaderDisplayMode,
   UploaderPreset,
-  UploaderPresetConfig,
   UploaderThemeVariant,
 } from "./types";
 export { UniversalMediaUploader } from "./UniversalMediaUploader";

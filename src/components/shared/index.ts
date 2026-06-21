@@ -33,7 +33,6 @@ export type {
   InitialFileItem,
   MediaViewerItem,
   UniversalMediaUploaderProps,
-  UploadTransportMode,
   UploadedMediaFile,
   UploaderDisplayMode,
   UploaderPreset,

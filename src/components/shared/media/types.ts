@@ -1,8 +1,6 @@
 import type { MediaFileKind } from "@/lib/media-file-utils";
 
-export type UploadTransportMode = "mock" | "xhr";
-
-export type UploaderDisplayMode = "dashboard" | "dropzone" | "compact";
+export type UploaderDisplayMode = "dashboard" | "modal";
 
 export type UploaderPreset = "single-image" | "multi-image" | "single-pdf" | "multi-pdf" | "mixed";
 
@@ -40,6 +38,5 @@ export interface UploaderPresetConfig {
   acceptedFileTypes: string[];
   maxNumberOfFiles: number;
   enableImageEditor: boolean;
-  enableCompressor: boolean;
   noteKey: string;
 }

@@ -5,35 +5,30 @@ const PRESET_CONFIGS: Record<UploaderPreset, UploaderPresetConfig> = {
     acceptedFileTypes: ["image/*"],
     maxNumberOfFiles: 1,
     enableImageEditor: true,
-    enableCompressor: false,
     noteKey: "compShared.presetSingleImageNote",
   },
   "multi-image": {
     acceptedFileTypes: ["image/*"],
-    maxNumberOfFiles: 20,
+    maxNumberOfFiles: 10,
     enableImageEditor: true,
-    enableCompressor: false,
     noteKey: "compShared.presetMultiImageNote",
   },
   "single-pdf": {
     acceptedFileTypes: [".pdf", "application/pdf"],
     maxNumberOfFiles: 1,
     enableImageEditor: false,
-    enableCompressor: false,
     noteKey: "compShared.presetSinglePdfNote",
   },
   "multi-pdf": {
     acceptedFileTypes: [".pdf", "application/pdf"],
-    maxNumberOfFiles: 20,
+    maxNumberOfFiles: 10,
     enableImageEditor: false,
-    enableCompressor: false,
     noteKey: "compShared.presetMultiPdfNote",
   },
   mixed: {
     acceptedFileTypes: ["image/*", ".pdf", "application/pdf"],
-    maxNumberOfFiles: 20,
+    maxNumberOfFiles: 10,
     enableImageEditor: true,
-    enableCompressor: false,
     noteKey: "compShared.presetMixedNote",
   },
 };
@@ -42,7 +37,6 @@ export interface ResolvedPresetConfig {
   acceptedFileTypes: string[];
   maxNumberOfFiles: number;
   enableImageEditor: boolean;
-  enableCompressor: boolean;
   noteKey: string;
 }
 
@@ -57,7 +51,6 @@ export function resolvePresetConfig(
     acceptedFileTypes?: string[];
     maxNumberOfFiles?: number;
     enableImageEditor?: boolean;
-    enableCompressor?: boolean;
   }
 ): ResolvedPresetConfig {
   const base = preset ? PRESET_CONFIGS[preset] : PRESET_CONFIGS.mixed;
@@ -66,7 +59,6 @@ export function resolvePresetConfig(
     acceptedFileTypes: overrides.acceptedFileTypes ?? base.acceptedFileTypes,
     maxNumberOfFiles: overrides.maxNumberOfFiles ?? base.maxNumberOfFiles,
     enableImageEditor: overrides.enableImageEditor ?? base.enableImageEditor,
-    enableCompressor: overrides.enableCompressor ?? base.enableCompressor,
     noteKey: base.noteKey,
   };
 }

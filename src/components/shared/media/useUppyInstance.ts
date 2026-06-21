@@ -1,89 +1,24 @@
-import { useAuthStore } from "@/stores/authStore";
-import Compressor from "@uppy/compressor";
-import Uppy, { type UploadResult, type UppyFile } from "@uppy/core";
+import Uppy from "@uppy/core";
 import ImageEditor from "@uppy/image-editor";
 import ScreenCapture from "@uppy/screen-capture";
 import Webcam from "@uppy/webcam";
-import XHRUpload from "@uppy/xhr-upload";
 import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import type { InitialFileItem, UploadTransportMode, UploadedMediaFile } from "./types";
+import type { InitialFileItem } from "./types";
 
 type UploadMeta = Record<string, string>;
 type UploadBody = Record<string, unknown>;
-
-function mapUploadedFile(file: UppyFile<UploadMeta, UploadBody>): UploadedMediaFile {
-  return {
-    id: file.id,
-    name: file.name,
-    size: file.size ?? 0,
-    type: file.type ?? "application/octet-stream",
-    uploadUrl: typeof file.response?.uploadURL === "string" ? file.response.uploadURL : undefined,
-  };
-}
-
-async function runMockSingleUpload(
-  uppy: Uppy<UploadMeta, UploadBody>,
-  fileId: string,
-  delayPerStepMs: number
-): Promise<void> {
-  const initialFile = uppy.getFile(fileId);
-  if (!initialFile) return;
-
-  const totalBytes = initialFile.size && initialFile.size > 0 ? initialFile.size : 1;
-  for (let step = 1; step <= 8; step += 1) {
-    await new Promise((resolve) => {
-      setTimeout(resolve, delayPerStepMs);
-    });
-    const currentFile = uppy.getFile(fileId);
-    if (!currentFile) return;
-
-    uppy.emit(
-      "upload-progress",
-      currentFile as never,
-      {
-        uploader: "mock-uploader",
-        bytesUploaded: Math.round((totalBytes * step) / 8),
-        bytesTotal: totalBytes,
-      } as never
-    );
-  }
-
-  const finishedFile = uppy.getFile(fileId);
-  if (!finishedFile) return;
-
-  uppy.emit(
-    "upload-success",
-    finishedFile as never,
-    {
-      status: 200,
-      body: { mock: true },
-      uploadURL: `mock://${encodeURIComponent(finishedFile.name)}`,
-    } as never
-  );
-}
 
 export interface UseUppyInstanceOptions {
   id?: string;
   acceptedFileTypes: string[];
   maxFileSizeMB: number;
   maxNumberOfFiles: number;
-  transportMode: UploadTransportMode;
-  endpoint?: string;
-  headers?: Record<string, string>;
-  multipartFieldName?: string;
   enableImageEditor: boolean;
-  enableCompressor: boolean;
   enableWebcam: boolean;
   enableScreenCapture: boolean;
-  autoProceed: boolean;
-  sequentialUpload: boolean;
-  bundleUpload: boolean;
   initialFiles?: InitialFileItem[];
   onFilesChange?: (_files: File[]) => void;
-  onUploadComplete?: (_files: UploadedMediaFile[]) => void;
-  onUploadError?: (_message: string) => void;
 }
 
 /**
@@ -94,23 +29,14 @@ export interface UseUppyInstanceOptions {
  */
 export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMeta, UploadBody> {
   const { t } = useTranslation();
-  const token = useAuthStore((state) => state.token);
   const reactId = useId();
   const uploaderId = options.id ?? `universal-uploader-${reactId.replace(/:/g, "")}`;
 
   // Stable refs for callbacks to avoid re-registering event listeners when
   // parent re-renders with new inline arrow functions.
   const onFilesChangeRef = useRef(options.onFilesChange);
-  const onUploadCompleteRef = useRef(options.onUploadComplete);
-  const onUploadErrorRef = useRef(options.onUploadError);
   useEffect(() => {
     onFilesChangeRef.current = options.onFilesChange;
-  });
-  useEffect(() => {
-    onUploadCompleteRef.current = options.onUploadComplete;
-  });
-  useEffect(() => {
-    onUploadErrorRef.current = options.onUploadError;
   });
 
   // Uppy instance lives for the entire lifetime of this component.
@@ -118,7 +44,7 @@ export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMet
   if (!uppyRef.current) {
     uppyRef.current = new Uppy<UploadMeta, UploadBody>({
       id: uploaderId,
-      autoProceed: options.autoProceed,
+      autoProceed: false, // Never auto proceed since we don't upload via Uppy
       allowMultipleUploadBatches: true,
       restrictions: {
         maxFileSize: options.maxFileSizeMB * 1024 * 1024,
@@ -197,20 +123,13 @@ export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMet
   // ── Sync upload restrictions when relevant props change ──────────────────
   useEffect(() => {
     uppy.setOptions({
-      autoProceed: options.autoProceed,
       restrictions: {
         maxFileSize: options.maxFileSizeMB * 1024 * 1024,
         maxNumberOfFiles: options.maxNumberOfFiles,
         allowedFileTypes: options.acceptedFileTypes,
       },
     });
-  }, [
-    uppy,
-    options.autoProceed,
-    options.maxFileSizeMB,
-    options.maxNumberOfFiles,
-    options.acceptedFileTypes,
-  ]);
+  }, [uppy, options.maxFileSizeMB, options.maxNumberOfFiles, options.acceptedFileTypes]);
 
   // ── Manage ImageEditor plugin ────────────────────────────────────────────
   useEffect(() => {
@@ -227,18 +146,6 @@ export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMet
     }
   }, [uppy, options.enableImageEditor]);
 
-  // ── Manage Compressor plugin ─────────────────────────────────────────────
-  useEffect(() => {
-    if (options.enableCompressor) {
-      if (!uppy.getPlugin("Compressor")) {
-        uppy.use(Compressor, { quality: 0.8 });
-      }
-    } else {
-      const plugin = uppy.getPlugin("Compressor");
-      if (plugin) uppy.removePlugin(plugin);
-    }
-  }, [uppy, options.enableCompressor]);
-
   // ── Manage Webcam plugin ─────────────────────────────────────────────────
   useEffect(() => {
     if (options.enableWebcam) {
@@ -253,7 +160,16 @@ export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMet
 
   // ── Manage ScreenCapture plugin ──────────────────────────────────────────
   useEffect(() => {
-    if (options.enableScreenCapture) {
+    // Screen capture (getDisplayMedia) is not supported on mobile browsers
+    const isMobileBrowser =
+      typeof window !== "undefined" &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        !navigator.mediaDevices ||
+        !("getDisplayMedia" in navigator.mediaDevices));
+
+    const shouldEnableScreenCapture = options.enableScreenCapture && !isMobileBrowser;
+
+    if (shouldEnableScreenCapture) {
       if (!uppy.getPlugin("ScreenCapture")) {
         uppy.use(ScreenCapture);
       }
@@ -262,56 +178,6 @@ export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMet
       if (plugin) uppy.removePlugin(plugin);
     }
   }, [uppy, options.enableScreenCapture]);
-
-  // ── Manage transport plugin (XHR vs Mock) ───────────────────────────────
-  const { transportMode, endpoint, headers, multipartFieldName, bundleUpload, sequentialUpload } =
-    options;
-
-  useEffect(() => {
-    // Remove both possible transport plugins before attaching the right one.
-    const existingXhr = uppy.getPlugin("XHRUpload");
-    if (existingXhr) uppy.removePlugin(existingXhr);
-
-    // Remove any previously registered mock uploader functions — Uppy does not
-    // expose a clean API for this, so we reassign via cancelAll + re-add.
-    // The cleanest approach: track mock uploader via ref and conditionally add.
-    if (transportMode === "xhr" && endpoint) {
-      const normalizedToken = token?.replace(/^Bearer\s+/i, "").trim();
-      const requestHeaders: Record<string, string> = { ...(headers ?? {}) };
-      if (normalizedToken) {
-        requestHeaders.Authorization = `Bearer ${normalizedToken}`;
-      }
-      uppy.use(XHRUpload, {
-        endpoint,
-        method: "POST",
-        formData: true,
-        fieldName: multipartFieldName ?? "file",
-        bundle: bundleUpload,
-        limit: sequentialUpload ? 1 : 5,
-        headers: requestHeaders,
-      });
-    } else {
-      // Mock transport — simulate upload progress for testing
-      uppy.addUploader(async (fileIds) => {
-        if (sequentialUpload) {
-          for (const fileId of fileIds) {
-            await runMockSingleUpload(uppy, fileId, 220);
-          }
-          return;
-        }
-        await Promise.all(fileIds.map((fileId) => runMockSingleUpload(uppy, fileId, 220)));
-      });
-    }
-  }, [
-    uppy,
-    transportMode,
-    endpoint,
-    headers,
-    multipartFieldName,
-    bundleUpload,
-    sequentialUpload,
-    token,
-  ]);
 
   // ── Load initial files for edit-form scenarios ───────────────────────────
   useEffect(() => {
@@ -338,45 +204,28 @@ export function useUppyInstance(options: UseUppyInstanceOptions): Uppy<UploadMet
 
   // ── Event listeners ──────────────────────────────────────────────────────
   useEffect(() => {
-    const handleFilesAdded = (files: UppyFile<UploadMeta, UploadBody>[]) => {
-      const selectedFiles = files
+    const notifyFilesChanged = () => {
+      const currentFiles = uppy.getFiles();
+      const selectedFiles = currentFiles
         .map((item) => item.data)
-        .filter((item): item is File => item instanceof File);
+        .filter(
+          (item): item is File | Blob => item instanceof File || item instanceof Blob
+        ) as File[];
       onFilesChangeRef.current?.(selectedFiles);
     };
 
-    const handleComplete = (result: UploadResult<UploadMeta, UploadBody>) => {
-      if (transportMode === "mock") {
-        toast.success(t("compShared.theFileDownloadSimulationWas"));
-      }
-      onUploadCompleteRef.current?.((result.successful ?? []).map(mapUploadedFile));
-    };
-
-    const handleError = (error: Error) => {
-      const message = error.message || t("compShared.couldNotLoadFilePlease");
-      toast.error(message);
-      onUploadErrorRef.current?.(message);
-    };
-
-    uppy.on("files-added", handleFilesAdded);
-    uppy.on("complete", handleComplete);
-    uppy.on("error", handleError);
+    uppy.on("file-added", notifyFilesChanged);
+    uppy.on("file-removed", notifyFilesChanged);
+    uppy.on("file-editor:complete", notifyFilesChanged);
+    uppy.on("dashboard:file-edit-complete", notifyFilesChanged);
 
     return () => {
-      uppy.off("files-added", handleFilesAdded);
-      uppy.off("complete", handleComplete);
-      uppy.off("error", handleError);
+      uppy.off("file-added", notifyFilesChanged);
+      uppy.off("file-removed", notifyFilesChanged);
+      uppy.off("file-editor:complete", notifyFilesChanged);
+      uppy.off("dashboard:file-edit-complete", notifyFilesChanged);
     };
-  }, [uppy, transportMode, t]);
-
-  // ── Cleanup on unmount ───────────────────────────────────────────────────
-  useEffect(() => {
-    return () => {
-      uppy.cancelAll();
-      uppy.destroy();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [uppy]);
 
   return uppy;
 }

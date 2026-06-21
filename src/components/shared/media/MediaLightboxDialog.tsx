@@ -88,33 +88,38 @@ export function MediaLightboxDialog({
     });
   }, [currentItem]);
 
-  const imageObjectUrl = useMemo(() => {
+  const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null);
+  const [documentObjectUrl, setDocumentObjectUrl] = useState<string | null>(null);
+
+  useEffect(() => {
     if (!open || !currentItem?.file || currentKind !== "image") {
-      return null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setImageObjectUrl(null);
+      return;
     }
 
-    return URL.createObjectURL(currentItem.file);
+    const url = URL.createObjectURL(currentItem.file);
+    setImageObjectUrl(url);
+
+    return () => {
+      revokeObjectUrlSafe(url);
+    };
   }, [currentItem, currentKind, open]);
 
   useEffect(() => {
-    return () => {
-      revokeObjectUrlSafe(imageObjectUrl);
-    };
-  }, [imageObjectUrl]);
-
-  const documentObjectUrl = useMemo(() => {
     if (!open || currentKind !== "document" || !currentItem?.file) {
-      return null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDocumentObjectUrl(null);
+      return;
     }
 
-    return URL.createObjectURL(currentItem.file);
-  }, [currentItem, currentKind, open]);
+    const url = URL.createObjectURL(currentItem.file);
+    setDocumentObjectUrl(url);
 
-  useEffect(() => {
     return () => {
-      revokeObjectUrlSafe(documentObjectUrl);
+      revokeObjectUrlSafe(url);
     };
-  }, [documentObjectUrl]);
+  }, [currentItem, currentKind, open]);
 
   const imageUrl =
     currentKind === "image"
