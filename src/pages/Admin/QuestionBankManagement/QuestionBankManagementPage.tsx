@@ -1,6 +1,5 @@
 import type { SortDirection } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ApiResponse } from "@/interfaces";
 import { extractDataArray } from "@/lib/utils";
 import { questionBankManager } from "@/services/question-bank.manager";
@@ -9,7 +8,6 @@ import { FolderOpen, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { QuestionCategoryManagementPage } from "../QuestionCategoryManagement/QuestionCategoryManagementPage";
 import { DeleteQuestionBankDialog } from "./components/DeleteQuestionBankDialog";
 import { QuestionBankFormDialog } from "./components/QuestionBankFormDialog";
 import { QuestionBankTable } from "./components/QuestionBankTable";
@@ -156,50 +154,33 @@ export function QuestionBankManagementPage() {
               </h1>
             </div>
             <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-              Quản lý danh sách câu hỏi và danh mục cho các vòng thi Quiz.
+              Quản lý danh sách câu hỏi cho các vòng thi Quiz.
             </p>
           </div>
+          <Button onClick={handleCreate} className="bg-indigo-600 text-white hover:bg-indigo-700">
+            <Plus className="mr-2 h-4 w-4" />
+            {t("adminQuestionbankmanagement.addQuestion")}
+          </Button>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto bg-slate-50 p-6 dark:bg-slate-900/50">
-        <Tabs defaultValue="questions" className="flex h-full flex-col">
-          <TabsList className="mb-4 w-fit">
-            <TabsTrigger value="questions">Danh sách câu hỏi</TabsTrigger>
-            <TabsTrigger value="categories">Quản lý chuyên mục</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="questions" className="mt-0 flex-1">
-            <div className="flex h-full flex-col space-y-4">
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleCreate}
-                  className="bg-indigo-600 text-white hover:bg-indigo-700">
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t("adminQuestionbankmanagement.addQuestion")}
-                </Button>
-              </div>
-              {isLoading ? (
-                <div className="flex h-64 items-center justify-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-                </div>
-              ) : (
-                <div className="rounded-xl border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <QuestionBankTable
-                    questions={questions}
-                    onEdit={handleEdit}
-                    onDelete={handleDeleteClick}
-                    getSortProps={getSortProps}
-                  />
-                </div>
-              )}
+        <div className="flex h-full flex-col space-y-4">
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="categories" className="mt-0 flex-1">
-            <QuestionCategoryManagementPage isEmbedded />
-          </TabsContent>
-        </Tabs>
+          ) : (
+            <div className="rounded-xl border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <QuestionBankTable
+                questions={questions}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                getSortProps={getSortProps}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <QuestionBankFormDialog

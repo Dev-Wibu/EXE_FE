@@ -6,4 +6,4 @@
 export type {
   QuestionCategory,
   QuestionCategoryFormData,
-} from "@/services/question-category.manager";
+} from "@/services/question-lesson.manager";

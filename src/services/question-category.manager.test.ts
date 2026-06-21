@@ -72,7 +72,6 @@ describe("QuestionCategoryManager", () => {
     expect(result.data).toMatchObject({
       id: 1,
       categoryName: "Behavioral",
-      description: "Questions about behavior",
     });
     expect(mockApi.GET).toHaveBeenCalledWith("/api/question-categories/1", {});
   });
@@ -81,25 +80,20 @@ describe("QuestionCategoryManager", () => {
     mockApi.POST.mockResolvedValueOnce({
       data: {
         id: 10,
-        lessonName: "System Design",
-        description: "Advanced topics",
-        urlTutorial: "",
+        name: "System Design",
       },
     });
 
     const manager = new QuestionCategoryManager();
     const result = await manager.create({
       categoryName: "System Design",
-      description: "Advanced topics",
     });
 
     expect(result.success).toBe(true);
     expect(mockApi.POST).toHaveBeenCalledWith("/api/question-categories", {
       body: {
         id: 0,
-        lessonName: "System Design",
-        description: "Advanced topics",
-        urlTutorial: "",
+        name: "System Design",
       },
     });
   });
@@ -108,22 +102,20 @@ describe("QuestionCategoryManager", () => {
     mockApi.PUT.mockResolvedValueOnce({
       data: {
         id: 1,
-        lessonName: "Updated Category",
+        name: "Updated Name",
       },
     });
 
     const manager = new QuestionCategoryManager();
     const result = await manager.update(1, {
-      categoryName: "Updated Category",
+      categoryName: "Updated Name",
     });
 
     expect(result.success).toBe(true);
     expect(mockApi.PUT).toHaveBeenCalledWith("/api/question-categories", {
       body: {
         id: 1,
-        lessonName: "Updated Category",
-        description: undefined,
-        urlTutorial: undefined,
+        name: "Updated Name",
       },
     });
   });

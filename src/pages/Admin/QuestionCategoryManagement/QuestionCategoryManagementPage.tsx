@@ -5,7 +5,7 @@ import { SpinnerBlock } from "@/components/ui/spinner";
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
 import { extractDataArray } from "@/lib/utils";
-import { questionCategoryManager } from "@/services";
+import { questionLessonManager } from "@/services/question-lesson.manager";
 import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,7 +42,7 @@ export function QuestionCategoryManagementPage({ isEmbedded = false }: { isEmbed
         setIsInitialLoading(true);
       }
       try {
-        const response = await questionCategoryManager.getAll();
+        const response = await questionLessonManager.getAll();
         if (response.success) {
           setCategories(extractDataArray<QuestionCategory>(response));
         } else {
@@ -128,7 +128,7 @@ export function QuestionCategoryManagementPage({ isEmbedded = false }: { isEmbed
   };
   const handleSubmitCreate = async () => {
     try {
-      const response = await questionCategoryManager.create(formData);
+      const response = await questionLessonManager.create(formData);
       if (response.success) {
         toast.success(t("adminQuestioncategorymanagement.questionListCreatedSuccessfully"));
         setIsCreateDialogOpen(false);
@@ -144,7 +144,7 @@ export function QuestionCategoryManagementPage({ isEmbedded = false }: { isEmbed
   const handleSubmitEdit = async () => {
     if (!selectedCategory?.id) return;
     try {
-      const response = await questionCategoryManager.update(selectedCategory.id, formData);
+      const response = await questionLessonManager.update(selectedCategory.id, formData);
       if (response.success) {
         toast.success(t("adminQuestioncategorymanagement.questionListHasBeenUpdated"));
         setIsEditDialogOpen(false);
@@ -160,7 +160,7 @@ export function QuestionCategoryManagementPage({ isEmbedded = false }: { isEmbed
   const handleConfirmDelete = async () => {
     if (!selectedCategory?.id) return;
     try {
-      const response = await questionCategoryManager.delete(selectedCategory.id);
+      const response = await questionLessonManager.delete(selectedCategory.id);
       if (response.success) {
         toast.success(t("adminQuestioncategorymanagement.questionCategoryHasBeenSuccessfully"));
         setIsDeleteDialogOpen(false);

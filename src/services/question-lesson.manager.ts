@@ -18,12 +18,19 @@ import type { components } from "../../schema-from-be";
 export interface QuestionCategory {
   id?: number;
   categoryName?: string;
+  description?: string;
+  urlTutorial?: string;
 }
 
+/**
+ * Form data for create/update operations
+ */
 export interface QuestionCategoryFormData {
   categoryName: string;
+  description?: string;
+  urlTutorial?: string;
 }
-export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
+export class QuestionLessonManager implements BaseManager<QuestionCategory> {
   /**
    * Map backend QuestionLesson (lessonName) to frontend QuestionCategory (categoryName)
    */
@@ -32,7 +39,9 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
   private mapFromBackend(data: any): QuestionCategory {
     return {
       id: data.id,
-      categoryName: data.name || data.categoryName,
+      categoryName: data.name || data.lessonName || data.categoryName,
+      description: data.description,
+      urlTutorial: data.urlTutorial,
     };
   }
 
@@ -107,16 +116,20 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
    */
   async create(data: Partial<QuestionCategory>): Promise<ApiResponse<QuestionCategory>> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const categoryPayload: any = {
+      // Backend requires full QuestionLesson schema for creation
+      // id: 0 indicates new record creation
+      // Map categoryName → lessonName (backend schema uses QuestionLesson.lessonName)
+      const categoryPayload = {
         id: 0,
-        name: data.categoryName,
+        // Required: 0 for creation
+        lessonName: data.categoryName,
+        description: data.description,
+        urlTutorial: data.urlTutorial ?? "",
       };
       const response = await fetchClient
-        .POST("/api/question-categories", { body: categoryPayload })
+        .POST("/api/question-lessons", { body: categoryPayload })
         .then((res) => ({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data: res.data as any,
+          data: res.data as components["schemas"]["QuestionLesson"] | undefined,
           status: res.response?.status,
           headers: res.response?.headers,
         }));
@@ -141,16 +154,17 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
     data: Partial<QuestionCategory>
   ): Promise<ApiResponse<QuestionCategory>> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const categoryData: any = {
+      // Map categoryName → lessonName (backend schema uses QuestionLesson.lessonName)
+      const categoryData = {
         id: Number(id),
-        name: data.categoryName,
+        lessonName: data.categoryName,
+        description: data.description,
+        urlTutorial: data.urlTutorial,
       };
       const response = await fetchClient
-        .PUT("/api/question-categories", { body: categoryData })
+        .PUT("/api/question-lessons", { body: categoryData })
         .then((res) => ({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data: res.data as any,
+          data: res.data as components["schemas"]["QuestionLesson"] | undefined,
           status: res.response?.status,
           headers: res.response?.headers,
         }));
@@ -173,7 +187,7 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
    */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_CATEGORIES.DELETE, {
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_LESSONS.DELETE, {
         id,
       });
       // Use DELETE method as per schema
@@ -195,5 +209,4 @@ export class QuestionCategoryManager implements BaseManager<QuestionCategory> {
   }
 }
 
-// Export singleton instance
-export const questionCategoryManager = new QuestionCategoryManager();
+export const questionLessonManager = new QuestionLessonManager();

@@ -195,6 +195,14 @@ export const API_ENDPOINTS = {
     DELETE: "/api/question-categories/:id",
   },
 
+  QUESTION_LESSONS: {
+    LIST: "/api/question-lessons",
+    DETAIL: "/api/question-lessons/:id",
+    CREATE: "/api/question-lessons",
+    UPDATE: "/api/question-lessons",
+    DELETE: "/api/question-lessons/:id",
+  },
+
   // Question Banks endpoints
   QUESTION_BANKS: {
     BASE: "/api/question-banks",

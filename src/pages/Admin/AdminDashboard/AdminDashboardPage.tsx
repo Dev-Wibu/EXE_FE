@@ -23,6 +23,7 @@ import {
   Database,
   FileQuestion,
   FileText,
+  FolderOpen,
   GraduationCap,
   LayoutDashboard,
   LayoutTemplate,
@@ -51,6 +52,7 @@ import { PostManagementPage } from "../PostManagement";
 import { PracticeQuestionManagementPage } from "../PracticeQuestionManagement";
 import { PracticeSetManagementPage } from "../PracticeSetManagement";
 import { QuestionBankManagementPage } from "../QuestionBankManagement";
+import { QuestionCategoryManagementPage } from "../QuestionCategoryManagement/QuestionCategoryManagementPage";
 import { QuestionMajorManagementPage } from "../QuestionMajorManagement";
 import { QuizSetManagementPage } from "../QuizSetManagement";
 import { ReviewManagementPage } from "../ReviewManagement";
@@ -64,6 +66,7 @@ type TabType =
   | "reviews"
   | "feedback"
   | "notifications"
+  | "questionCategories"
   | "questionBanks"
   | "questionMajors"
   | "practiceSets"
@@ -82,6 +85,7 @@ const VALID_TAB_TYPES: TabType[] = [
   "reviews",
   "feedback",
   "notifications",
+  "questionCategories",
   "questionBanks",
   "questionMajors",
   "practiceSets",
@@ -131,6 +135,10 @@ const getAvailableTabs = (
     label: t("adminAdmindashboard.manageNotifications"),
   },
   {
+    type: "questionCategories",
+    label: t("common.lesson"),
+  },
+  {
     type: "questionBanks",
     label: t("common.questionBank"),
   },
@@ -175,6 +183,7 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   reviews: Star,
   feedback: MessageSquare,
   notifications: Bell,
+  questionCategories: FolderOpen,
   questionBanks: Database,
   questionMajors: GraduationCap,
   practiceSets: BookOpen,
@@ -193,6 +202,7 @@ const TAB_COLORS: Record<TabType, string> = {
   reviews: "text-yellow-600",
   feedback: "text-cyan-600",
   notifications: "text-red-600",
+  questionCategories: "text-purple-600",
   questionBanks: "text-indigo-500",
   questionMajors: "text-pink-600",
   practiceSets: "text-teal-600",
@@ -396,6 +406,12 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
         label: "Khảo thí & Đào tạo",
         color: "text-purple-600",
         children: [
+          {
+            type: "questionCategories",
+            icon: FolderOpen,
+            label: t("common.lesson"),
+            color: "text-purple-600",
+          },
           {
             type: "questionBanks",
             icon: Database,
@@ -646,6 +662,8 @@ export function AdminDashboardPage() {
         return <FeedbackManagementPage />;
       case "notifications":
         return <NotificationManagementPage />;
+      case "questionCategories":
+        return <QuestionCategoryManagementPage />;
       case "questionBanks":
         return <QuestionBankManagementPage />;
       case "questionMajors":
