@@ -1666,7 +1666,10 @@
     "screenCaptureStop": "Stop capturing",
     "screenCaptureSubmit": "Submit recorded file",
     "screenCaptureStreamActive": "Capturing screen",
-    "screenCaptureStreamPassive": "Not capturing"
+    "screenCaptureStreamPassive": "Not capturing",
+    "clickToOpenUploader": "Click to open uploader",
+    "supportsAdvancedFeatures": "Supports Drag-and-drop, Ctrl+V, Webcam...",
+    "editOrChangeFiles": "Edit / Change file"
   },
   "compThemetoggle": {
     "switchInterface": "Switch interface"
@@ -2802,9 +2805,23 @@
     "demo6SubmitForm": "Submit Form",
     "demo6Reset": "Reset",
     "demo6ValidationRequired": "Please upload at least one document.",
-    "testTip1": "Click the Month Year label in the header to select directly.",
-    "testTip2": "Presets on the left allow quick date selections.",
-    "testTip3": "Theme variant matches User (Blue) and Mentor (Green) portals."
+    "demo7Title": "7. Modal Uploader Deep Test",
+    "demo7Description": "Dedicated test for Modal Mode inside a Form context to ensure state isolation.",
+    "demo7SupportingDocs": "Profile Picture / Docs (Modal)",
+    "demo7WatchLabel": "form.watch(\"files\"):",
+    "demo7SubmitForm": "Submit Form",
+    "demo7Reset": "Reset",
+    "demo7ValidationRequired": "Please select at least 1 file.",
+    "demo7ConfigTitle": "Modal Configuration Sandbox",
+    "demo7ConfigPreset": "Active Preset",
+    "demo7ConfigWebcam": "Enable Webcam",
+    "demo7ConfigScreenCapture": "Enable Screen Capture",
+    "demo7ConfigCompressor": "Enable Compressor",
+    "demo7ConfigEditor": "Enable Image Editor",
+    "demo7MixedLabel": "Mixed (Any files)",
+    "demo7ImageLabel": "Single Image",
+    "demo7MultiPdfLabel": "Multi PDF",
+    "demo7SinglePdfLabel": "Single PDF"
   },
   "sharedMessenger": {
     "chooseAMentorToStart": "Choose a mentor to start the conversation",

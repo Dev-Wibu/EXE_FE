@@ -1636,7 +1636,10 @@
     "screenCaptureStop": "キャプチャ停止",
     "screenCaptureSubmit": "録画ファイルを送信",
     "screenCaptureStreamActive": "画面をキャプチャ中",
-    "screenCaptureStreamPassive": "未キャプチャ"
+    "screenCaptureStreamPassive": "未キャプチャ",
+    "clickToOpenUploader": "クリックしてアップローダーを開く",
+    "supportsAdvancedFeatures": "ドラッグアンドドロップ、Ctrl+V、Webカメラをサポート...",
+    "editOrChangeFiles": "ファイルの編集/変更"
   },
   "compThemetoggle": {
     "switchInterface": "インターフェースを切り替え"
@@ -2799,9 +2802,28 @@
     "demo6SubmitForm": "フォーム送信",
     "demo6Reset": "リセット",
     "demo6ValidationRequired": "少なくとも1つのドキュメントをアップロードしてください。",
+    "demo7Title": "7. Modal Uploader Deep Test",
+    "demo7Description": "フォームのコンテキスト内でModal Modeの専用テストを実施します。",
+    "demo7SupportingDocs": "プロフィール写真 / 書類 (Modal)",
+    "demo7WatchLabel": "form.watch(\"files\"):",
+    "demo7SubmitForm": "フォーム送信",
+    "demo7Reset": "リセット",
+    "demo7ValidationRequired": "少なくとも1つのファイルを選択してください。",
+    "demo7ConfigTitle": "モーダル設定",
+    "demo7ConfigPreset": "プリセット",
+    "demo7ConfigWebcam": "Webカメラを有効にする",
+    "demo7ConfigScreenCapture": "画面録画を有効にする",
+    "demo7ConfigCompressor": "画像圧縮を有効にする",
+    "demo7ConfigEditor": "画像編集を有効にする",
     "testTip1": "ヘッダーの月年ラベルをクリックすると直接選択できます。",
     "testTip2": "左のプリセットで日付を素早く選択できます。",
-    "testTip3": "テーマバリアントはユーザー（青）とメンター（緑）ポータルに対応。"
+    "testTip3": "テーマバリアントはユーザー（青）とメンター（緑）ポータルに対応。",
+    "demo7Title": "Demo 7: Modal Mode Variants",
+    "demo7Description": "Testing Uploader in Modal pop-up mode with various preset combinations.",
+    "demo7MixedLabel": "Mixed (Any files)",
+    "demo7ImageLabel": "Single Image",
+    "demo7MultiPdfLabel": "Multi PDF",
+    "demo7SinglePdfLabel": "Single PDF"
   },
   "sharedMessenger": {
     "chooseAMentorToStart": "メンターを選択して会話を開始",
