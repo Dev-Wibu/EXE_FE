@@ -1,4 +1,5 @@
 import icon2 from "@/assets/icon2.svg";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { NotificationBell } from "@/components/notification";
 import type { SidebarMenuGroup } from "@/components/shared";
 import {
@@ -334,7 +335,8 @@ export function MentorDashboardPage() {
             />
           </div>
           <DashboardBreadcrumb items={breadcrumbItems} className="min-w-0 flex-1" />
-          <div className="shrink-0 pl-3">
+          <div className="flex shrink-0 items-center gap-3 pl-3">
+            <LanguageToggle />
             <NotificationBell notificationsPath="/mentor?tab=notifications" />
           </div>
         </div>

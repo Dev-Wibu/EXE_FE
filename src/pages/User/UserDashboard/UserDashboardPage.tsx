@@ -1,4 +1,5 @@
 import icon2 from "@/assets/icon2.svg";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { NotificationBell } from "@/components/notification";
 import type { SidebarMenuGroup } from "@/components/shared";
 import {
@@ -84,7 +85,7 @@ const isValidTabType = (value: string): value is TabType => {
   ].includes(value as TabType);
 };
 const getAvailableTabs = (
-  t: (key: string) => string
+  t: (_key: string) => string
 ): Array<{
   type: TabType;
   label: string;
@@ -138,7 +139,7 @@ const getAvailableTabs = (
     label: t("common.messages"),
   },
 ];
-const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] => [
+const getSidebarMenuGroups = (t: (_key: string) => string): SidebarMenuGroup[] => [
   {
     label: t("common.home"),
     items: [
@@ -423,6 +424,7 @@ export function UserDashboardPage() {
           </div>
           <DashboardBreadcrumb items={breadcrumbItems} className="min-w-0 flex-1" />
           <div className="flex shrink-0 items-center gap-3 pl-3">
+            <LanguageToggle />
             <NotificationBell notificationsPath="/user?tab=notifications" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

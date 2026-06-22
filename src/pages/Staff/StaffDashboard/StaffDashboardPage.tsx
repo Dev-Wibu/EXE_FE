@@ -1,3 +1,4 @@
+import { LanguageToggle } from "@/components/LanguageToggle";
 import type { ChromeTabMenuGroup, SidebarMenuGroup } from "@/components/shared";
 import {
   DashboardChromeTabs,
@@ -312,6 +313,9 @@ export function StaffDashboardPage() {
       />
 
       <div className="relative z-0 flex flex-1 flex-col overflow-hidden">
+        <div className="flex items-center justify-end border-b border-gray-200 bg-white px-4 py-2 dark:border-slate-800 dark:bg-slate-950">
+          <LanguageToggle />
+        </div>
         <DashboardChromeTabs
           tabs={tabs}
           activeTabId={activeTabId}

@@ -589,14 +589,14 @@ export function ApplicationHistoryPage() {
       {/* Main Content Grid */}
       <div className="grid gap-4 lg:grid-cols-12">
         {/* Left: Application List */}
-        <div className="lg:col-span-4">
+        <div className="relative flex max-h-[calc(100vh-200px)] flex-col lg:col-span-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {t("userApplicationhistory.applications")} ({filteredApplications.length})
             </span>
           </div>
 
-          <div className="max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             {isLoading ? (
               <LoadingCardList count={4} />
             ) : applicationsError ? (
@@ -637,9 +637,9 @@ export function ApplicationHistoryPage() {
             )}
           </div>
 
-          {/* Pagination — inside scrollable area */}
+          {/* Pagination — stays at bottom of left column */}
           {filteredApplications.length > pageSize && (
-            <div className="mt-4 bg-white/80 dark:bg-slate-950/80">
+            <div className="mt-4 shrink-0">
               <PaginationControl
                 pagination={pagination}
                 onPageSizeChange={(size) => {

@@ -1,3 +1,4 @@
+import { LanguageToggle } from "@/components/LanguageToggle";
 import type {
   ChromeTabMenuAction,
   ChromeTabMenuGroup,
@@ -754,6 +755,7 @@ export function AdminDashboardPage() {
           tabColors={TAB_COLORS}
           menuGroups={chromeTabsMenuGroups}
           menuActions={chromeMenuActions}
+          rightSlot={<LanguageToggle />}
           theme={{
             bg: "bg-gray-100",
             tabActiveBorder: "border-gray-300",

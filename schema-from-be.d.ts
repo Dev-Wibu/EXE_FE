@@ -236,22 +236,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/majors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllMajors"];
-        put: operations["updateMajor"];
-        post: operations["createMajor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/job-descriptions": {
         parameters: {
             query?: never;
@@ -1228,6 +1212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rounds/find-by-application-order/{applicationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["findByApplicationOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/quiz-sets/{quizId}": {
         parameters: {
             query?: never;
@@ -1733,22 +1733,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/majors/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getMajorById"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteMajor"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/mails/send": {
         parameters: {
             query?: never;
@@ -1872,38 +1856,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getSessionFromCache"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/feature-usage-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAll_2"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/feature-usage-logs/by-feature": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getByFeature"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2353,6 +2305,15 @@ export interface components {
             id?: number;
             name?: string;
         };
+        UpdateQuestionBankRequest: {
+            /** Format: int32 */
+            questionCategoryId?: number;
+            /** @enum {string} */
+            questionLevel?: "EASY" | "MEDIUM" | "HARD";
+            questionText?: string;
+            options?: string[];
+            correctAnswer?: string;
+        };
         QuestionBank: {
             /** Format: int32 */
             id?: number;
@@ -2384,8 +2345,6 @@ export interface components {
             level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
             /** Format: date-time */
             startDate?: string;
-            /** @enum {string} */
-            major?: "CNTT" | "Marketing";
             user?: components["schemas"]["User"];
             questions?: components["schemas"]["PracticeQuestion"][];
             /** Format: int32 */
@@ -2403,8 +2362,6 @@ export interface components {
             avatarUrl?: string;
             public_id?: string;
             university?: string;
-            /** @enum {string} */
-            major?: "CNTT" | "Marketing";
             cvUrl?: string;
             cv_public_id?: string;
         };
@@ -2503,12 +2460,6 @@ export interface components {
             /** Format: int32 */
             rating?: number;
             comment?: string;
-        };
-        Major: {
-            /** Format: int32 */
-            id?: number;
-            majorName?: string;
-            description?: string;
         };
         UpdateJobDescriptionRequest: {
             /** Format: int64 */
@@ -2817,6 +2768,15 @@ export interface components {
             /** Format: int32 */
             quizId?: number;
             items?: components["schemas"]["QuizItemResponse"][];
+        };
+        CreateQuestionBankRequest: {
+            /** Format: int32 */
+            questionCategoryId: number;
+            /** @enum {string} */
+            questionLevel: "EASY" | "MEDIUM" | "HARD";
+            questionText: string;
+            options: string[];
+            correctAnswer: string;
         };
         QuestionGenerateRequest: {
             categoryName?: string;
@@ -3289,8 +3249,6 @@ export interface components {
             avatarUrl?: string;
             public_id?: string;
             university?: string;
-            /** @enum {string} */
-            major?: "CNTT" | "Marketing";
             cvUrl?: string;
             cv_public_id?: string;
         };
@@ -3404,10 +3362,10 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PostResponse"][];
@@ -3417,19 +3375,19 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
-            unpaged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
+            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
         };
         SortObject: {
-            unsorted?: boolean;
             sorted?: boolean;
+            unsorted?: boolean;
             empty?: boolean;
         };
         Payment: {
@@ -3573,16 +3531,6 @@ export interface components {
             currentQuestionType?: "BLUEPRINT" | "FOLLOW_UP";
             chatHistory?: components["schemas"]["InterviewExchange"][];
         };
-        FeatureUsageLog: {
-            /** Format: int32 */
-            id?: number;
-            /** Format: int32 */
-            userId?: number;
-            /** @enum {string} */
-            featureName?: "MENTOR_INTERVIEW" | "AI_INTERVIEW" | "PRACTICE" | "QUIZ";
-            /** Format: date-time */
-            useAt?: string;
-        };
         ApplicationContext: {
             applicationName?: string;
             /** Format: int64 */
@@ -3688,6 +3636,9 @@ export interface components {
             taglibs?: components["schemas"]["TaglibDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
+            elIgnored?: string;
+            isXml?: string;
+            trimDirectiveWhitespaces?: string;
             pageEncoding?: string;
             scriptingInvalid?: string;
             includePreludes?: string[];
@@ -3695,11 +3646,8 @@ export interface components {
             errorOnELNotFound?: string;
             deferredSyntaxAllowedAsLiteral?: string;
             errorOnUndeclaredNamespace?: string;
-            trimDirectiveWhitespaces?: string;
-            elIgnored?: string;
-            isXml?: string;
-            defaultContentType?: string;
             urlPatterns?: string[];
+            defaultContentType?: string;
             buffer?: string;
         };
         RedirectView: {
@@ -3723,29 +3671,28 @@ export interface components {
             expandUriTemplateVariables?: boolean;
             propagateQueryParams?: boolean;
             hosts?: string[];
-            redirectView?: boolean;
             propagateQueryProperties?: boolean;
+            redirectView?: boolean;
+            attributesCSV?: string;
             attributesMap?: {
                 [key: string]: unknown;
             };
-            attributesCSV?: string;
             attributes?: {
                 [key: string]: string;
             };
         };
         ServletContext: {
-            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            virtualServerName?: string;
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             /** Format: int32 */
             sessionTimeout?: number;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            virtualServerName?: string;
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
             effectiveMajorVersion?: number;
-            serverInfo?: string;
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
@@ -3755,6 +3702,7 @@ export interface components {
             filterRegistrations?: {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
+            serverInfo?: string;
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
             initParameterNames?: unknown;
             contextPath?: string;
@@ -4190,7 +4138,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuestionBank"];
+                "application/json": components["schemas"]["UpdateQuestionBankRequest"];
             };
         };
         responses: {
@@ -4609,74 +4557,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MentorFeedback"];
-                };
-            };
-        };
-    };
-    getAllMajors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"][];
-                };
-            };
-        };
-    };
-    updateMajor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Major"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"];
-                };
-            };
-        };
-    };
-    createMajor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Major"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"];
                 };
             };
         };
@@ -5388,7 +5268,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuestionBank"];
+                "application/json": components["schemas"]["CreateQuestionBankRequest"];
             };
         };
         responses: {
@@ -6371,6 +6251,28 @@ export interface operations {
             };
         };
     };
+    findByApplicationOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Round"];
+                };
+            };
+        };
+    };
     getQuizById: {
         parameters: {
             query?: never;
@@ -7179,50 +7081,6 @@ export interface operations {
             };
         };
     };
-    getMajorById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Major"];
-                };
-            };
-        };
-    };
-    deleteMajor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": boolean;
-                };
-            };
-        };
-    };
     adminSendMail: {
         parameters: {
             query: {
@@ -7399,48 +7257,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["InterviewSessionRedis"];
-                };
-            };
-        };
-    };
-    getAll_2: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["FeatureUsageLog"][];
-                };
-            };
-        };
-    };
-    getByFeature: {
-        parameters: {
-            query: {
-                featureName: "MENTOR_INTERVIEW" | "AI_INTERVIEW" | "PRACTICE" | "QUIZ";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["FeatureUsageLog"][];
                 };
             };
         };
