@@ -24,26 +24,16 @@ export interface PracticeQuestion {
   hint?: string;
 }
 export class QuestionManager implements BaseManager<PracticeQuestion> {
-  /**
-   * Get all question sets
-   */
   async getAll(
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<PracticeQuestion> | PracticeQuestion[]>> {
     try {
-      const response = await fetchClient
-        .GET("/api/practice-questions", {
-          // @ts-expect-error: Backend Swagger schema mismatch
-          params,
-        })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["GET"]("/api/practice-questions", { params });
+      const data = response.data;
       return {
         success: true,
-        data: response.data,
+        data: data,
       };
     } catch (error) {
       return {
@@ -53,24 +43,15 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Get question set by ID (with full details including questions)
-   */
   async getById(id: string | number): Promise<ApiResponse<PracticeQuestion>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DETAIL, {
-        id,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DETAIL, { id });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["GET"](endpoint, {});
+      const data = response.data;
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
-        data: response.data,
+        data: data,
       };
     } catch (error) {
       return {
@@ -80,28 +61,17 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Create new question
-   * POST /api/practice-questions (JSON body)
-   * Backend requires full PracticeQuestion schema including questionId: 0 for creation
-   */
   async create(data: Partial<PracticeQuestion>): Promise<ApiResponse<PracticeQuestion>> {
     try {
-      // Backend requires questionId: 0 for creation to avoid null int parse error
-      const questionPayload = {
-        questionId: 0,
-        ...data,
-      };
-      const response = await fetchClient
-        .POST("/api/practice-questions", { body: questionPayload })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      const questionPayload = { questionId: 0, ...data };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["POST"]("/api/practice-questions", {
+        body: questionPayload,
+      });
+      const result = response.data;
       return {
         success: true,
-        data: response.data,
+        data: result,
       };
     } catch (error) {
       return {
@@ -111,32 +81,20 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Update question
-   * POST /api/practice-questions (JSON body)
-   * Backend requires full PracticeQuestion schema including questionId
-   */
   async update(
     id: string | number,
     data: Partial<PracticeQuestion>
   ): Promise<ApiResponse<PracticeQuestion>> {
     try {
-      // Backend requires questionId in body for update
-      const questionPayload = {
-        questionId: Number(id),
-        ...data,
-      };
-      // Use POST for updates (backend treats questionId > 0 as update)
-      const response = await fetchClient
-        .POST("/api/practice-questions", { body: questionPayload })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      const questionPayload = { questionId: Number(id), ...data };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["PUT"](`/api/practice-questions/${id}`, {
+        body: questionPayload,
+      });
+      const result = response.data;
       return {
         success: true,
-        data: response.data,
+        data: result,
       };
     } catch (error) {
       return {
@@ -146,24 +104,12 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Delete question
-   * DELETE /api/practice-questions/{id}
-   */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DELETE, {
-        id,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      await fetchClient.DELETE(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
-      return {
-        success: true,
-      };
+      const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION.DELETE, { id });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (fetchClient as any)["DELETE"](endpoint, {});
+      return { success: true };
     } catch (error) {
       return {
         success: false,
@@ -172,30 +118,19 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Search question sets by text
-   */
   async search(
     searchText: string,
     params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<PracticeQuestion> | PracticeQuestion[]>> {
     try {
-      const response = await fetchClient
-        .GET("/api/practice-questions", {
-          params: {
-            ...params,
-            // @ts-expect-error: Backend Swagger schema mismatch
-            search: searchText,
-          },
-        })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["GET"]("/api/practice-questions", {
+        params: { ...params, search: searchText },
+      });
+      const data = response.data;
       return {
         success: true,
-        data: response.data,
+        data: data,
       };
     } catch (error) {
       return {
@@ -204,28 +139,18 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
       };
     }
   }
-  /**
-   * Get random questions by level
-   * GET /api/practice-questions/random-by-level?level={level}&count={count}
-   */
+
   async getRandomByLevel(level: string, count: number): Promise<ApiResponse<PracticeQuestion[]>> {
     try {
-      const response = await fetchClient
-        .GET("/api/practice-questions/random-by-level", {
-          params: {
-            // @ts-expect-error: Backend Swagger schema mismatch
-            level,
-            count,
-          },
-        })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["GET"](
+        "/api/practice-questions/random-by-level",
+        { params: { level, count } }
+      );
+      const data = response.data;
       return {
         success: true,
-        data: response.data,
+        data: data,
       };
     } catch (error) {
       return {
@@ -235,31 +160,20 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Get questions by category and level
-   * GET /api/practice-questions/by-category-level?categoryId={categoryId}&level={level}
-   */
   async getByCategoryAndLevel(
     categoryId: number,
     level: string
   ): Promise<ApiResponse<PracticeQuestion[]>> {
     try {
-      const response = await fetchClient
-        .GET("/api/practice-questions/by-category-level", {
-          params: {
-            // @ts-expect-error: Backend Swagger schema mismatch
-            categoryId,
-            level,
-          },
-        })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["GET"](
+        "/api/practice-questions/by-category-level",
+        { params: { categoryId, level } }
+      );
+      const data = response.data;
       return {
         success: true,
-        data: response.data,
+        data: data,
       };
     } catch (error) {
       return {
@@ -269,28 +183,21 @@ export class QuestionManager implements BaseManager<PracticeQuestion> {
     }
   }
 
-  /**
-   * Bulk create questions
-   * POST /api/practice-questions/save-all
-   * Body: PracticeQuestion[]
-   */
-  async saveAll(questions: PracticeQuestion[]): Promise<ApiResponse<PracticeQuestion[]>> {
+  async saveAll(data: Partial<PracticeQuestion>[]): Promise<ApiResponse<PracticeQuestion[]>> {
     try {
-      const response = await fetchClient
-        .POST("/api/practice-questions/save-all", { body: questions })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any)["POST"]("/api/practice-questions/save-all", {
+        body: data,
+      });
+      const result = response.data;
       return {
         success: true,
-        data: response.data,
+        data: result,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : t("general.questionCannotBeSaved"),
+        error: error instanceof Error ? error.message : t("common.unableToSaveAllQuestions"),
       };
     }
   }

@@ -1218,7 +1218,12 @@
     "perPage": " / page",
     "back": "Back",
     "updateYourSecuritySettings": "Update your security settings",
-    "testTheory": "Theory Check"
+    "testTheory": "Theory Check",
+    "submit": "Submit",
+    "applicationSubmittedSuccessfully": "Application submitted successfully",
+    "uploading": "Uploading...",
+    "applicationIsBeingReviewed": "Application is being reviewed, please wait",
+    "theApplicationIsBeingReviewed": "The application is being reviewed. Please wait for the results."
   },
   "compDemologinbutton": {
     "administratorAccountToManageThe": "Administrator account to manage the system",
@@ -2080,7 +2085,8 @@
     "youHaveCompletedMockInterview": "You have completed {{var_0}} mock interview sessions with a mentor. Keep up the good work!",
     "youHaveEnteredIncorrectlyToo": "You have entered incorrectly too many times. Please try again later",
     "youHaveJustReceivedA": "You have just received a new notification.",
-    "youHaveNewNotifications": "You have {{var_0}} new notifications"
+    "youHaveNewNotifications": "You have {{var_0}} new notifications",
+    "submit": "Submit"
   },
   "homepageFeatures": {
     "50ProfessionalMentors": "50+ professional Mentors",
@@ -2781,7 +2787,6 @@
     "noExperienceYetClickQuot": "No experience yet. Click \"Add experience\" to add.",
     "overviewOfYourApplicationProfile": "Overview of your application profile and skills.",
     "payForMembershipPackages": "Pay for membership packages",
-    "changePhoto": "Change photo",
     "memberSince": "Member since",
     "personalInfo": "Personal Info",
     "pngOrJpgMaximum5mb": "PNG or JPG, maximum 5MB",
@@ -2802,9 +2807,6 @@
     "userIdNotFound": "User ID not found",
     "viewCurrentCv": "View current CV",
     "youHaveNotParticipatedIn": "You have not participated in any interviews yet.",
-    "personalInfo": "Personal Info",
-    "memberSince": "Member since",
-    "quickSettings": "Quick Settings",
     "viewYourPastInterviewSessions": "View your past interview sessions"
   },
   "userAiinterview": {
@@ -2846,6 +2848,7 @@
     "cameraIsOn": "Camera is on",
     "cameraNotFoundOnCurrent": "Camera not found on current device.",
     "cameraPermissionDenied": "Camera permission denied",
+    "submit": "Submit",
     "cancel": "Cancel",
     "candidateAmpLocation": "Candidate & Location",
     "candidateProfileSavedSuccessfully": "Candidate profile saved successfully!",
@@ -3080,7 +3083,31 @@
     "noResultYet": "No result yet",
     "pending": "Pending",
     "enterRoom": "Enter Room",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "roundPending": "Pending",
+    "roundSubmitting": "Submitting",
+    "roundAiEvaluated": "AI Evaluated",
+    "roundCompleted": "Completed",
+    "roundError": "Error",
+    "submittedContent": "Submitted Content",
+    "viewUploadedFile": "View uploaded file",
+    "quizAnswers": "Quiz Answers",
+    "questions": "questions",
+    "moreAnswers": "more",
+    "passed": "Passed",
+    "failed": "Failed",
+    "page": "Page",
+    "uploadYourCvToBegin": "Upload your CV to begin the screening process.",
+    "alreadySubmitted": "You have already submitted for this round.",
+    "submitYourApplication": "Submit Your Application",
+    "currentSubmission": "Current submission",
+    "uploadFile": "Upload File",
+    "clickToSelectFile": "Click to select a file",
+    "maxFileSize25mb": "Max file size: 25MB",
+    "yourAnswer": "Your Answer",
+    "enterYourContentHere": "Enter your content here...",
+    "pleaseEnterContent": "Please enter content or select a file to submit.",
+    "pleaseSubmitYourDocument": "Please submit your document to complete this round."
   },
   "userFeedback": {
     "evaluationContent": "Evaluation Content",

@@ -31,14 +31,17 @@ function documentItems(
   return [
     {
       label: t("userMentordetail.identificationDocuments"),
+      // @ts-expect-error: Backend Swagger schema mismatch - identityImg not in Mentor type
       url: mentor.identityImg,
     },
     {
       label: t("common.degree"),
+      // @ts-expect-error: Backend Swagger schema mismatch - degreeImg not in Mentor type
       url: mentor.degreeImg,
     },
     {
       label: t("userMentordetail.additionalDocuments"),
+      // @ts-expect-error: Backend Swagger schema mismatch - otherFile not in Mentor type
       url: mentor.otherFile,
     },
   ].filter(
@@ -96,12 +99,15 @@ function buildSlaEstimate(mentor: SchemaMentorResponse | null, t: (key: string) 
 }
 function buildVerificationTags(mentor: SchemaMentorResponse, t: (key: string) => string): string[] {
   const tags: string[] = [];
+  // @ts-expect-error: Backend Swagger schema mismatch - identityImg not in Mentor type
   if (mentor.identityImg) {
     tags.push(t("userMentordetail.identityVerified"));
   }
+  // @ts-expect-error: Backend Swagger schema mismatch - degreeImg not in Mentor type
   if (mentor.degreeImg) {
     tags.push(t("userMentordetail.degreeProvided"));
   }
+  // @ts-expect-error: Backend Swagger schema mismatch - otherFile not in Mentor type
   if (mentor.otherFile) {
     tags.push(t("userMentordetail.additionalDocumentationIsAvailable"));
   }

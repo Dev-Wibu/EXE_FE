@@ -11,31 +11,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { authManager } from "@/services/auth.manager";
 import { getDashboardPath, useAuthStore } from "@/stores/authStore";
 import {
-  BookOpen,
-  Bot,
   Building2,
   HelpCircle,
   LayoutDashboard,
-  Lightbulb,
   LogIn,
   LogOut,
   Menu,
   Newspaper,
   Rocket,
   UserCircle,
-  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,33 +41,6 @@ function getInitials(name?: string): string {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-}
-
-// Reusable menu item component for consistent styling
-interface MenuItemProps {
-  to: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-function MenuItem({ to, icon, title, description }: MenuItemProps) {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <Link
-          to={to}
-          className="group flex h-[72px] w-full flex-col justify-center rounded-md p-3 no-underline transition-colors outline-none hover:bg-slate-100 hover:text-[#0058be] dark:hover:bg-slate-800 dark:hover:text-[#66B2FF]">
-          <div className="mb-1.5 flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0058be]/10 text-[#0058be] transition-colors group-hover:bg-[#0058be] group-hover:text-white dark:bg-[#66B2FF]/20 dark:text-[#66B2FF] dark:group-hover:bg-[#66B2FF] dark:group-hover:text-slate-900">
-              {icon}
-            </span>
-            <span className="text-sm font-medium">{title}</span>
-          </div>
-          <p className="text-xs leading-tight text-slate-500 dark:text-slate-400">{description}</p>
-        </Link>
-      </NavigationMenuLink>
-    </li>
-  );
 }
 
 export function Header() {
@@ -150,66 +111,6 @@ export function Header() {
               />
             </Link>
           </Button>
-
-          {/* Tính năng - Dropdown */}
-          <NavigationMenu viewport={false}>
-            <NavigationMenuList className="gap-1">
-              <NavigationMenuItem>
-                <NavigationMenuTrigger
-                  className={`group/item relative bg-transparent text-sm font-medium transition-colors duration-300 ${linkColorClass}`}>
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  {t("common.features")}
-                  <span
-                    className={`absolute bottom-0 left-1/2 h-[2px] w-0 -translate-x-1/2 transition-all group-hover/item:w-1/2 ${underlineColorClass}`}
-                  />
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                  <ul className="grid w-[480px] grid-cols-2 gap-2">
-                    <MenuItem
-                      to="/features/ai-interview"
-                      icon={<Bot className="h-4 w-4" />}
-                      title={t("common.virtualInterviewRoom")}
-                      description={t("common.experienceInterviewingWithAi")}
-                    />
-                    <MenuItem
-                      to="/features/mentor-interview"
-                      icon={<Users className="h-4 w-4" />}
-                      title={t("common.mentorInterview")}
-                      description={t("common.connectWithRealMentors")}
-                    />
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-
-              {/* Câu hỏi - Dropdown */}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger
-                  className={`group/item relative bg-transparent text-sm font-medium transition-colors duration-300 ${linkColorClass}`}>
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  {t("common.question")}
-                  <span
-                    className={`absolute bottom-0 left-1/2 h-[2px] w-0 -translate-x-1/2 transition-all group-hover/item:w-1/2 ${underlineColorClass}`}
-                  />
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                  <ul className="grid w-[480px] grid-cols-2 gap-2">
-                    <MenuItem
-                      to="/questions/bank"
-                      icon={<BookOpen className="h-4 w-4" />}
-                      title={t("common.questionBank")}
-                      description={t("common.over1500RealInterviewQuestions")}
-                    />
-                    <MenuItem
-                      to="/questions/tips"
-                      icon={<Lightbulb className="h-4 w-4" />}
-                      title={t("common.interviewTips")}
-                      description={t("common.interviewTipsFromExperts")}
-                    />
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
 
           {/* Blog - Simple Link */}
           <Button
@@ -359,48 +260,6 @@ export function Header() {
                           <Building2 className="h-5 w-5 text-slate-500 transition-colors group-hover:text-[#0047AB] dark:text-slate-400 dark:group-hover:text-[#66B2FF]" />
                           {t("common.company")}
                         </Link>
-                      </div>
-
-                      {/* Features Group */}
-                      <div className="space-y-1">
-                        <span className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                          {t("common.features")}
-                        </span>
-                        <div className="flex flex-col gap-0.5">
-                          <Link
-                            to="/features/ai-interview"
-                            className="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-[#66B2FF]">
-                            <Bot className="h-5 w-5 text-slate-500 transition-colors group-hover:text-[#0047AB] dark:text-slate-400 dark:group-hover:text-[#66B2FF]" />
-                            {t("common.virtualInterviewRoom")}
-                          </Link>
-                          <Link
-                            to="/features/mentor-interview"
-                            className="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-[#66B2FF]">
-                            <Users className="h-5 w-5 text-slate-500 transition-colors group-hover:text-[#0047AB] dark:text-slate-400 dark:group-hover:text-[#66B2FF]" />
-                            {t("common.mentorInterview")}
-                          </Link>
-                        </div>
-                      </div>
-
-                      {/* Questions Group */}
-                      <div className="space-y-1">
-                        <span className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                          {t("common.question")}
-                        </span>
-                        <div className="flex flex-col gap-0.5">
-                          <Link
-                            to="/questions/bank"
-                            className="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-[#66B2FF]">
-                            <BookOpen className="h-5 w-5 text-slate-500 transition-colors group-hover:text-[#0047AB] dark:text-slate-400 dark:group-hover:text-[#66B2FF]" />
-                            {t("common.questionBank")}
-                          </Link>
-                          <Link
-                            to="/questions/tips"
-                            className="group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#0047AB] dark:text-slate-300 dark:hover:bg-slate-900/60 dark:hover:text-[#66B2FF]">
-                            <Lightbulb className="h-5 w-5 text-slate-500 transition-colors group-hover:text-[#0047AB] dark:text-slate-400 dark:group-hover:text-[#66B2FF]" />
-                            {t("common.interviewTips")}
-                          </Link>
-                        </div>
                       </div>
 
                       {/* Resources Group */}

@@ -4,6 +4,7 @@
 
 export * from "./use-mobile";
 export * from "./useApplication";
+export * from "./useApplicationDetails";
 export * from "./useCompany";
 export * from "./useFeatureUsageLogs";
 export * from "./useInterviewAnalysis";

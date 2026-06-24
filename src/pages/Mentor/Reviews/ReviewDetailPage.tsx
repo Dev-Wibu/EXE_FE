@@ -57,6 +57,7 @@ export function ReviewDetailPage() {
         })
       : t("common.students"));
   const studentEmail = review?.user?.email || studentInfo?.email;
+  // @ts-expect-error: Backend Swagger schema mismatch - university not in User type
   const studentUniversity = review?.user?.university || studentInfo?.university;
   const studentAvatarUrl = review?.user?.avatarUrl || studentInfo?.avatarUrl;
   const reviewSessionId = review?.session?.id;

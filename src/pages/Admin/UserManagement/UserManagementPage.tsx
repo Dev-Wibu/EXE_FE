@@ -95,6 +95,7 @@ export function UserManagementPage() {
         const matchesSearch =
           user.name?.toLowerCase().includes(lowerQuery) ||
           user.email?.toLowerCase().includes(lowerQuery) ||
+          // @ts-expect-error: Backend Swagger schema mismatch - university/major not in User type
           user.university?.toLowerCase().includes(lowerQuery) ||
           user.major?.toLowerCase().includes(lowerQuery);
         if (!matchesSearch) return false;
@@ -136,8 +137,10 @@ export function UserManagementPage() {
       name: user.name || "",
       email: user.email || "",
       password: user.password || "",
-      university: user.university,
-      major: user.major ?? undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...((user as any).university !== undefined && { university: (user as any).university }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...((user as any).major !== undefined && { major: (user as any).major }),
       isActive: user.isActive,
       // Include Cloudinary public_id fields for file management during update
       public_id: user.public_id,

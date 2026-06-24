@@ -1218,7 +1218,12 @@
     "perPage": " / trang",
     "back": "Trở lại",
     "updateYourSecuritySettings": "Cập nhật cài đặt bảo mật của bạn",
-    "testTheory": "Kiểm tra lý thuyết"
+    "testTheory": "Kiểm tra lý thuyết",
+    "submit": "Nộp bài",
+    "applicationSubmittedSuccessfully": "Đơn ứng tuyển đã được gửi thành công",
+    "uploading": "Đang tải lên...",
+    "applicationIsBeingReviewed": "Đơn đang được chấm, vui lòng chờ",
+    "theApplicationIsBeingReviewed": "Đơn đang được chấm. Vui lòng chờ kết quả."
   },
   "compDemologinbutton": {
     "administratorAccountToManageThe": "Tài khoản quản trị viên để quản lý hệ thống",
@@ -2080,7 +2085,8 @@
     "youHaveCompletedMockInterview": "Bạn đã hoàn thành {{var_0}} buổi phỏng vấn giả lập với mentor. Hãy tiếp tục giữ vững phong độ nhé!",
     "youHaveEnteredIncorrectlyToo": "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau",
     "youHaveJustReceivedA": "Bạn vừa nhận được một thông báo mới.",
-    "youHaveNewNotifications": "Có {{var_0}} thông báo mới"
+    "youHaveNewNotifications": "Có {{var_0}} thông báo mới",
+    "submit": "Nộp bài"
   },
   "homepageFeatures": {
     "50ProfessionalMentors": "50+ Mentor chuyên nghiệp",
@@ -2781,7 +2787,6 @@
     "noExperienceYetClickQuot": "Chưa có kinh nghiệm nào. Nhấn \"Thêm kinh nghiệm\" để thêm.",
     "overviewOfYourApplicationProfile": "Tổng quan hồ sơ ứng tuyển và kỹ năng của bạn.",
     "payForMembershipPackages": "Thanh toán gói thành viên",
-    "changePhoto": "Đổi ảnh",
     "memberSince": "Thành viên từ",
     "personalInfo": "Thông tin cá nhân",
     "pngOrJpgMaximum5mb": "PNG hoặc JPG, tối đa 5MB",
@@ -2802,9 +2807,6 @@
     "userIdNotFound": "Không tìm thấy ID người dùng",
     "viewCurrentCv": "Xem CV hiện tại",
     "youHaveNotParticipatedIn": "Bạn chưa tham gia buổi phỏng vấn nào.",
-    "personalInfo": "Thông tin cá nhân",
-    "memberSince": "Thành viên từ",
-    "quickSettings": "Cài đặt nhanh",
     "viewYourPastInterviewSessions": "Xem lại các phiên phỏng vấn đã qua của bạn"
   },
   "userAiinterview": {
@@ -2846,6 +2848,7 @@
     "cameraIsOn": "Camera đang bật",
     "cameraNotFoundOnCurrent": "Không tìm thấy camera trên thiết bị hiện tại.",
     "cameraPermissionDenied": "Quyền camera bị từ chối",
+    "submit": "Nộp bài",
     "cancel": "Hủy bỏ",
     "candidateAmpLocation": "Ứng viên & Vị trí",
     "candidateProfileSavedSuccessfully": "Đã lưu hồ sơ ứng viên thành công!",
@@ -3080,7 +3083,35 @@
     "noResultYet": "Chưa có",
     "pending": "Chờ xử lý",
     "enterRoom": "Vào phòng",
-    "viewDetails": "Xem chi tiết"
+    "viewDetails": "Xem chi tiết",
+    "roundPending": "Chờ xử lý",
+    "roundSubmitting": "Đang nộp",
+    "roundAiEvaluated": "Đã chấm AI",
+    "roundCompleted": "Hoàn thành",
+    "roundError": "Lỗi",
+    "submittedContent": "Nội dung đã nộp",
+    "viewUploadedFile": "Xem file đã tải lên",
+    "quizAnswers": "Đáp án trắc nghiệm",
+    "questions": "câu hỏi",
+    "moreAnswers": "câu còn lại",
+    "passed": "Đậu",
+    "failed": "Tạch",
+    "page": "Trang",
+    "uploadYourCvToBegin": "Tải CV lên để bắt đầu vòng sàng lọc.",
+    "alreadySubmitted": "Bạn đã nộp cho vòng này rồi.",
+    "submitYourApplication": "Nộp Đơn Ứng Tuyển",
+    "currentSubmission": "Bài đã nộp hiện tại",
+    "uploadFile": "Tải File",
+    "clickToSelectFile": "Nhấn để chọn file",
+    "maxFileSize25mb": "Dung lượng tối đa: 25MB",
+    "yourAnswer": "Câu Trả Lời Của Bạn",
+    "enterYourContentHere": "Nhập nội dung của bạn tại đây...",
+    "pleaseEnterContent": "Vui lòng nhập nội dung hoặc chọn file để nộp.",
+    "pleaseSubmitYourDocument": "Vui lòng nộp tài liệu để hoàn thành vòng này.",
+    "aiEvaluating": "AI đang chấm...",
+    "aiEvaluatingDetail": "AI đang đánh giá bài của bạn, vui lòng chờ trong giây lát...",
+    "aiEvaluationComplete": "AI đã chấm xong! Kết quả đã được cập nhật.",
+    "aiEvaluationTimeout": "Hết thời gian chờ kết quả AI. Vui lòng tải lại trang để kiểm tra."
   },
   "userFeedback": {
     "evaluationContent": "Nội Dung Đánh Giá",

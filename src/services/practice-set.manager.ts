@@ -38,7 +38,6 @@ export interface SessionQuestion {
 
 /**
  * Lightweight response shape returned by /api/practice-sets/user/{userId}
- * Does NOT include `major` or `user` fields.
  */
 export interface PracticeSetResponse {
   id?: number;
@@ -81,7 +80,6 @@ export interface PracticeSet {
     email?: string;
   };
   interviewSessionId?: number;
-  /** Populated when fetched via /api/practice-sets/interview-session/{id} */
   questions?: SessionQuestion[];
 }
 
@@ -95,24 +93,14 @@ export interface PracticeSetFormData {
   majorId?: number;
 }
 export class PracticeSetManager implements BaseManager<PracticeSet> {
-  /**
-   * Get all practice sets
-   * GET /api/practice-sets
-   */
   async getAll(
     _params?: PaginationParams
   ): Promise<ApiResponse<PaginatedResponse<PracticeSet> | PracticeSet[]>> {
     try {
-      const response = await fetchClient
-        .GET("/api/practice-sets", {
-          // @ts-expect-error: Backend Swagger schema mismatch
-          params: _params,
-        })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).GET("/api/practice-sets", {
+        params: _params,
+      });
       return {
         success: true,
         data: response.data,
@@ -125,24 +113,13 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Get practice set by ID
-   * GET /api/practice-sets/{id}
-   */
   async getById(id: string | number): Promise<ApiResponse<PracticeSet>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DETAIL, {
-        id,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DETAIL, { id });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).GET(endpoint, {});
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
         data: response.data,
       };
     } catch (error) {
@@ -153,24 +130,13 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Get practice sets by target level
-   * GET /api/practice-sets/level/{level}
-   */
   async getByLevel(level: PracticeSetLevel): Promise<ApiResponse<PracticeSet[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_LEVEL, {
-        level,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_LEVEL, { level });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).GET(endpoint, {});
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
         data: response.data,
       };
     } catch (error) {
@@ -181,31 +147,19 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Create new practice set
-   * POST /api/practice-sets (JSON body)
-   * Backend requires full PracticeSet schema including id: 0 for creation
-   */
   async create(data: Partial<PracticeSet>): Promise<ApiResponse<PracticeSet>> {
     try {
-      // Backend requires full PracticeSet schema for creation
-      // id: 0 indicates new record creation
       const practiceSetPayload: PracticeSet = {
         id: 0,
-        // Required: 0 for creation
         practiceSetName: data.practiceSetName,
         objective: data.objective,
         level: data.level,
         major: data.major,
       };
-      const response = await fetchClient
-        // @ts-expect-error: Backend Swagger schema mismatch
-        .POST("/api/practice-sets", { body: practiceSetPayload })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).POST("/api/practice-sets", {
+        body: practiceSetPayload,
+      });
       return {
         success: true,
         data: response.data,
@@ -218,24 +172,13 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Update practice set
-   * PUT /api/practice-sets (JSON body)
-   */
   async update(id: string | number, data: Partial<PracticeSet>): Promise<ApiResponse<PracticeSet>> {
     try {
-      const practiceSetData: PracticeSet = {
-        ...data,
-        id: Number(id),
-      };
-      const response = await fetchClient
-        // @ts-expect-error: Backend Swagger schema mismatch
-        .PUT("/api/practice-sets", { body: practiceSetData })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      const practiceSetData: PracticeSet = { ...data, id: Number(id) };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).PUT("/api/practice-sets", {
+        body: practiceSetData,
+      });
       return {
         success: true,
         data: response.data,
@@ -248,26 +191,12 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Delete practice set
-   * DELETE /api/practice-sets/{id}
-   * Schema provides DELETE endpoint for practice sets
-   */
   async delete(id: string | number): Promise<ApiResponse<void>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DELETE, {
-        id,
-      });
-      // Use DELETE method as per schema
-      // @ts-expect-error: Backend Swagger schema mismatch
-      await fetchClient.DELETE(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
-      return {
-        success: true,
-      };
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.DELETE, { id });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (fetchClient as any).DELETE(endpoint, {});
+      return { success: true };
     } catch (error) {
       return {
         success: false,
@@ -275,30 +204,16 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
       };
     }
   }
-  /**
-   * Get full practice set with items
-   * GET /api/practice-sets/full-set/{id}
-   * Returns PracticeSetResponse = { practiceSet, practiceSetItem[] }
-   */
-  async getFullSet(id: string | number): Promise<
-    ApiResponse<{
-      practiceSet: PracticeSet;
-      practiceSetItem: PracticeSetItem[];
-    }>
-  > {
+
+  async getFullSet(
+    id: string | number
+  ): Promise<ApiResponse<{ practiceSet: PracticeSet; practiceSetItem: PracticeSetItem[] }>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.FULL_SET, {
-        id,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.FULL_SET, { id });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).GET(endpoint, {});
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
         data: response.data,
       };
     } catch (error) {
@@ -309,10 +224,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Get all practice sets for a given interview session
-   * GET /api/practice-sets/interview-session/{interviewSessionId}
-   */
   async getByInterviewSession(
     interviewSessionId: number
   ): Promise<ApiResponse<PracticeSetResponse[]>> {
@@ -320,15 +231,10 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
       const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_INTERVIEW_SESSION, {
         interviewSessionId,
       });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).GET(endpoint, {});
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
         data: response.data,
       };
     } catch (error) {
@@ -339,26 +245,17 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Generate a practice set via AI from a completed interview session
-   * POST /api/practice-sets/create-by-ai
-   * Body: PracticeGenerateRequest — session must be COMPLETED with a result
-   */
   async createByAI(data: {
     aiInterviewId?: number;
     dateNumber: number;
   }): Promise<ApiResponse<PracticeSet>> {
     try {
-      const response = await fetchClient
-        .POST("/api/practice-sets/create-by-ai", { body: data })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).POST("/api/practice-sets/create-by-ai", {
+        body: data,
+      });
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
         data: response.data,
       };
     } catch (error) {
@@ -369,24 +266,13 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Get all practice sets belonging to a specific user
-   * GET /api/practice-sets/user/{userId}
-   */
   async getByUser(userId: number): Promise<ApiResponse<PracticeSetResponse[]>> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_USER, {
-        userId,
-      });
-      // @ts-expect-error: Backend Swagger schema mismatch
-      const response = await fetchClient.GET(endpoint, {}).then((res) => ({
-        data: res.data,
-        status: res.response?.status,
-        headers: res.response?.headers,
-      }));
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRACTICE_SETS.BY_USER, { userId });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).GET(endpoint, {});
       return {
         success: true,
-        // @ts-expect-error: Backend Swagger schema mismatch
         data: response.data,
       };
     } catch (error) {
@@ -397,11 +283,6 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }
   }
 
-  /**
-   * Create full practice set with questions
-   * POST /api/practice-sets/create-full
-   * Body: PracticeRequest
-   */
   async createFull(data: {
     practiceSetName: string;
     objective?: string;
@@ -418,13 +299,10 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     }>;
   }): Promise<ApiResponse<PracticeSet>> {
     try {
-      const response = await fetchClient
-        .POST("/api/practice-sets/create-full", { body: data })
-        .then((res) => ({
-          data: res.data,
-          status: res.response?.status,
-          headers: res.response?.headers,
-        }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (fetchClient as any).POST("/api/practice-sets/create-full", {
+        body: data,
+      });
       return {
         success: true,
         data: response.data,
@@ -432,7 +310,7 @@ export class PracticeSetManager implements BaseManager<PracticeSet> {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : t("general.unableToCreateAFull"),
+        error: error instanceof Error ? error.message : t("general.cannotCreateFullReviewSet"),
       };
     }
   }

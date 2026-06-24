@@ -24,7 +24,6 @@ import {
   Database,
   FileQuestion,
   FileText,
-  FolderOpen,
   GraduationCap,
   LayoutDashboard,
   LayoutTemplate,
@@ -34,7 +33,6 @@ import {
   Settings,
   Star,
   Trash2,
-  Trophy,
   UserCog,
   Users,
   Video,
@@ -53,9 +51,7 @@ import { PostManagementPage } from "../PostManagement";
 import { PracticeQuestionManagementPage } from "../PracticeQuestionManagement";
 import { PracticeSetManagementPage } from "../PracticeSetManagement";
 import { QuestionBankManagementPage } from "../QuestionBankManagement";
-import { QuestionCategoryManagementPage } from "../QuestionCategoryManagement/QuestionCategoryManagementPage";
 import { QuestionMajorManagementPage } from "../QuestionMajorManagement";
-import { QuizSetManagementPage } from "../QuizSetManagement";
 import { ReviewManagementPage } from "../ReviewManagement";
 import { SessionManagementPage } from "../SessionManagement";
 import { UserManagementPage } from "../UserManagement";
@@ -67,12 +63,10 @@ type TabType =
   | "reviews"
   | "feedback"
   | "notifications"
-  | "questionCategories"
   | "questionBanks"
   | "questionMajors"
   | "practiceSets"
   | "practiceQuestions"
-  | "quizSets"
   | "posts"
   | "companies"
   | "candidateProfiles"
@@ -86,12 +80,10 @@ const VALID_TAB_TYPES: TabType[] = [
   "reviews",
   "feedback",
   "notifications",
-  "questionCategories",
   "questionBanks",
   "questionMajors",
   "practiceSets",
   "practiceQuestions",
-  "quizSets",
   "posts",
   "companies",
   "candidateProfiles",
@@ -136,10 +128,6 @@ const getAvailableTabs = (
     label: t("adminAdmindashboard.manageNotifications"),
   },
   {
-    type: "questionCategories",
-    label: t("common.lesson"),
-  },
-  {
     type: "questionBanks",
     label: t("common.questionBank"),
   },
@@ -154,10 +142,6 @@ const getAvailableTabs = (
   {
     type: "practiceQuestions",
     label: t("adminAdmindashboard.reviewQuestions"),
-  },
-  {
-    type: "quizSets",
-    label: t("adminAdmindashboard.testSet"),
   },
   {
     type: "posts",
@@ -184,12 +168,10 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   reviews: Star,
   feedback: MessageSquare,
   notifications: Bell,
-  questionCategories: FolderOpen,
   questionBanks: Database,
   questionMajors: GraduationCap,
   practiceSets: BookOpen,
   practiceQuestions: FileQuestion,
-  quizSets: Trophy,
   posts: Newspaper,
   companies: Building2,
   candidateProfiles: FileText,
@@ -203,12 +185,10 @@ const TAB_COLORS: Record<TabType, string> = {
   reviews: "text-yellow-600",
   feedback: "text-cyan-600",
   notifications: "text-red-600",
-  questionCategories: "text-purple-600",
   questionBanks: "text-indigo-500",
   questionMajors: "text-pink-600",
   practiceSets: "text-teal-600",
   practiceQuestions: "text-emerald-600",
-  quizSets: "text-amber-600",
   posts: "text-purple-500",
   companies: "text-sky-600",
   candidateProfiles: "text-teal-600",
@@ -313,12 +293,6 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
         icon: FileQuestion,
         iconColor: "text-emerald-600",
       },
-      {
-        type: "quizSets",
-        label: t("adminAdmindashboard.testSet"),
-        icon: Trophy,
-        iconColor: "text-amber-600",
-      },
     ],
   },
   {
@@ -408,12 +382,6 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
         color: "text-purple-600",
         children: [
           {
-            type: "questionCategories",
-            icon: FolderOpen,
-            label: t("common.lesson"),
-            color: "text-purple-600",
-          },
-          {
             type: "questionBanks",
             icon: Database,
             label: t("common.questionBank"),
@@ -436,12 +404,6 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
             icon: FileQuestion,
             label: t("adminAdmindashboard.reviewQuestions"),
             color: "text-emerald-600",
-          },
-          {
-            type: "quizSets",
-            icon: Trophy,
-            label: t("adminAdmindashboard.testSet"),
-            color: "text-amber-600",
           },
         ],
       },
@@ -663,8 +625,6 @@ export function AdminDashboardPage() {
         return <FeedbackManagementPage />;
       case "notifications":
         return <NotificationManagementPage />;
-      case "questionCategories":
-        return <QuestionCategoryManagementPage />;
       case "questionBanks":
         return <QuestionBankManagementPage />;
       case "questionMajors":
@@ -673,8 +633,6 @@ export function AdminDashboardPage() {
         return <PracticeSetManagementPage />;
       case "practiceQuestions":
         return <PracticeQuestionManagementPage />;
-      case "quizSets":
-        return <QuizSetManagementPage />;
       case "posts":
         return <PostManagementPage />;
       case "companies":

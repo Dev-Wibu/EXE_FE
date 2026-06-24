@@ -74,6 +74,7 @@ export function AccountPage() {
           email: userData.email || currentAuthUser.email || "",
           avatar: userData.avatarUrl || null,
           public_id: userData.public_id || null,
+          // @ts-expect-error: Backend Swagger schema mismatch - university not in User type
           university: userData.university || "",
           major: userData.major || "",
           cvUrl: userData.cvUrl || null,
@@ -222,6 +223,7 @@ export function AccountPage() {
         userProfile.id,
         {
           name: formData.name,
+          // @ts-expect-error: Backend Swagger schema mismatch - university not in User type
           university: formData.university,
           major: normalizeMajor(formData.major),
           ...(userProfile.public_id ? { public_id: userProfile.public_id } : {}),
@@ -303,6 +305,7 @@ export function AccountPage() {
   const summaryName = userProfile?.name || authUser?.name || t("common.account");
   const summaryEmail = userProfile?.email || authUser?.email || "—";
   const summaryJoinedAt = userProfile?.createdAt ? formatDate(userProfile.createdAt) : "—";
+  // @ts-expect-error: Backend Swagger schema mismatch - university/major not in User type
   const summaryUniversity = userProfile?.university || authUser?.university || "";
   const summaryMajor = userProfile?.major || authUser?.major || "";
 

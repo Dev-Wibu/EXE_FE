@@ -43,11 +43,17 @@ export function MentorAccountPage() {
           currentCompany: mentorData.currentCompany || "",
           pricePerMinute: mentorData.pricePerMinute || 0,
           averageRating: mentorData.averageRating ?? 0,
+          // @ts-expect-error: Backend Swagger schema mismatch - identityImg/public_id_identity not in Mentor type
           identityImg: mentorData.identityImg || null,
+          // @ts-expect-error: Backend Swagger schema mismatch - public_id_identity not in Mentor type
           public_id_identity: mentorData.public_id_identity || null,
+          // @ts-expect-error: Backend Swagger schema mismatch - degreeImg/public_id_degree not in Mentor type
           degreeImg: mentorData.degreeImg || null,
+          // @ts-expect-error: Backend Swagger schema mismatch - public_id_degree not in Mentor type
           public_id_degree: mentorData.public_id_degree || null,
+          // @ts-expect-error: Backend Swagger schema mismatch - otherFile/public_id_other not in Mentor type
           otherFile: mentorData.otherFile || null,
+          // @ts-expect-error: Backend Swagger schema mismatch - public_id_other not in Mentor type
           public_id_other: mentorData.public_id_other || null,
           totalSession: mentorData.totalSession || 0,
           active: mentorData.active !== false,

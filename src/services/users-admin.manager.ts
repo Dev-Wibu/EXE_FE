@@ -154,12 +154,15 @@ export class UsersAdminManager implements BaseManager<User> {
       // Note: Password should be handled securely by the backend (e.g., hashing)
       // The frontend sends the password in plain text over HTTPS
       const createData = _data as CreateUserData;
-      const userInfo: UserInfo = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userInfo: UserInfo & Record<string, any> = {
         name: _data.name.trim(),
         email: _data.email.trim(),
         password: _data.password,
-        university: _data.university,
-        major: normalizeMajor(_data.major),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        university: (_data as any).university,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        major: normalizeMajor((_data as any).major),
         // IMPORTANT: Include public_id fields for Cloudinary file management
         // Backend requires public_id to be present when files are uploaded.
         // For new users creating with files, send empty string "" as placeholder.
@@ -279,7 +282,8 @@ export class UsersAdminManager implements BaseManager<User> {
       // Backend may accept these fields since they are part of the User schema
       // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
       // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
-      const userInfo: UserInfo = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userInfo: UserInfo & Record<string, any> = {
         id: Number(_id),
         // Include id for update operation
         name: _data.name?.trim() || existingUser.name,
@@ -287,8 +291,15 @@ export class UsersAdminManager implements BaseManager<User> {
         // Backend ignores empty string password, but wipes if null/missing.
         // If _data.password is undefined (e.g. from User Site), fall back to existingUser.password
         password: _data.password ?? existingUser.password,
-        university: _data.university || existingUser.university,
-        major: _data.major ? normalizeMajor(_data.major) : (existingUser.major ?? undefined),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        university: (_data as any).university || (existingUser as any).university,
+
+        major: _data.major
+          ? normalizeMajor(_data.major)
+          : normalizeMajor(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (existingUser as any).major
+            ),
         // Include role if provided - backend may accept this even though not in UserInfo schema
         role: _data.role || existingUser.role,
         // Include Cloudinary public_id for avatar - required for update/delete operations
@@ -392,12 +403,15 @@ export class UsersAdminManager implements BaseManager<User> {
       // Include all existing user data to prevent backend from nullifying fields
       // IMPORTANT: Include public_id and cv_public_id for Cloudinary file management
       // Updated: Removed bio, targetPosition, targetLevel per BE requirement (2026-01-20)
-      const userInfo: UserInfo = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userInfo: UserInfo & Record<string, any> = {
         id: Number(_id),
         name: currentUserData?.name?.trim(),
         email: currentUserData?.email?.trim(),
-        university: currentUserData?.university,
-        major: currentUserData?.major ?? undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        university: (currentUserData as any)?.university,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        major: normalizeMajor((currentUserData as any)?.major),
         role: currentUserData?.role,
         isActive: newActiveStatus,
         // Include Cloudinary public_id for avatar - required for update operations

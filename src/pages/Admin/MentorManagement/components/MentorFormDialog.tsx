@@ -267,8 +267,11 @@ export function MentorFormDialog({
 
   // Get display URLs - prioritize new upload preview over existing URL
   const displayAvatarUrl = avatarPreview || selectedMentor?.avatarUrl;
+  // @ts-expect-error: Backend Swagger schema mismatch - identityImg not in Mentor type
   const displayIdentityUrl = identityPreview || selectedMentor?.identityImg;
+  // @ts-expect-error: Backend Swagger schema mismatch - degreeImg not in Mentor type
   const displayDegreeUrl = degreePreview || selectedMentor?.degreeImg;
+  // @ts-expect-error: Backend Swagger schema mismatch - otherFile not in Mentor type
   const displayOtherUrl = otherPreview || selectedMentor?.otherFile;
   const handleOpenFilePreview = ({
     label,

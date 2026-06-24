@@ -45,6 +45,7 @@ export function CommunityFeedPage({ title, description }: CommunityFeedPageProps
     .slice(0, 2)
     .toUpperCase();
   const allMajors = useMemo(() => {
+    // @ts-expect-error: Backend Swagger schema mismatch - majorName not in PostResponse
     return [...new Set(posts.map((p) => p.post?.majorName).filter(Boolean))] as string[];
   }, [posts]);
   const filtered = useMemo(() => {
@@ -57,6 +58,7 @@ export function CommunityFeedPage({ title, description }: CommunityFeedPageProps
           post?.title?.toLowerCase().includes(lower) ||
           post?.tags?.some((t) => t.toLowerCase().includes(lower)) ||
           false;
+        // @ts-expect-error: Backend Swagger schema mismatch - majorName not in PostResponse
         const matchMajor = majorFilter === "all" || post?.majorName === majorFilter;
         return matchSearch && matchMajor;
       })

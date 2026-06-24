@@ -42,6 +42,7 @@ export const transformUserUpdateRequest = (
   name: formData.name?.trim() || existingUser?.name,
   email: formData.email?.trim() || existingUser?.email,
   role: formData.role || existingUser?.role,
+  // @ts-expect-error: Backend Swagger schema mismatch - university/major not in User type
   university: formData.university?.trim() || existingUser?.university,
   major: normalizeMajor(formData.major) || existingUser?.major,
 });

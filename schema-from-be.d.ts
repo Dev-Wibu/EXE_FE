@@ -76,22 +76,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/question-lessons": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["findAll"];
-        put: operations["updateQuestionCategory"];
-        post: operations["createQuestionCategory"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/question-categories": {
         parameters: {
             query?: never;
@@ -100,8 +84,8 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getAllQuestionCategories"];
-        put: operations["updateQuestionCategory_1"];
-        post: operations["createQuestionCategory_1"];
+        put: operations["updateQuestionCategory"];
+        post: operations["createQuestionCategory"];
         delete?: never;
         options?: never;
         head?: never;
@@ -119,54 +103,6 @@ export interface paths {
         put: operations["updateQuestionBank"];
         post?: never;
         delete: operations["deleteQuestionBank"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionSets"];
-        put: operations["updateQuestionSet"];
-        post: operations["createQuestionSet"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-set-items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionSetItems"];
-        put: operations["updateQuestionSetItem"];
-        post: operations["createQuestionSetItem"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-questions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllQuestions"];
-        put: operations["updateQuestion"];
-        post: operations["createQuestion"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -509,70 +445,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/quiz-sets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAll_1"];
-        put?: never;
-        post: operations["createQuizSet"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quiz-sets/submit/{quizId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["submitAndCalculateScore"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quiz-sets/create-full": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createFullQuizSet"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quiz-sets/create-full-ai": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createFullQuizSetByAI"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/question-banks": {
         parameters: {
             query?: never;
@@ -599,70 +471,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["generateQuestion_1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/create-full": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createFullQuestionSet"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/create-by-ai": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createPracticeSetByAI"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-set-items/create-items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createQuestionSetItems"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-questions/save-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createQuestionList"];
         delete?: never;
         options?: never;
         head?: never;
@@ -916,6 +724,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -926,6 +750,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["forgotPassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -978,6 +818,26 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["hrScore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/application-details/code-review/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chấm bài Code Review
+         * @description Xử lý chấm điểm trực tiếp bài review code của ứng viên thông qua AnythingLLM với workspace CODE_REVIEW.
+         */
+        post: operations["evaluateCodeReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1228,54 +1088,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/quiz-sets/{quizId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuizById"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteQuizSet"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/quiz-sets/by-practice-set/{practiceSetId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getHistoryByPracticeSet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/question-lessons/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["findById"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteQuestionCategory"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/question-categories/{id}": {
         parameters: {
             query?: never;
@@ -1287,167 +1099,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete riu */
-        delete: operations["deleteQuestionCategory_1"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionSet"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteQuestionSet"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/user/{userId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getByUser"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/level/{level} ": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionSetsByTargetLevel"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/interview-session/{interviewSessionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllByInterviewSession"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-sets/full-set/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getFullQuestionSet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-set-items/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionSetItem"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteQuestionSetItem"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-set-items/by-question-set/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionSetItemsByQuestionSet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-questions/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionById"];
-        put?: never;
-        post?: never;
-        delete: operations["deleteQuestion"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-questions/random-by-level": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getRandomQuestionsByLevel"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/practice-questions/by-category-level": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getQuestionsByCategoryAndLevel"];
-        put?: never;
-        post?: never;
-        delete?: never;
+        delete: operations["deleteQuestionCategory"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2267,6 +1919,8 @@ export interface components {
             roundType: "CV_SCREENING" | "EMAIL_SIMULATOR" | "QUIZ" | "CODING" | "CODE_REVIEW" | "MENTROR_REVIEW" | "AI_INTERVIEW";
             /** Format: double */
             passThreshold: number;
+            /** Format: int32 */
+            reviewerId?: number;
             configData: components["schemas"]["RoundConfigDto"];
         };
         SetupJdRoundsRequest: {
@@ -2283,6 +1937,8 @@ export interface components {
             /** Format: double */
             passThreshold?: number;
             configData?: components["schemas"]["RoundConfig"];
+            /** Format: int32 */
+            reviewerId?: number;
             isDeleted?: boolean;
             isAuto?: boolean;
             /** Format: date-time */
@@ -2292,13 +1948,6 @@ export interface components {
         };
         UpdateJdRoundRequest: {
             rounds: components["schemas"]["RoundItemDto"][];
-        };
-        QuestionLesson: {
-            /** Format: int32 */
-            id?: number;
-            lessonName?: string;
-            description?: string;
-            urlTutorial?: string;
         };
         QuestionCategory: {
             /** Format: int32 */
@@ -2325,30 +1974,17 @@ export interface components {
             correctAnswer?: string;
             isDeleted?: boolean;
         };
-        PracticeQuestion: {
-            /** Format: int32 */
-            questionId?: number;
-            title?: string;
-            content?: string;
-            /** @enum {string} */
-            level?: "EASY" | "MEDIUM" | "HARD";
-            lesson?: components["schemas"]["QuestionLesson"];
-            answer?: string;
-            hint?: string;
-        };
-        PracticeSet: {
+        PostComment: {
             /** Format: int32 */
             id?: number;
-            practiceSetName?: string;
-            objective?: string;
-            /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
-            /** Format: date-time */
-            startDate?: string;
             user?: components["schemas"]["User"];
-            questions?: components["schemas"]["PracticeQuestion"][];
+            content?: string;
             /** Format: int32 */
-            interviewSessionId?: number;
+            parentCommentId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         User: {
             /** Format: int32 */
@@ -2361,29 +1997,8 @@ export interface components {
             isActive?: boolean;
             avatarUrl?: string;
             public_id?: string;
-            university?: string;
             cvUrl?: string;
             cv_public_id?: string;
-        };
-        PracticeSetItem: {
-            /** Format: int32 */
-            id?: number;
-            practiceQuestion?: components["schemas"]["PracticeQuestion"];
-            practiceSet?: components["schemas"]["PracticeSet"];
-            /** Format: int32 */
-            orderIndex?: number;
-        };
-        PostComment: {
-            /** Format: int32 */
-            id?: number;
-            user?: components["schemas"]["User"];
-            content?: string;
-            /** Format: int32 */
-            parentCommentId?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
         };
         UpdateMentorReviewRequest: {
             /** Format: int32 */
@@ -2414,12 +2029,6 @@ export interface components {
             yearsOfExperience?: number;
             linkedInUrl?: string;
             currentCompany?: string;
-            identityImg?: string;
-            public_id_identity?: string;
-            degreeImg?: string;
-            public_id_degree?: string;
-            otherFile?: string;
-            public_id_other?: string;
             /** Format: int32 */
             totalSession?: number;
             /** Format: double */
@@ -2604,8 +2213,6 @@ export interface components {
             name?: string;
             email: string;
             password?: string;
-            university?: string;
-            major?: string;
         };
         CVParserResponse: {
             targetRole?: string;
@@ -2729,46 +2336,6 @@ export interface components {
             examples?: components["schemas"]["Example"][];
             suggested_grading_rubric?: string;
         };
-        QuizItem: {
-            /** Format: int32 */
-            id?: number;
-            question?: string;
-            options?: string;
-            correctAnswer?: string;
-            userResponse?: string;
-            explanation?: string;
-        };
-        QuizSet: {
-            /** Format: int32 */
-            quizId?: number;
-            quizName?: string;
-            /** Format: double */
-            score?: number;
-            practiceSet?: components["schemas"]["PracticeSet"];
-            /** Format: date-time */
-            createdAt?: string;
-            questions?: components["schemas"]["QuizItem"][];
-            submitted?: boolean;
-        };
-        QuizItemCreateRequest: {
-            question?: string;
-            options?: {
-                [key: string]: string;
-            };
-            correctAnswer?: string;
-            explanation?: string;
-        };
-        QuizItemResponse: {
-            /** Format: int32 */
-            id?: number;
-            question?: string;
-            options?: string;
-        };
-        QuizResponse: {
-            /** Format: int32 */
-            quizId?: number;
-            items?: components["schemas"]["QuizItemResponse"][];
-        };
         CreateQuestionBankRequest: {
             /** Format: int32 */
             questionCategoryId: number;
@@ -2789,41 +2356,6 @@ export interface components {
             options?: string[];
             correctAnswer?: string;
         };
-        PracticeQuestionRequest: {
-            title?: string;
-            content?: string;
-            /** @enum {string} */
-            level?: "EASY" | "MEDIUM" | "HARD";
-            lessonName?: string;
-            answer?: string;
-            hint?: string;
-        };
-        PracticeRequest: {
-            /** Format: int32 */
-            aiInterviewId?: number;
-            /** Format: int32 */
-            userId?: number;
-            practiceSetName?: string;
-            objective?: string;
-            /** @enum {string} */
-            target?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
-            /** Format: int32 */
-            dateNumber?: number;
-            questions?: components["schemas"]["PracticeQuestionRequest"][];
-        };
-        PracticeGenerateRequest: {
-            /** Format: int32 */
-            aiInterviewId?: number;
-            /** Format: int32 */
-            dateNumber?: number;
-        };
-        PracticeSetAIResponse: {
-            practiceSetName?: string;
-            objective?: string;
-            /** Format: int32 */
-            dateNumber?: number;
-            questions?: components["schemas"]["PracticeQuestionRequest"][];
-        };
         /** @description Post create request */
         PostCreateRequest: {
             title?: string;
@@ -2831,8 +2363,6 @@ export interface components {
             summary?: string;
             /** Format: int32 */
             authorId?: number;
-            /** Format: int32 */
-            majorId?: number;
             /** Format: binary */
             coverImg?: string;
             tags?: string[];
@@ -3116,9 +2646,19 @@ export interface components {
             files?: components["schemas"]["CodeFile"][];
             expectedIssues?: components["schemas"]["ExpectedIssue"][];
         };
+        ResetPasswordRequest: {
+            /** Format: email */
+            email: string;
+            otp: string;
+            newPassword: string;
+        };
         LoginRequest: {
             email?: string;
             password?: string;
+        };
+        ForgotPasswordRequest: {
+            /** Format: email */
+            email: string;
         };
         Application: {
             /** Format: int64 */
@@ -3177,6 +2717,13 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        CodeReviewSubmission: {
+            filename?: string;
+            /** Format: int32 */
+            lineNumber?: number;
+            severity?: string;
+            description?: string;
+        };
         CodeSubmission: {
             sourceCode?: string[];
             testCases?: components["schemas"]["CompilerResponseDto"];
@@ -3202,6 +2749,7 @@ export interface components {
             fileUrl?: string;
             quizAnswers?: components["schemas"]["QuizAnswer"][];
             codeSubmissions?: components["schemas"]["CodeSubmission"][];
+            codeReviewSubmissions?: components["schemas"]["CodeReviewSubmission"][];
         };
         SubmissionResult: {
             /** @enum {string} */
@@ -3242,6 +2790,13 @@ export interface components {
             quizAnswers?: string[];
             compileRequest?: components["schemas"]["CompileRequest"][];
         };
+        CodeReviewSubmitRequest: {
+            /** Format: int64 */
+            applicationId?: number;
+            /** Format: int64 */
+            roundId?: number;
+            submissions?: components["schemas"]["CodeReviewSubmission"][];
+        };
         UserResponse: {
             /** Format: int32 */
             id?: number;
@@ -3252,7 +2807,6 @@ export interface components {
             isActive?: boolean;
             avatarUrl?: string;
             public_id?: string;
-            university?: string;
             cvUrl?: string;
             cv_public_id?: string;
         };
@@ -3280,39 +2834,6 @@ export interface components {
             /** Format: double */
             passThreshold?: number;
             configData?: components["schemas"]["RoundConfig"];
-        };
-        PracticeQuestionDto: {
-            /** Format: int32 */
-            questionId?: number;
-            title?: string;
-            content?: string;
-            /** @enum {string} */
-            level?: "EASY" | "MEDIUM" | "HARD";
-            lessonName?: string;
-            answer?: string;
-            hint?: string;
-        };
-        PracticeSetResponse: {
-            /** Format: int32 */
-            id?: number;
-            practiceSetName?: string;
-            objective?: string;
-            /** @enum {string} */
-            level?: "INTERN" | "FRESHER" | "JUNIOR" | "MIDDLE";
-            /** Format: date-time */
-            startDate?: string;
-            /** Format: int32 */
-            interviewSessionId?: number;
-            questions?: components["schemas"]["PracticeQuestionDto"][];
-            quizzes?: components["schemas"]["Quiz"][];
-        };
-        Quiz: {
-            /** Format: int32 */
-            quizId?: number;
-            quizName?: string;
-            /** Format: int32 */
-            index?: number;
-            submit?: boolean;
         };
         AuthorResponse: {
             name?: string;
@@ -3345,7 +2866,6 @@ export interface components {
             coverImgUrl?: string;
             tags?: string[];
             author?: components["schemas"]["AuthorResponse"];
-            majorName?: string;
         };
         PostLikeResponse: {
             userName?: string;
@@ -3361,15 +2881,15 @@ export interface components {
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
         PagePostResponse: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
             pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["PostResponse"][];
@@ -3379,15 +2899,15 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
-            /** Format: int32 */
-            pageNumber?: number;
-            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
+            /** Format: int32 */
+            pageNumber?: number;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
+            unpaged?: boolean;
         };
         SortObject: {
             unsorted?: boolean;
@@ -3436,9 +2956,6 @@ export interface components {
             currentCompany?: string;
             /** Format: int32 */
             rate?: number;
-            identityImg?: string;
-            degreeImg?: string;
-            otherFile?: string;
             /** Format: int32 */
             totalSession?: number;
             /** Format: double */
@@ -3536,9 +3053,9 @@ export interface components {
             chatHistory?: components["schemas"]["InterviewExchange"][];
         };
         ApplicationContext: {
+            applicationName?: string;
             /** Format: int64 */
             startupDate?: number;
-            applicationName?: string;
             autowireCapableBeanFactory?: components["schemas"]["AutowireCapableBeanFactory"];
             parent?: components["schemas"]["ApplicationContext"];
             id?: string;
@@ -3641,17 +3158,17 @@ export interface components {
         };
         JspPropertyGroupDescriptor: {
             trimDirectiveWhitespaces?: string;
+            includeCodas?: string[];
+            elIgnored?: string;
+            defaultContentType?: string;
+            urlPatterns?: string[];
             errorOnELNotFound?: string;
             pageEncoding?: string;
+            errorOnUndeclaredNamespace?: string;
+            deferredSyntaxAllowedAsLiteral?: string;
+            isXml?: string;
             scriptingInvalid?: string;
             includePreludes?: string[];
-            includeCodas?: string[];
-            deferredSyntaxAllowedAsLiteral?: string;
-            errorOnUndeclaredNamespace?: string;
-            elIgnored?: string;
-            isXml?: string;
-            urlPatterns?: string[];
-            defaultContentType?: string;
             buffer?: string;
         };
         RedirectView: {
@@ -3675,20 +3192,21 @@ export interface components {
             expandUriTemplateVariables?: boolean;
             propagateQueryParams?: boolean;
             hosts?: string[];
-            redirectView?: boolean;
             propagateQueryProperties?: boolean;
+            redirectView?: boolean;
+            attributesCSV?: string;
             attributesMap?: {
                 [key: string]: unknown;
             };
             attributes?: {
                 [key: string]: string;
             };
-            attributesCSV?: string;
         };
         ServletContext: {
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            /** Format: int32 */
-            sessionTimeout?: number;
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            virtualServerName?: string;
+            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
@@ -3696,6 +3214,9 @@ export interface components {
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
+            serverInfo?: string;
+            /** Format: int32 */
+            sessionTimeout?: number;
             servletRegistrations?: {
                 [key: string]: components["schemas"]["ServletRegistration"];
             };
@@ -3703,11 +3224,7 @@ export interface components {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
-            serverInfo?: string;
-            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            virtualServerName?: string;
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             initParameterNames?: unknown;
             contextPath?: string;
             attributeNames?: unknown;
@@ -3777,8 +3294,8 @@ export interface components {
             minorVersion?: number;
         };
         ServletRegistration: {
-            runAsRole?: string;
             mappings?: string[];
+            runAsRole?: string;
             initParameters?: {
                 [key: string]: string;
             };
@@ -3973,74 +3490,6 @@ export interface operations {
             };
         };
     };
-    findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuestionLesson"][];
-                };
-            };
-        };
-    };
-    updateQuestionCategory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["QuestionLesson"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuestionLesson"];
-                };
-            };
-        };
-    };
-    createQuestionCategory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["QuestionLesson"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuestionLesson"];
-                };
-            };
-        };
-    };
     getAllQuestionCategories: {
         parameters: {
             query?: never;
@@ -4061,7 +3510,7 @@ export interface operations {
             };
         };
     };
-    updateQuestionCategory_1: {
+    updateQuestionCategory: {
         parameters: {
             query?: never;
             header?: never;
@@ -4085,7 +3534,7 @@ export interface operations {
             };
         };
     };
-    createQuestionCategory_1: {
+    createQuestionCategory: {
         parameters: {
             query?: never;
             header?: never;
@@ -4174,210 +3623,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    getQuestionSets: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSet"][];
-                };
-            };
-        };
-    };
-    updateQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeSet"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSet"];
-                };
-            };
-        };
-    };
-    createQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeSet"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSet"];
-                };
-            };
-        };
-    };
-    getQuestionSetItems: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetItem"][];
-                };
-            };
-        };
-    };
-    updateQuestionSetItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeSetItem"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetItem"];
-                };
-            };
-        };
-    };
-    createQuestionSetItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeSetItem"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetItem"];
-                };
-            };
-        };
-    };
-    getAllQuestions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"][];
-                };
-            };
-        };
-    };
-    updateQuestion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeQuestion"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"];
-                };
-            };
-        };
-    };
-    createQuestion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeQuestion"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"];
-                };
             };
         };
     };
@@ -5123,126 +4368,6 @@ export interface operations {
             };
         };
     };
-    getAll_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizSet"][];
-                };
-            };
-        };
-    };
-    createQuizSet: {
-        parameters: {
-            query: {
-                quizId: number;
-                quizName: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizSet"];
-                };
-            };
-        };
-    };
-    submitAndCalculateScore: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                quizId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizSet"];
-                };
-            };
-        };
-    };
-    createFullQuizSet: {
-        parameters: {
-            query: {
-                practiceSetId: number;
-                QuizName: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["QuizItemCreateRequest"][];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizItem"][];
-                };
-            };
-        };
-    };
-    createFullQuizSetByAI: {
-        parameters: {
-            query: {
-                practiceSetId: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizResponse"];
-                };
-            };
-        };
-    };
     getQuestionBank: {
         parameters: {
             query?: never;
@@ -5307,106 +4432,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["QuestionGenerateResponse"];
-                };
-            };
-        };
-    };
-    createFullQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSet"];
-                };
-            };
-        };
-    };
-    createPracticeSetByAI: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeGenerateRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetAIResponse"][];
-                };
-            };
-        };
-    };
-    createQuestionSetItems: {
-        parameters: {
-            query: {
-                easy: number;
-                medium: number;
-                hard: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeSet"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetItem"][];
-                };
-            };
-        };
-    };
-    createQuestionList: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PracticeQuestion"][];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"][];
                 };
             };
         };
@@ -5606,12 +4631,6 @@ export interface operations {
                     data: components["schemas"]["MentorInfo"];
                     /** Format: binary */
                     avatar?: string;
-                    /** Format: binary */
-                    identityFile?: string;
-                    /** Format: binary */
-                    degreeFile?: string;
-                    /** Format: binary */
-                    otherFile?: string;
                 };
             };
         };
@@ -5838,6 +4857,30 @@ export interface operations {
             };
         };
     };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -5848,6 +4891,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
             };
         };
         responses: {
@@ -5958,6 +5025,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": Record<string, never>;
+                };
+            };
+        };
+    };
+    evaluateCodeReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodeReviewSubmitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplicationDetail"];
                 };
             };
         };
@@ -6277,112 +5368,6 @@ export interface operations {
             };
         };
     };
-    getQuizById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                quizId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizSet"];
-                };
-            };
-        };
-    };
-    deleteQuizSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                quizId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getHistoryByPracticeSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                practiceSetId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuizSet"][];
-                };
-            };
-        };
-    };
-    findById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["QuestionLesson"];
-                };
-            };
-        };
-    };
-    deleteQuestionCategory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     getQuestionCategoryById: {
         parameters: {
             query?: never;
@@ -6405,7 +5390,7 @@ export interface operations {
             };
         };
     };
-    deleteQuestionCategory_1: {
+    deleteQuestionCategory: {
         parameters: {
             query?: never;
             header?: never;
@@ -6422,288 +5407,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    getQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSet"];
-                };
-            };
-        };
-    };
-    deleteQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getByUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetResponse"][];
-                };
-            };
-        };
-    };
-    getQuestionSetsByTargetLevel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                level: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSet"][];
-                };
-            };
-        };
-    };
-    getAllByInterviewSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                interviewSessionId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetResponse"][];
-                };
-            };
-        };
-    };
-    getFullQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetResponse"];
-                };
-            };
-        };
-    };
-    getQuestionSetItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetItem"];
-                };
-            };
-        };
-    };
-    deleteQuestionSetItem: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getQuestionSetItemsByQuestionSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeSetItem"][];
-                };
-            };
-        };
-    };
-    getQuestionById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"];
-                };
-            };
-        };
-    };
-    deleteQuestion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getRandomQuestionsByLevel: {
-        parameters: {
-            query: {
-                level: string;
-                count: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"][];
-                };
-            };
-        };
-    };
-    getQuestionsByCategoryAndLevel: {
-        parameters: {
-            query: {
-                categoryId: number;
-                level: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PracticeQuestion"][];
-                };
             };
         };
     };

@@ -87,8 +87,14 @@ export function UserTable({
                 {user.role}
               </Badge>
             </TableCell>
-            <TableCell className="max-w-xs truncate">{user.university || "-"}</TableCell>
-            <TableCell>{getMajorLabel(user.major || "", t) || "-"}</TableCell>
+            <TableCell className="max-w-xs truncate">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {(user as any).university || "-"}
+            </TableCell>
+            <TableCell>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {getMajorLabel((user as any).major || "", t) || "-"}
+            </TableCell>
             <TableCell>
               <Badge variant={user.isActive !== false ? "default" : "destructive"}>
                 {user.isActive !== false ? t("common.work") : t("common.shutDown")}

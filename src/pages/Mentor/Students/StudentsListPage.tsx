@@ -102,6 +102,7 @@ export function StudentsListPage() {
         name: userInfo?.name,
         email: userInfo?.email,
         avatarUrl: userInfo?.avatarUrl,
+        // @ts-expect-error: Backend Swagger schema mismatch - university not in User type
         university: userInfo?.university,
         sessionCount: 0,
         feedbackCount: 0,

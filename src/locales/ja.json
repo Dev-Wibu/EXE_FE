@@ -1218,7 +1218,12 @@
     "register": "登録する",
     "back": "戻る",
     "updateYourSecuritySettings": "セキュリティ設定を更新する",
-    "testTheory": "理論チェック"
+    "testTheory": "理論チェック",
+    "submit": "提出",
+    "applicationSubmittedSuccessfully": "応募が正常に送信されました",
+    "uploading": "アップロード中...",
+    "applicationIsBeingReviewed": "応募は審査中です。しばらくお待ちください。",
+    "theApplicationIsBeingReviewed": "応募は審査中です。しばらくお待ちください。"
   },
   "compDemologinbutton": {
     "administratorAccountToManageThe": "システムを管理する管理者アカウント",
@@ -2101,7 +2106,8 @@
     "youHaveCompletedMockInterview": "メンターとの{{var_0}}回のモック面接セッションを完了しました。その調子で続けてください！",
     "youHaveEnteredIncorrectlyToo": "不正な入力が多すぎます。後でもう一度お試しください",
     "youHaveJustReceivedA": "新しい通知を受信しました。",
-    "youHaveNewNotifications": "{{var_0}}件の新しい通知があります"
+    "youHaveNewNotifications": "{{var_0}}件の新しい通知があります",
+    "submit": "提出"
   },
   "homepageFeatures": {
     "50ProfessionalMentors": "50人以上のプロメンター",
@@ -2808,8 +2814,7 @@
     "noExperienceYetClickQuot": "まだ経験がありません。「経験を追加」をクリックして追加してください。",
     "overviewOfYourApplicationProfile": "応募プロフィールとスキルの概要。",
     "payForMembershipPackages": "メンバーシップパッケージを購入",
-    "changePhoto": "写真を変更",
-    "memberSince": "メンバー since",
+    "memberSince": "メンバー開始",
     "personalInfo": "個人情報",
     "pngOrJpgMaximum5mb": "PNGまたはJPG、最大5MB",
     "profileCreatedSuccessfully": "プロフィールが正常に作成されました！",
@@ -2829,9 +2834,6 @@
     "userIdNotFound": "ユーザーIDが見つかりません",
     "viewCurrentCv": "現在のCVを表示",
     "youHaveNotParticipatedIn": "まだ任何の面接に参加していません。",
-    "personalInfo": "個人情報",
-    "memberSince": "メンバー開始",
-    "quickSettings": "クイック設定",
     "viewYourPastInterviewSessions": "過去の面接セッションを表示する"
   },
   "userAiinterview": {
@@ -2873,6 +2875,7 @@
     "cameraIsOn": "カメラがオンです",
     "cameraNotFoundOnCurrent": "現在のデバイスにカメラが見つかりません。",
     "cameraPermissionDenied": "カメラの使用が拒否されました",
+    "submit": "提出",
     "cancel": "キャンセル",
     "candidateAmpLocation": "候補者＆勤務地",
     "candidateProfileSavedSuccessfully": "候補者プロフィールが正常に保存されました！",
@@ -3110,7 +3113,31 @@
     "noResultYet": "まだ結果はありません",
     "pending": "保留中",
     "enterRoom": "入室する",
-    "viewDetails": "詳細を見る"
+    "viewDetails": "詳細を見る",
+    "roundPending": "保留中",
+    "roundSubmitting": "提出中",
+    "roundAiEvaluated": "AI評価済み",
+    "roundCompleted": "完了",
+    "roundError": "エラー",
+    "submittedContent": "提出内容",
+    "viewUploadedFile": "アップロードファイルを見る",
+    "quizAnswers": "クイズ回答",
+    "questions": "質問",
+    "moreAnswers": "件以上",
+    "passed": "合格",
+    "failed": "不合格",
+    "page": "ページ",
+    "uploadYourCvToBegin": "スクリーニングプロセスを開始するには履歴書をアップロードしてください。",
+    "alreadySubmitted": "このラウンドにはすでに提出済みです。",
+    "submitYourApplication": "応募を提出する",
+    "currentSubmission": "現在の提出物",
+    "uploadFile": "ファイルをアップロード",
+    "clickToSelectFile": "クリックしてファイルを選択",
+    "maxFileSize25mb": "最大ファイルサイズ：25MB",
+    "yourAnswer": "あなたの回答",
+    "enterYourContentHere": "ここに内容を入力してください...",
+    "pleaseEnterContent": "提出する内容またはファイルを選択してください。",
+    "pleaseSubmitYourDocument": "このラウンドを完了するにはドキュメントを提出してください。"
   },
   "userFeedback": {
     "evaluationContent": "評価内容",

@@ -417,6 +417,7 @@ export function FeedbackModerationPage() {
                 <div>
                   <p className="font-semibold">{selectedFeedback.user?.name}</p>
                   <p className="text-sm text-slate-500">
+                    {/* @ts-expect-error: Backend Swagger schema mismatch - university not in User type */}
                     {selectedFeedback.user?.email || selectedFeedback.user?.university}
                   </p>
                 </div>

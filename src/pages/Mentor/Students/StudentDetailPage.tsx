@@ -160,10 +160,12 @@ export function StudentDetailPage() {
                     {studentInfo.email}
                   </p>
                 )}
-                {studentInfo.university && (
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {(studentInfo as any).university && (
                   <p className="flex items-center gap-2">
                     <School className="h-4 w-4" />
-                    {studentInfo.university}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {(studentInfo as any).university}
                   </p>
                 )}
               </div>

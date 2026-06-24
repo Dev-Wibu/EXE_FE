@@ -168,11 +168,13 @@ export function PostFeedModal({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold">{authorName}</span>
-                  {post?.majorName && (
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {(post as any)?.majorName && (
                     <Badge
                       variant="secondary"
                       className="bg-[#DCEEFF] text-xs text-[#0047AB] dark:bg-[#0047AB]/20 dark:text-[#66B2FF]">
-                      {post.majorName}
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(post as any).majorName}
                     </Badge>
                   )}
                 </div>
