@@ -13,6 +13,7 @@ import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/contexts/QueryProvider";
 import { AdminDashboardPage } from "@/pages/Admin";
+import { ApplicationGradingDetailPage } from "@/pages/Admin/ApplicationGrading";
 import {
   LoginPage,
   MentorRegisterPage,
@@ -295,6 +296,10 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
               <Route path="/admin" element={<AdminDashboardPage />} />
               <Route path="/admin/companies/:companyId" element={<AdminDashboardPage />} />
+              <Route
+                path="/admin/application-grading/:appId"
+                element={<ApplicationGradingDetailPage />}
+              />
             </Route>
             {/* Redirect routes for backward compatibility - redirect /admin/* to /admin?tab=* */}
             <Route
