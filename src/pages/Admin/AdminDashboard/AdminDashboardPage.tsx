@@ -13,7 +13,8 @@ import {
   TabContentWrapper,
 } from "@/components/shared";
 import { ScrollToTopButton } from "@/components/shared/ScrollToTopButton";
-import { useTabsState } from "@/hooks/useTabsState";
+import { AdminGradingTabProvider } from "@/contexts/AdminGradingTabContext";
+import { useTabsState, type Tab } from "@/hooks/useTabsState";
 import { useSettingsStore } from "@/stores/settingsStore";
 import {
   Bell,
@@ -21,6 +22,7 @@ import {
   BrainCircuit,
   Briefcase,
   Building2,
+  ClipboardCheck,
   Database,
   FileQuestion,
   FileText,
@@ -39,7 +41,12 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  ApplicationGradingDetailPage,
+  ApplicationGradingPage,
+} from "../ApplicationGrading/ApplicationGradingPage";
 import { CandidateProfileManagementPage } from "../CandidateProfileManagement";
 import { CompanyManagementPage } from "../CompanyManagement";
 import { DashboardOverviewPage } from "../DashboardOverview";
@@ -70,7 +77,11 @@ type TabType =
   | "posts"
   | "companies"
   | "candidateProfiles"
-  | "interviewTemplates";
+  | "interviewTemplates"
+  | "applicationGrading"
+  | "grading-detail"
+  | "gradingTemplates"
+  | "practiceExam";
 
 const VALID_TAB_TYPES: TabType[] = [
   "dashboard",
@@ -88,6 +99,10 @@ const VALID_TAB_TYPES: TabType[] = [
   "companies",
   "candidateProfiles",
   "interviewTemplates",
+  "applicationGrading",
+  "grading-detail",
+  "gradingTemplates",
+  "practiceExam",
 ];
 
 const isValidTabType = (value: string): value is TabType => {
@@ -159,6 +174,22 @@ const getAvailableTabs = (
     type: "interviewTemplates",
     label: "Mẫu quy trình",
   },
+  {
+    type: "applicationGrading",
+    label: "Chấm bài ứng viên",
+  },
+  {
+    type: "grading-detail",
+    label: "Chi tiết chấm bài",
+  },
+  {
+    type: "gradingTemplates",
+    label: "Mẫu chấm điểm",
+  },
+  {
+    type: "practiceExam",
+    label: "Bài thi thử",
+  },
 ];
 const TAB_ICONS: Record<TabType, React.ElementType> = {
   dashboard: LayoutDashboard,
@@ -176,6 +207,10 @@ const TAB_ICONS: Record<TabType, React.ElementType> = {
   companies: Building2,
   candidateProfiles: FileText,
   interviewTemplates: LayoutTemplate,
+  applicationGrading: ClipboardCheck,
+  gradingTemplates: ClipboardCheck,
+  practiceExam: ClipboardCheck,
+  "grading-detail": ClipboardCheck,
 };
 const TAB_COLORS: Record<TabType, string> = {
   dashboard: "text-indigo-600",
@@ -193,6 +228,10 @@ const TAB_COLORS: Record<TabType, string> = {
   companies: "text-sky-600",
   candidateProfiles: "text-teal-600",
   interviewTemplates: "text-violet-600",
+  applicationGrading: "text-rose-600",
+  gradingTemplates: "text-rose-600",
+  practiceExam: "text-rose-600",
+  "grading-detail": "text-rose-600",
 };
 const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup[] => [
   {
@@ -265,6 +304,12 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
         icon: MessageSquare,
         iconColor: "text-cyan-600",
       },
+      {
+        type: "applicationGrading",
+        label: "Chấm bài ứng viên",
+        icon: ClipboardCheck,
+        iconColor: "text-rose-600",
+      },
     ],
   },
   {
@@ -274,24 +319,6 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
         label: t("common.questionBank"),
         icon: Database,
         iconColor: "text-indigo-500",
-      },
-      {
-        type: "questionMajors",
-        label: t("common.specialized"),
-        icon: GraduationCap,
-        iconColor: "text-pink-600",
-      },
-      {
-        type: "practiceSets",
-        label: t("adminAdmindashboard.reviewSet"),
-        icon: BookOpen,
-        iconColor: "text-teal-600",
-      },
-      {
-        type: "practiceQuestions",
-        label: t("adminAdmindashboard.reviewQuestions"),
-        icon: FileQuestion,
-        iconColor: "text-emerald-600",
       },
     ],
   },
@@ -373,6 +400,12 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
             label: t("common.feedbackFromCandidates"),
             color: "text-cyan-600",
           },
+          {
+            type: "applicationGrading",
+            icon: ClipboardCheck,
+            label: "Chấm bài ứng viên",
+            color: "text-rose-600",
+          },
         ],
       },
       {
@@ -386,24 +419,6 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
             icon: Database,
             label: t("common.questionBank"),
             color: "text-indigo-500",
-          },
-          {
-            type: "questionMajors",
-            icon: GraduationCap,
-            label: t("common.specialized"),
-            color: "text-pink-600",
-          },
-          {
-            type: "practiceSets",
-            icon: BookOpen,
-            label: t("adminAdmindashboard.reviewSet"),
-            color: "text-teal-600",
-          },
-          {
-            type: "practiceQuestions",
-            icon: FileQuestion,
-            label: t("adminAdmindashboard.reviewQuestions"),
-            color: "text-emerald-600",
           },
         ],
       },
@@ -475,13 +490,20 @@ export function AdminDashboardPage() {
   const availableTabs = useMemo(() => getAvailableTabs(t), [t]);
   const sidebarMenuGroups = useMemo(() => getSidebarMenuGroups(t), [t]);
   const chromeTabsMenuGroups = useMemo(() => getChromeTabsMenuGroups(t), [t]);
-  const { activeTab, openTabs, setActiveTab, closeTab, resetTabsTo, closeOtherTabs } = useTabsState(
-    {
-      storageKey: "admin",
-      defaultTab: "dashboard",
-      availableTabs: availableTabs,
-    }
-  );
+  const {
+    activeTab,
+    openTabs,
+    setActiveTab,
+    closeTab,
+    resetTabsTo,
+    closeOtherTabs,
+    openGradingTab,
+  } = useTabsState({
+    storageKey: "admin",
+    defaultTab: "dashboard",
+    availableTabs: availableTabs,
+  });
+  const [searchParams] = useSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
   const [scrollTarget, setScrollTarget] = useState<HTMLDivElement | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
@@ -492,15 +514,7 @@ export function AdminDashboardPage() {
     )
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const typedActiveTab: TabType = isValidTabType(activeTab) ? activeTab : "dashboard";
-  useEffect(() => {
-    if (!companyId) {
-      return;
-    }
-    if (activeTab !== "companies") {
-      setActiveTab("companies");
-    }
-  }, [activeTab, companyId, setActiveTab]);
+  const typedActiveTab = activeTab as TabType;
   useEffect(() => {
     if (!import.meta.env.DEV) {
       return;
@@ -520,21 +534,45 @@ export function AdminDashboardPage() {
   useEffect(() => {
     setIsSidebarCollapsed(sidebarBehavior === "auto-collapse");
   }, [sidebarBehavior]);
+  const { appId: gradingAppId } = Object.fromEntries(searchParams.entries());
+
   const chromeTabsData = useMemo(() => {
-    return openTabs
-      .filter((tab) => isValidTabType(tab.type))
+    console.log("[DEBUG chromeTabsData] openTabs:", JSON.stringify(openTabs));
+    const result = openTabs
+      .filter((tab) => tab.type === "grading-detail" || isValidTabType(tab.type))
       .map((tab) => ({
         id: tab.id,
         type: tab.type,
         title: tab.label,
+        appId: (tab as Tab).appId,
       }));
-  }, [openTabs]);
+    console.log("[DEBUG chromeTabsData] result:", JSON.stringify(result));
+    console.log(
+      "[DEBUG chromeTabsData] activeTab:",
+      activeTab,
+      "activeTabId will be:",
+      result.find((t) => t.type === activeTab)?.id || "not found"
+    );
+    return result;
+  }, [openTabs, activeTab]);
+
   const activeTabId = useMemo(() => {
+    // For grading-detail tabs, match by type AND appId from URL
+    if (activeTab === "grading-detail") {
+      const tab = openTabs.find((t) => t.type === "grading-detail" && t.appId === gradingAppId);
+      return tab?.id || "";
+    }
     const activeTabData = openTabs.find((tab) => tab.type === activeTab);
     return activeTabData?.id || "";
-  }, [openTabs, activeTab]);
+  }, [openTabs, activeTab, gradingAppId]);
   const navigateToTab = useCallback(
     (tabType: string) => {
+      // Prevent opening grading-detail tab without appId (would show blank page)
+      if (tabType === "grading-detail" && !searchParams.get("appId")) {
+        toast.error("Vui lòng chọn một đơn ứng tuyển cụ thể từ danh sách");
+        navigate("/admin?tab=applicationGrading", { replace: true });
+        return;
+      }
       if (companyId && tabType !== "companies") {
         navigate(`/admin?tab=${tabType}`, {
           replace: true,
@@ -544,16 +582,24 @@ export function AdminDashboardPage() {
         setActiveTab(tabType);
       }
     },
-    [companyId, navigate, setActiveTab]
+    [companyId, navigate, setActiveTab, searchParams]
   );
   const handleTabSelect = useCallback(
     (tabId: string) => {
       const selectedTab = openTabs.find((tab) => tab.id === tabId);
-      if (selectedTab) {
-        navigateToTab(selectedTab.type);
+      if (!selectedTab) return;
+      // For grading-detail tabs, navigate with appId
+      if (selectedTab.type === "grading-detail") {
+        const appId = (selectedTab as Tab).appId;
+        if (appId) {
+          navigate(`/admin?tab=grading-detail&appId=${appId}`, { replace: true });
+          setActiveTab("grading-detail", true);
+        }
+        return;
       }
+      navigateToTab(selectedTab.type);
     },
-    [navigateToTab, openTabs]
+    [navigateToTab, openTabs, navigate, setActiveTab]
   );
   const handleNewTab = useCallback(
     (type: string) => {
@@ -610,6 +656,12 @@ export function AdminDashboardPage() {
   );
 
   const renderTabContent = (tabType: string, isTabActive: boolean) => {
+    console.log("[DEBUG renderTabContent]", {
+      tabType,
+      isTabActive,
+      gradingAppId,
+      chromeTabsData: chromeTabsData.map((t) => ({ id: t.id, type: t.type })),
+    });
     switch (tabType) {
       case "dashboard":
         return <DashboardOverviewPage />;
@@ -641,6 +693,10 @@ export function AdminDashboardPage() {
         return <CandidateProfileManagementPage />;
       case "interviewTemplates":
         return <InterviewTemplateManagementPage />;
+      case "applicationGrading":
+        return <ApplicationGradingPage onOpenGradingDetail={openGradingTab} />;
+      case "grading-detail":
+        return <ApplicationGradingDetailPage appId={gradingAppId} />;
       default:
         return <div>{t("common.invalidTabType")}</div>;
     }
@@ -728,19 +784,21 @@ export function AdminDashboardPage() {
         />
 
         <div ref={handleContentRef} className="relative flex-1 overflow-hidden">
-          {chromeTabsData.map((tab) => {
-            const isTabActive = tab.id === activeTabId;
-            return (
-              <TabContentWrapper
-                key={tab.id}
-                tabId={tab.id}
-                tabType={tab.type}
-                isActive={isTabActive}
-                onScrollTargetActive={setScrollTarget}>
-                {renderTabContent(tab.type, isTabActive)}
-              </TabContentWrapper>
-            );
-          })}
+          <AdminGradingTabProvider openGradingTab={openGradingTab}>
+            {chromeTabsData.map((tab) => {
+              const isTabActive = tab.id === activeTabId;
+              return (
+                <TabContentWrapper
+                  key={tab.id}
+                  tabId={tab.id}
+                  tabType={tab.type}
+                  isActive={isTabActive}
+                  onScrollTargetActive={setScrollTarget}>
+                  {renderTabContent(tab.type, isTabActive)}
+                </TabContentWrapper>
+              );
+            })}
+          </AdminGradingTabProvider>
         </div>
         <ScrollToTopButton target={scrollTarget} threshold={600} />
       </div>
