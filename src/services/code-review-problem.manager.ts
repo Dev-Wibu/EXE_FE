@@ -63,7 +63,6 @@ export class CodeReviewProblemManager {
         status: res.response?.status,
         headers: res.response?.headers,
       }));
-      // @ts-expect-error: Backend Swagger schema mismatch
       return { success: true, data: response.data };
     } catch (error) {
       return {
