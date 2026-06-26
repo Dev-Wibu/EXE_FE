@@ -132,11 +132,11 @@ export function UserManagementPage() {
   };
   const handleEdit = (user: User) => {
     setSelectedUser(user);
-    // Note: Role not editable via form as UserInfo schema doesn't include it
     setFormData({
       name: user.name || "",
       email: user.email || "",
       password: user.password || "",
+      role: user.role,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...((user as any).university !== undefined && { university: (user as any).university }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

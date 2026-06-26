@@ -17,6 +17,12 @@
     "systemAdministration": "システム管理",
     "testSet": "テストセット"
   },
+  "adminApplicationGrading": {
+    "pageTitle": "候補者の答案採点",
+    "pageDescription": "採用プロセス中の候補者の試験ラウンドを閲覧・採点します。",
+    "applicationGrading": "答案採点",
+    "gradeApplications": "候補者のテスト提出物を閲覧・採点する"
+  },
   "adminCandidateprofilemanagement": {
     "allRoles": "すべての役割",
     "filterByRole": "役割でフィルター",
@@ -471,6 +477,7 @@
     "previewYourProfilePicture": "プロフィール画像をプレビュー",
     "reloadUserList": "ユーザー一覧を再読み込み",
     "searchByNameEmailUniversity": "名前、メール、大学で検索...",
+    "selectRole": "役割を選択",
     "targetInformation": "ターゲット情報",
     "thisUserDoesNotHave": "このユーザーにはまだ候補者プロフィールがありません",
     "universityName": "大学名",
@@ -610,6 +617,8 @@
     "5StarRating": "5つ星の評価",
     "account": "アカウント",
     "achievements": "実績",
+    "admin": "管理者",
+    "staff": "スタッフ",
     "act": "アクション",
     "actFast": "素早く行動",
     "activate": "有効化",
@@ -1235,6 +1244,7 @@
     "note": "注意:",
     "password": "パスワード:",
     "seeDemoAccountForTesting": "テスト用デモアカウントを見る",
+    "staffAccountToManageApplications": "書類を採点し、応募を管理するスタッフアカウント",
     "theSystemIsRunningApi": "システムはAPI専用モードで動作しているため、デモリストにはサポート用のバックエンドアカウントのみ含まれています。",
     "thisButtonIsForDevelopment": "このボタンは開発用であり、実際のアカウント作成時に削除されます。",
     "thisIsAVirtualAccount": "これは関数テスト用の仮想アカウントです。カードをクリックすると情報が自動入力されます。",
@@ -2768,11 +2778,25 @@
     "userId": "ユーザー（ID）:",
     "waitingForApproval": "承認待ち"
   },
+  "staffOverview": {
+    "activitySummary": "アクティビティサマリー",
+    "activitySummaryPlaceholder": "アクティビティサマリーデータがここに表示されます。",
+    "manageCommunityPosts": "コミュニティ投稿を管理",
+    "moderateMentorReviews": "メンターレビューをモデレート",
+    "monitorInterviewSessions": "面接セッションを監視",
+    "processMentorApplications": "メンター登録申請を処理",
+    "quickActions": "クイックアクション",
+    "welcomeDescription": "スタッフダッシュボードへようこそ。",
+    "welcomeTitle": "スタッフホーム"
+  },
   "staffStaffdashboard": {
+    "admindashboardpageThePlusTabMenu": "StaffDashboardPage: 次のタブが「+」メニューにありません: {{missingInMenu}}。availableTabsにないメニュー内のタブ: {{invalidInMenu}}",
     "browseMentors": "メンター審査",
     "candidateResponses": "候補者レスポンス",
     "censor": "審査",
     "coordinationPanel": "調整パネル",
+    "manageCandidateFeedback": "候補者フィードバック",
+    "manageMentorReviews": "メンター評価",
     "mentorSReview": "メンターのレビュー",
     "moderateCandidateResponses": "フィードバック審査",
     "moderateCandidatesResponsesToMentors": "候補者がメンターに送信したレスポンスをモデレート",
@@ -2782,7 +2806,9 @@
     "newTab": "新しいタブ",
     "permanentProcessing": "恒久的処理",
     "postModeration": "投稿審査",
-    "processMentorRegistration": "メンター登録を処理"
+    "processMentorRegistration": "メンター登録を処理",
+    "staffAdministration": "スタッフ管理",
+    "staffPanel": "Staff パネル"
   },
   "userAccount": {
     "alreadyTt": "支払い済み",

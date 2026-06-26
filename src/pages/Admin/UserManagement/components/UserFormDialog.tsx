@@ -204,8 +204,27 @@ export function UserFormDialog({
               </Button>
             </div>
           </div>
-          {/* Note: Role field removed as UserInfo schema (used for createUser) does not include role */}
-          {/* Backend UserInfo only contains: id, name, email, password, university, major */}
+          <div className="space-y-1.5">
+            <Label htmlFor="role">{t("common.role")}</Label>
+            <Select
+              value={formData.role || ""}
+              onValueChange={(value) =>
+                onFormChange({
+                  ...formData,
+                  role: value as "ADMIN" | "STAFF" | "MENTOR" | "USER",
+                })
+              }>
+              <SelectTrigger>
+                <SelectValue placeholder={t("adminUsermanagement.selectRole")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USER">{t("common.user")}</SelectItem>
+                <SelectItem value="ADMIN">{t("common.admin")}</SelectItem>
+                <SelectItem value="STAFF">{t("common.staff")}</SelectItem>
+                <SelectItem value="MENTOR">{t("common.mentor")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="university">{t("common.university")}</Label>

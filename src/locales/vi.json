@@ -17,6 +17,12 @@
     "systemAdministration": "Quản trị hệ thống",
     "testSet": "Bộ trắc nghiệm"
   },
+  "adminApplicationGrading": {
+    "pageTitle": "Chấm bài ứng viên",
+    "pageDescription": "Xem và chấm điểm các vòng thi của ứng viên trong quy trình tuyển dụng.",
+    "applicationGrading": "Chấm bài ứng viên",
+    "gradeApplications": "Xem và chấm điểm bài thi của ứng viên"
+  },
   "adminCandidateprofilemanagement": {
     "allRoles": "Tất cả vai trò",
     "filterByRole": "Lọc theo vai trò",
@@ -471,6 +477,7 @@
     "previewYourProfilePicture": "Xem trước ảnh đại diện",
     "reloadUserList": "Tải lại danh sách người dùng",
     "searchByNameEmailUniversity": "Tìm kiếm theo tên, email, trường đại học...",
+    "selectRole": "Chọn vai trò",
     "targetInformation": "Thông tin mục tiêu",
     "thisUserDoesNotHave": "Người dùng này chưa có hồ sơ ứng viên",
     "universityName": "Tên trường đại học",
@@ -610,6 +617,8 @@
     "5StarRating": "Đánh giá 5 sao",
     "account": "Tài khoản",
     "achievements": "Thành tích",
+    "admin": "Quản trị viên",
+    "staff": "Nhân viên",
     "act": "Hành động",
     "actFast": "Hành động nhanh",
     "activate": "Kích hoạt",
@@ -1235,6 +1244,7 @@
     "note": "Lưu ý:",
     "password": "Mật khẩu:",
     "seeDemoAccountForTesting": "Xem tài khoản demo để thử nghiệm",
+    "staffAccountToManageApplications": "Tài khoản nhân viên để chấm bài và quản lý đơn ứng tuyển",
     "theSystemIsRunningApi": "Hệ thống đang chạy API-only nên danh sách demo chỉ giữ các tài khoản backend đang hỗ trợ.",
     "thisButtonIsForDevelopment": "Nút này chỉ dùng cho mục đích phát triển và sẽ được xóa khi có tài khoản thật.",
     "thisIsAVirtualAccount": "Đây là tài khoản ảo dùng để thử nghiệm chức năng. Click vào thẻ để tự động điền thông tin.",
@@ -2741,12 +2751,26 @@
     "userId": "Người dùng (ID):",
     "waitingForApproval": "chờ duyệt"
   },
+  "staffOverview": {
+    "activitySummary": "Tóm tắt hoạt động",
+    "activitySummaryPlaceholder": "Dữ liệu tóm tắt hoạt động sẽ được hiển thị tại đây.",
+    "manageCommunityPosts": "Quản lý bài viết cộng đồng",
+    "moderateMentorReviews": "Duyệt đánh giá từ mentor",
+    "monitorInterviewSessions": "Giám sát các phiên phỏng vấn",
+    "processMentorApplications": "Xử lý đơn đăng ký mentor",
+    "quickActions": "Thao tác nhanh",
+    "welcomeDescription": "Chào mừng bạn đến với bảng điều khiển dành cho Staff.",
+    "welcomeTitle": "Trang chủ Staff"
+  },
   "staffStaffdashboard": {
-    "browseMentors": "Duyệt mentor",
-    "candidateResponses": "Phản hồi của ứng viên",
+    "admindashboardpageThePlusTabMenu": "StaffDashboardPage: Các tab sau không có trong menu '+': {{missingInMenu}}. Các tab trong menu nhưng không có trong availableTabs: {{invalidInMenu}}",
+    "browseMentors": "Duyệt Mentor",
+    "candidateResponses": "Phản hồi ứng viên",
     "censor": "Kiểm duyệt",
     "coordinationPanel": "Bảng Điều Phối",
-    "mentorSReview": "Đánh giá của mentor",
+    "manageCandidateFeedback": "Phản hồi ứng viên",
+    "manageMentorReviews": "Đánh giá Mentor",
+    "mentorSReview": "Đánh giá của Mentor",
     "moderateCandidateResponses": "Duyệt phản hồi",
     "moderateCandidatesResponsesToMentors": "Kiểm duyệt phản hồi của ứng viên cho mentor",
     "moderateResponsesFromCandidates": "Duyệt phản hồi",
@@ -2755,7 +2779,9 @@
     "newTab": "Tab mới",
     "permanentProcessing": "Xử lý thường trực",
     "postModeration": "Duyệt bài viết",
-    "processMentorRegistration": "Xử lý đăng ký mentor"
+    "processMentorRegistration": "Xử lý đăng ký mentor",
+    "staffAdministration": "Quản trị viên",
+    "staffPanel": "Staff Panel"
   },
   "userAccount": {
     "alreadyTt": "Đã TT",
@@ -3111,7 +3137,10 @@
     "aiEvaluating": "AI đang chấm...",
     "aiEvaluatingDetail": "AI đang đánh giá bài của bạn, vui lòng chờ trong giây lát...",
     "aiEvaluationComplete": "AI đã chấm xong! Kết quả đã được cập nhật.",
-    "aiEvaluationTimeout": "Hết thời gian chờ kết quả AI. Vui lòng tải lại trang để kiểm tra."
+    "aiEvaluationTimeout": "Hết thời gian chờ kết quả AI. Vui lòng tải lại trang để kiểm tra.",
+    "emailScenario": "Hãy trả lời email này một cách chuyên nghiệp.",
+    "emailPlaceholder": "Viết nội dung email của bạn tại đây...",
+    "attachFile": "Đính kèm file"
   },
   "userFeedback": {
     "evaluationContent": "Nội Dung Đánh Giá",

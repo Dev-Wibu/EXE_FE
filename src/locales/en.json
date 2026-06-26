@@ -17,6 +17,12 @@
     "systemAdministration": "System administration",
     "testSet": "Test set"
   },
+  "adminApplicationGrading": {
+    "pageTitle": "Grade Candidate Applications",
+    "pageDescription": "View and grade interview rounds for candidates in the recruitment pipeline.",
+    "applicationGrading": "Grade Applications",
+    "gradeApplications": "View and grade candidate test submissions"
+  },
   "adminCandidateprofilemanagement": {
     "allRoles": "All roles",
     "filterByRole": "Filter by role",
@@ -471,6 +477,7 @@
     "previewYourProfilePicture": "Preview your profile picture",
     "reloadUserList": "Reload user list",
     "searchByNameEmailUniversity": "Search by name, email, university...",
+    "selectRole": "Select role",
     "targetInformation": "Target information",
     "thisUserDoesNotHave": "This user does not have a candidate profile yet",
     "universityName": "University name",
@@ -610,6 +617,8 @@
     "5StarRating": "5 star rating",
     "account": "Account",
     "achievements": "Achievements",
+    "admin": "Admin",
+    "staff": "Staff",
     "act": "Act",
     "actFast": "Act fast",
     "activate": "Activate",
@@ -1235,6 +1244,7 @@
     "note": "Note:",
     "password": "Password:",
     "seeDemoAccountForTesting": "See demo account for testing",
+    "staffAccountToManageApplications": "Staff account to grade assignments and manage applications",
     "theSystemIsRunningApi": "The system is running API-only so the demo list only holds supporting backend accounts support.",
     "thisButtonIsForDevelopment": "This button is for development purposes only and will be removed when a real account is created.",
     "thisIsAVirtualAccount": "This is a virtual account used to test functions. Click card to automatically fill in information.",
@@ -2741,21 +2751,37 @@
     "userId": "User (ID):",
     "waitingForApproval": "waiting for approval"
   },
+  "staffOverview": {
+    "activitySummary": "Tóm tắt hoạt động",
+    "activitySummaryPlaceholder": "Dữ liệu tóm tắt hoạt động sẽ được hiển thị tại đây.",
+    "manageCommunityPosts": "Quản lý bài viết cộng đồng",
+    "moderateMentorReviews": "Duyệt đánh giá từ mentor",
+    "monitorInterviewSessions": "Giám sát các phiên phỏng vấn",
+    "processMentorApplications": "Xử lý đơn đăng ký mentor",
+    "quickActions": "Thao tác nhanh",
+    "welcomeDescription": "Chào mừng bạn đến với bảng điều khiển dành cho Staff.",
+    "welcomeTitle": "Trang chủ Staff"
+  },
   "staffStaffdashboard": {
-    "browseMentors": "Browse mentors",
-    "candidateResponses": "Candidate responses",
-    "censor": "Censor",
-    "coordinationPanel": "Coordination Panel",
-    "mentorSReview": "Mentor's review",
-    "moderateCandidateResponses": "Moderate feedback",
-    "moderateCandidatesResponsesToMentors": "Moderate candidates' responses to mentors",
-    "moderateResponsesFromCandidates": "Moderate feedback",
-    "moderateTheMentorSAssessment": "Moderate the mentor's assessment of the candidate",
-    "moderateYourMentorSReviews": "Moderate reviews",
-    "newTab": "New tab",
-    "permanentProcessing": "Permanent processing",
-    "postModeration": "Moderate posts",
-    "processMentorRegistration": "Process mentor registration"
+    "admindashboardpageThePlusTabMenu": "StaffDashboardPage: Các tab sau không có trong menu '+': {{missingInMenu}}. Các tab trong menu nhưng không có trong availableTabs: {{invalidInMenu}}",
+    "browseMentors": "Duyệt Mentor",
+    "candidateResponses": "Phản hồi ứng viên",
+    "censor": "Kiểm duyệt",
+    "coordinationPanel": "Bảng Điều Phối",
+    "manageCandidateFeedback": "Phản hồi ứng viên",
+    "manageMentorReviews": "Đánh giá Mentor",
+    "mentorSReview": "Đánh giá của Mentor",
+    "moderateCandidateResponses": "Duyệt phản hồi",
+    "moderateCandidatesResponsesToMentors": "Kiểm duyệt phản hồi của ứng viên cho mentor",
+    "moderateResponsesFromCandidates": "Duyệt phản hồi",
+    "moderateTheMentorSAssessment": "Kiểm duyệt đánh giá của mentor cho ứng viên",
+    "moderateYourMentorSReviews": "Duyệt đánh giá",
+    "newTab": "Tab mới",
+    "permanentProcessing": "Xử lý thường trực",
+    "postModeration": "Duyệt bài viết",
+    "processMentorRegistration": "Xử lý đăng ký mentor",
+    "staffAdministration": "Quản trị Staff",
+    "staffPanel": "Bảng điều khiển Staff"
   },
   "userAccount": {
     "alreadyTt": "Already TT",
@@ -3107,7 +3133,10 @@
     "yourAnswer": "Your Answer",
     "enterYourContentHere": "Enter your content here...",
     "pleaseEnterContent": "Please enter content or select a file to submit.",
-    "pleaseSubmitYourDocument": "Please submit your document to complete this round."
+    "pleaseSubmitYourDocument": "Please submit your document to complete this round.",
+    "emailScenario": "Please reply to this email professionally.",
+    "emailPlaceholder": "Write your email content here...",
+    "attachFile": "Attach file"
   },
   "userFeedback": {
     "evaluationContent": "Evaluation Content",

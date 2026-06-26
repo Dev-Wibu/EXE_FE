@@ -55,6 +55,12 @@ export function DemoLoginButton({ onSelectAccount }: DemoLoginButtonProps) {
       password: "12345",
       description: t("compDemologinbutton.mentorAccountToManageInterview"),
     },
+    {
+      role: "STAFF",
+      email: "nhanquan@gmail.com",
+      password: "12345",
+      description: t("compDemologinbutton.staffAccountToManageApplications"),
+    },
   ];
 
   const handleCopy = async (text: string, fieldId: string) => {
