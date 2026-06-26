@@ -89,7 +89,10 @@
     "updateJdInformation": "Update JD information",
     "updatedJdSuccessfully": "Updated JD successfully",
     "wage": "Wage",
-    "welfareBenefits": "Welfare/Benefits"
+    "welfareBenefits": "Welfare/Benefits",
+    "reviewer": "Reviewer",
+    "selectReviewer": "Select reviewer (STAFF)...",
+    "noReviewerAssigned": "Unassigned"
   },
   "adminDashboardoverview": {
     "14Days": "14 days",

@@ -988,6 +988,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/test-spotless": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["test_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{userId}/by-user": {
         parameters: {
             query?: never;
@@ -1700,6 +1716,26 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getApplicationDetailById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/application-details/reviewer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lấy danh sách các vòng được giao cho reviewer hiện tại (STAFF)
+         * @description Lấy danh sách application details của các vòng thi được gán cho staff hiện tại làm reviewer.
+         */
+        get: operations["getApplicationDetailsForReviewer"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2881,10 +2917,10 @@ export interface components {
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
         PagePostResponse: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
@@ -2899,6 +2935,7 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
@@ -2907,7 +2944,6 @@ export interface components {
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
-            unpaged?: boolean;
         };
         SortObject: {
             unsorted?: boolean;
@@ -3053,9 +3089,9 @@ export interface components {
             chatHistory?: components["schemas"]["InterviewExchange"][];
         };
         ApplicationContext: {
-            applicationName?: string;
             /** Format: int64 */
             startupDate?: number;
+            applicationName?: string;
             autowireCapableBeanFactory?: components["schemas"]["AutowireCapableBeanFactory"];
             parent?: components["schemas"]["ApplicationContext"];
             id?: string;
@@ -3153,22 +3189,22 @@ export interface components {
             error?: boolean;
         };
         JspConfigDescriptor: {
-            taglibs?: components["schemas"]["TaglibDescriptor"][];
             jspPropertyGroups?: components["schemas"]["JspPropertyGroupDescriptor"][];
+            taglibs?: components["schemas"]["TaglibDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
-            trimDirectiveWhitespaces?: string;
-            includeCodas?: string[];
             elIgnored?: string;
-            defaultContentType?: string;
-            urlPatterns?: string[];
+            isXml?: string;
+            trimDirectiveWhitespaces?: string;
+            includePreludes?: string[];
+            includeCodas?: string[];
             errorOnELNotFound?: string;
             pageEncoding?: string;
-            errorOnUndeclaredNamespace?: string;
-            deferredSyntaxAllowedAsLiteral?: string;
-            isXml?: string;
             scriptingInvalid?: string;
-            includePreludes?: string[];
+            deferredSyntaxAllowedAsLiteral?: string;
+            errorOnUndeclaredNamespace?: string;
+            urlPatterns?: string[];
+            defaultContentType?: string;
             buffer?: string;
         };
         RedirectView: {
@@ -3192,21 +3228,22 @@ export interface components {
             expandUriTemplateVariables?: boolean;
             propagateQueryParams?: boolean;
             hosts?: string[];
-            propagateQueryProperties?: boolean;
             redirectView?: boolean;
-            attributesCSV?: string;
+            propagateQueryProperties?: boolean;
             attributesMap?: {
                 [key: string]: unknown;
             };
+            attributesCSV?: string;
             attributes?: {
                 [key: string]: string;
             };
         };
         ServletContext: {
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            virtualServerName?: string;
             defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            serverInfo?: string;
+            /** Format: int32 */
+            sessionTimeout?: number;
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
@@ -3214,9 +3251,6 @@ export interface components {
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
-            serverInfo?: string;
-            /** Format: int32 */
-            sessionTimeout?: number;
             servletRegistrations?: {
                 [key: string]: components["schemas"]["ServletRegistration"];
             };
@@ -3224,9 +3258,11 @@ export interface components {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            virtualServerName?: string;
             sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            initParameterNames?: unknown;
             contextPath?: string;
+            initParameterNames?: unknown;
             attributeNames?: unknown;
             classLoader?: {
                 name?: string;
@@ -3294,8 +3330,8 @@ export interface components {
             minorVersion?: number;
         };
         ServletRegistration: {
-            mappings?: string[];
             runAsRole?: string;
+            mappings?: string[];
             initParameters?: {
                 [key: string]: string;
             };
@@ -5007,7 +5043,7 @@ export interface operations {
     hrScore: {
         parameters: {
             query: {
-                applicationId: number;
+                applicationDetailId: number;
                 isPass: boolean;
                 note: string;
                 score: number;
@@ -5220,6 +5256,26 @@ export interface operations {
         };
     };
     triggerError: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    test_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -6238,6 +6294,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApplicationDetail"];
+                };
+            };
+        };
+    };
+    getApplicationDetailsForReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": Record<string, never>;
                 };
             };
         };

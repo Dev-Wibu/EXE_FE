@@ -89,7 +89,10 @@
     "updateJdInformation": "JD情報を更新",
     "updatedJdSuccessfully": "JDが正常に更新されました",
     "wage": "給与",
-    "welfareBenefits": "福利厚生"
+    "welfareBenefits": "福利厚生",
+    "reviewer": "評価者",
+    "selectReviewer": "評価者 (STAFF) を選択...",
+    "noReviewerAssigned": "未割り当て"
   },
   "adminDashboardoverview": {
     "14Days": "14日間",
