@@ -6,12 +6,34 @@ import type { components } from "../../schema-from-be";
 const t = i18n.t.bind(i18n);
 
 export type SubmissionResult = components["schemas"]["SubmissionResult"];
+export type ApplicationDetail = components["schemas"]["ApplicationDetail"];
 
 export interface SubmitApplicationDetailParams {
   applicationId: number;
   textContent?: string;
   file?: File;
   quizAnswers?: string[];
+  compileRequest?: string; // JSON string for coding submissions
+}
+
+export interface HrScoreParams {
+  applicationDetailId: number;
+  isPass: boolean;
+  note: string;
+  score: number;
+}
+
+export interface CodeReviewSubmission {
+  filename: string;
+  lineNumber: number;
+  severity: string;
+  description: string;
+}
+
+export interface CodeReviewEvaluateParams {
+  applicationId: number;
+  roundId: number;
+  submissions: CodeReviewSubmission[];
 }
 
 export class ApplicationDetailManager {
@@ -32,7 +54,7 @@ export class ApplicationDetailManager {
   }
 
   /**
-   * Submit application detail (CV screening, quiz answers, etc.)
+   * Submit application detail (CV screening, quiz answers, email, coding, etc.)
    * POST /api/application-details/submit (multipart/form-data)
    */
   async submit(params: SubmitApplicationDetailParams): Promise<ApiResponse<SubmissionResult>> {
@@ -48,11 +70,13 @@ export class ApplicationDetailManager {
       if (params.quizAnswers && params.quizAnswers.length > 0) {
         params.quizAnswers.forEach((ans) => formData.append("quizAnswers", ans));
       }
+      if (params.compileRequest) {
+        formData.append("compileRequest", params.compileRequest);
+      }
 
       const response = await fetchClient
         .POST("/api/application-details/submit", {
           headers: {
-            // Let browser set Content-Type with proper multipart boundary
             "Content-Type": undefined,
           },
           body: formData as unknown as Record<string, unknown>,
@@ -69,6 +93,112 @@ export class ApplicationDetailManager {
       };
     } catch (error) {
       console.error("[ApplicationDetailManager] submit error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
+   * HR/Admin scores and approves/rejects a candidate's application round
+   * POST /api/application-details/hr-score?applicationDetailId=&isPass=&note=&score=
+   */
+  async hrScore(params: HrScoreParams): Promise<ApiResponse<ApplicationDetail>> {
+    try {
+      const response = await fetchClient.POST("/api/application-details/hr-score", {
+        params: {
+          query: {
+            applicationDetailId: params.applicationDetailId,
+            isPass: params.isPass,
+            note: params.note,
+            score: params.score,
+          },
+        },
+      });
+      return {
+        success: true,
+        data: response.data as ApplicationDetail,
+      };
+    } catch (error) {
+      // Handle empty JSON body (BE returns 200 with no body)
+      if (
+        error instanceof SyntaxError ||
+        (error instanceof Error && error.message.includes("JSON"))
+      ) {
+        return {
+          success: true,
+          data: undefined as unknown as ApplicationDetail,
+        };
+      }
+      console.error("[ApplicationDetailManager] hrScore error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
+   * Get all application details (all rounds) for a specific application
+   * GET /api/application-details/application/{applicationId}
+   */
+  async getByApplicationId(applicationId: number): Promise<ApiResponse<ApplicationDetail[]>> {
+    try {
+      const response = await fetchClient.GET(
+        "/api/application-details/application/{applicationId}",
+        {
+          params: { path: { applicationId } },
+        }
+      );
+      return {
+        success: true,
+        data: (response.data ?? []) as ApplicationDetail[],
+      };
+    } catch (error) {
+      console.error("[ApplicationDetailManager] getByApplicationId error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
+   * Get a single application detail by ID
+   * GET /api/application-details/{id}
+   */
+  async getById(id: number): Promise<ApiResponse<ApplicationDetail | null>> {
+    try {
+      const response = await fetchClient.GET("/api/application-details/{id}", {
+        params: { path: { id } },
+      });
+      return {
+        success: true,
+        data: response.data as ApplicationDetail,
+      };
+    } catch (error) {
+      console.error("[ApplicationDetailManager] getById error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
+   * Get all application details assigned to current reviewer (Staff)
+   * GET /api/application-details/reviewer
+   */
+  async getForReviewer(): Promise<ApiResponse<ApplicationDetail[]>> {
+    try {
+      const response = await fetchClient.GET("/api/application-details/reviewer", {});
+      return {
+        success: true,
+        data: (response.data ?? []) as ApplicationDetail[],
+      };
+    } catch (error) {
+      console.error("[ApplicationDetailManager] getForReviewer error:", error);
       return {
         success: false,
         error: this.extractErrorMessage(error),
