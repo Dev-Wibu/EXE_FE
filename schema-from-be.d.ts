@@ -1708,6 +1708,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/application-details/reviewer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lấy danh sách các vòng được giao cho reviewer hiện tại (STAFF)
+         * @description Lấy danh sách application details của các vòng thi được gán cho staff hiện tại làm reviewer.
+         */
+        get: operations["getApplicationDetailsForReviewer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/application-details/application/{applicationId}": {
         parameters: {
             query?: never;
@@ -2899,19 +2919,19 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
+            /** Format: int32 */
+            pageNumber?: number;
             paged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            /** Format: int32 */
-            pageNumber?: number;
+            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
-            unpaged?: boolean;
         };
         SortObject: {
-            unsorted?: boolean;
             sorted?: boolean;
+            unsorted?: boolean;
             empty?: boolean;
         };
         Payment: {
@@ -3157,18 +3177,18 @@ export interface components {
             jspPropertyGroups?: components["schemas"]["JspPropertyGroupDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
-            trimDirectiveWhitespaces?: string;
-            includeCodas?: string[];
-            elIgnored?: string;
-            defaultContentType?: string;
-            urlPatterns?: string[];
             errorOnELNotFound?: string;
             pageEncoding?: string;
-            errorOnUndeclaredNamespace?: string;
-            deferredSyntaxAllowedAsLiteral?: string;
-            isXml?: string;
             scriptingInvalid?: string;
             includePreludes?: string[];
+            includeCodas?: string[];
+            elIgnored?: string;
+            isXml?: string;
+            trimDirectiveWhitespaces?: string;
+            deferredSyntaxAllowedAsLiteral?: string;
+            errorOnUndeclaredNamespace?: string;
+            urlPatterns?: string[];
+            defaultContentType?: string;
             buffer?: string;
         };
         RedirectView: {
@@ -3203,8 +3223,6 @@ export interface components {
             };
         };
         ServletContext: {
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            virtualServerName?: string;
             defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             requestCharacterEncoding?: string;
@@ -3214,18 +3232,20 @@ export interface components {
             /** Format: int32 */
             effectiveMinorVersion?: number;
             servletContextName?: string;
-            serverInfo?: string;
-            /** Format: int32 */
-            sessionTimeout?: number;
             servletRegistrations?: {
                 [key: string]: components["schemas"]["ServletRegistration"];
             };
+            serverInfo?: string;
+            /** Format: int32 */
+            sessionTimeout?: number;
             filterRegistrations?: {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             initParameterNames?: unknown;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            virtualServerName?: string;
             contextPath?: string;
             attributeNames?: unknown;
             classLoader?: {
@@ -3294,8 +3314,8 @@ export interface components {
             minorVersion?: number;
         };
         ServletRegistration: {
-            mappings?: string[];
             runAsRole?: string;
+            mappings?: string[];
             initParameters?: {
                 [key: string]: string;
             };
@@ -5007,7 +5027,7 @@ export interface operations {
     hrScore: {
         parameters: {
             query: {
-                applicationId: number;
+                applicationDetailId: number;
                 isPass: boolean;
                 note: string;
                 score: number;
@@ -6238,6 +6258,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApplicationDetail"];
+                };
+            };
+        };
+    };
+    getApplicationDetailsForReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": Record<string, never>;
                 };
             };
         };
