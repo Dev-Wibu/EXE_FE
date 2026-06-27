@@ -2265,6 +2265,8 @@ export interface components {
             name?: string;
             email: string;
             password?: string;
+            /** @enum {string} */
+            role?: "MENTOR" | "ADMIN" | "STAFF" | "USER";
         };
         CVParserResponse: {
             targetRole?: string;
@@ -2935,10 +2937,10 @@ export interface components {
             postComments?: components["schemas"]["PostCommentResponse"][];
         };
         PagePostResponse: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
@@ -3124,9 +3126,9 @@ export interface components {
             createdAt?: string;
         };
         ApplicationContext: {
+            applicationName?: string;
             /** Format: int64 */
             startupDate?: number;
-            applicationName?: string;
             autowireCapableBeanFactory?: components["schemas"]["AutowireCapableBeanFactory"];
             parent?: components["schemas"]["ApplicationContext"];
             id?: string;
@@ -3228,8 +3230,6 @@ export interface components {
             jspPropertyGroups?: components["schemas"]["JspPropertyGroupDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
-            isXml?: string;
-            elIgnored?: string;
             trimDirectiveWhitespaces?: string;
             errorOnELNotFound?: string;
             pageEncoding?: string;
@@ -3238,6 +3238,8 @@ export interface components {
             includeCodas?: string[];
             deferredSyntaxAllowedAsLiteral?: string;
             errorOnUndeclaredNamespace?: string;
+            elIgnored?: string;
+            isXml?: string;
             urlPatterns?: string[];
             defaultContentType?: string;
             buffer?: string;
@@ -3266,23 +3268,17 @@ export interface components {
             propagateQueryProperties?: boolean;
             redirectView?: boolean;
             attributesCSV?: string;
-            attributes?: {
-                [key: string]: string;
-            };
             attributesMap?: {
                 [key: string]: unknown;
             };
+            attributes?: {
+                [key: string]: string;
+            };
         };
         ServletContext: {
+            serverInfo?: string;
             /** Format: int32 */
             sessionTimeout?: number;
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
-            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
-            virtualServerName?: string;
-            initParameterNames?: unknown;
-            contextPath?: string;
-            attributeNames?: unknown;
-            serverInfo?: string;
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
@@ -3299,6 +3295,12 @@ export interface components {
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
             defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            virtualServerName?: string;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
+            initParameterNames?: unknown;
+            contextPath?: string;
+            attributeNames?: unknown;
             classLoader?: {
                 name?: string;
                 registeredAsParallelCapable?: boolean;
@@ -3374,9 +3376,9 @@ export interface components {
             className?: string;
         };
         SessionCookieConfig: {
-            secure?: boolean;
             /** Format: int32 */
             maxAge?: number;
+            secure?: boolean;
             domain?: string;
             httpOnly?: boolean;
             path?: string;

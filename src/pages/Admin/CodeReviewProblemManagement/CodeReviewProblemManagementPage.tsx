@@ -133,11 +133,11 @@ export function CodeReviewProblemManagementPage() {
         return { label: t("common.easy") || "D?", className: "bg-green-100 text-green-700" };
       case "MEDIUM":
         return {
-          label: t("common.medium") || "Trung bùnh",
+          label: t("common.medium") || "Trung bÔøΩnh",
           className: "bg-amber-100 text-amber-700",
         };
       case "HARD":
-        return { label: t("common.hard") || "Khù", className: "bg-red-100 text-red-700" };
+        return { label: t("common.hard") || "KhÔøΩ", className: "bg-red-100 text-red-700" };
       default:
         return { label: difficulty || "-", className: "bg-slate-100 text-slate-700" };
     }
@@ -164,7 +164,7 @@ export function CodeReviewProblemManagementPage() {
   const handleGenerateAI = useCallback(async () => {
     if (!aiTopic.trim() || !aiTargetLevel.trim() || !aiProgrammingLanguage.trim()) {
       toast.error(
-        t("adminCodeReviewProblem.requiredFields") || "Vui lùng nh?p ?? Topic, Level vù Language"
+        t("adminCodeReviewProblem.requiredFields") || "Vui lÔøΩng nh?p ?? Topic, Level vÔøΩ Language"
       );
       return;
     }
@@ -190,15 +190,15 @@ export function CodeReviewProblemManagementPage() {
         if (data.expectedIssues) setGeneratedIssues(data.expectedIssues);
         setAiDialogOpen(false);
         toast.success(
-          t("adminCodeReviewProblem.generatedSuccessfully") || "?ù t?o bùi t?p b?ng AI"
+          t("adminCodeReviewProblem.generatedSuccessfully") || "?ÔøΩ t?o bÔøΩi t?p b?ng AI"
         );
       } else {
         toast.error(
-          response.error || t("adminCodeReviewProblem.generateFailed") || "T?o bùi t?p th?t b?i"
+          response.error || t("adminCodeReviewProblem.generateFailed") || "T?o bÔøΩi t?p th?t b?i"
         );
       }
     } catch {
-      toast.error(t("adminCodeReviewProblem.generateFailed") || "T?o bùi t?p th?t b?i");
+      toast.error(t("adminCodeReviewProblem.generateFailed") || "T?o bÔøΩi t?p th?t b?i");
     } finally {
       setGenerating(false);
     }
@@ -232,8 +232,8 @@ export function CodeReviewProblemManagementPage() {
 
   if (view.mode === "create") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-        <div className="border-b bg-white/80 backdrop-blur-sm">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/20">
+        <div className="border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
@@ -241,17 +241,19 @@ export function CodeReviewProblemManagementPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleBack}
-                  className="text-slate-600 hover:text-slate-900">
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200">
                   <ChevronRight className="mr-1 h-4 w-4 rotate-180" />
                   {t("common.backToTheList") || "Quay l?i"}
                 </Button>
                 <Separator orientation="vertical" className="mx-2 h-4" />
                 <nav className="flex items-center gap-2 text-slate-500">
-                  <span className="cursor-pointer hover:text-slate-700" onClick={handleBack}>
-                    {t("adminCodeReviewProblem.pageTitle") || "Qu?n lù bùi t?p"}
+                  <span
+                    className="cursor-pointer hover:text-slate-700 dark:hover:text-slate-300"
+                    onClick={handleBack}>
+                    {t("adminCodeReviewProblem.pageTitle") || "Qu?n lÔøΩ bÔøΩi t?p"}
                   </span>
                   <ChevronRight className="h-3 w-3" />
-                  <span className="font-medium text-slate-900">
+                  <span className="font-medium text-slate-900 dark:text-slate-200">
                     {t("common.create") || "T?o m?i"}
                   </span>
                 </nav>
@@ -267,12 +269,12 @@ export function CodeReviewProblemManagementPage() {
                 <Plus className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">
-                  {t("common.create") || "T?o bùi t?p Code Review"}
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {t("common.create") || "T?o bÔøΩi t?p Code Review"}
                 </h1>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   {t("adminCodeReviewProblem.createDescription") ||
-                    "T?o bùi t?p ?ùnh giù code review m?i cho ?ng viùn"}
+                    "T?o bÔøΩi t?p ?ÔøΩnh giÔøΩ code review m?i cho ?ng viÔøΩn"}
                 </p>
               </div>
             </div>
@@ -280,7 +282,7 @@ export function CodeReviewProblemManagementPage() {
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <Card className="border-0 shadow-lg">
+              <Card className="border-0 shadow-lg dark:border dark:border-slate-800 dark:bg-slate-900/50">
                 <CardContent className="p-6">
                   <CodeReviewProblemForm
                     onSuccess={() => {
@@ -328,12 +330,12 @@ export function CodeReviewProblemManagementPage() {
                   <CardContent className="p-6">
                     <div className="mb-4 flex items-center gap-2">
                       <Lightbulb className="h-5 w-5 text-amber-500" />
-                      <h3 className="font-semibold text-slate-900">M?o t?o bùi t?p</h3>
+                      <h3 className="font-semibold text-slate-900">M?o t?o bÔøΩi t?p</h3>
                     </div>
                     <ul className="space-y-3 text-sm text-slate-700">
                       <li className="flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                        <span>??t tiùu ?? rù rùng, c? th? v? v?n ?? code review</span>
+                        <span>??t tiÔøΩu ?? rÔøΩ rÔøΩng, c? th? v? v?n ?? code review</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -341,11 +343,11 @@ export function CodeReviewProblemManagementPage() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                        <span>Li?t kù expected issues chi ti?t v?i severity</span>
+                        <span>Li?t kÔøΩ expected issues chi ti?t v?i severity</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                        <span>S? d?ng AI ?? generate ?? bùi nhanh chùng</span>
+                        <span>S? d?ng AI ?? generate ?? bÔøΩi nhanh chÔøΩng</span>
                       </li>
                     </ul>
                   </CardContent>
@@ -358,7 +360,7 @@ export function CodeReviewProblemManagementPage() {
                       <h3 className="font-semibold text-slate-900">T?o b?ng AI</h3>
                     </div>
                     <p className="mb-4 text-sm text-slate-700">
-                      S? d?ng AI ?? t? ??ng generate ?? bùi code review ch? trong vùi giùy.
+                      S? d?ng AI ?? t? ??ng generate ?? bÔøΩi code review ch? trong vÔøΩi giÔøΩy.
                     </p>
                     <Button
                       variant="outline"
@@ -378,7 +380,7 @@ export function CodeReviewProblemManagementPage() {
           <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {t("adminCodeReviewProblem.aiGenerateTitle") || "T?o bùi t?p b?ng AI"}
+                {t("adminCodeReviewProblem.aiGenerateTitle") || "T?o bÔøΩi t?p b?ng AI"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
@@ -392,7 +394,7 @@ export function CodeReviewProblemManagementPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{t("adminCodeReviewProblem.difficulty") || "?? khù"} *</Label>
+                  <Label>{t("adminCodeReviewProblem.difficulty") || "?? khÔøΩ"} *</Label>
                   <Select
                     value={generatedDifficulty}
                     onValueChange={(v) => setGeneratedDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
@@ -401,13 +403,13 @@ export function CodeReviewProblemManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="EASY">{t("common.easy") || "D?"}</SelectItem>
-                      <SelectItem value="MEDIUM">{t("common.medium") || "Trung bùnh"}</SelectItem>
-                      <SelectItem value="HARD">{t("common.hard") || "Khù"}</SelectItem>
+                      <SelectItem value="MEDIUM">{t("common.medium") || "Trung bÔøΩnh"}</SelectItem>
+                      <SelectItem value="HARD">{t("common.hard") || "KhÔøΩ"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("adminCodeReviewProblem.programmingLanguage") || "Ngùn ng?"} *</Label>
+                  <Label>{t("adminCodeReviewProblem.programmingLanguage") || "NgÔøΩn ng?"} *</Label>
                   <Input
                     value={aiProgrammingLanguage}
                     onChange={(e) => setAiProgrammingLanguage(e.target.value)}
@@ -416,7 +418,7 @@ export function CodeReviewProblemManagementPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>{t("adminCodeReviewProblem.targetLevel") || "M?c tiùu"} *</Label>
+                <Label>{t("adminCodeReviewProblem.targetLevel") || "M?c tiÔøΩu"} *</Label>
                 <Input
                   value={aiTargetLevel}
                   onChange={(e) => setAiTargetLevel(e.target.value)}
@@ -424,7 +426,7 @@ export function CodeReviewProblemManagementPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("adminCodeReviewProblem.contextJobTitle") || "V? trù cùng vi?c"}</Label>
+                <Label>{t("adminCodeReviewProblem.contextJobTitle") || "V? trÔøΩ cÔøΩng vi?c"}</Label>
                 <Input
                   value={aiContextJobTitle}
                   onChange={(e) => setAiContextJobTitle(e.target.value)}
@@ -432,20 +434,20 @@ export function CodeReviewProblemManagementPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("adminCodeReviewProblem.contextRequirement") || "Yùu c?u"}</Label>
+                <Label>{t("adminCodeReviewProblem.contextRequirement") || "YÔøΩu c?u"}</Label>
                 <Textarea
                   value={aiContextRequirement}
                   onChange={(e) => setAiContextRequirement(e.target.value)}
-                  placeholder="Mù t? yùu c?u..."
+                  placeholder="MÔøΩ t? yÔøΩu c?u..."
                   rows={2}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("adminCodeReviewProblem.contextPrompting") || "H??ng d?n thùm"}</Label>
+                <Label>{t("adminCodeReviewProblem.contextPrompting") || "H??ng d?n thÔøΩm"}</Label>
                 <Textarea
                   value={aiContextPrompting}
                   onChange={(e) => setAiContextPrompting(e.target.value)}
-                  placeholder="G?i ù thùm cho AI..."
+                  placeholder="G?i ÔøΩ thÔøΩm cho AI..."
                   rows={2}
                 />
               </div>
@@ -459,7 +461,7 @@ export function CodeReviewProblemManagementPage() {
                   ) : (
                     <>
                       <Bot className="mr-2 h-4 w-4" />
-                      {t("adminCodeReviewProblem.generate") || "T?o bùi t?p"}
+                      {t("adminCodeReviewProblem.generate") || "T?o bÔøΩi t?p"}
                     </>
                   )}
                 </Button>
@@ -479,11 +481,11 @@ export function CodeReviewProblemManagementPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">
-            {t("adminCodeReviewProblem.pageTitle") || "Qu?n lù bùi t?p Code Review"}
+            {t("adminCodeReviewProblem.pageTitle") || "Qu?n lÔøΩ bÔøΩi t?p Code Review"}
           </h1>
           <p className="text-muted-foreground text-sm">
             {t("adminCodeReviewProblem.pageDescription") ||
-              "T?o vù qu?n lù cùc bùi t?p ?ùnh giù code review"}
+              "T?o vÔøΩ qu?n lÔøΩ cÔøΩc bÔøΩi t?p ?ÔøΩnh giÔøΩ code review"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -510,7 +512,7 @@ export function CodeReviewProblemManagementPage() {
             <div className="relative min-w-[220px] flex-1">
               <Input
                 placeholder={
-                  t("adminCodeReviewProblem.searchPlaceholder") || "Tùm theo tùn, ngùn ng?, ID..."
+                  t("adminCodeReviewProblem.searchPlaceholder") || "TÔøΩm theo tÔøΩn, ngÔøΩn ng?, ID..."
                 }
                 value={searchQuery}
                 onChange={(e) => {
@@ -526,13 +528,13 @@ export function CodeReviewProblemManagementPage() {
                 pagination.goToFirstPage();
               }}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder={t("adminCodeReviewProblem.difficulty") || "?? khù"} />
+                <SelectValue placeholder={t("adminCodeReviewProblem.difficulty") || "?? khÔøΩ"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("common.allStatus") || "T?t c?"}</SelectItem>
                 <SelectItem value="EASY">{t("common.easy") || "D?"}</SelectItem>
-                <SelectItem value="MEDIUM">{t("common.medium") || "Trung bùnh"}</SelectItem>
-                <SelectItem value="HARD">{t("common.hard") || "Khù"}</SelectItem>
+                <SelectItem value="MEDIUM">{t("common.medium") || "Trung bÔøΩnh"}</SelectItem>
+                <SelectItem value="HARD">{t("common.hard") || "KhÔøΩ"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -541,7 +543,7 @@ export function CodeReviewProblemManagementPage() {
             <SpinnerBlock size="lg" />
           ) : filteredProblems.length === 0 ? (
             <div className="py-8 text-center text-slate-500">
-              {t("common.noDataAvailable") || "Khùng cù d? li?u"}
+              {t("common.noDataAvailable") || "KhÔøΩng cÔøΩ d? li?u"}
             </div>
           ) : (
             <div className="rounded-md border">
@@ -550,19 +552,19 @@ export function CodeReviewProblemManagementPage() {
                   <tr className="border-b bg-slate-50">
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">ID</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">
-                      {t("common.title1") || "Tiùu ??"}
+                      {t("common.title1") || "TiÔøΩu ??"}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">
-                      {t("adminCodeReviewProblem.language") || "Ngùn ng?"}
+                      {t("adminCodeReviewProblem.language") || "NgÔøΩn ng?"}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">
-                      {t("adminCodeReviewProblem.difficulty") || "?? khù"}
+                      {t("adminCodeReviewProblem.difficulty") || "?? khÔøΩ"}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-600">
-                      {t("common.creationDate") || "Ngùy t?o"}
+                      {t("common.creationDate") || "NgÔøΩy t?o"}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-slate-600">
-                      {t("common.operation") || "Thao tùc"}
+                      {t("common.operation") || "Thao tÔøΩc"}
                     </th>
                   </tr>
                 </thead>
@@ -636,7 +638,7 @@ export function CodeReviewProblemManagementPage() {
               {selectedProblem.problemStatement && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold">
-                    {t("adminCodeReviewProblem.problemStatement") || "?? bùi"}
+                    {t("adminCodeReviewProblem.problemStatement") || "?? bÔøΩi"}
                   </h3>
                   <div className="rounded-lg bg-slate-50 p-4 text-sm whitespace-pre-wrap dark:bg-slate-800">
                     {selectedProblem.problemStatement}
@@ -702,7 +704,7 @@ export function CodeReviewProblemManagementPage() {
               <div className="text-muted-foreground text-xs">
                 {selectedProblem.createdAt && (
                   <span>
-                    {t("common.creationDate") || "Ngùy t?o"}:{" "}
+                    {t("common.creationDate") || "NgÔøΩy t?o"}:{" "}
                     {formatDate(selectedProblem.createdAt)}
                   </span>
                 )}
@@ -833,7 +835,7 @@ function CodeReviewProblemForm({
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      toast.error(t("adminCodeReviewProblem.titleRequired") || "Vui lùng nh?p tiùu ??");
+      toast.error(t("adminCodeReviewProblem.titleRequired") || "Vui lÔøΩng nh?p tiÔøΩu ??");
       return;
     }
     setSubmitting(true);
@@ -848,13 +850,13 @@ function CodeReviewProblemForm({
       };
       const response = await codeReviewProblemManager.create(payload);
       if (response.success) {
-        toast.success(t("common.success") || "T?o thùnh cùng");
+        toast.success(t("common.success") || "T?o thÔøΩnh cÔøΩng");
         onSuccess();
       } else {
-        toast.error(response.error || t("common.unableToSave") || "Khùng th? l?u");
+        toast.error(response.error || t("common.unableToSave") || "KhÔøΩng th? l?u");
       }
     } catch {
-      toast.error(t("common.unableToSave") || "Khùng th? l?u");
+      toast.error(t("common.unableToSave") || "KhÔøΩng th? l?u");
     } finally {
       setSubmitting(false);
     }
@@ -875,17 +877,17 @@ function CodeReviewProblemForm({
       </div>
 
       <div className="space-y-2">
-        <Label>{t("common.title1") || "Tiùu ??"}</Label>
+        <Label>{t("common.title1") || "TiÔøΩu ??"}</Label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("adminCodeReviewProblem.titlePlaceholder") || "Nh?p tiùu ?? bùi t?p"}
+          placeholder={t("adminCodeReviewProblem.titlePlaceholder") || "Nh?p tiÔøΩu ?? bÔøΩi t?p"}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t("adminCodeReviewProblem.difficulty") || "?? khù"}</Label>
+          <Label>{t("adminCodeReviewProblem.difficulty") || "?? khÔøΩ"}</Label>
           <Select
             value={difficulty}
             onValueChange={(v) => setDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
@@ -894,13 +896,13 @@ function CodeReviewProblemForm({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="EASY">{t("common.easy") || "D?"}</SelectItem>
-              <SelectItem value="MEDIUM">{t("common.medium") || "Trung bùnh"}</SelectItem>
-              <SelectItem value="HARD">{t("common.hard") || "Khù"}</SelectItem>
+              <SelectItem value="MEDIUM">{t("common.medium") || "Trung bÔøΩnh"}</SelectItem>
+              <SelectItem value="HARD">{t("common.hard") || "KhÔøΩ"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>{t("adminCodeReviewProblem.language") || "Ngùn ng?"}</Label>
+          <Label>{t("adminCodeReviewProblem.language") || "NgÔøΩn ng?"}</Label>
           <Input
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
@@ -910,11 +912,11 @@ function CodeReviewProblemForm({
       </div>
 
       <div className="space-y-2">
-        <Label>{t("adminCodeReviewProblem.problemStatement") || "?? bùi"}</Label>
+        <Label>{t("adminCodeReviewProblem.problemStatement") || "?? bÔøΩi"}</Label>
         <Textarea
           value={problemStatement}
           onChange={(e) => setProblemStatement(e.target.value)}
-          placeholder={t("adminCodeReviewProblem.problemStatementPlaceholder") || "Nh?p ?? bùi..."}
+          placeholder={t("adminCodeReviewProblem.problemStatementPlaceholder") || "Nh?p ?? bÔøΩi..."}
           rows={5}
         />
       </div>
@@ -924,7 +926,7 @@ function CodeReviewProblemForm({
           <Label>{t("adminCodeReviewProblem.files") || "Files"}</Label>
           <Button type="button" variant="outline" size="sm" onClick={handleAddFile}>
             <Plus className="mr-1 h-4 w-4" />
-            {t("common.add") || "Thùm"}
+            {t("common.add") || "ThÔøΩm"}
           </Button>
         </div>
         <div className="space-y-2">
@@ -945,12 +947,12 @@ function CodeReviewProblemForm({
               <Input
                 value={file.filename || ""}
                 onChange={(e) => handleUpdateFile(idx, "filename", e.target.value)}
-                placeholder={t("adminCodeReviewProblem.filename") || "Tùn file"}
+                placeholder={t("adminCodeReviewProblem.filename") || "TÔøΩn file"}
               />
               <Input
                 value={file.language || ""}
                 onChange={(e) => handleUpdateFile(idx, "language", e.target.value)}
-                placeholder={t("adminCodeReviewProblem.languagePlaceholder") || "Ngùn ng?"}
+                placeholder={t("adminCodeReviewProblem.languagePlaceholder") || "NgÔøΩn ng?"}
               />
               <Textarea
                 value={file.content || ""}
@@ -968,7 +970,7 @@ function CodeReviewProblemForm({
           <Label>{t("adminCodeReviewProblem.expectedIssues") || "Expected Issues"}</Label>
           <Button type="button" variant="outline" size="sm" onClick={handleAddIssue}>
             <Plus className="mr-1 h-4 w-4" />
-            {t("common.add") || "Thùm"}
+            {t("common.add") || "ThÔøΩm"}
           </Button>
         </div>
         <div className="space-y-2">
@@ -990,7 +992,7 @@ function CodeReviewProblemForm({
                 <Input
                   value={issue.filename || ""}
                   onChange={(e) => handleUpdateIssue(idx, "filename", e.target.value)}
-                  placeholder={t("adminCodeReviewProblem.filename") || "Tùn file"}
+                  placeholder={t("adminCodeReviewProblem.filename") || "TÔøΩn file"}
                 />
                 <Input
                   type="number"
@@ -1002,7 +1004,7 @@ function CodeReviewProblemForm({
                       e.target.value ? Number(e.target.value) : undefined
                     )
                   }
-                  placeholder={t("adminCodeReviewProblem.lineNumber") || "Dùng"}
+                  placeholder={t("adminCodeReviewProblem.lineNumber") || "DÔøΩng"}
                 />
               </div>
               <Input
@@ -1013,7 +1015,7 @@ function CodeReviewProblemForm({
               <Textarea
                 value={issue.description || ""}
                 onChange={(e) => handleUpdateIssue(idx, "description", e.target.value)}
-                placeholder={t("adminCodeReviewProblem.description") || "Mù t? v?n ??"}
+                placeholder={t("adminCodeReviewProblem.description") || "MÔøΩ t? v?n ??"}
                 rows={2}
               />
             </div>
