@@ -14,11 +14,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { SummaryResponse } from "@/interfaces";
+import type {
+  SetupJdRoundsRequest,
+  SummaryResponse,
+  UpdateJdRoundRequest,
+  User,
+} from "@/interfaces";
 import { cn } from "@/lib/utils";
 import { interviewTemplateManager } from "@/services/interview-template.manager";
 import { jobDescriptionManager } from "@/services/job-description.manager";
 import { roundManager } from "@/services/round.manager";
+import { usersAdminManager } from "@/services/users-admin.manager";
 import {
   AlertTriangle,
   ArrowRight,
@@ -37,6 +43,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { JobDescription } from "../types";
 
@@ -80,6 +87,7 @@ interface UIRound {
   roundOrder?: number;
   roundType?: RoundType;
   passThreshold?: number;
+  reviewerId?: number | null;
   configData?: UIRoundConfig;
   isDeleted?: boolean;
   createdAt?: string;
@@ -271,13 +279,27 @@ const getBestConnection = (fromPos: { x: number; y: number }, toPos: { x: number
   };
 };
 
+type SetupRequestWithReviewer = {
+  rounds?: (Omit<NonNullable<SetupJdRoundsRequest["rounds"]>[number], "reviewerId"> & {
+    reviewerId?: number | null;
+  })[];
+};
+
+type UpdateRequestWithReviewer = {
+  rounds?: (Omit<NonNullable<UpdateJdRoundRequest["rounds"]>[number], "reviewerId"> & {
+    reviewerId?: number | null;
+  })[];
+};
+
 export function JobDescriptionRoundsDialog({
   isOpen,
   onOpenChange,
   jobDescription,
   onSaved,
 }: JobDescriptionRoundsDialogProps) {
+  const { t } = useTranslation();
   const [rounds, setRounds] = useState<UIRound[]>([]);
+  const [staffUsers, setStaffUsers] = useState<User[]>([]);
   const [selectedRoundIndex, setSelectedRoundIndex] = useState<number | null>(null);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -452,14 +474,21 @@ export function JobDescriptionRoundsDialog({
 
       const fetchJd = jobDescriptionManager.getById(jobDescription.id);
       const fetchTypes = roundManager.getAvailableRoundTypes();
+      const fetchUsers = usersAdminManager.getAll();
 
-      Promise.all([fetchJd, fetchTypes])
-        .then(([jdRes, typesRes]) => {
+      Promise.all([fetchJd, fetchTypes, fetchUsers])
+        .then(([jdRes, typesRes, usersRes]) => {
           if (typesRes.success && typesRes.data) {
             setAvailableTypes(typesRes.data);
           } else {
             // Fallback to all if API fails
             setAvailableTypes(AVAILABLE_ROUNDS_TEMPLATES.map((t) => t.type));
+          }
+
+          if (usersRes.success && usersRes.data) {
+            const allUsers = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.data;
+            const staff = (allUsers || []).filter((u) => u.role === "STAFF");
+            setStaffUsers(staff as User[]);
           }
 
           if (jdRes.success && jdRes.data) {
@@ -481,6 +510,7 @@ export function JobDescriptionRoundsDialog({
               return {
                 ...r,
                 roundType: r.roundType as RoundType,
+                reviewerId: (r as { reviewerId?: number | null }).reviewerId ?? null,
                 configData: {
                   ...configObj,
                   codingProblemsId:
@@ -573,6 +603,7 @@ export function JobDescriptionRoundsDialog({
         name: r.name,
         roundType: r.roundType as RoundType,
         passThreshold: r.passThreshold ?? 0.8,
+        reviewerId: (r as { reviewerId?: number | null }).reviewerId ?? null,
         configData: {
           ...r.configData,
           codingProblemsId:
@@ -626,7 +657,6 @@ export function JobDescriptionRoundsDialog({
           name: r.name || `Vòng ${idx + 1}`,
           roundOrder: idx + 1,
           roundType: r.roundType as RoundType,
-
           passThreshold: Number(r.passThreshold ?? 0.8),
           configData: {
             instruction: r.configData?.instruction || "",
@@ -893,7 +923,7 @@ export function JobDescriptionRoundsDialog({
         return;
       }
 
-      const payload = {
+      const payload: SetupRequestWithReviewer & UpdateRequestWithReviewer = {
         // Map UI format to Dto expected by Backend API
         rounds: roundsToSave.map((r, idx) => ({
           id: r.id,
@@ -901,6 +931,7 @@ export function JobDescriptionRoundsDialog({
           roundOrder: idx + 1,
           roundType: r.roundType as RoundType,
           passThreshold: Number(r.passThreshold ?? 0.8),
+          reviewerId: r.reviewerId || null,
           configData: {
             instruction: r.configData?.instruction || "",
             submissionFormat: r.configData?.submissionFormat || "",
@@ -944,9 +975,15 @@ export function JobDescriptionRoundsDialog({
 
       let response;
       if (hasExistingRounds) {
-        response = await roundManager.updateForJd(jobDescription.id, payload);
+        response = await roundManager.updateForJd(
+          jobDescription.id,
+          payload as unknown as UpdateJdRoundRequest
+        );
       } else {
-        response = await roundManager.setUpForJd(jobDescription.id, payload);
+        response = await roundManager.setUpForJd(
+          jobDescription.id,
+          payload as unknown as SetupJdRoundsRequest
+        );
       }
 
       if (response.success) {
@@ -979,6 +1016,7 @@ export function JobDescriptionRoundsDialog({
               return {
                 ...r,
                 roundType: r.roundType as RoundType,
+                reviewerId: (r as { reviewerId?: number | null }).reviewerId ?? null,
                 configData: {
                   ...configObj,
                   codingProblemsId:
@@ -1419,6 +1457,17 @@ export function JobDescriptionRoundsDialog({
                                     </span>
                                   </div>
 
+                                  {/* Reviewer badge */}
+                                  {round.reviewerId && (
+                                    <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-slate-50 px-2 py-1 text-[10px] text-slate-600 dark:bg-slate-800/40 dark:text-slate-400">
+                                      <UserCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                                      <span className="truncate font-medium">
+                                        {staffUsers.find((u) => u.id === round.reviewerId)?.name ||
+                                          `ID: ${round.reviewerId}`}
+                                      </span>
+                                    </div>
+                                  )}
+
                                   {/* Quiz warning */}
                                   {round.roundType === "QUIZ" &&
                                     (!round.configData?.quizQuestions ||
@@ -1511,298 +1560,338 @@ export function JobDescriptionRoundsDialog({
                       </Button>
                     </div>
 
-                    <div
-                      className={cn(
-                        "flex-1 overflow-hidden",
-                        selectedRound.roundType !== "QUIZ" &&
-                          selectedRound.roundType !== "CODING" &&
-                          selectedRound.roundType !== "CODE_REVIEW" &&
-                          "overflow-y-auto p-5"
-                      )}>
-                      {selectedRound.roundType === "QUIZ" ? (
-                        <QuizEditor
-                          questions={selectedRound.configData?.quizQuestions || []}
-                          onChange={(questions) =>
-                            updateRoundConfigField(selectedRoundIndex, "quizQuestions", questions)
-                          }
-                          maxScore={selectedRound.configData?.maxScore ?? 100}
-                          onMaxScoreChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "maxScore", v)
-                          }
-                          passThreshold={selectedRound.passThreshold ?? 0.8}
-                          onPassThresholdChange={(v) =>
-                            updateRoundField(selectedRoundIndex, "passThreshold", v)
-                          }
-                          timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
-                          onTimeLimitMinutesChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
-                          }
-                        />
-                      ) : selectedRound.roundType === "CODING" ? (
-                        <CodingEditor
-                          ref={codingEditorRef}
-                          codingProblemsId={selectedRound.configData?.codingProblemsId || []}
-                          codingProblems={selectedRound.configData?.codingProblems || []}
-                          onChange={(ids, problems) => {
-                            const updated = [...rounds];
-                            updated[selectedRoundIndex] = {
-                              ...updated[selectedRoundIndex],
-                              configData: {
-                                ...updated[selectedRoundIndex].configData,
-                                codingProblemsId: ids,
-                                codingProblems: problems,
-                              },
-                            };
-                            setRounds(updated);
-                          }}
-                          maxScore={selectedRound.configData?.maxScore ?? 100}
-                          onMaxScoreChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "maxScore", v)
-                          }
-                          passThreshold={selectedRound.passThreshold ?? 0.8}
-                          onPassThresholdChange={(v) =>
-                            updateRoundField(selectedRoundIndex, "passThreshold", v)
-                          }
-                          timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
-                          onTimeLimitMinutesChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
-                          }
-                        />
-                      ) : selectedRound.roundType === "CODE_REVIEW" ? (
-                        <CodeReviewEditor
-                          ref={codeReviewEditorRef}
-                          codeReviewProblemsId={
-                            selectedRound.configData?.codeReviewProblemsId || []
-                          }
-                          codeReviewProblems={selectedRound.configData?.codeReviewProblems || []}
-                          onChange={(ids, problems) => {
-                            const updated = [...rounds];
-                            updated[selectedRoundIndex] = {
-                              ...updated[selectedRoundIndex],
-                              configData: {
-                                ...updated[selectedRoundIndex].configData,
-                                codeReviewProblemsId: ids,
-                                codeReviewProblems: problems,
-                              },
-                            };
-                            setRounds(updated);
-                          }}
-                          maxScore={selectedRound.configData?.maxScore ?? 100}
-                          onMaxScoreChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "maxScore", v)
-                          }
-                          passThreshold={selectedRound.passThreshold ?? 0.8}
-                          onPassThresholdChange={(v) =>
-                            updateRoundField(selectedRoundIndex, "passThreshold", v)
-                          }
-                          timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
-                          onTimeLimitMinutesChange={(v) =>
-                            updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
-                          }
-                        />
-                      ) : (
-                        <div className="space-y-4 pb-6">
-                          {/* General Settings */}
-                          <div className="space-y-3 pb-3">
-                            {/* Max Score + Time in one row */}
-                            <div className="flex items-start gap-4">
-                              <div
-                                className={cn(
-                                  "space-y-1",
-                                  selectedRound.roundType === "CV_SCREENING" ||
-                                    selectedRound.roundType === "EMAIL_SIMULATOR"
-                                    ? "w-full"
-                                    : "w-[55%]"
-                                )}>
-                                <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                  Điểm tối đa
-                                </Label>
-                                <ScoreInput
-                                  value={selectedRound.configData?.maxScore ?? 100}
-                                  min={1}
-                                  max={500}
-                                  step={5}
-                                  accent="indigo"
-                                  variant="simple"
-                                  onChange={(v) =>
-                                    updateRoundConfigField(selectedRoundIndex, "maxScore", v)
-                                  }
-                                />
-                              </div>
-
-                              {selectedRound.roundType !== "CV_SCREENING" &&
-                                selectedRound.roundType !== "EMAIL_SIMULATOR" && (
-                                  <div className="w-[45%] space-y-1">
-                                    <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                      Thời gian
-                                    </Label>
-                                    {dialogEditingTime ? (
-                                      <div className="flex items-center gap-1">
-                                        <Input
-                                          type="number"
-                                          min={0}
-                                          autoFocus
-                                          value={selectedRound.configData?.timeLimitMinutes ?? 0}
-                                          onChange={(e) =>
-                                            updateRoundConfigField(
-                                              selectedRoundIndex,
-                                              "timeLimitMinutes",
-                                              Number(e.target.value)
-                                            )
-                                          }
-                                          onBlur={() => setDialogEditingTime(false)}
-                                          onKeyDown={(e) =>
-                                            e.key === "Enter" && setDialogEditingTime(false)
-                                          }
-                                          className="h-11 w-full [appearance:textfield] border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                        />
-                                        <span className="shrink-0 text-[9px] text-slate-400">
-                                          phút
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() => setDialogEditingTime(true)}
-                                        className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400">
-                                        <Clock className="h-4 w-4 text-slate-400" />
-                                        {(selectedRound.configData?.timeLimitMinutes ?? 0) > 0
-                                          ? `${selectedRound.configData?.timeLimitMinutes} phút`
-                                          : "Không hạn chế"}
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-
-                            {/* Pass Score - circular */}
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                Điểm đạt tối thiểu
-                              </Label>
-                              <div className="flex justify-center">
-                                <ScoreInput
-                                  value={Math.round(
-                                    (selectedRound.passThreshold ?? 0.8) *
-                                      (selectedRound.configData?.maxScore ?? 100)
-                                  )}
-                                  min={0}
-                                  max={selectedRound.configData?.maxScore ?? 100}
-                                  step={1}
-                                  accent="emerald"
-                                  variant="circular"
-                                  size="sm"
-                                  onChange={(val) => {
-                                    const max = selectedRound.configData?.maxScore ?? 100;
-                                    updateRoundField(
-                                      selectedRoundIndex,
-                                      "passThreshold",
-                                      max > 0 ? val / max : 0.8
-                                    );
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Specific features depending on Round Type */}
-                          <div className="border-t border-slate-800/60 pt-4">
-                            {/* 1. CV_SCREENING */}
-                            {selectedRound.roundType === "CV_SCREENING" && (
-                              <>
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                    Định dạng nộp hồ sơ
-                                  </Label>
-                                  <Select
-                                    value={selectedRound.configData?.submissionFormat || "pdf"}
-                                    onValueChange={(val) =>
-                                      updateRoundConfigField(
-                                        selectedRoundIndex,
-                                        "submissionFormat",
-                                        val
-                                      )
-                                    }>
-                                    <SelectTrigger className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                                      <SelectItem value="pdf">Tệp PDF (.pdf)</SelectItem>
-                                      <SelectItem value="doc">Tệp Word (.doc, .docx)</SelectItem>
-                                      <SelectItem value="any">Tất cả định dạng tài liệu</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </>
-                            )}
-
-                            {/* (Coding specific inputs removed since they are inline in CodingEditor) */}
-
-                            {/* 4. AI INTERVIEW */}
-                            {selectedRound.roundType === "AI_INTERVIEW" && (
-                              <>
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                    AI System Prompt
-                                  </Label>
-                                  <Textarea
-                                    value={selectedRound.configData?.aiSystemPrompt || ""}
-                                    onChange={(e) =>
-                                      updateRoundConfigField(
-                                        selectedRoundIndex,
-                                        "aiSystemPrompt",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="Cung cấp prompt cấu hình vai trò AI..."
-                                    rows={5}
-                                    className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                                  />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                    Tiêu chuẩn Đánh giá
-                                  </Label>
-                                  <Textarea
-                                    value={selectedRound.configData?.evaluationCriteria || ""}
-                                    onChange={(e) =>
-                                      updateRoundConfigField(
-                                        selectedRoundIndex,
-                                        "evaluationCriteria",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="Các tiêu chuẩn đánh giá kết quả của ứng viên..."
-                                    rows={4}
-                                    className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                                  />
-                                </div>
-                              </>
-                            )}
-
-                            {/* Instruction (Common for all) */}
-                            <div className="space-y-1.5">
-                              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                Lời Hướng dẫn cho ứng viên
-                              </Label>
-                              <Textarea
-                                value={selectedRound.configData?.instruction || ""}
-                                onChange={(e) =>
-                                  updateRoundConfigField(
-                                    selectedRoundIndex,
-                                    "instruction",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Hướng dẫn ứng viên làm bài..."
-                                rows={4}
-                                className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    <div className="flex flex-1 flex-col overflow-hidden">
+                      {/* Reviewer Configuration Selection */}
+                      <div className="shrink-0 border-b border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-900/10">
+                        <div className="max-w-md space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            {t("adminCompanymanagement.reviewer")}
+                          </Label>
+                          <Select
+                            value={
+                              selectedRound.reviewerId ? String(selectedRound.reviewerId) : "none"
+                            }
+                            onValueChange={(val) =>
+                              updateRoundField(
+                                selectedRoundIndex,
+                                "reviewerId",
+                                val === "none" ? null : Number(val)
+                              )
+                            }>
+                            <SelectTrigger className="w-full border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white">
+                              <SelectValue
+                                placeholder={t("adminCompanymanagement.selectReviewer")}
                               />
+                            </SelectTrigger>
+                            <SelectContent className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                              <SelectItem value="none">
+                                {t("adminCompanymanagement.noReviewerAssigned")}
+                              </SelectItem>
+                              {staffUsers.map((staff) => (
+                                <SelectItem key={staff.id} value={String(staff.id)}>
+                                  {staff.name} ({staff.email})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div
+                        className={cn(
+                          "flex-1 overflow-hidden",
+                          selectedRound.roundType !== "QUIZ" &&
+                            selectedRound.roundType !== "CODING" &&
+                            selectedRound.roundType !== "CODE_REVIEW" &&
+                            "overflow-y-auto p-5"
+                        )}>
+                        {selectedRound.roundType === "QUIZ" ? (
+                          <QuizEditor
+                            questions={selectedRound.configData?.quizQuestions || []}
+                            onChange={(questions) =>
+                              updateRoundConfigField(selectedRoundIndex, "quizQuestions", questions)
+                            }
+                            maxScore={selectedRound.configData?.maxScore ?? 100}
+                            onMaxScoreChange={(v) =>
+                              updateRoundConfigField(selectedRoundIndex, "maxScore", v)
+                            }
+                            passThreshold={selectedRound.passThreshold ?? 0.8}
+                            onPassThresholdChange={(v) =>
+                              updateRoundField(selectedRoundIndex, "passThreshold", v)
+                            }
+                            timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
+                            onTimeLimitMinutesChange={(v) =>
+                              updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
+                            }
+                          />
+                        ) : selectedRound.roundType === "CODING" ? (
+                          <CodingEditor
+                            ref={codingEditorRef}
+                            codingProblemsId={selectedRound.configData?.codingProblemsId || []}
+                            codingProblems={selectedRound.configData?.codingProblems || []}
+                            onChange={(ids, problems) => {
+                              const updated = [...rounds];
+                              updated[selectedRoundIndex] = {
+                                ...updated[selectedRoundIndex],
+                                configData: {
+                                  ...updated[selectedRoundIndex].configData,
+                                  codingProblemsId: ids,
+                                  codingProblems: problems,
+                                },
+                              };
+                              setRounds(updated);
+                            }}
+                            maxScore={selectedRound.configData?.maxScore ?? 100}
+                            onMaxScoreChange={(v) =>
+                              updateRoundConfigField(selectedRoundIndex, "maxScore", v)
+                            }
+                            passThreshold={selectedRound.passThreshold ?? 0.8}
+                            onPassThresholdChange={(v) =>
+                              updateRoundField(selectedRoundIndex, "passThreshold", v)
+                            }
+                            timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
+                            onTimeLimitMinutesChange={(v) =>
+                              updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
+                            }
+                          />
+                        ) : selectedRound.roundType === "CODE_REVIEW" ? (
+                          <CodeReviewEditor
+                            ref={codeReviewEditorRef}
+                            codeReviewProblemsId={
+                              selectedRound.configData?.codeReviewProblemsId || []
+                            }
+                            codeReviewProblems={selectedRound.configData?.codeReviewProblems || []}
+                            onChange={(ids, problems) => {
+                              const updated = [...rounds];
+                              updated[selectedRoundIndex] = {
+                                ...updated[selectedRoundIndex],
+                                configData: {
+                                  ...updated[selectedRoundIndex].configData,
+                                  codeReviewProblemsId: ids,
+                                  codeReviewProblems: problems,
+                                },
+                              };
+                              setRounds(updated);
+                            }}
+                            maxScore={selectedRound.configData?.maxScore ?? 100}
+                            onMaxScoreChange={(v) =>
+                              updateRoundConfigField(selectedRoundIndex, "maxScore", v)
+                            }
+                            passThreshold={selectedRound.passThreshold ?? 0.8}
+                            onPassThresholdChange={(v) =>
+                              updateRoundField(selectedRoundIndex, "passThreshold", v)
+                            }
+                            timeLimitMinutes={selectedRound.configData?.timeLimitMinutes ?? 0}
+                            onTimeLimitMinutesChange={(v) =>
+                              updateRoundConfigField(selectedRoundIndex, "timeLimitMinutes", v)
+                            }
+                          />
+                        ) : (
+                          <div className="space-y-4 pb-6">
+                            {/* General Settings */}
+                            <div className="space-y-3 pb-3">
+                              {/* Max Score + Time in one row */}
+                              <div className="flex items-start gap-4">
+                                <div
+                                  className={cn(
+                                    "space-y-1",
+                                    selectedRound.roundType === "CV_SCREENING" ||
+                                      selectedRound.roundType === "EMAIL_SIMULATOR"
+                                      ? "w-full"
+                                      : "w-[55%]"
+                                  )}>
+                                  <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                                    Điểm tối đa
+                                  </Label>
+                                  <ScoreInput
+                                    value={selectedRound.configData?.maxScore ?? 100}
+                                    min={1}
+                                    max={500}
+                                    step={5}
+                                    accent="indigo"
+                                    variant="simple"
+                                    onChange={(v) =>
+                                      updateRoundConfigField(selectedRoundIndex, "maxScore", v)
+                                    }
+                                  />
+                                </div>
+
+                                {selectedRound.roundType !== "CV_SCREENING" &&
+                                  selectedRound.roundType !== "EMAIL_SIMULATOR" && (
+                                    <div className="w-[45%] space-y-1">
+                                      <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                                        Thời gian
+                                      </Label>
+                                      {dialogEditingTime ? (
+                                        <div className="flex items-center gap-1">
+                                          <Input
+                                            type="number"
+                                            min={0}
+                                            autoFocus
+                                            value={selectedRound.configData?.timeLimitMinutes ?? 0}
+                                            onChange={(e) =>
+                                              updateRoundConfigField(
+                                                selectedRoundIndex,
+                                                "timeLimitMinutes",
+                                                Number(e.target.value)
+                                              )
+                                            }
+                                            onBlur={() => setDialogEditingTime(false)}
+                                            onKeyDown={(e) =>
+                                              e.key === "Enter" && setDialogEditingTime(false)
+                                            }
+                                            className="h-11 w-full [appearance:textfield] border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                          />
+                                          <span className="shrink-0 text-[9px] text-slate-400">
+                                            phút
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => setDialogEditingTime(true)}
+                                          className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400">
+                                          <Clock className="h-4 w-4 text-slate-400" />
+                                          {(selectedRound.configData?.timeLimitMinutes ?? 0) > 0
+                                            ? `${selectedRound.configData?.timeLimitMinutes} phút`
+                                            : "Không hạn chế"}
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+
+                              {/* Pass Score - circular */}
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                                  Điểm đạt tối thiểu
+                                </Label>
+                                <div className="flex justify-center">
+                                  <ScoreInput
+                                    value={Math.round(
+                                      (selectedRound.passThreshold ?? 0.8) *
+                                        (selectedRound.configData?.maxScore ?? 100)
+                                    )}
+                                    min={0}
+                                    max={selectedRound.configData?.maxScore ?? 100}
+                                    step={1}
+                                    accent="emerald"
+                                    variant="circular"
+                                    size="sm"
+                                    onChange={(val) => {
+                                      const max = selectedRound.configData?.maxScore ?? 100;
+                                      updateRoundField(
+                                        selectedRoundIndex,
+                                        "passThreshold",
+                                        max > 0 ? val / max : 0.8
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Specific features depending on Round Type */}
+                            <div className="border-t border-slate-800/60 pt-4">
+                              {/* 1. CV_SCREENING */}
+                              {selectedRound.roundType === "CV_SCREENING" && (
+                                <>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                      Định dạng nộp hồ sơ
+                                    </Label>
+                                    <Select
+                                      value={selectedRound.configData?.submissionFormat || "pdf"}
+                                      onValueChange={(val) =>
+                                        updateRoundConfigField(
+                                          selectedRoundIndex,
+                                          "submissionFormat",
+                                          val
+                                        )
+                                      }>
+                                      <SelectTrigger className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                                        <SelectItem value="pdf">Tệp PDF (.pdf)</SelectItem>
+                                        <SelectItem value="doc">Tệp Word (.doc, .docx)</SelectItem>
+                                        <SelectItem value="any">
+                                          Tất cả định dạng tài liệu
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </>
+                              )}
+
+                              {/* (Coding specific inputs removed since they are inline in CodingEditor) */}
+
+                              {/* 4. AI INTERVIEW */}
+                              {selectedRound.roundType === "AI_INTERVIEW" && (
+                                <>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                      AI System Prompt
+                                    </Label>
+                                    <Textarea
+                                      value={selectedRound.configData?.aiSystemPrompt || ""}
+                                      onChange={(e) =>
+                                        updateRoundConfigField(
+                                          selectedRoundIndex,
+                                          "aiSystemPrompt",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Cung cấp prompt cấu hình vai trò AI..."
+                                      rows={5}
+                                      className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                      Tiêu chuẩn Đánh giá
+                                    </Label>
+                                    <Textarea
+                                      value={selectedRound.configData?.evaluationCriteria || ""}
+                                      onChange={(e) =>
+                                        updateRoundConfigField(
+                                          selectedRoundIndex,
+                                          "evaluationCriteria",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Các tiêu chuẩn đánh giá kết quả của ứng viên..."
+                                      rows={4}
+                                      className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                                    />
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Instruction (Common for all) */}
+                              <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                  Lời Hướng dẫn cho ứng viên
+                                </Label>
+                                <Textarea
+                                  value={selectedRound.configData?.instruction || ""}
+                                  onChange={(e) =>
+                                    updateRoundConfigField(
+                                      selectedRoundIndex,
+                                      "instruction",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Hướng dẫn ứng viên làm bài..."
+                                  rows={4}
+                                  className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                     <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-900/50">
                       <Button
