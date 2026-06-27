@@ -820,7 +820,10 @@
     "id": "ID",
     "idMentor": "メンターID",
     "identity": "身元",
+    "identityCard": "身分証明書",
     "imagePreview": "画像プレビュー",
+    "degreecertificate": "学位証明書",
+    "otherDocuments": "その他の書類",
     "individual": "個人",
     "interface": "インターフェース",
     "intern": "インターン",
@@ -3528,7 +3531,15 @@
     "contextRequirement": "業務要件（任意）",
     "contextPrompting": "AIへの追加プロンプト（任意）",
     "generating": "生成中...",
-    "generate": "問題を生成"
+    "generate": "問題を生成",
+    "createDescription": "候補者のための新しいコードレビュー評価問題を作成する",
+    "tipsTitle": "問題作成のヒント",
+    "tipClearGoals": "コードレビュー題目の具体的で明確なタイトルを設定する",
+    "tipProvideCode": "複数のファイルから多様なサンプルコードを提供する",
+    "tipListIssues": "重大度を含む詳細なexpected issuesをリストする",
+    "tipUseAI": "AIを使用して問題を素早く生成する",
+    "aiFeatureTitle": "AIで生成",
+    "aiFeatureDescription": "AIを使用して数秒でコードレビュー問題を自動生成します。"
   },
   "adminQuestionbankmanagement": {
     "addQuestion": "質問を追加"

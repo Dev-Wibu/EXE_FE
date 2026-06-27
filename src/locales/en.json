@@ -894,7 +894,10 @@
     "link": "Link",
     "id": "ID",
     "identity": "Identity",
+    "identityCard": "ID Card / Passport",
     "idMentor": "Mentor ID",
+    "degreecertificate": "Degree Certificate",
+    "otherDocuments": "Other Documents",
     "mentorEmailCopied": "Mentor email copied",
     "mentorInformation": "Mentor Information",
     "mentorInterview": "Mentor Interview",
@@ -3525,7 +3528,15 @@
     "contextRequirement": "Job Requirement (optional)",
     "contextPrompting": "Additional prompt for AI (optional)",
     "generating": "Generating...",
-    "generate": "Generate Problem"
+    "generate": "Generate Problem",
+    "createDescription": "Create a new code review assessment problem for candidates",
+    "tipsTitle": "Tips for creating problems",
+    "tipClearGoals": "Set clear, specific titles about the code review topic",
+    "tipProvideCode": "Provide diverse sample code from multiple files",
+    "tipListIssues": "List expected issues in detail with severity",
+    "tipUseAI": "Use AI to generate problems quickly",
+    "aiFeatureTitle": "Generate with AI",
+    "aiFeatureDescription": "Use AI to automatically generate code review problems in just a few seconds."
   },
   "adminQuestionbankmanagement": {
     "addQuestion": "Add question"

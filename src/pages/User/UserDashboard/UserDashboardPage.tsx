@@ -379,10 +379,11 @@ export function UserDashboardPage() {
         settingsLabel={t("common.systemSettings")}
         onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
-          wrapper: "h-screen flex-shrink-0 border-r border-slate-200 bg-slate-50",
+          wrapper:
+            "h-screen flex-shrink-0 border-r border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900",
           expandedWidth: "w-56",
           collapsedWidth: "w-16",
-          logoBorder: "border-b border-slate-200",
+          logoBorder: "border-b border-slate-200 dark:border-slate-800",
           logoExpandedPadding: "h-14 gap-2 px-4",
           logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex flex-1 flex-col gap-1 py-4",
@@ -390,7 +391,7 @@ export function UserDashboardPage() {
           navCollapsedPadding: "px-2",
           sectionLabel:
             "px-3 text-xs font-semibold tracking-wider text-slate-500/70 uppercase dark:text-slate-500",
-          divider: "border-slate-100",
+          divider: "border-slate-100 dark:border-slate-800",
           itemPy: "py-2.5",
           activeItem: "bg-[#0047AB]/10 text-[#0047AB] dark:bg-[#0047AB]/20 dark:text-[#66B2FF]",
           inactiveItem:
@@ -401,8 +402,8 @@ export function UserDashboardPage() {
           flyoutInactiveItem:
             "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800",
           flyoutActiveIcon: "text-[#0047AB] dark:text-[#66B2FF]",
-          flyoutBorder: "border-slate-200",
-          footerBorder: "border-t border-slate-200",
+          flyoutBorder: "border-slate-200 dark:border-slate-800",
+          footerBorder: "border-t border-slate-200 dark:border-slate-800",
           footerExpandedPadding: "p-3",
           footerCollapsedPadding: "p-2",
           logoutExpandedBtn:

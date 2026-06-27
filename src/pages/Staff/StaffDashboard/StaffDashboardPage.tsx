@@ -492,10 +492,11 @@ export function StaffDashboardPage() {
         settingsLabel={t("common.setting")}
         onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
-          wrapper: "h-full border-r border-gray-200 bg-white",
+          wrapper:
+            "h-full border-r border-gray-200 bg-white dark:border-slate-800 dark:bg-slate-900",
           expandedWidth: "w-56",
           collapsedWidth: "w-16",
-          logoBorder: "border-b border-gray-200",
+          logoBorder: "border-b border-gray-200 dark:border-slate-800",
           logoExpandedPadding: "h-14 gap-3 px-4",
           logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex-1 space-y-1 overflow-y-auto",
@@ -508,7 +509,7 @@ export function StaffDashboardPage() {
           activeItem: "bg-gray-100 text-gray-900 dark:bg-slate-800 dark:text-white",
           inactiveItem:
             "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
-          footerBorder: "border-t border-gray-200",
+          footerBorder: "border-t border-gray-200 dark:border-slate-800",
           footerExpandedPadding: "p-4",
           footerCollapsedPadding: "p-2",
           logoutExpandedBtn:
@@ -542,15 +543,15 @@ export function StaffDashboardPage() {
           menuActions={chromeMenuActions}
           rightSlot={<LanguageToggle />}
           theme={{
-            bg: "bg-gray-100",
-            tabActiveBorder: "border-gray-300",
-            tabActiveBg: "bg-white",
-            tabInactiveBg: "bg-gray-200",
-            tabInactiveHover: "hover:bg-gray-100",
-            closeHover: "hover:bg-gray-300",
-            addBtnBg: "bg-gray-200",
-            addBtnHover: "hover:bg-gray-300",
-            menuHover: "hover:bg-gray-100",
+            bg: "bg-gray-100 dark:bg-slate-800",
+            tabActiveBorder: "border-gray-300 dark:border-slate-600",
+            tabActiveBg: "bg-white dark:bg-slate-900",
+            tabInactiveBg: "bg-gray-200 dark:bg-slate-700",
+            tabInactiveHover: "hover:bg-gray-100 dark:hover:bg-slate-600",
+            closeHover: "hover:bg-gray-300 dark:hover:bg-slate-500",
+            addBtnBg: "bg-gray-200 dark:bg-slate-700",
+            addBtnHover: "hover:bg-gray-300 dark:hover:bg-slate-500",
+            menuHover: "hover:bg-gray-100 dark:hover:bg-slate-600",
           }}
         />
 

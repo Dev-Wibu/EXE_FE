@@ -296,10 +296,11 @@ export function MentorDashboardPage() {
         settingsLabel={t("common.setting")}
         onSettingsClick={() => setIsSettingsOpen(true)}
         theme={{
-          wrapper: "h-screen border-r border-emerald-200 bg-emerald-50/50",
+          wrapper:
+            "h-screen border-r border-emerald-200 bg-emerald-50/50 dark:border-slate-800 dark:bg-slate-900",
           expandedWidth: "w-56",
           collapsedWidth: "w-16",
-          logoBorder: "border-b border-emerald-200",
+          logoBorder: "border-b border-emerald-200 dark:border-slate-800",
           logoExpandedPadding: "h-14 gap-2 px-4",
           logoCollapsedPadding: "h-14 justify-center px-2",
           navWrapper: "flex flex-1 flex-col gap-1 overflow-y-auto py-4",
@@ -307,14 +308,14 @@ export function MentorDashboardPage() {
           navCollapsedPadding: "px-2",
           sectionLabel:
             "px-3 text-xs font-semibold tracking-wider text-emerald-600/70 uppercase dark:text-slate-500",
-          divider: "border-emerald-100",
+          divider: "border-emerald-100 dark:border-slate-800",
           itemPy: "py-2.5",
           activeItem:
             "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
           inactiveItem:
             "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-emerald-400",
           activeIconOverride: "text-emerald-600 dark:text-emerald-400",
-          footerBorder: "border-t border-emerald-200",
+          footerBorder: "border-t border-emerald-200 dark:border-slate-800",
           footerExpandedPadding: "p-3",
           footerCollapsedPadding: "p-2",
           logoutExpandedBtn:

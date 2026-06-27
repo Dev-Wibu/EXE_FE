@@ -894,7 +894,10 @@
     "link": "Liên kết",
     "id": "ID",
     "identity": "Giấy tờ",
+    "identityCard": "CMND/CCCD",
     "idMentor": "ID Mentor",
+    "degreecertificate": "Bằng cấp",
+    "otherDocuments": "Giấy tờ khác",
     "mentorEmailCopied": "Đã sao chép email mentor",
     "mentorInformation": "Thông Tin Mentor",
     "mentorInterview": "Phỏng vấn Mentor",
@@ -3526,7 +3529,14 @@
     "contextRequirement": "Yêu cầu công việc (tùy chọn)",
     "contextPrompting": "Gợi ý thêm cho AI (tùy chọn)",
     "generating": "Đang tạo...",
-    "generate": "Tạo bài tập"
+    "generate": "Tạo bài tập",
+    "tipsTitle": "Mẹo tạo bài tập",
+    "tipClearGoals": "Đặt tiêu đề rõ ràng, cụ thể về vấn đề code review",
+    "tipProvideCode": "Cung cấp code mẫu đa dạng từ nhiều file",
+    "tipListIssues": "Liệt kê expected issues chi tiết với severity",
+    "tipUseAI": "Sử dụng AI để generate đề bài nhanh chóng",
+    "aiFeatureTitle": "Tạo bằng AI",
+    "aiFeatureDescription": "Sử dụng AI để tự động generate đề bài code review chỉ trong vài giây."
   },
   "adminQuestionbankmanagement": {
     "addQuestion": "Thêm câu hỏi"
