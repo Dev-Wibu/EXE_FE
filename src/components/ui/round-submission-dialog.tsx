@@ -33,7 +33,7 @@ export interface RoundSubmissionDialogProps {
   onSuccess?: (_result: { status?: string; message?: string; detail?: ApplicationDetail }) => void;
 }
 
-const SYSTEM_EMAIL = "hanptse184261@fpt.edu.vn";
+const SYSTEM_EMAIL = "tuyendung@inblue.org";
 
 export function RoundSubmissionDialog({
   open,
@@ -157,11 +157,15 @@ export function RoundSubmissionDialog({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCopySubject = () => {
+    const subject = `[INBLUE-APP-${applicationId}]`;
+    navigator.clipboard.writeText(subject);
+    toast.success("Đã copy subject!");
+  };
+
   const handleOpenEmailClient = () => {
-    window.open(
-      `mailto:${SYSTEM_EMAIL}?subject=${encodeURIComponent("Ứng tuyển vị trí")}`,
-      "_blank"
-    );
+    const subject = `[INBLUE-APP-${applicationId}]`;
+    window.open(`mailto:${SYSTEM_EMAIL}?subject=${encodeURIComponent(subject)}`, "_blank");
   };
 
   return (
@@ -218,6 +222,32 @@ export function RoundSubmissionDialog({
                     Outlook,...) đến địa chỉ bên dưới:
                   </p>
 
+                  {/* Subject Pattern */}
+                  <div className="mb-3 rounded-lg bg-white p-4 dark:bg-slate-800">
+                    <p className="mb-2 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
+                      Tiêu đề email (Subject)
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-1 items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-800 dark:bg-purple-900/30">
+                        <span className="font-mono text-sm font-semibold text-purple-700 dark:text-purple-300">
+                          [INBLUE-APP-{applicationId}]
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopySubject}
+                        className="shrink-0 gap-2 border-purple-300 text-purple-700 hover:bg-purple-100 dark:border-purple-600 dark:text-purple-300 dark:hover:bg-purple-900/30">
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                      Lưu ý: Subject phải chứa đúng cú pháp định danh để hệ thống nhận diện đơn ứng
+                      tuyển của bạn
+                    </p>
+                  </div>
+
                   {/* Target email address */}
                   <div className="mb-4 rounded-lg bg-white p-4 dark:bg-slate-800">
                     <p className="mb-2 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
@@ -251,10 +281,13 @@ export function RoundSubmissionDialog({
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={handleCopyEmail}
+                      onClick={() => {
+                        handleCopyEmail();
+                        handleCopySubject();
+                      }}
                       className="flex-1 gap-2 border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/30">
                       <Copy className="h-4 w-4" />
-                      Copy địa chỉ email
+                      Copy tất cả
                     </Button>
                   </div>
                 </div>
@@ -292,18 +325,25 @@ export function RoundSubmissionDialog({
                   <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">1.</span>
-                      Soạn email với tiêu đề và nội dung phù hợp theo hướng dẫn
+                      Subject bắt buộc phải có:{" "}
+                      <code className="rounded bg-slate-200 px-1 dark:bg-slate-700">
+                        [INBLUE-APP-{applicationId}]
+                      </code>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">2.</span>
-                      Gửi đến đúng địa chỉ email được cung cấp ở trên
+                      Soạn email với nội dung phù hợp theo hướng dẫn
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">3.</span>
-                      Có thể đính kèm file CV, portfolio nếu cần
+                      Gửi đến đúng địa chỉ: <strong>{SYSTEM_EMAIL}</strong>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">4.</span>
+                      Có thể đính kèm file CV, portfolio nếu cần
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="mt-0.5 text-blue-500">5.</span>
                       Sau khi gửi, hệ thống sẽ tự động nhận và chấm điểm
                     </li>
                   </ul>
