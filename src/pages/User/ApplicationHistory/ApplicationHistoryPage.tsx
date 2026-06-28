@@ -1190,10 +1190,7 @@ function ApplicationDetailPanel({
         submissionFormat={getSubmissionFormat(submissionRound)}
         currentFileUrl={submissionDetail?.submissionData?.fileUrl}
         currentTextContent={submissionDetail?.submissionData?.textContent}
-        isAlreadySubmitted={
-          !!submissionDetail?.submissionData?.fileUrl ||
-          !!submissionDetail?.submissionData?.textContent
-        }
+        emailSubmissionId={submissionDetail?.submissionData?.emailSubmissionId}
         onSuccess={handleSubmissionSuccess}
       />
 
