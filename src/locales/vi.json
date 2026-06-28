@@ -3153,7 +3153,19 @@
     "aiEvaluationTimeout": "Đánh giá AI mất quá nhiều thời gian",
     "emailScenario": "Tình huống email",
     "emailPlaceholder": "Nội dung email...",
-    "attachFile": "Đính kèm file"
+    "attachFile": "Đính kèm file",
+    "emailRound": "Vòng Email Simulator",
+    "emailInstructions": "Vui lòng gửi email theo hướng dẫn để hoàn thành vòng này."
+  },
+  "emailPreview": {
+    "title": "Email đã nộp",
+    "description": "Xem chi tiết email bạn đã nộp cho vòng Email Simulator.",
+    "fetchError": "Không thể tải email. Vui lòng thử lại.",
+    "noSubject": "(Không có tiêu đề)",
+    "from": "Từ",
+    "attachments": "Đính kèm",
+    "receivedAt": "Nhận lúc",
+    "viewSubmittedEmail": "Xem email đã nộp"
   },
   "userFeedback": {
     "evaluationContent": "Nội Dung Đánh Giá",

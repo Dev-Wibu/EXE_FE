@@ -459,7 +459,10 @@ export function StaffDashboardPage() {
         return <ApplicationGradingPage onOpenGradingDetail={openGradingTab} basePath="/staff" />;
       case "grading-detail":
         return (
-          <ApplicationGradingDetailPage appId={gradingDetailId ?? gradingAppId} basePath="/staff" />
+          <ApplicationGradingDetailPage
+            detailId={gradingDetailId ?? gradingAppId}
+            basePath="/staff"
+          />
         );
       case "reviewModeration":
         return <ReviewModerationPage />;

@@ -3150,10 +3150,22 @@
     "emailScenario": "Email scenario",
     "emailPlaceholder": "Email content...",
     "attachFile": "Attach file",
+    "emailRound": "Email Simulator Round",
+    "emailInstructions": "Please send an email according to the instructions to complete this round.",
     "aiEvaluating": "AI is evaluating...",
     "aiEvaluatingDetail": "AI is analyzing your submission...",
     "aiEvaluationComplete": "AI evaluation complete",
     "aiEvaluationTimeout": "AI evaluation timed out"
+  },
+  "emailPreview": {
+    "title": "Submitted Email",
+    "description": "View the details of the email you submitted for the Email Simulator round.",
+    "fetchError": "Failed to load email. Please try again.",
+    "noSubject": "(No subject)",
+    "from": "From",
+    "attachments": "Attachments",
+    "receivedAt": "Received at",
+    "viewSubmittedEmail": "View submitted email"
   },
   "userFeedback": {
     "evaluationContent": "Evaluation Content",

@@ -79,6 +79,11 @@ export function CompanySearchPage() {
           ).content;
         }
 
+        // Filter only active companies (not deleted and approved)
+        companyList = companyList.filter(
+          (company) => !company.isDeleted && company.status === "ACTIVE"
+        );
+
         // Filter by search term if provided
         if (searchTerm.trim()) {
           const term = searchTerm.toLowerCase();

@@ -1,6 +1,8 @@
 import { ReloadButton } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CodeSubmissionViewer } from "@/components/ui/code-submission-viewer";
+import { EmailPreviewDialog } from "@/components/ui/email-preview-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { LoadingCardList } from "@/components/ui/loading-card";
@@ -23,6 +25,7 @@ import {
   ChevronRight,
   FileText,
   Lock,
+  Mail,
   Star,
   TrendingUp,
   Upload,
@@ -64,6 +67,11 @@ interface JdRound {
     instruction?: string;
     timeLimitMinutes?: number;
     submissionFormat?: string;
+    codingProblemsId?: number[];
+    codingProblems?: components["schemas"]["CodingProblemSnapshot"][];
+    quizQuestions?: components["schemas"]["QuizQuestion"][];
+    codeReviewProblems?: components["schemas"]["CodeReviewProblemSnapshot"][];
+    mentorInterview?: components["schemas"]["MentorInterviewDto"];
   };
 }
 
@@ -209,10 +217,18 @@ function AIEvaluatingBadge({ roundName }: { roundName: string }) {
 // Submission Preview
 // ============================================================
 
-function SubmissionPreview({ detail }: { detail: ApplicationDetail }) {
+function SubmissionPreview({
+  detail,
+  onViewEmailSubmission,
+}: {
+  detail: ApplicationDetail;
+  onViewEmailSubmission?: (emailSubmissionId: number) => void;
+}) {
   const { t } = useTranslation();
   const sd = detail.submissionData;
   if (!sd) return null;
+
+  const emailSubmissionId = sd.emailSubmissionId;
 
   return (
     <div className="mt-3 space-y-2">
@@ -272,6 +288,39 @@ function SubmissionPreview({ detail }: { detail: ApplicationDetail }) {
               +{sd.quizAnswers.length - 3} {t("userApplicationhistory.moreAnswers")}
             </p>
           )}
+        </div>
+      )}
+      {emailSubmissionId && emailSubmissionId > 0 && (
+        <button
+          type="button"
+          onClick={() => onViewEmailSubmission?.(emailSubmissionId)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5",
+            "text-xs font-medium text-blue-700",
+            "hover:border-blue-300 hover:bg-blue-100",
+            "dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300",
+            "dark:hover:border-blue-700 dark:hover:bg-blue-900/30",
+            "transition-colors"
+          )}>
+          <Mail className="h-3.5 w-3.5" />
+          {t("emailPreview.viewSubmittedEmail")}
+        </button>
+      )}
+      {sd.codeSubmissions && sd.codeSubmissions.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            {sd.codeSubmissions.length > 1
+              ? `${sd.codeSubmissions.length} bài nộp code`
+              : "Bài nộp code"}
+          </p>
+          {sd.codeSubmissions.map((submission, idx) => (
+            <CodeSubmissionViewer
+              key={idx}
+              codeSubmission={submission}
+              title={`Bài ${idx + 1}`}
+              defaultExpanded={sd.codeSubmissions!.length === 1}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -578,6 +627,7 @@ function RoundTimelineItem({
   isCurrent,
   isLocked,
   onEnterRoom,
+  onViewEmailSubmission,
   isPolling,
   optimistic,
 }: {
@@ -589,6 +639,7 @@ function RoundTimelineItem({
   isCurrent: boolean;
   isLocked: boolean;
   onEnterRoom?: () => void;
+  onViewEmailSubmission?: (emailSubmissionId: number) => void;
   isPolling?: boolean;
   optimistic?: { isOptimistic: true; roundId: number; status: "SUBMITTED"; submittedAt: string };
 }) {
@@ -720,7 +771,9 @@ function RoundTimelineItem({
                 </p>
               )}
 
-              {submissionData && <SubmissionPreview detail={detail!} />}
+              {submissionData && (
+                <SubmissionPreview detail={detail!} onViewEmailSubmission={onViewEmailSubmission} />
+              )}
 
               {(aiScore !== undefined ||
                 aiFeedback ||
@@ -778,6 +831,7 @@ function ApplicationDetailPanel({
   onSubmissionSuccess?: () => void;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { id, status } = application;
   const rounds = useMemo(() => application.rounds ?? [], [application.rounds]);
   const totalRounds = rounds.length;
@@ -811,6 +865,10 @@ function ApplicationDetailPanel({
   const [submissionOpen, setSubmissionOpen] = useState(false);
   const [submissionRound, setSubmissionRound] = useState<JdRound | undefined>();
   const [submissionDetail, setSubmissionDetail] = useState<ApplicationDetail | undefined>();
+
+  // Email preview dialog state
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  const [emailPreviewId, setEmailPreviewId] = useState<number>(0);
 
   // Optimistic placeholder for rounds submitted but AI not yet evaluated.
   // Used when BE hasn't created the ApplicationDetail record yet (PENDING state).
@@ -978,9 +1036,22 @@ function ApplicationDetailPanel({
   }, [rounds, detailsData, optimisticDetails, apiCurrentRoundOrder, status]);
 
   const handleEnterRoom = (round: JdRound, detail?: ApplicationDetail) => {
+    // If this is a QUIZ round, navigate to the quiz page
+    if (round.roundType === "QUIZ") {
+      // Get JD ID from the application (passed via context)
+      const jdId = (application as unknown as { jdId?: number }).jdId ?? 0;
+      navigate(`/user/quiz/${application.id}/round/${round.id}?jdId=${jdId}`);
+      return;
+    }
+
     setSubmissionRound(round);
     setSubmissionDetail(detail);
     setSubmissionOpen(true);
+  };
+
+  const handleViewEmailSubmission = (emailSubmissionId: number) => {
+    setEmailPreviewId(emailSubmissionId);
+    setEmailPreviewOpen(true);
   };
 
   const handleSubmissionSuccess = (result?: {
@@ -1122,6 +1193,7 @@ function ApplicationDetailPanel({
                 onEnterRoom={
                   item.isCurrent ? () => handleEnterRoom(item.round, item.detail) : undefined
                 }
+                onViewEmailSubmission={handleViewEmailSubmission}
               />
             ))
           )}
@@ -1135,17 +1207,27 @@ function ApplicationDetailPanel({
           if (!open) setSubmissionOpen(false);
         }}
         applicationId={id ?? 0}
+        roundId={submissionRound?.id}
         roundName={submissionRound?.name ?? getRoundTypeLabel(submissionRound?.roundType)}
         roundType={submissionRound?.roundType}
         instruction={submissionRound?.configData?.instruction}
         submissionFormat={getSubmissionFormat(submissionRound)}
         currentFileUrl={submissionDetail?.submissionData?.fileUrl}
         currentTextContent={submissionDetail?.submissionData?.textContent}
-        isAlreadySubmitted={
-          !!submissionDetail?.submissionData?.fileUrl ||
-          !!submissionDetail?.submissionData?.textContent
-        }
+        emailSubmissionId={submissionDetail?.submissionData?.emailSubmissionId}
+        codingProblems={submissionRound?.configData?.codingProblems}
+        codingProblemsId={submissionRound?.configData?.codingProblemsId}
+        timeLimitMinutes={submissionRound?.configData?.timeLimitMinutes}
         onSuccess={handleSubmissionSuccess}
+      />
+
+      {/* Email Preview Dialog */}
+      <EmailPreviewDialog
+        open={emailPreviewOpen}
+        onOpenChange={(open) => {
+          if (!open) setEmailPreviewOpen(false);
+        }}
+        emailSubmissionId={emailPreviewId}
       />
     </>
   );

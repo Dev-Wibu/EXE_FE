@@ -2,9 +2,10 @@ import { PaginationControl } from "@/components/shared/PaginationControl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CodingRoundGrader } from "@/components/ui/coding-round-grader";
+import { EmailPreviewDialog } from "@/components/ui/email-preview-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { LoadingCardList } from "@/components/ui/loading-card";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -32,15 +33,17 @@ import {
   AlertTriangle,
   CheckCircle2,
   ChevronLeft,
+  ChevronRight,
   ClipboardCheck,
   FileText,
+  Mail,
   Search,
   Star,
   ThumbsDown,
   ThumbsUp,
   XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -98,49 +101,499 @@ const RESULT_CONFIG: Record<string, { label: string; className: string }> = {
 };
 
 // ============================================================
+// Expandable Round Card
+// ============================================================
+
+interface RoundCardProps {
+  detail: ApplicationDetail;
+  isExpanded: boolean;
+  isStartGrading: boolean;
+  onToggle: () => void;
+  onStartGrading: () => void;
+  onViewEmailSubmission: (emailSubmissionId: number) => void;
+  onHrScoreSuccess: () => void;
+}
+
+function RoundCard({
+  detail,
+  isExpanded,
+  isStartGrading,
+  onToggle,
+  onStartGrading,
+  onViewEmailSubmission,
+  onHrScoreSuccess,
+}: RoundCardProps) {
+  const { mutate: submitScore, isPending: isSubmitting } = useHrScore({
+    onSuccess: onHrScoreSuccess,
+  });
+
+  const statusCfg = STATUS_CONFIG[detail.status ?? ""] ?? { label: detail.status, className: "" };
+  const resultCfg = detail.finalResult ? RESULT_CONFIG[detail.finalResult] : null;
+  const needsHrScore =
+    detail.status === "AI_EVALUATED" && (detail.hrScore === undefined || detail.hrScore === null);
+  const hasExistingGrade = detail.hrScore !== undefined;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [isPass, setIsPass] = useState(detail.finalResult === "PASSED");
+  const [score, setScore] = useState(
+    detail.hrScore !== undefined
+      ? String(detail.hrScore)
+      : detail.aiScore !== undefined
+        ? String(Math.round(detail.aiScore))
+        : ""
+  );
+  const [note, setNote] = useState(detail.hrNote ?? "");
+
+  const data = detail.submissionData as SubmissionData | undefined;
+
+  const handleSubmit = () => {
+    const scoreNum = parseFloat(score);
+    if (isNaN(scoreNum) || score.trim() === "") {
+      toast.error("Vui lòng nhập điểm hợp lệ (0 - 100)");
+      return;
+    }
+    const clampedScore = Math.min(100, Math.max(0, scoreNum));
+    submitScore({
+      applicationDetailId: detail.id!,
+      isPass,
+      note: note.trim(),
+      score: clampedScore,
+    });
+  };
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border transition-all",
+        isExpanded
+          ? "border-[#0047AB] shadow-md dark:border-[#0047AB]"
+          : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600",
+        needsHrScore && !hasExistingGrade && !isExpanded && "border-amber-300 dark:border-amber-700"
+      )}>
+      {/* Card Header - Always visible */}
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          {/* Expand/Collapse icon or Grading button */}
+          {needsHrScore && !hasExistingGrade && !isExpanded ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={onStartGrading}
+              className="h-8 gap-1.5 bg-amber-500 px-3 text-xs font-medium text-white hover:bg-amber-600">
+              <ClipboardCheck className="h-3.5 w-3.5" />
+              Chấm
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={onToggle}
+              className={cn(
+                "transition-col flex h-8 w-8 items-center justify-center rounded-lg",
+                isExpanded
+                  ? "bg-[#0047AB] text-white"
+                  : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+              )}>
+              <ChevronRight
+                className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-90")}
+              />
+            </button>
+          )}
+
+          {/* Round info */}
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                Vòng #{detail.roundId}
+              </h3>
+              <Badge className={cn("px-1.5 py-0 text-[10px]", statusCfg.className)}>
+                {statusCfg.label}
+              </Badge>
+              {resultCfg && (
+                <Badge className={cn("px-1.5 py-0 text-[10px]", resultCfg.className)}>
+                  {resultCfg.label}
+                </Badge>
+              )}
+              {needsHrScore && !hasExistingGrade && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-400 px-1.5 py-0 text-[10px] text-amber-600">
+                  Cần chấm
+                </Badge>
+              )}
+            </div>
+
+            {/* Quick scores */}
+            <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
+              {detail.aiScore !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-purple-400 text-purple-400" />
+                  AI: <span className="font-medium text-purple-600">{detail.aiScore}</span>
+                </span>
+              )}
+              {detail.hrScore !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  HR: <span className="font-medium text-[#0047AB]">{detail.hrScore}</span>
+                </span>
+              )}
+              {detail.finalScore !== undefined && (
+                <span className="font-medium text-slate-600 dark:text-slate-300">
+                  Final: {detail.finalScore}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right side: completion indicator */}
+        <div className="flex items-center gap-2">
+          {detail.completedAt && (
+            <span className="text-xs text-slate-400">{formatDateTime(detail.completedAt)}</span>
+          )}
+          {detail.finalResult === "PASSED" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+          {detail.finalResult === "FAILED" && <XCircle className="h-5 w-5 text-red-500" />}
+        </div>
+      </div>
+
+      {/* Expanded Content */}
+      {isExpanded && (
+        <div className="border-t border-slate-200 p-4 dark:border-slate-700">
+          <div className="space-y-4">
+            {/* Submission Content */}
+            {data && (
+              <div>
+                <h4 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Nội dung bài nộp
+                </h4>
+                <SubmissionPreview detail={detail} onViewEmailSubmission={onViewEmailSubmission} />
+              </div>
+            )}
+
+            {/* AI Feedback */}
+            {(detail.aiScore !== undefined || detail.aiFeedback) && (
+              <div>
+                <h4 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  Phản hồi AI
+                </h4>
+                <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
+                  <AIFeedbackPanel feedback={detail.aiFeedback} score={detail.aiScore} />
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* HR Grading Section */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  {hasExistingGrade ? (isEditing ? "Sửa điểm" : "Kết quả HR") : "Chấm điểm HR"}
+                </h4>
+                {hasExistingGrade && isEditing && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setScore(String(detail.hrScore ?? detail.aiScore ?? ""));
+                      setNote(detail.hrNote ?? "");
+                    }}
+                    className="h-7 gap-1.5 text-xs">
+                    Hủy
+                  </Button>
+                )}
+              </div>
+
+              {/* Existing Grade Display - Đã chấm */}
+              {hasExistingGrade && !isEditing && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+                    <div className="flex items-center gap-1.5">
+                      <Star className="h-6 w-6 fill-amber-400 text-amber-400" />
+                      <span className="text-3xl font-bold text-[#0047AB]">{detail.hrScore}</span>
+                      <span className="text-base text-slate-400">/100</span>
+                    </div>
+                    <div className="h-10 w-px bg-green-200 dark:bg-green-800" />
+                    <Badge
+                      className={
+                        detail.finalResult === "PASSED"
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                      }>
+                      {detail.finalResult === "PASSED" ? "Đậu" : "Tạch"}
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                    className="gap-1.5 text-xs">
+                    Sửa
+                  </Button>
+                </div>
+              )}
+
+              {/* Grading Form - Chưa chấm, đang sửa, hoặc bấm nút "Chấm" */}
+              {(!hasExistingGrade || isEditing || isStartGrading) && (
+                <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                  {/* AI Score Reference */}
+                  {detail.aiScore !== undefined && (
+                    <div className="rounded-lg bg-purple-50 p-2.5 dark:bg-purple-900/20">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                        <Star className="h-3.5 w-3.5 fill-purple-400 text-purple-400" />
+                        Điểm AI tham khảo:{" "}
+                        <span className="font-bold text-purple-600 dark:text-purple-400">
+                          {detail.aiScore}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Decision */}
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Quyết định
+                    </label>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant={isPass ? "default" : "outline"}
+                        size="sm"
+                        className={cn(
+                          "flex-1 gap-1.5 text-sm",
+                          isPass ? "bg-green-600 hover:bg-green-700" : ""
+                        )}
+                        onClick={() => setIsPass(true)}>
+                        <ThumbsUp className="h-4 w-4" />
+                        Đậu
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={!isPass ? "default" : "outline"}
+                        size="sm"
+                        className={cn(
+                          "flex-1 gap-1.5 text-sm",
+                          !isPass ? "bg-red-600 hover:bg-red-700" : ""
+                        )}
+                        onClick={() => setIsPass(false)}>
+                        <ThumbsDown className="h-4 w-4" />
+                        Tạch
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Score Input */}
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Điểm HR (0-100)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={score}
+                      onChange={(e) => setScore(e.target.value)}
+                      placeholder="Nhập điểm..."
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Note */}
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Ghi chú
+                    </label>
+                    <Textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Nhập ghi chú HR (không bắt buộc)..."
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className={cn(
+                      "w-full gap-1.5",
+                      isPass ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                    )}>
+                    {isSubmitting ? (
+                      <>
+                        <Spinner className="h-4 w-4" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        {isPass ? (
+                          <ThumbsUp className="h-4 w-4" />
+                        ) : (
+                          <ThumbsDown className="h-4 w-4" />
+                        )}
+                        Lưu kết quả
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Existing HR Note */}
+              {detail.hrNote && !isEditing && (
+                <div className="mt-4">
+                  <h5 className="mb-2 text-xs font-semibold text-slate-500">Ghi chú HR</h5>
+                  <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                    <p className="text-sm whitespace-pre-wrap text-blue-700 dark:text-blue-300">
+                      {detail.hrNote}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // Submission Preview
 // ============================================================
 
-function SubmissionPreview({ detail }: { detail: ApplicationDetail }) {
+interface SubmissionPreviewProps {
+  detail: ApplicationDetail;
+  onViewEmailSubmission?: (emailSubmissionId: number) => void;
+}
+
+function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewProps) {
+  const { t } = useTranslation();
   const data = detail.submissionData as SubmissionData | undefined;
+  const [localExpanded, setLocalExpanded] = useState(false);
+
   if (!data) return null;
 
+  const emailSubmissionId = data.emailSubmissionId;
+
+  // Email content
   if (data.textContent) {
-    const isEmail = data.textContent.includes("To:") || data.textContent.includes("Subject:");
-    if (isEmail) {
-      const lines = data.textContent.split("\n");
-      return (
-        <div className="rounded-lg border bg-slate-50 p-3 dark:bg-slate-800/50">
-          {lines.slice(0, 12).map((line, i) => (
-            <p key={i} className="text-xs text-slate-600 dark:text-slate-400">
+    const isEmail =
+      data.textContent.includes("To:") ||
+      data.textContent.includes("Subject:") ||
+      data.textContent.includes("Kính gửi") ||
+      data.textContent.includes("Dear");
+    const lines = data.textContent.split("\n");
+    const shouldTruncate = lines.length > 12;
+    const displayLines = localExpanded ? lines : lines.slice(0, 12);
+
+    return (
+      <div className="space-y-3">
+        {/* Email type indicator */}
+        {isEmail && (
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4 text-blue-500" />
+            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+              Email nộp bài
+            </span>
+          </div>
+        )}
+
+        {/* Email content */}
+        <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+          {displayLines.map((line, i) => (
+            <p
+              key={i}
+              className={cn(
+                "text-sm text-slate-700 dark:text-slate-300",
+                line.trim() === "" ? "h-2" : ""
+              )}>
               {line}
             </p>
           ))}
-          {lines.length > 12 && (
-            <p className="mt-1 text-xs text-slate-400">... +{lines.length - 12} dòng</p>
+          {shouldTruncate && !localExpanded && (
+            <p className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-400 dark:border-slate-700">
+              ... +{lines.length - 12} dòng còn lại
+            </p>
           )}
         </div>
-      );
-    }
-    return (
-      <p className="line-clamp-6 text-sm whitespace-pre-wrap text-slate-600 dark:text-slate-400">
-        {data.textContent.slice(0, 800)}
-        {data.textContent.length > 800 && "..."}
-      </p>
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-2">
+          {/* Expand/Collapse email */}
+          {shouldTruncate && (
+            <button
+              type="button"
+              onClick={() => setLocalExpanded(!localExpanded)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5",
+                "text-xs font-medium transition-colors",
+                localExpanded
+                  ? "border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                  : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300"
+              )}>
+              {localExpanded ? (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 rotate-180" />
+                  Thu gọn
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                  Xem đầy đủ ({lines.length} dòng)
+                </>
+              )}
+            </button>
+          )}
+
+          {/* View original email */}
+          {emailSubmissionId && emailSubmissionId > 0 && (
+            <button
+              type="button"
+              onClick={() => onViewEmailSubmission?.(emailSubmissionId)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5",
+                "text-xs font-medium text-blue-700 hover:bg-blue-100",
+                "dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30",
+                "transition-colors"
+              )}>
+              <Mail className="h-3.5 w-3.5" />
+              {t("emailPreview.viewSubmittedEmail")}
+            </button>
+          )}
+        </div>
+      </div>
     );
   }
 
+  // File upload (CV, etc.)
   if (data.fileUrl) {
     return (
-      <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-        <FileText className="h-4 w-4" />
-        <a href={data.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-orange-500" />
+          <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+            File đã nộp
+          </span>
+        </div>
+        <a
+          href={data.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5",
+            "text-xs font-medium text-blue-700 hover:bg-blue-100",
+            "dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30",
+            "transition-colors"
+          )}>
+          <FileText className="h-3.5 w-3.5" />
           Xem file đã nộp
         </a>
       </div>
     );
   }
 
+  // Quiz answers
   if (data.quizAnswers && data.quizAnswers.length > 0) {
     const correct = data.quizAnswers.filter((a) => a.isCorrect).length;
     return (
@@ -153,25 +606,12 @@ function SubmissionPreview({ detail }: { detail: ApplicationDetail }) {
     );
   }
 
+  // Code submissions (CODING round) — use IDE-style grader
   if (data.codeSubmissions && data.codeSubmissions.length > 0) {
-    const passed = data.codeSubmissions.reduce(
-      (sum, sub) => sum + (sub.testCases?.passedTestCases ?? 0),
-      0
-    );
-    const total = data.codeSubmissions.reduce(
-      (sum, sub) => sum + (sub.testCases?.totalTestCases ?? 0),
-      0
-    );
-    return (
-      <div className="flex items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
-        <Star className="h-4 w-4" />
-        <span>
-          {passed}/{total} test case passed
-        </span>
-      </div>
-    );
+    return <CodingRoundGrader detail={detail} />;
   }
 
+  // Code review submissions
   if (data.codeReviewSubmissions && data.codeReviewSubmissions.length > 0) {
     return (
       <div className="flex items-center gap-2 text-sm text-cyan-600 dark:text-cyan-400">
@@ -350,256 +790,6 @@ function AIFeedbackPanel({ feedback, score }: { feedback?: AiFeedback; score?: n
               </li>
             ))}
           </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================
-// HR Grading Panel
-// ============================================================
-
-function HrGradingPanel({
-  detail,
-  onSuccess,
-}: {
-  detail: ApplicationDetail | null;
-  onSuccess?: () => void;
-}) {
-  const { mutate: submitScore, isPending: isSubmitting } = useHrScore({ onSuccess });
-
-  const aiScore = detail?.aiScore;
-  const existingHrScore = detail?.hrScore;
-
-  const needsHrScore = detail?.status === "AI_EVALUATED" && existingHrScore === undefined;
-  const hasExistingGrade = existingHrScore !== undefined;
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [isPass, setIsPass] = useState(true);
-  const [score, setScore] = useState("");
-  const [note, setNote] = useState("");
-
-  const prevDetailIdRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (detail?.id === prevDetailIdRef.current) return;
-    prevDetailIdRef.current = detail?.id ?? null;
-    setIsEditing(false);
-    setScore(
-      existingHrScore !== undefined
-        ? String(existingHrScore)
-        : aiScore !== undefined
-          ? String(Math.round(aiScore))
-          : ""
-    );
-    setNote(detail?.hrNote ?? "");
-    setIsPass(detail?.finalResult === "PASSED");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detail?.id]);
-
-  if (!detail) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center text-center">
-        <ClipboardCheck className="mb-3 h-10 w-10 text-slate-300" />
-        <p className="text-sm text-slate-400">Chọn một vòng thi để bắt đầu chấm điểm</p>
-      </div>
-    );
-  }
-
-  const handleSubmit = () => {
-    const scoreNum = parseFloat(score);
-    if (isNaN(scoreNum) || score.trim() === "") {
-      toast.error("Vui lòng nhập điểm hợp lệ (0 - 100)");
-      return;
-    }
-    const clampedScore = Math.min(100, Math.max(0, scoreNum));
-    submitScore({
-      applicationDetailId: detail.id!,
-      isPass,
-      note: note.trim(),
-      score: clampedScore,
-    });
-  };
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className="border-border shrink-0 border-b p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {hasExistingGrade ? "Kết quả HR" : needsHrScore ? "Chấm điểm" : "Kết quả HR"}
-            </h3>
-            <p className="mt-0.5 text-xs text-slate-500">Vòng #{detail.roundId}</p>
-          </div>
-          {hasExistingGrade && !isEditing && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-              className="gap-1.5 text-xs">
-              Sửa
-            </Button>
-          )}
-          {isEditing && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setIsEditing(false);
-                setScore(String(existingHrScore ?? aiScore ?? ""));
-                setNote(detail.hrNote ?? "");
-              }}
-              className="gap-1.5 text-xs">
-              Hủy
-            </Button>
-          )}
-        </div>
-
-        {hasExistingGrade && !isEditing && (
-          <div className="mt-4 flex items-center gap-4 rounded-xl border bg-slate-50 p-4 dark:bg-slate-800/50">
-            <div className="flex items-center gap-1.5">
-              <Star className="h-6 w-6 fill-amber-400 text-amber-400" />
-              <span className="text-3xl font-bold text-[#0047AB]">{existingHrScore}</span>
-              <span className="text-base text-slate-400">/100</span>
-            </div>
-            <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" />
-            <div className="flex flex-col gap-1">
-              <Badge
-                className={
-                  detail.finalResult === "PASSED"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                }>
-                {detail.finalResult === "PASSED" ? "Đậu" : "Tạch"}
-              </Badge>
-              {detail.startedAt && (
-                <span className="text-xs text-slate-400">{formatDateTime(detail.startedAt)}</span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-5">
-        {isEditing || needsHrScore ? (
-          <div className="space-y-5">
-            {aiScore !== undefined && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/50">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Star className="h-3.5 w-3.5 fill-purple-400 text-purple-400" />
-                  Điểm AI tham khảo:{" "}
-                  <span className="font-bold text-purple-600 dark:text-purple-400">{aiScore}</span>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                Quyết định
-              </label>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant={isPass ? "default" : "outline"}
-                  size="sm"
-                  className={cn(
-                    "flex-1 gap-1.5 text-sm",
-                    isPass ? "bg-green-600 hover:bg-green-700" : ""
-                  )}
-                  onClick={() => setIsPass(true)}>
-                  <ThumbsUp className="h-4 w-4" />
-                  Đậu
-                </Button>
-                <Button
-                  type="button"
-                  variant={!isPass ? "destructive" : "outline"}
-                  size="sm"
-                  className="flex-1 gap-1.5 text-sm"
-                  onClick={() => setIsPass(false)}>
-                  <ThumbsDown className="h-4 w-4" />
-                  Tạch
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                Điểm <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                step={0.1}
-                placeholder="0 - 100"
-                value={score}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === "") {
-                    setScore("");
-                    return;
-                  }
-                  const num = parseFloat(val);
-                  if (num > 100) setScore("100");
-                  else if (num < 0) setScore("0");
-                  else setScore(val);
-                }}
-                className="text-center text-2xl font-bold"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                Ghi chú
-              </label>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Nhận xét về bài làm của ứng viên..."
-                rows={5}
-                className="resize-none text-sm"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {detail.hrNote ? (
-              <div>
-                <p className="mb-2 text-xs font-medium text-slate-500">Ghi chú HR</p>
-                <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-                  <p className="text-sm whitespace-pre-wrap text-blue-700 dark:text-blue-300">
-                    {detail.hrNote}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400 italic">Chưa có ghi chú từ HR.</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {(isEditing || needsHrScore) && (
-        <div className="border-border shrink-0 border-t p-5">
-          <Button
-            onClick={handleSubmit}
-            disabled={!score.trim() || isSubmitting}
-            className={cn(
-              "w-full gap-2 text-sm",
-              isPass ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-            )}>
-            {isSubmitting ? (
-              <>
-                <Spinner className="h-4 w-4 animate-spin" />
-                Đang lưu...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                Lưu kết quả
-              </>
-            )}
-          </Button>
         </div>
       )}
     </div>
@@ -836,7 +1026,7 @@ export function ApplicationGradingPage({
                         const jdId = item.jdId;
 
                         return (
-                          <TableRow key={item.id}>
+                          <TableRow key={item.detailId ?? item.id}>
                             <TableCell className="font-medium">#{item.id}</TableCell>
                             {isStaff ? (
                               <>
@@ -906,9 +1096,11 @@ export function ApplicationGradingPage({
 
 export function ApplicationGradingDetailPage({
   appId: appIdProp,
+  detailId: detailIdProp,
   basePath,
 }: {
   appId?: string;
+  detailId?: string;
   basePath?: string;
 }) {
   const { t } = useTranslation();
@@ -917,58 +1109,115 @@ export function ApplicationGradingDetailPage({
 
   // Auto-detect base path from current location if not provided
   const dashboardBase = basePath ?? (location.pathname.startsWith("/staff") ? "/staff" : "/admin");
+  const isStaff = dashboardBase === "/staff";
 
-  // Check if this is a valid ID
-  const numericId = Number(appIdProp);
+  // Staff: numericId is a detail ID  → single detail
+  // Admin: numericId is an application ID → all details for that application
+  const numericId = Number(appIdProp ?? detailIdProp ?? "0");
   const isValidId = Number.isFinite(numericId) && numericId > 0;
 
-  // For Staff: fetch single detail by ID
+  // Staff: fetch single detail by ID
   const {
     data: singleDetail,
     isLoading: isLoadingSingle,
     refetch: refetchSingle,
-  } = useApplicationDetail(numericId, isValidId);
+  } = useApplicationDetail(numericId, isValidId && isStaff);
 
-  // For Admin: fetch all details by applicationId
+  // Admin: fetch all details by applicationId
   const {
     data: details = [],
     isLoading: isLoadingDetails,
     refetch: refetchDetails,
-  } = useApplicationDetails(numericId, isValidId);
-
-  // Use singleDetail when provided (Staff flow), otherwise use details (Admin flow)
-  const [selectedDetailId, setSelectedDetailId] = useState<number | null>(null);
-
-  // Staff with detailId: auto-select the detail
-  // Admin with appId: auto-select pending detail or first detail
-  const autoSelectedDetailId = useMemo(() => {
-    if (selectedDetailId !== null) return selectedDetailId;
-
-    // Staff flow: singleDetail is provided
-    if (singleDetail) {
-      return singleDetail.id ?? null;
-    }
-
-    // Admin flow: select from details list
-    if (details.length === 0) return null;
-    const pending = details.find(
-      (d: ApplicationDetail) =>
-        d.status === "AI_EVALUATED" && (d.hrScore === undefined || d.hrScore === null)
-    );
-    return pending?.id ?? details[0]?.id ?? null;
-  }, [singleDetail, details, selectedDetailId]);
-
-  const selectedDetail = useMemo(() => {
-    if (singleDetail) return singleDetail;
-    return details.find((d: ApplicationDetail) => d.id === autoSelectedDetailId) ?? null;
-  }, [singleDetail, details, autoSelectedDetailId]);
+  } = useApplicationDetails(numericId, isValidId && !isStaff);
 
   const isLoading = isLoadingSingle || isLoadingDetails;
   const refetch = refetchSingle || refetchDetails;
 
-  const handleSelectDetail = useCallback((detail: ApplicationDetail) => {
-    setSelectedDetailId(detail.id ?? null);
+  // Email preview dialog state
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  const [emailPreviewId, setEmailPreviewId] = useState<number | null>(null);
+
+  // Track which round to start grading (for "Chấm" button)
+  const [startGradingRoundId, setStartGradingRoundId] = useState<number | null>(null);
+
+  // Unified details array: single detail for Staff, all details for Admin
+  const displayDetails = useMemo((): ApplicationDetail[] => {
+    if (isStaff && singleDetail) {
+      return [singleDetail];
+    }
+    return details;
+  }, [isStaff, singleDetail, details]);
+
+  // Expanded rounds state - track which round cards are expanded
+  const [expandedRoundIds, setExpandedRoundIds] = useState<Set<number>>(() => {
+    if (displayDetails.length === 0) return new Set<number>();
+    const firstNeedsHr = displayDetails.find(
+      (d) => d.status === "AI_EVALUATED" && (d.hrScore === undefined || d.hrScore === null)
+    );
+    const firstId = firstNeedsHr?.id ?? displayDetails[0]?.id;
+    return firstId !== undefined ? new Set([firstId]) : new Set<number>();
+  });
+
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
+
+  const handleViewEmailSubmission = useCallback((emailSubmissionId: number) => {
+    setEmailPreviewId(emailSubmissionId);
+    setEmailPreviewOpen(true);
   }, []);
+
+  const toggleExpanded = useCallback((detailId: number) => {
+    setExpandedRoundIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(detailId)) {
+        next.delete(detailId);
+      } else {
+        next.add(detailId);
+      }
+      return next;
+    });
+    setStartGradingRoundId(null);
+  }, []);
+
+  const handleStartGrading = useCallback((detailId: number) => {
+    setStartGradingRoundId(detailId);
+    setExpandedRoundIds(new Set([detailId]));
+  }, []);
+
+  const expandAll = useCallback(() => {
+    setExpandedRoundIds(
+      new Set(displayDetails.map((d: ApplicationDetail) => d.id!).filter(Boolean))
+    );
+  }, [displayDetails]);
+
+  const collapseAll = useCallback(() => {
+    setExpandedRoundIds(new Set());
+  }, []);
+
+  // Filter displayDetails based on showPendingOnly
+  const filteredDetails = useMemo(() => {
+    if (!showPendingOnly) return displayDetails;
+    return displayDetails.filter(
+      (d: ApplicationDetail) =>
+        d.status === "AI_EVALUATED" && (d.hrScore === undefined || d.hrScore === null)
+    );
+  }, [displayDetails, showPendingOnly]);
+
+  // Calculate summary stats
+  const summaryStats = useMemo(() => {
+    const total = displayDetails.length;
+    const pending = displayDetails.filter(
+      (d: ApplicationDetail) =>
+        d.status === "AI_EVALUATED" && (d.hrScore === undefined || d.hrScore === null)
+    ).length;
+    const completed = displayDetails.filter((d: ApplicationDetail) => d.finalResult).length;
+    const passed = displayDetails.filter(
+      (d: ApplicationDetail) => d.finalResult === "PASSED"
+    ).length;
+    const avgScore =
+      displayDetails.reduce((sum: number, d: ApplicationDetail) => sum + (d.hrScore ?? 0), 0) /
+      (completed || 1);
+    return { total, pending, completed, passed, avgScore: Math.round(avgScore) };
+  }, [displayDetails]);
 
   if (!isValidId) {
     return (
@@ -1046,178 +1295,103 @@ export function ApplicationGradingDetailPage({
         </button>
       </div>
 
-      {/* 2-column content — fills remaining space */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* LEFT: Submission + AI Feedback */}
-        <div className="flex flex-1 flex-col overflow-hidden border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-          {/* Round tabs (only show for Admin with multiple details) */}
-          {!singleDetail && (
-            <div className="border-border shrink-0 border-b bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
-              <p className="mb-2 px-1 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
-                Các vòng thi
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {isLoading ? (
-                  <LoadingCardList count={3} />
-                ) : details.length === 0 ? (
-                  <p className="text-xs text-slate-400">Chưa có vòng thi nào.</p>
-                ) : (
-                  details.map((detail: ApplicationDetail) => {
-                    const statusCfg = STATUS_CONFIG[detail.status ?? ""] ?? {
-                      label: detail.status,
-                      className: "",
-                    };
-                    const resultCfg = detail.finalResult ? RESULT_CONFIG[detail.finalResult] : null;
-                    const needsHrScore =
-                      detail.status === "AI_EVALUATED" &&
-                      (detail.hrScore === undefined || detail.hrScore === null);
-                    const isActive = detail.id === autoSelectedDetailId;
-
-                    return (
-                      <button
-                        key={detail.id}
-                        onClick={() => handleSelectDetail(detail)}
-                        className={cn(
-                          "rounded-lg border px-3 py-2 text-left transition-all",
-                          isActive
-                            ? "border-[#0047AB] bg-[#0047AB]/5 dark:border-[#0047AB] dark:bg-[#0047AB]/10"
-                            : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800"
-                        )}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            Vòng #{detail.roundId}
-                          </span>
-                          {needsHrScore && <span className="h-2 w-2 rounded-full bg-amber-400" />}
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          <Badge className={cn("px-1 py-0 text-[9px]", statusCfg.className)}>
-                            {statusCfg.label}
-                          </Badge>
-                          {resultCfg && (
-                            <Badge className={cn("px-1 py-0 text-[9px]", resultCfg.className)}>
-                              {resultCfg.label}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
-                          {detail.hrScore !== undefined && (
-                            <span className="font-bold text-[#0047AB]">{detail.hrScore}</span>
-                          )}
-                          {detail.aiScore !== undefined && (
-                            <span className="text-purple-500">AI: {detail.aiScore}</span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+      {/* NEW LAYOUT: Single page with all rounds as expandable cards */}
+      <div className="flex flex-1 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+        {/* Summary Stats Bar */}
+        <div className="shrink-0 border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Tổng vòng:</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
+                {summaryStats.total}
+              </span>
             </div>
-          )}
-
-          {/* Content area */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {selectedDetail ? (
-              <div className="space-y-6">
-                {/* Round meta */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Vòng #{selectedDetail.roundId}
-                  </h2>
-                  <Badge className={STATUS_CONFIG[selectedDetail.status ?? ""]?.className}>
-                    {STATUS_CONFIG[selectedDetail.status ?? ""]?.label}
-                  </Badge>
-                  {selectedDetail.finalResult && (
-                    <Badge className={RESULT_CONFIG[selectedDetail.finalResult]?.className}>
-                      {RESULT_CONFIG[selectedDetail.finalResult]?.label}
-                    </Badge>
-                  )}
-                  {selectedDetail.status === "AI_EVALUATED" &&
-                    (selectedDetail.hrScore === undefined || selectedDetail.hrScore === null) && (
-                      <Badge variant="outline" className="border-amber-400 text-amber-600">
-                        Cần HR chấm
-                      </Badge>
-                    )}
-                </div>
-
-                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-500">
-                  {selectedDetail.aiScore !== undefined && (
-                    <span className="flex items-center gap-1">
-                      <Star className="h-3.5 w-3.5 fill-purple-400 text-purple-400" />
-                      AI: {selectedDetail.aiScore}
-                    </span>
-                  )}
-                  {selectedDetail.hrScore !== undefined && (
-                    <span className="flex items-center gap-1 font-bold text-[#0047AB]">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      HR: {selectedDetail.hrScore}
-                    </span>
-                  )}
-                  {selectedDetail.finalScore !== undefined && (
-                    <span className="text-[#0047AB]">Final: {selectedDetail.finalScore}</span>
-                  )}
-                  {selectedDetail.startedAt && (
-                    <span>{formatDateTime(selectedDetail.startedAt)}</span>
-                  )}
-                </div>
-
-                <Separator />
-
-                {selectedDetail.submissionData && (
-                  <div>
-                    <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Nội dung bài nộp
-                    </h3>
-                    <SubmissionPreview detail={selectedDetail} />
-                  </div>
-                )}
-
-                <Separator />
-
-                {(selectedDetail.aiScore !== undefined || selectedDetail.aiFeedback) && (
-                  <div>
-                    <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Phản hồi từ AI
-                    </h3>
-                    <AIFeedbackPanel
-                      feedback={selectedDetail.aiFeedback}
-                      score={selectedDetail.aiScore}
-                    />
-                  </div>
-                )}
-
-                {selectedDetail.hrNote && (
-                  <div>
-                    <h3 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                      Ghi chú HR
-                    </h3>
-                    <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-                      <p className="text-sm whitespace-pre-wrap text-blue-700 dark:text-blue-300">
-                        {selectedDetail.hrNote}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <ClipboardCheck className="mb-4 h-12 w-12 text-slate-300" />
-                <p className="text-sm text-slate-400">Chọn một vòng thi để xem chi tiết</p>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-xs text-amber-600">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Cần chấm:
+              </span>
+              <span className="font-semibold text-amber-600">{summaryStats.pending}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-xs text-green-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Đã chấm:
+              </span>
+              <span className="font-semibold text-green-600">{summaryStats.completed}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-xs text-[#0047AB]">
+                <Star className="h-3.5 w-3.5 fill-[#0047AB] text-[#0047AB]" />
+                Điểm TB HR:
+              </span>
+              <span className="font-semibold text-[#0047AB]">{summaryStats.avgScore}</span>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT: HR Grading Panel */}
-        <div className="w-96 shrink-0 bg-white dark:border-slate-800 dark:bg-slate-900">
-          <HrGradingPanel
-            detail={selectedDetail}
-            onSuccess={() => {
-              void refetch();
-            }}
-          />
+        {/* Filter & Actions Bar */}
+        {!singleDetail && (
+          <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-2 dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2">
+              <Button
+                variant={showPendingOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowPendingOnly(!showPendingOnly)}
+                className={cn(
+                  "gap-1.5 text-xs",
+                  showPendingOnly && "bg-amber-600 hover:bg-amber-700"
+                )}>
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Cần chấm ({summaryStats.pending})
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={expandAll} className="gap-1.5 text-xs">
+                Mở tất cả
+              </Button>
+              <Button variant="outline" size="sm" onClick={collapseAll} className="gap-1.5 text-xs">
+                Thu gọn
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Expandable Round Cards */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {filteredDetails.length === 0 ? (
+            <div className="flex h-64 flex-col items-center justify-center text-center">
+              <ClipboardCheck className="mb-4 h-12 w-12 text-slate-300" />
+              <p className="text-sm text-slate-400">Chưa có vòng thi nào cho đơn ứng tuyển này.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredDetails.map((detail: ApplicationDetail) => (
+                <RoundCard
+                  key={detail.id}
+                  detail={detail}
+                  isExpanded={expandedRoundIds.has(detail.id!)}
+                  isStartGrading={startGradingRoundId === detail.id}
+                  onToggle={() => toggleExpanded(detail.id!)}
+                  onStartGrading={() => handleStartGrading(detail.id!)}
+                  onViewEmailSubmission={handleViewEmailSubmission}
+                  onHrScoreSuccess={() => {
+                    setStartGradingRoundId(null);
+                    void refetch();
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Email Preview Dialog */}
+      <EmailPreviewDialog
+        open={emailPreviewOpen}
+        onOpenChange={setEmailPreviewOpen}
+        emailSubmissionId={emailPreviewId}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ export * from "./use-mobile";
 export * from "./useApplication";
 export * from "./useApplicationDetails";
 export * from "./useCompany";
+export * from "./useEmailSubmission";
 export * from "./useFeatureUsageLogs";
 export * from "./useInterviewAnalysis";
 export * from "./useInterviewSession";

@@ -76,6 +76,7 @@ import {
   UserDashboardPage,
   WriteReviewPage,
 } from "@/pages/User";
+import { ApplicationQuizPage } from "@/pages/User/ApplicationQuiz";
 
 /** Preserves the path suffix after a given prefix when redirecting /dashboard/* → /user/* */
 function DashboardSubRedirect({ prefix }: { prefix: string }) {
@@ -194,6 +195,11 @@ function App() {
               <Route element={<UserAccountLayout />}>
                 <Route path="/user/account" element={<AccountPage />} />
               </Route>
+            </Route>
+
+            {/* Quiz page — full page, no sidebar, outside ChromeTabs shell */}
+            <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
+              <Route path="/user/quiz/:appId/round/:roundId" element={<ApplicationQuizPage />} />
             </Route>
             {/* Backward-compat redirects for old /dashboard/* URLs */}
             <Route path="/dashboard" element={<Navigate to="/user" replace />} />
