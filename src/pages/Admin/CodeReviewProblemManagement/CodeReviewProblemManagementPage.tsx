@@ -1,4 +1,4 @@
-﻿import { PaginationControl, ReloadButton } from "@/components/shared";
+import { PaginationControl, ReloadButton } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,24 @@ import { SpinnerBlock } from "@/components/ui/spinner";
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
 import { formatDate } from "@/lib/formatting";
-import { extractDataArray } from "@/lib/utils";
+import { cn, extractDataArray } from "@/lib/utils";
 import {
   codeReviewProblemManager,
   type CodeReviewProblem,
 } from "@/services/code-review-problem.manager";
-import { AlertTriangle, Bot, ChevronRight, Lightbulb, Loader2, Plus } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  Bot,
+  Bug,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  FileCode2,
+  Lightbulb,
+  Loader2,
+  Plus,
+} from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { CodeReviewProblemBuilder } from "./components/CodeReviewProblemBuilder";
@@ -43,6 +54,15 @@ export function CodeReviewProblemManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [selectedProblem, setSelectedProblem] = useState<CodeReviewProblem | null>(null);
+  const [viewActiveFileIdx, setViewActiveFileIdx] = useState<number>(0);
+  const [expandedIssues, setExpandedIssues] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (selectedProblem) {
+      setViewActiveFileIdx(0);
+      setExpandedIssues({});
+    }
+  }, [selectedProblem]);
 
   const loadProblems = useCallback(
     async (showReloading = false) => {
@@ -346,32 +366,11 @@ export function CodeReviewProblemManagementPage() {
               <div className="mx-auto max-w-4xl p-8">
                 {/* Header Section */}
                 <div className="mb-8">
-                  <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
-                    <span>Bài tập #{selectedProblem.id}</span>
-                    <span>•</span>
-                    <span>
-                      {selectedProblem.createdAt ? formatDate(selectedProblem.createdAt) : ""}
-                    </span>
-                  </div>
-
-                  <h2 className="mb-4 text-2xl font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                     {selectedProblem.title}
                   </h2>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className={getDifficultyBadge(selectedProblem.difficulty).className}>
-                      {getDifficultyBadge(selectedProblem.difficulty).label}
-                    </Badge>
-                    {selectedProblem.language && (
-                      <Badge variant="outline" className="bg-slate-50 dark:bg-slate-900">
-                        {selectedProblem.language}
-                      </Badge>
-                    )}
-                  </div>
                 </div>
-
-                <Separator className="my-8" />
-
+                \n\n <Separator className="my-8" />
                 {/* Problem Statement Section */}
                 {selectedProblem.problemStatement && (
                   <div className="mb-10">
@@ -384,93 +383,142 @@ export function CodeReviewProblemManagementPage() {
                     </div>
                   </div>
                 )}
-
-                {/* Files Section */}
+                {/* IDE-like File Viewer Section */}
                 {selectedProblem.files && selectedProblem.files.length > 0 && (
-                  <div className="mb-10">
-                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-                      <Bot className="h-5 w-5 text-blue-500" />
-                      Mã nguồn (Files)
-                    </h3>
-                    <div className="space-y-4">
-                      {selectedProblem.files.map((file, idx) => (
-                        <div
-                          key={idx}
-                          className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm dark:border-slate-800 dark:bg-slate-900/30">
-                          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100/50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/50">
-                            <span className="font-mono text-sm font-medium text-slate-700 dark:text-slate-300">
-                              {file.filename || `File ${idx + 1}`}
-                            </span>
-                            {file.language && (
-                              <Badge variant="secondary" className="text-[10px] uppercase">
-                                {file.language}
-                              </Badge>
+                  <div className="mb-10 flex h-[600px] flex-col overflow-hidden rounded-xl border border-slate-200 shadow-sm dark:border-slate-800">
+                    {/* File Tabs */}
+                    <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60">
+                      {(selectedProblem.files || []).map((f, fIdx) => (
+                        <button
+                          key={fIdx}
+                          onClick={() => setViewActiveFileIdx(fIdx)}
+                          className={cn(
+                            "flex items-center gap-2 border-r border-slate-200 px-4 py-2.5 text-xs font-semibold transition-all dark:border-slate-800",
+                            viewActiveFileIdx === fIdx
+                              ? "border-b-2 border-b-indigo-500 bg-white text-indigo-600 dark:bg-slate-950 dark:text-indigo-400"
+                              : "text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          )}>
+                          <FileCode2
+                            className={cn(
+                              "h-3.5 w-3.5",
+                              viewActiveFileIdx === fIdx ? "text-indigo-500" : ""
                             )}
-                          </div>
-                          <pre className="overflow-x-auto p-4 font-mono text-sm break-all whitespace-pre-wrap text-slate-800 dark:text-slate-300">
-                            {file.content?.replace(/\\n/g, "\n")}
-                          </pre>
-                        </div>
+                          />
+                          {f.filename || "Untitled"}
+                        </button>
                       ))}
                     </div>
-                  </div>
-                )}
 
-                {/* Expected Issues Section */}
-                {selectedProblem.expectedIssues && selectedProblem.expectedIssues.length > 0 && (
-                  <div className="mb-10">
-                    <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
-                      Lỗi cần tìm (Expected Issues)
-                    </h3>
-                    <div className="grid gap-3">
-                      {selectedProblem.expectedIssues.map((issue, idx) => (
-                        <div
-                          key={idx}
-                          className="flex gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50">
-                          <div className="mt-0.5 shrink-0">
-                            <AlertTriangle
-                              className={`h-5 w-5 ${
-                                issue.severity === "CRITICAL"
-                                  ? "text-red-500"
-                                  : issue.severity === "WARNING"
-                                    ? "text-amber-500"
-                                    : "text-blue-500"
-                              }`}
-                            />
+                    {/* Code Workspace view with annotations */}
+                    <div className="flex-1 overflow-y-auto bg-slate-50 p-4 font-mono text-[11px] leading-relaxed select-text dark:bg-slate-950/50">
+                      {(() => {
+                        const file = (selectedProblem.files || [])[viewActiveFileIdx];
+                        if (!file)
+                          return <div className="p-4 text-slate-500 italic">File trống</div>;
+                        const fileLines = (file.content || "").split("\\n");
+                        return (
+                          <div className="w-full">
+                            {fileLines.map((lineText, lineIdx) => {
+                              const currentLineNum = lineIdx + 1;
+                              const lineIssues = (selectedProblem.expectedIssues || []).filter(
+                                (iss) =>
+                                  iss.filename === file.filename &&
+                                  Number(iss.lineNumber) === currentLineNum
+                              );
+
+                              const toggleKey = `view-${file.filename}-${currentLineNum}`;
+                              const isExpanded = !!expandedIssues[toggleKey];
+
+                              return (
+                                <React.Fragment key={lineIdx}>
+                                  <div
+                                    className={cn(
+                                      "group relative flex items-center rounded-sm px-1 py-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/40",
+                                      lineIssues.length > 0 &&
+                                        "border-l-2 border-l-red-500 bg-red-50 dark:bg-red-950/10"
+                                    )}>
+                                    {/* Gutter Gutter on the LEFT side */}
+                                    <div className="flex w-20 shrink-0 items-center justify-end gap-1.5 pr-2.5 select-none">
+                                      {lineIssues.length > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setExpandedIssues((prev) => ({
+                                              ...prev,
+                                              [toggleKey]: !prev[toggleKey],
+                                            }));
+                                          }}
+                                          className={cn(
+                                            "rounded p-0.5 text-indigo-500 transition-colors hover:bg-slate-200 dark:text-indigo-400 dark:hover:bg-slate-800"
+                                          )}>
+                                          {isExpanded ? (
+                                            <EyeOff className="h-3.5 w-3.5" />
+                                          ) : (
+                                            <Eye className="h-3.5 w-3.5" />
+                                          )}
+                                        </button>
+                                      )}
+                                      <span className="w-6 text-right font-semibold text-slate-400 dark:text-slate-600">
+                                        {currentLineNum}
+                                      </span>
+                                    </div>
+
+                                    <span className="flex-1 font-mono break-all whitespace-pre-wrap text-slate-800 dark:text-slate-200">
+                                      {lineText || " "}
+                                    </span>
+                                  </div>
+
+                                  {isExpanded &&
+                                    lineIssues.map((issue, issueIdx) => (
+                                      <div
+                                        key={issueIdx}
+                                        className={cn(
+                                          "my-1.5 mr-2 ml-20 flex items-start gap-2.5 rounded-lg border p-3 font-sans text-xs shadow-sm",
+                                          issue.severity === "CRITICAL"
+                                            ? "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+                                            : issue.severity === "WARNING"
+                                              ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                                              : "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
+                                        )}>
+                                        <Bug
+                                          className={cn(
+                                            "mt-0.5 h-4 w-4 shrink-0",
+                                            issue.severity === "CRITICAL"
+                                              ? "text-red-500 dark:text-red-400"
+                                              : issue.severity === "WARNING"
+                                                ? "text-amber-500 dark:text-amber-400"
+                                                : "text-blue-500 dark:text-blue-400"
+                                          )}
+                                        />
+                                        <div className="flex-1">
+                                          <div className="mb-1 flex items-center gap-1.5">
+                                            <span className="font-semibold text-slate-900 dark:text-slate-100">
+                                              Lỗi mẫu phát hiện:
+                                            </span>
+                                            <span
+                                              className={cn(
+                                                "rounded-full px-1.5 py-0.5 text-[8px] font-bold tracking-wider uppercase",
+                                                issue.severity === "CRITICAL"
+                                                  ? "bg-red-100 text-red-700 ring-1 ring-red-500/20 dark:bg-red-900/60 dark:text-red-300"
+                                                  : issue.severity === "WARNING"
+                                                    ? "bg-amber-100 text-amber-700 ring-1 ring-amber-500/20 dark:bg-amber-900/60 dark:text-amber-300"
+                                                    : "bg-blue-100 text-blue-700 ring-1 ring-blue-500/20 dark:bg-blue-900/60 dark:text-blue-300"
+                                              )}>
+                                              {issue.severity}
+                                            </span>
+                                          </div>
+                                          <p className="leading-relaxed text-slate-700 dark:text-slate-300">
+                                            {issue.description}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                </React.Fragment>
+                              );
+                            })}
                           </div>
-                          <div className="flex-1 space-y-2">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                                {issue.filename && <span>{issue.filename}</span>}
-                                {issue.lineNumber && (
-                                  <span className="ml-1 text-slate-500 dark:text-slate-400">
-                                    Dòng {issue.lineNumber}
-                                  </span>
-                                )}
-                              </p>
-                              {issue.severity && (
-                                <Badge
-                                  variant="outline"
-                                  className={` ${
-                                    issue.severity === "CRITICAL"
-                                      ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-500/10 dark:text-red-400"
-                                      : issue.severity === "WARNING"
-                                        ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-400"
-                                        : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-500/10 dark:text-blue-400"
-                                  } `}>
-                                  {issue.severity}
-                                </Badge>
-                              )}
-                            </div>
-                            {issue.description && (
-                              <p className="text-sm text-slate-600 dark:text-slate-300">
-                                {issue.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
