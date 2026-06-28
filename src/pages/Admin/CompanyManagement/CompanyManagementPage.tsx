@@ -56,6 +56,7 @@ export function CompanyManagementPage({ isActive: propActive }: CompanyManagemen
   const detailCompanyId = frozenCompanyId;
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [formData, setFormData] = useState<CompanyFormData>({});
+  const [isCreating, setIsCreating] = useState(false);
   const { data: companies = [], refetch: refetchCompanies } = useQuery({
     queryKey: ["admin", "companies"],
     queryFn: async () => {
@@ -76,6 +77,7 @@ export function CompanyManagementPage({ isActive: propActive }: CompanyManagemen
   };
   const handleSubmitCreate = async () => {
     try {
+      setIsCreating(true);
       const response = await companyManager.create({
         data: {
           name: formData.name?.trim() || undefined,
@@ -98,6 +100,8 @@ export function CompanyManagementPage({ isActive: propActive }: CompanyManagemen
     } catch (error) {
       console.error("Error creating company:", error);
       toast.error(t("common.cannotCreateCompany"));
+    } finally {
+      setIsCreating(false);
     }
   };
   const hasDetail = !!detailCompanyId;
@@ -147,6 +151,7 @@ export function CompanyManagementPage({ isActive: propActive }: CompanyManagemen
         title={t("adminCompanymanagement.addNewPartners")}
         description={t("adminCompanymanagement.fillInBasicInformationTo")}
         submitLabel={t("adminCompanymanagement.createPartners")}
+        isSubmitting={isCreating}
       />
     </div>
   );

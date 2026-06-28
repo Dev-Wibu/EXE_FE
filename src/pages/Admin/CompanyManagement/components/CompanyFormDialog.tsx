@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { inferFileKind, openUrlInNewTab } from "@/lib/media-file-utils";
 import { ExternalLink, ImageIcon, X } from "lucide-react";
@@ -33,6 +34,7 @@ interface CompanyFormDialogProps {
   description: string;
   submitLabel: string;
   selectedCompany?: Company | null;
+  isSubmitting?: boolean;
 }
 const COMPANY_STATUSES: CompanyStatus[] = ["ACTIVE", "INACTIVE"];
 export function CompanyFormDialog({
@@ -45,6 +47,7 @@ export function CompanyFormDialog({
   description,
   submitLabel,
   selectedCompany,
+  isSubmitting = false,
 }: CompanyFormDialogProps) {
   const { t } = useTranslation();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -327,10 +330,19 @@ export function CompanyFormDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             {t("general.cancel")}
           </Button>
-          <Button onClick={onSubmit}>{submitLabel}</Button>
+          <Button onClick={onSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Spinner size="sm" tone="white" />
+                {t("common.processing")}
+              </>
+            ) : (
+              submitLabel
+            )}
+          </Button>
         </DialogFooter>
       </DialogContent>
 
