@@ -449,7 +449,7 @@ export function CodeReviewProblemManagementPage() {
                           customStyle={{ margin: 0, padding: 0, background: "transparent" }}
                           wrapLines={true}
                           renderer={({ rows, stylesheet, useInlineStyles }) => {
-                            const renderAst = (node: unknown, i: number) => {
+                            const renderAst = (node: unknown, i: number): React.ReactNode => {
                               const n = node as Record<string, unknown>;
                               if (n.type === "text") return n.value as string;
                               if (n.type === "element") {
