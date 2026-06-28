@@ -44,11 +44,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { CodeReviewProblemBuilder } from "./components/CodeReviewProblemBuilder";
 
-function normalizeContent(content: string | undefined): string {
-  if (!content) return "";
-  return content.replace(/\\n/g, "\n").replace(/\\r/g, "");
-}
-
 type ViewState = { mode: "list" } | { mode: "create" } | { mode: "detail"; problemId: number };
 
 type SortableProblem = CodeReviewProblem & {
@@ -442,7 +437,7 @@ export function CodeReviewProblemManagementPage() {
                         language={(
                           selectedProblem.files[viewActiveFileIdx]?.language || "java"
                         ).toLowerCase()}
-                        value={normalizeContent(selectedProblem.files[viewActiveFileIdx]?.content)}
+                        value={selectedProblem.files[viewActiveFileIdx]?.content || ""}
                         theme="vs-dark"
                         options={{
                           readOnly: true,

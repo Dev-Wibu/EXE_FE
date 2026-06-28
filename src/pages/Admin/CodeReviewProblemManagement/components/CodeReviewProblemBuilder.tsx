@@ -24,11 +24,6 @@ import {
 import * as React from "react";
 import { toast } from "sonner";
 
-function normalizeContent(content: string | undefined): string {
-  if (!content) return "";
-  return content.replace(/\\n/g, "\n").replace(/\\r/g, "");
-}
-
 function StyledSelect({
   value,
   onChange,
@@ -536,9 +531,7 @@ export function CodeReviewProblemBuilder({
                               language={(
                                 newProblem.files[createActiveFileIdx]?.language || "java"
                               ).toLowerCase()}
-                              value={normalizeContent(
-                                newProblem.files[createActiveFileIdx]?.content
-                              )}
+                              value={newProblem.files[createActiveFileIdx]?.content || ""}
                               theme="vs-dark"
                               options={{
                                 readOnly: false,
