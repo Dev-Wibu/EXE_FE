@@ -62,6 +62,11 @@ export function RoundSubmissionDialog({
 
   const isEmailMode = roundType === "EMAIL_SIMULATOR";
 
+  // Filter old emails from instruction and replace with system email
+  const filteredInstruction = instruction
+    ? instruction.replace(/hanptse\d+@fpt\.edu\.vn|[\w.-]+@[\w.-]+\.\w+/gi, SYSTEM_EMAIL)
+    : "";
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isTextMode =
@@ -192,7 +197,7 @@ export function RoundSubmissionDialog({
               /* ========== EMAIL SIMULATOR MODE ========== */
               <div className="space-y-5">
                 {/* Instruction from JD */}
-                {instruction && (
+                {filteredInstruction && (
                   <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
                     <div className="mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -201,7 +206,7 @@ export function RoundSubmissionDialog({
                       </span>
                     </div>
                     <p className="text-sm whitespace-pre-wrap text-blue-700 dark:text-blue-300">
-                      {instruction}
+                      {filteredInstruction}
                     </p>
                   </div>
                 )}

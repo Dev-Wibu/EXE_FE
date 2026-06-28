@@ -3150,6 +3150,8 @@
     "emailScenario": "Email scenario",
     "emailPlaceholder": "Email content...",
     "attachFile": "Attach file",
+    "emailRound": "Email Simulator Round",
+    "emailInstructions": "Please send an email according to the instructions to complete this round.",
     "aiEvaluating": "AI is evaluating...",
     "aiEvaluatingDetail": "AI is analyzing your submission...",
     "aiEvaluationComplete": "AI evaluation complete",

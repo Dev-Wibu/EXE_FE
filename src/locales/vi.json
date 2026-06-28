@@ -3153,7 +3153,9 @@
     "aiEvaluationTimeout": "Đánh giá AI mất quá nhiều thời gian",
     "emailScenario": "Tình huống email",
     "emailPlaceholder": "Nội dung email...",
-    "attachFile": "Đính kèm file"
+    "attachFile": "Đính kèm file",
+    "emailRound": "Vòng Email Simulator",
+    "emailInstructions": "Vui lòng gửi email theo hướng dẫn để hoàn thành vòng này."
   },
   "emailPreview": {
     "title": "Email đã nộp",
