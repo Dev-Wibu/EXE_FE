@@ -180,7 +180,7 @@ export function MediaToolkitTab() {
                   <DateTimePicker
                     value={date1}
                     onChange={setDate1}
-                    placeholder="Chọn ngày giờ"
+                    placeholder={t("general.selectDateTime")}
                     hour12={false}
                   />
                   <p className="font-mono text-[11px] text-slate-500">

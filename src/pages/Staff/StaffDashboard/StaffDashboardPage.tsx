@@ -369,7 +369,7 @@ export function StaffDashboardPage() {
         !searchParams.get("detailId") &&
         !searchParams.get("appId")
       ) {
-        toast.error("Vui lòng chọn một đơn ứng tuyển cụ thể từ danh sách");
+        toast.error(t("application.selectFromList"));
         navigate("/staff?tab=applicationGrading", { replace: true });
         return;
       }

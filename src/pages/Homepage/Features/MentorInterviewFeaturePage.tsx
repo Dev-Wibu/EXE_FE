@@ -54,11 +54,7 @@ export function MentorInterviewFeaturePage() {
       experience: t("homepageFeatures.8Years"),
       rating: 4.9,
       sessions: 150,
-      expertise: [
-        t("homepageFeatures.systemDesign"),
-        t("homepageFeatures.algorithms"),
-        t("homepageFeatures.backend"),
-      ],
+      expertise: [t("homepageFeatures.systemDesign"), t("homepageFeatures.algorithms"), "Backend"],
     },
     {
       id: 2,
@@ -71,7 +67,7 @@ export function MentorInterviewFeaturePage() {
       expertise: [
         t("homepageFeatures.machineLearning"),
         t("homepageFeatures.dataAnalysis"),
-        t("homepageFeatures.python"),
+        "Python",
       ],
     },
     {

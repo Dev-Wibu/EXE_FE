@@ -42,15 +42,15 @@ export function JobListingsSection({ jobs, companyName }: JobListingsSectionProp
     },
     {
       value: "FRESHER",
-      label: t("common.fresher"),
+      label: "Fresher",
     },
     {
       value: "JUNIOR",
-      label: t("common.junior"),
+      label: "Junior",
     },
     {
       value: "MIDDLE",
-      label: t("common.middle"),
+      label: "Middle",
     },
   ];
   const navigate = useNavigate();

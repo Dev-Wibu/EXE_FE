@@ -23,9 +23,9 @@ export function JobCard({ job }: JobCardProps) {
   const { t, i18n } = useTranslation();
   const levelLabels: Record<string, string> = {
     INTERN: t("enterpriseCompanydetail.internInternship"),
-    FRESHER: t("common.fresher"),
-    JUNIOR: t("common.junior"),
-    MIDDLE: t("common.middle"),
+    FRESHER: "Fresher",
+    JUNIOR: "Junior",
+    MIDDLE: "Middle",
   };
   const formatSalary = (min?: number, max?: number, currency = "VND"): string => {
     if (!min && !max) return t("enterpriseCompanydetail.negotiate");
