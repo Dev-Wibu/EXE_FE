@@ -12,7 +12,7 @@ describe("useSettingsStore — initial state", () => {
   it("has correct defaults", () => {
     const state = useSettingsStore.getState();
     expect(state.fontSize).toBe("default");
-    expect(state.language).toBe("vi");
+    expect(state.language).toBe("en");
     expect(state.sidebarBehavior).toBe("always-open");
     expect(state.muteSoundNotification).toBe(false);
     expect(state.muteToastNotification).toBe(false);
@@ -95,7 +95,7 @@ describe("useSettingsStore — resetToDefaults", () => {
 
     const state = useSettingsStore.getState();
     expect(state.fontSize).toBe("default");
-    expect(state.language).toBe("vi");
+    expect(state.language).toBe("en");
     expect(state.sidebarBehavior).toBe("always-open");
     expect(state.muteSoundNotification).toBe(false);
     expect(state.muteToastNotification).toBe(false);
@@ -152,7 +152,7 @@ describe("useSettingsStore — onRehydrateStorage version migration", () => {
     const state = useSettingsStore.getState();
     expect(state._version).toBe(3);
     expect(state.fontSize).toBe("default");
-    expect(state.language).toBe("vi");
+    expect(state.language).toBe("en");
     expect(state.sidebarBehavior).toBe("always-open");
     expect(state.muteSoundNotification).toBe(false);
     expect(state.muteToastNotification).toBe(false);

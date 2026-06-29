@@ -25,7 +25,7 @@ i18n
     },
     // If you're using a language detector, do not define the lng option
     // fallback language is very important!
-    fallbackLng: "vi",
+    fallbackLng: "en",
 
     // Have a common namespace used around the full app
     defaultNS: "translation",

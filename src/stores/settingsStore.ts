@@ -59,7 +59,7 @@ const DEFAULT_SETTINGS: Omit<
 > = {
   _version: SETTINGS_SCHEMA_VERSION,
   fontSize: "default",
-  language: "vi",
+  language: "en",
   sidebarBehavior: "always-open",
   muteSoundNotification: false,
   muteToastNotification: false,
