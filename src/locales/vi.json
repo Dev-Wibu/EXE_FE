@@ -275,7 +275,8 @@
     "priceMin": "Giá / phút",
     "successfullyCreatedMentor": "Đã tạo mentor thành công",
     "unitPricePerMinuteVnd": "Đơn giá mỗi phút (VNĐ)",
-    "updateMentorInformation": "Cập nhật thông tin mentor."
+    "updateMentorInformation": "Cập nhật thông tin mentor.",
+    "bio": "Tiểu sử"
   },
   "adminNotificationmanagement": {
     "chooseFromTemplateOptional": "Chọn từ mẫu (tùy chọn)",
@@ -1379,7 +1380,9 @@
     "score": "điểm",
     "editShort": "Sửa",
     "minutes": "phút",
-    "goBack": "Quay lại"
+    "goBack": "Quay lại",
+    "userDetail": "Chi tiết người dùng",
+    "inactive": "Không hoạt động"
   },
   "compDemologinbutton": {
     "administratorAccountToManageThe": "Tài khoản quản trị viên để quản lý hệ thống",

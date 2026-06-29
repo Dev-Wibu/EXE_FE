@@ -245,7 +245,8 @@
     "priceMin": "単価/分",
     "successfullyCreatedMentor": "メンターが正常に作成されました",
     "unitPricePerMinuteVnd": "1分あたり単価（VND）",
-    "updateMentorInformation": "メンター情報を更新します。"
+    "updateMentorInformation": "メンター情報を更新します。",
+    "bio": "略歴"
   },
   "adminNotificationmanagement": {
     "chooseFromTemplateOptional": "テンプレートから選択（任意）",
@@ -1349,7 +1350,9 @@
     "score": "score",
     "editShort": "Edit",
     "minutes": "分",
-    "goBack": "戻る"
+    "goBack": "戻る",
+    "userDetail": "ユーザー詳細",
+    "inactive": "非アクティブ"
   },
   "compDemologinbutton": {
     "administratorAccountToManageThe": "システムを管理する管理者アカウント",
@@ -2802,8 +2805,8 @@
     "demo6SubmitForm": "フォーム送信",
     "demo6Reset": "リセット",
     "demo6ValidationRequired": "少なくとも1つのドキュメントをアップロードしてください。",
-    "demo7Title": "7. Modal Uploader Deep Test",
-    "demo7Description": "フォームのコンテキスト内でModal Modeの専用テストを実施します。",
+    "demo7Title": "Demo 7: Modal Mode Variants",
+    "demo7Description": "Testing Uploader in Modal pop-up mode with various preset combinations.",
     "demo7SupportingDocs": "プロフィール写真 / 書類 (Modal)",
     "demo7WatchLabel": "form.watch(\"files\"):",
     "demo7SubmitForm": "フォーム送信",
@@ -2818,8 +2821,6 @@
     "testTip1": "ヘッダーの月年ラベルをクリックすると直接選択できます。",
     "testTip2": "左のプリセットで日付を素早く選択できます。",
     "testTip3": "テーマバリアントはユーザー（青）とメンター（緑）ポータルに対応。",
-    "demo7Title": "Demo 7: Modal Mode Variants",
-    "demo7Description": "Testing Uploader in Modal pop-up mode with various preset combinations.",
     "demo7MixedLabel": "Mixed (Any files)",
     "demo7ImageLabel": "Single Image",
     "demo7MultiPdfLabel": "Multi PDF",

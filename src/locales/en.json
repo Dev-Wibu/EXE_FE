@@ -275,7 +275,8 @@
     "priceMin": "Price/min",
     "successfullyCreatedMentor": "Successfully created mentor",
     "unitPricePerMinuteVnd": "Unit price per minute (VND)",
-    "updateMentorInformation": "Update mentor information."
+    "updateMentorInformation": "Update mentor information.",
+    "bio": "Bio"
   },
   "adminNotificationmanagement": {
     "chooseFromTemplateOptional": "Choose from template (optional)",
@@ -1379,7 +1380,9 @@
     "score": "score",
     "editShort": "Edit",
     "minutes": "minutes",
-    "goBack": "Go back"
+    "goBack": "Go back",
+    "userDetail": "User Detail",
+    "inactive": "Inactive"
   },
   "compDemologinbutton": {
     "administratorAccountToManageThe": "Administrator account to manage the system",
