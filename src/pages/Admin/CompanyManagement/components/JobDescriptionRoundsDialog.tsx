@@ -2096,7 +2096,7 @@ export function JobDescriptionRoundsDialog({
               <Button
                 variant="outline"
                 size="sm"
-                className="hover:bg-red-55 hover:text-red-655 h-8 border-red-200 text-xs text-red-500 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+                className="h-8 border-red-200 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
                 onClick={() => {
                   setShowExitConfirm(false);
                   onOpenChange(false);
@@ -2105,7 +2105,7 @@ export function JobDescriptionRoundsDialog({
               </Button>
               <Button
                 size="sm"
-                className="bg-indigo-650 h-8 px-3.5 text-xs text-white hover:bg-indigo-700"
+                className="h-8 bg-indigo-600 px-3.5 text-xs text-white hover:bg-indigo-700"
                 onClick={async () => {
                   setShowExitConfirm(false);
                   await handleSave();
