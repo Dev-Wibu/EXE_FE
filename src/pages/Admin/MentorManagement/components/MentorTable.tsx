@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatting";
-import { Edit, Power, Search } from "lucide-react";
+import { Edit, Eye, Power, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Mentor } from "../types";
 interface SortProps {
@@ -21,9 +21,16 @@ interface MentorTableProps {
   mentors: Mentor[];
   onEdit: (mentor: Mentor) => void;
   onDelete: (mentor: Mentor) => void;
+  onViewDetail: (mentor: Mentor) => void;
   getSortProps?: (key: keyof Mentor) => SortProps;
 }
-export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorTableProps) {
+export function MentorTable({
+  mentors,
+  onEdit,
+  onDelete,
+  onViewDetail,
+  getSortProps,
+}: MentorTableProps) {
   const { t } = useTranslation();
   if (mentors.length === 0) {
     return (
@@ -98,11 +105,19 @@ export function MentorTable({ mentors, onEdit, onDelete, getSortProps }: MentorT
             </TableCell>
             <TableCell>
               <Badge variant={mentor.active !== false ? "default" : "destructive"}>
-                {mentor.active !== false ? t("common.work") : t("common.shutDown")}
+                {mentor.active !== false ? t("common.active") : t("common.inactive")}
               </Badge>
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewDetail(mentor)}
+                  className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title={t("common.userDetail") || "View Details"}>
+                  <Eye className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

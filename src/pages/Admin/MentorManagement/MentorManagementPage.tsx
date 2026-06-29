@@ -16,7 +16,7 @@ import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { DeleteMentorDialog, MentorFormDialog, MentorTable } from "./components";
+import { DeleteMentorDialog, MentorDetailModal, MentorFormDialog, MentorTable } from "./components";
 import type { Mentor, MentorFormData } from "./types";
 export function MentorManagementPage() {
   const { t } = useTranslation();
@@ -30,6 +30,7 @@ export function MentorManagementPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [formData, setFormData] = useState<Partial<MentorFormData>>({});
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Load mentors using the mentor manager service
   const loadMentors = useCallback(
@@ -268,6 +269,10 @@ export function MentorManagementPage() {
               mentors={pageData}
               onEdit={handleEdit}
               onDelete={handleToggleActive}
+              onViewDetail={(mentor) => {
+                setSelectedMentor(mentor);
+                setIsDetailModalOpen(true);
+              }}
               getSortProps={getSortProps}
             />
 
@@ -331,6 +336,13 @@ export function MentorManagementPage() {
         onOpenChange={setIsDeleteDialogOpen}
         mentor={selectedMentor}
         onConfirm={handleConfirmToggle}
+      />
+
+      {/* Mentor Detail Modal */}
+      <MentorDetailModal
+        mentor={selectedMentor}
+        isOpen={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
       />
     </div>
   );
