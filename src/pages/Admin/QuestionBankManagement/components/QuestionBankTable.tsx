@@ -39,7 +39,7 @@ export function QuestionBankTable({
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <Search className="h-12 w-12 text-gray-400" />
         <p className="font-['Inter'] text-lg text-gray-500">
-          {t("common.noData", "Không tìm thấy dữ liệu")}
+          {t("common.noData", t("adminQuestionbankmanagement.noDataFound"))}
         </p>
       </div>
     );
@@ -56,23 +56,23 @@ export function QuestionBankTable({
               t("common.id")
             )}
           </TableHead>
-          <TableHead className="w-48">{t("common.category", "Chuyên mục")}</TableHead>
+          <TableHead className="w-48">{t("common.category", t("general.category"))}</TableHead>
           <TableHead className="w-32">
             {getSortProps ? (
               <SortButton {...getSortProps("levelSortValue")}>
-                {t("common.level", "Độ khó")}
+                {t("common.level", t("common.difficulty"))}
               </SortButton>
             ) : (
-              t("common.level", "Độ khó")
+              t("common.level", t("common.difficulty"))
             )}
           </TableHead>
           <TableHead>
             {getSortProps ? (
               <SortButton {...getSortProps("questionTextSortValue")}>
-                {t("common.questionText", "Nội dung câu hỏi")}
+                {t("common.questionText", t("common.questionText"))}
               </SortButton>
             ) : (
-              t("common.questionText", "Nội dung câu hỏi")
+              t("common.questionText", t("common.questionText"))
             )}
           </TableHead>
           <TableHead className="w-24 text-right">{t("common.operation")}</TableHead>

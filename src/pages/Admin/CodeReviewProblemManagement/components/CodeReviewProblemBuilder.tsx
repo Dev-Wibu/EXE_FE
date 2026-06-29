@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   codeReviewProblemManager,
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
+const t = i18n.t.bind(i18n);
 
 function StyledSelect({
   value,
@@ -98,7 +100,7 @@ export function CodeReviewProblemBuilder({
 
   const handleAiGenerate = async () => {
     if (!aiTopic.trim()) {
-      toast.error("Vui lòng nhập chủ đề / lỗi bảo mật");
+      toast.error(t("problem.enterTopicSecurity"));
       return;
     }
     setIsGenerating(true);
@@ -127,12 +129,12 @@ export function CodeReviewProblemBuilder({
         setCreateTabMode("code");
 
         setCreateActiveFileIdx(0);
-        toast.success("Đã sinh đề bài Code Review thành công");
+        toast.success(t("problem.codeReviewGenerated"));
       } else {
-        toast.error(response.error || "Tạo bài tập thất bại");
+        toast.error(response.error || t("adminCodeReviewProblem.generateFailed"));
       }
     } catch {
-      toast.error("Tạo bài tập thất bại");
+      toast.error(t("adminCodeReviewProblem.generateFailed"));
     } finally {
       setIsGenerating(false);
     }
@@ -140,7 +142,7 @@ export function CodeReviewProblemBuilder({
 
   const handleSave = async () => {
     if (!newProblem.title.trim()) {
-      toast.error("Vui lòng nhập tiêu đề bài tập");
+      toast.error(t("adminCodeReviewProblem.pleaseEnterTitle"));
       return;
     }
     setSubmitting(true);
@@ -156,13 +158,13 @@ export function CodeReviewProblemBuilder({
       };
       const response = await codeReviewProblemManager.create(payload);
       if (response.success) {
-        toast.success("Tạo bài tập thành công");
+        toast.success(t("problem.createdSuccessfully"));
         onSuccess();
       } else {
-        toast.error(response.error || "Không thể lưu bài tập");
+        toast.error(response.error || t("adminCodeReviewProblem.cannotSaveProblem"));
       }
     } catch {
-      toast.error("Không thể lưu bài tập");
+      toast.error(t("adminCodeReviewProblem.cannotSaveProblem"));
     } finally {
       setSubmitting(false);
     }
@@ -174,7 +176,7 @@ export function CodeReviewProblemBuilder({
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
           <div className="flex items-center gap-2 font-sans text-sm font-bold text-slate-700 dark:text-slate-200">
             <Settings className="h-4 w-4 text-emerald-500" />
-            Thiết lập bài toán
+            {t("adminCodeReviewProblem.problemSetup")}
           </div>
         </div>
 
@@ -182,19 +184,19 @@ export function CodeReviewProblemBuilder({
           <div className="space-y-4 font-sans text-xs">
             <div>
               <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                Tiêu đề bài *
+                {t("adminCodeReviewProblem.problemTitleStar")}
               </Label>
               <Input
                 value={newProblem.title}
                 onChange={(e) => setNewProblem({ ...newProblem, title: e.target.value })}
-                placeholder="Ví dụ: Rò rỉ API Token"
+                placeholder={t("adminCodeReviewProblem.exampleApiTokenLeak")}
                 className="mt-1 h-8 border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                  Ngôn ngữ
+                  {t("adminCodeReviewProblem.programmingLanguage")}
                 </Label>
                 <StyledSelect
                   value={newProblem.language}
@@ -211,7 +213,7 @@ export function CodeReviewProblemBuilder({
               </div>
               <div>
                 <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                  Độ khó
+                  {t("adminCodeReviewProblem.difficulty")}
                 </Label>
                 <StyledSelect
                   value={newProblem.difficulty}
@@ -219,21 +221,23 @@ export function CodeReviewProblemBuilder({
                   onChange={(v) =>
                     setNewProblem({ ...newProblem, difficulty: v as "EASY" | "MEDIUM" | "HARD" })
                   }>
-                  <option value="EASY">Dễ</option>
-                  <option value="MEDIUM">Trung bình</option>
-                  <option value="HARD">Khó</option>
+                  <option value="EASY">{t("common.difficultyEasy", t("common.easy"))}</option>
+                  <option value="MEDIUM">
+                    {t("common.difficultyMedium", t("common.mediumLevel"))}
+                  </option>
+                  <option value="HARD">{t("common.difficultyHard", t("common.hard"))}</option>
                 </StyledSelect>
               </div>
             </div>
             <div>
               <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase dark:text-slate-500">
-                Yêu cầu / Ngữ cảnh
+                {t("adminCodeReviewProblem.requirementContext")}
               </Label>
               <textarea
                 value={newProblem.problemStatement}
                 onChange={(e) => setNewProblem({ ...newProblem, problemStatement: e.target.value })}
                 rows={5}
-                placeholder="Mô tả ngữ cảnh và mục tiêu đề..."
+                placeholder={t("adminCodeReviewProblem.contextPlaceholder")}
                 className="mt-1 flex min-h-[120px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
               />
             </div>
@@ -243,14 +247,14 @@ export function CodeReviewProblemBuilder({
         {/* Action Buttons */}
         <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
           <Button variant="outline" className="flex-1" onClick={onCancel} disabled={submitting}>
-            Hủy
+            {t("general.cancel", t("common.cancel"))}
           </Button>
           <Button
             className="flex-1 bg-emerald-600 hover:bg-emerald-700"
             onClick={handleSave}
             disabled={submitting || isGenerating}>
             {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Lưu bài tập
+            {t("adminCodeReviewProblem.saveProblem")}
           </Button>
         </div>
       </div>
@@ -262,7 +266,7 @@ export function CodeReviewProblemBuilder({
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
               <span className="text-xs font-semibold text-slate-300">
-                AI đang sinh đề bài Code Review, vui lòng chờ trong giây lát...
+                {t("adminCodeReviewProblem.aiGenerating")}
               </span>
             </div>
           </div>
@@ -271,7 +275,9 @@ export function CodeReviewProblemBuilder({
         <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-4 py-3">
           <div className="flex items-center gap-3">
             <Plus className="h-4 w-4 text-emerald-400" />
-            <h3 className="text-xs font-bold text-white">Thiết kế đề Code Review mới</h3>
+            <h3 className="text-xs font-bold text-white">
+              {t("adminCodeReviewProblem.designNewCodeReview")}
+            </h3>
             <div className="rounded-lg bg-slate-900 p-0.5">
               <div className="flex gap-0.5">
                 <button
@@ -284,7 +290,7 @@ export function CodeReviewProblemBuilder({
                     "rounded px-2.5 py-1 text-[10px] font-bold transition-all",
                     creationMode === "ai" ? "bg-slate-800 text-indigo-400" : "text-slate-400"
                   )}>
-                  ✨ Sinh bằng AI
+                  {t("adminCodeReviewProblem.generateWithAI")}
                 </button>
                 <button
                   type="button"
@@ -296,7 +302,7 @@ export function CodeReviewProblemBuilder({
                     "rounded px-2.5 py-1 text-[10px] font-bold transition-all",
                     creationMode === "manual" ? "bg-slate-800 text-indigo-400" : "text-slate-400"
                   )}>
-                  ✏️ Thủ công
+                  {t("adminCodeReviewProblem.manual")}
                 </button>
               </div>
             </div>
@@ -314,12 +320,10 @@ export function CodeReviewProblemBuilder({
                   </div>
                   <div>
                     <h3 className="text-lg font-bold tracking-wide text-white">
-                      Thiết Kế Đề Bài Bằng Trí Tuệ Nhân Tạo (AI)
+                      {t("adminCodeReviewProblem.designByAi")}
                     </h3>
                     <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-400">
-                      Nhập các tham số thiết kế bên dưới. AI sẽ tự động tạo cấu trúc các file source
-                      code chứa lỗi logic/bảo mật, đồng thời thiết lập các bình luận chỉ định lỗi
-                      review mẫu.
+                      {t("problem.aiGenerateInstruction2")}
                     </p>
                   </div>
                 </div>
@@ -327,33 +331,33 @@ export function CodeReviewProblemBuilder({
                 <div className="space-y-4 text-left">
                   <div>
                     <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                      Chủ đề / Lỗi bảo mật cần review *
+                      {/*Chủ đề /*/} {t("common.error")} {/*bảo mật cần review **/}
                     </Label>
                     <Input
                       value={aiTopic}
                       onChange={(e) => setAiTopic(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleAiGenerate()}
-                      placeholder="Ví dụ: Rò rỉ thông tin qua log, SQL Injection, N+1 Query..."
+                      placeholder={t("adminCodeReviewProblem.exampleBugTypes")}
                       className="mt-1.5 h-10 border-slate-800 bg-slate-950/60 px-3 text-xs text-white focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                        Độ khó
+                        {t("common.difficulty")}
                       </Label>
                       <StyledSelect
                         value={aiDifficulty}
                         className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
                         onChange={(v) => setAiDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
-                        <option value="EASY">Dễ</option>
-                        <option value="MEDIUM">Trung bình</option>
-                        <option value="HARD">Khó</option>
+                        <option value="EASY">{t("common.easy")}</option>
+                        <option value="MEDIUM">{t("common.mediumLevel")}</option>
+                        <option value="HARD">{t("common.hard")}</option>
                       </StyledSelect>
                     </div>
                     <div>
                       <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                        Ngôn ngữ
+                        {t("common.language")}
                       </Label>
                       <StyledSelect
                         value={aiLanguage}
@@ -370,7 +374,7 @@ export function CodeReviewProblemBuilder({
                     </div>
                     <div>
                       <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                        Cấp độ ứng viên
+                        {t("adminCodeReviewProblem.candidateLevel")}
                       </Label>
                       <StyledSelect
                         value={aiLevel}
@@ -384,13 +388,13 @@ export function CodeReviewProblemBuilder({
                   </div>
                   <div>
                     <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                      Yêu cầu bổ sung
+                      {t("general.additionalRequirements")}
                     </Label>
                     <textarea
                       value={aiRequirement}
                       onChange={(e) => setAiRequirement(e.target.value)}
                       rows={4}
-                      placeholder="Mô tả context dự án hoặc hướng dẫn đặc biệt cho AI..."
+                      placeholder={t("adminCodeReviewProblem.describeProjectContext")}
                       className="border-slate-850 mt-1.5 flex w-full rounded-md border bg-slate-950/60 px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
                     />
                   </div>
@@ -400,7 +404,7 @@ export function CodeReviewProblemBuilder({
                     onClick={handleAiGenerate}
                     className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 font-sans text-xs font-bold text-white shadow-lg transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
                     <Sparkles className="h-4 w-4" />
-                    Bắt đầu sinh đề bài với AI
+                    {t("adminCodeReviewProblem.startGeneratingByAi")}
                   </Button>
                 </div>
               </div>
@@ -418,8 +422,8 @@ export function CodeReviewProblemBuilder({
                         ? "border-b-2 border-b-indigo-500 text-indigo-400"
                         : "text-slate-400 hover:text-slate-200"
                     )}>
-                    <Code2 className="mr-1 inline-block h-3.5 w-3.5" /> Code Files (
-                    {newProblem.files.length})
+                    <Code2 className="mr-1 inline-block h-3.5 w-3.5" />{" "}
+                    {t("adminCodeReviewProblem.codeFilesCount", { count: newProblem.files.length })}
                   </button>
                   <button
                     type="button"
@@ -430,8 +434,10 @@ export function CodeReviewProblemBuilder({
                         ? "border-b-2 border-b-indigo-500 text-indigo-400"
                         : "text-slate-400 hover:text-slate-200"
                     )}>
-                    <Bug className="mr-1 inline-block h-3.5 w-3.5" /> Lỗi cần bắt (
-                    {newProblem.expectedIssues.length})
+                    <Bug className="mr-1 inline-block h-3.5 w-3.5" />{" "}
+                    {t("adminCodeReviewProblem.issuesToCatchCount", {
+                      count: newProblem.expectedIssues.length,
+                    })}
                   </button>
                 </div>
               </div>
@@ -498,7 +504,7 @@ export function CodeReviewProblemBuilder({
                           <div className="mb-3 grid grid-cols-2 gap-4">
                             <div>
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Tên File
+                                {t("adminCodeReviewProblem.fileName")}
                               </Label>
                               <Input
                                 value={newProblem.files[createActiveFileIdx].filename}
@@ -512,7 +518,7 @@ export function CodeReviewProblemBuilder({
                             </div>
                             <div>
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Ngôn ngữ highlight
+                                {t("adminCodeReviewProblem.highlightLanguage")}
                               </Label>
                               <Input
                                 value={newProblem.files[createActiveFileIdx].language}
@@ -558,11 +564,9 @@ export function CodeReviewProblemBuilder({
                     <div className="mb-4 flex items-center justify-between">
                       <div>
                         <h4 className="text-sm font-semibold text-white">
-                          Danh sách Expected Issues
+                          {t("problem.expectedIssuesList")}
                         </h4>
-                        <p className="text-xs text-slate-400">
-                          Định nghĩa các lỗi ứng viên cần phải tìm ra.
-                        </p>
+                        <p className="text-xs text-slate-400">{t("problem.defineIssuesToFind")}</p>
                       </div>
                       <Button
                         type="button"
@@ -583,7 +587,7 @@ export function CodeReviewProblemBuilder({
                         }
                         className="h-8 bg-indigo-600 text-xs hover:bg-indigo-700">
                         <Plus className="mr-1.5 h-3.5 w-3.5" />
-                        Thêm Lỗi Mẫu
+                        {/*Thêm*/} {t("common.error")} {/*Mẫu*/}
                       </Button>
                     </div>
 
@@ -615,7 +619,7 @@ export function CodeReviewProblemBuilder({
                           <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-12 sm:col-span-5">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Tên file
+                                {t("adminCodeReviewProblem.fileName")}
                               </Label>
                               <StyledSelect
                                 value={issue.filename || ""}
@@ -634,7 +638,7 @@ export function CodeReviewProblemBuilder({
                             </div>
                             <div className="col-span-6 sm:col-span-3">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Dòng số
+                                {t("general.lineNumber")}
                               </Label>
                               <Input
                                 type="number"
@@ -650,7 +654,7 @@ export function CodeReviewProblemBuilder({
                             </div>
                             <div className="col-span-6 sm:col-span-4">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Mức độ (Severity)
+                                {t("problem.severity")}
                               </Label>
                               <StyledSelect
                                 value={issue.severity || ""}
@@ -667,7 +671,7 @@ export function CodeReviewProblemBuilder({
                             </div>
                             <div className="col-span-12">
                               <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Mô tả lỗi (Description)
+                                {t("problem.issueDescription")}
                               </Label>
                               <textarea
                                 value={issue.description}
@@ -678,7 +682,7 @@ export function CodeReviewProblemBuilder({
                                 }}
                                 rows={2}
                                 className="mt-1 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                placeholder="Giải thích lỗi gì và cách khắc phục..."
+                                placeholder={t("problem.explainIssueAndFix")}
                               />
                             </div>
                           </div>
@@ -687,8 +691,10 @@ export function CodeReviewProblemBuilder({
                       {newProblem.expectedIssues.length === 0 && (
                         <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-8 text-center text-slate-500">
                           <Bug className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                          <p className="text-sm">Chưa có lỗi mẫu nào được định nghĩa.</p>
-                          <p className="mt-1 text-xs">Hãy nhấn "Thêm Lỗi Mẫu" để bắt đầu.</p>
+                          <p className="text-sm">{t("problem.noSampleIssuesDefined")}</p>
+                          <p className="mt-1 text-xs">
+                            {/*Hãy nhấn "Thêm*/} {t("common.error")} {/*Mẫu" để bắt đầu.*/}
+                          </p>
                         </div>
                       )}
                     </div>

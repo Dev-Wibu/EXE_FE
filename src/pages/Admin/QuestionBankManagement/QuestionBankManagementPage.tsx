@@ -47,7 +47,7 @@ export function QuestionBankManagementPage() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Không thể tải dữ liệu");
+      toast.error(t("common.unableToDownloadData"));
     } finally {
       setIsLoading(false);
     }
@@ -63,14 +63,14 @@ export function QuestionBankManagementPage() {
     try {
       const res = await questionCategoryManager.create({ categoryName });
       if (res.success) {
-        toast.success("Thêm chuyên mục thành công");
+        toast.success(t("category.addSuccess2"));
         fetchData();
         return res.data?.id;
       } else {
-        toast.error(res.error || "Có lỗi xảy ra");
+        toast.error(res.error || t("compCodingSubmissionModal.errorOccurred"));
       }
     } catch {
-      toast.error("Đã xảy ra lỗi hệ thống");
+      toast.error(t("error.systemError"));
     }
   };
 
@@ -93,7 +93,7 @@ export function QuestionBankManagementPage() {
 
   const handleFormSubmit = async () => {
     if (!formData.questionCategory?.id || !formData.questionLevel || !formData.questionText) {
-      toast.error("Vui lòng nhập đầy đủ Chuyên mục, Độ khó và Nội dung câu hỏi.");
+      toast.error(t("question.enterAllFields"));
       return;
     }
 
@@ -109,14 +109,14 @@ export function QuestionBankManagementPage() {
       }
 
       if (res.success) {
-        toast.success(editingQuestion ? "Cập nhật thành công" : "Thêm mới thành công");
+        toast.success(editingQuestion ? t("general.updateSuccess") : t("general.addSuccess"));
         setIsFormOpen(false);
         fetchData();
       } else {
-        toast.error(res.error || "Có lỗi xảy ra");
+        toast.error(res.error || t("compCodingSubmissionModal.errorOccurred"));
       }
     } catch {
-      toast.error("Đã xảy ra lỗi hệ thống");
+      toast.error(t("error.systemError"));
     }
   };
 
@@ -126,14 +126,14 @@ export function QuestionBankManagementPage() {
     try {
       const res = await questionBankManager.delete(editingQuestion.id);
       if (res.success) {
-        toast.success("Đã xóa câu hỏi");
+        toast.success(t("question.deleted"));
         setIsDeleteOpen(false);
         fetchData();
       } else {
-        toast.error(res.error || "Có lỗi xảy ra");
+        toast.error(res.error || t("compCodingSubmissionModal.errorOccurred"));
       }
     } catch {
-      toast.error("Đã xảy ra lỗi hệ thống");
+      toast.error(t("error.systemError"));
     }
   };
 
@@ -152,11 +152,11 @@ export function QuestionBankManagementPage() {
                 <FolderOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {t("common.questionBank", "Ngân hàng đề")}
+                {t("common.questionBank", t("adminCodingProblem.problemBank"))}
               </h1>
             </div>
             <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-              Quản lý danh sách câu hỏi và danh mục cho các vòng thi Quiz.
+              {t("adminQuestionbankmanagement.description")}
             </p>
           </div>
         </div>
@@ -165,8 +165,12 @@ export function QuestionBankManagementPage() {
       <div className="flex-1 overflow-auto bg-slate-50 p-6 dark:bg-slate-900/50">
         <Tabs defaultValue="questions" className="flex h-full flex-col">
           <TabsList className="mb-4 w-fit">
-            <TabsTrigger value="questions">Danh sách câu hỏi</TabsTrigger>
-            <TabsTrigger value="categories">Quản lý chuyên mục</TabsTrigger>
+            <TabsTrigger value="questions">
+              {t("adminQuestionbankmanagement.questionList")}
+            </TabsTrigger>
+            <TabsTrigger value="categories">
+              {t("adminQuestionbankmanagement.categoryManagement")}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="questions" className="mt-0 flex-1">
@@ -176,7 +180,7 @@ export function QuestionBankManagementPage() {
                   onClick={handleCreate}
                   className="bg-indigo-600 text-white hover:bg-indigo-700">
                   <Plus className="mr-2 h-4 w-4" />
-                  {t("adminQuestionbankmanagement.addQuestion", "Thêm mới")}
+                  {t("adminQuestionbankmanagement.addQuestion", t("general.addNew"))}
                 </Button>
               </div>
               {isLoading ? (
@@ -210,14 +214,16 @@ export function QuestionBankManagementPage() {
         onSubmit={handleFormSubmit}
         categories={categories}
         onCreateCategory={handleCreateCategory}
-        title={editingQuestion ? "Cập nhật câu hỏi" : "Thêm câu hỏi mới"}
+        title={
+          editingQuestion ? t("question.updateQuestion") : t("adminQuizProblem.addNewQuestion")
+        }
         description={
-          editingQuestion
-            ? "Chỉnh sửa thông tin câu hỏi. Các thay đổi sẽ được cập nhật ngay."
-            : "Tạo câu hỏi mới hoặc sử dụng AI để tự động tạo câu hỏi."
+          editingQuestion ? t("question.editInfoInstructions") : t("question.createOrAi")
         }
         submitLabel={
-          editingQuestion ? t("general.update", "Cập nhật") : t("general.create", "Thêm mới")
+          editingQuestion
+            ? t("general.update", t("general.update"))
+            : t("general.create", t("general.addNew"))
         }
       />
 

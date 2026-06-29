@@ -79,11 +79,11 @@ export function QuestionBankFormDialog({
       (c) => c.id === formData.questionCategory?.id
     )?.categoryName;
     if (!categoryName) {
-      toast.error("Vui lòng chọn Chuyên mục trước khi sinh bằng AI");
+      toast.error(t("ai.selectCategoryFirst"));
       return;
     }
     if (!formData.questionLevel) {
-      toast.error("Vui lòng chọn Độ khó trước khi sinh bằng AI");
+      toast.error(t("ai.selectDifficultyFirst"));
       return;
     }
 
@@ -110,10 +110,10 @@ export function QuestionBankFormDialog({
         options: res.data.options,
         correctAnswer: res.data.correctAnswer,
       });
-      toast.success("Sinh câu hỏi thành công! Vui lòng kiểm tra lại nội dung.");
+      toast.success(t("ai.generateQuestionSuccess"));
       setActiveTab("manual");
     } else {
-      toast.error(res.error || "Lỗi khi sinh câu hỏi");
+      toast.error(res.error || t("ai.generateQuestionError"));
     }
   };
 
@@ -145,7 +145,7 @@ export function QuestionBankFormDialog({
         <div className="mt-2 grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label>Chuyên mục</Label>
+              <Label>{t("general.category")}</Label>
               {onCreateCategory && !isCreatingCategory && (
                 <Button
                   type="button"
@@ -153,7 +153,7 @@ export function QuestionBankFormDialog({
                   size="sm"
                   className="h-6 px-2 text-xs text-indigo-600"
                   onClick={() => setIsCreatingCategory(true)}>
-                  <Plus className="mr-1 h-3 w-3" /> Thêm nhanh
+                  <Plus className="mr-1 h-3 w-3" /> {t("general.quickAdd")}
                 </Button>
               )}
               {isCreatingCategory && (
@@ -163,7 +163,7 @@ export function QuestionBankFormDialog({
                   size="sm"
                   className="h-6 px-2 text-xs text-slate-500"
                   onClick={() => setIsCreatingCategory(false)}>
-                  Hủy
+                  {t("common.cancel")}
                 </Button>
               )}
             </div>
@@ -171,7 +171,7 @@ export function QuestionBankFormDialog({
               <div className="flex items-center gap-2">
                 <Input
                   autoFocus
-                  placeholder="Nhập tên chuyên mục"
+                  placeholder={t("category.enterCategoryName2")}
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   onKeyDown={(e) => {
@@ -186,7 +186,11 @@ export function QuestionBankFormDialog({
                   size="sm"
                   onClick={handleCreateCategorySubmit}
                   disabled={!newCategoryName.trim() || isSubmittingCategory}>
-                  {isSubmittingCategory ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lưu"}
+                  {isSubmittingCategory ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    t("general.save")
+                  )}
                 </Button>
               </div>
             ) : (
@@ -196,7 +200,7 @@ export function QuestionBankFormDialog({
                   onFormChange({ ...formData, questionCategory: { id: parseInt(val) } })
                 }>
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn chuyên mục" />
+                  <SelectValue placeholder={t("category.selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
@@ -209,19 +213,19 @@ export function QuestionBankFormDialog({
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Độ khó</Label>
+            <Label>{t("common.difficulty")}</Label>
             <Select
               value={formData.questionLevel || ""}
               onValueChange={(val: "EASY" | "MEDIUM" | "HARD") =>
                 onFormChange({ ...formData, questionLevel: val })
               }>
               <SelectTrigger>
-                <SelectValue placeholder="Chọn độ khó" />
+                <SelectValue placeholder={t("general.selectDifficulty")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="EASY">Dễ (EASY)</SelectItem>
-                <SelectItem value="MEDIUM">Trung bình (MEDIUM)</SelectItem>
-                <SelectItem value="HARD">Khó (HARD)</SelectItem>
+                <SelectItem value="EASY">{t("common.easy")} (EASY)</SelectItem>
+                <SelectItem value="MEDIUM">{t("common.mediumLevel")} (MEDIUM)</SelectItem>
+                <SelectItem value="HARD">{t("common.hard")} (HARD)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -229,18 +233,18 @@ export function QuestionBankFormDialog({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual">Nhập thủ công</TabsTrigger>
+            <TabsTrigger value="manual">{t("userAiinterview.enterManually")}</TabsTrigger>
             <TabsTrigger value="ai" className="gap-2">
               <Sparkles className="h-4 w-4 text-indigo-500" />
-              Tạo bằng AI
+              {t("adminCodeReviewProblem.generateAI")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="manual" className="mt-4 space-y-4">
             <div className="space-y-1.5">
-              <Label>Nội dung câu hỏi</Label>
+              <Label>{t("common.questionText")}</Label>
               <Textarea
-                placeholder="Nhập nội dung câu hỏi"
+                placeholder={t("adminPracticequestionmanagement.enterQuestionContent")}
                 rows={3}
                 value={formData.questionText || ""}
                 onChange={(e) => onFormChange({ ...formData, questionText: e.target.value })}
@@ -249,14 +253,14 @@ export function QuestionBankFormDialog({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Các đáp án</Label>
+                <Label>{t("question.answers")}</Label>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={addOption}
                   className="h-7 text-xs">
-                  <Plus className="mr-1 h-3 w-3" /> Thêm đáp án
+                  <Plus className="mr-1 h-3 w-3" /> {t("question.addAnswer")}
                 </Button>
               </div>
               {(formData.options || []).map((opt, idx) => (
@@ -279,9 +283,9 @@ export function QuestionBankFormDialog({
             </div>
 
             <div className="space-y-1.5 pt-2">
-              <Label>Đáp án đúng (nhập chính xác text của đáp án)</Label>
+              <Label>{t("question.correctAnswerInstruction")}</Label>
               <Input
-                placeholder="Ví dụ: A, B, C hoặc nội dung text"
+                placeholder={t("question.exampleAbc")}
                 value={formData.correctAnswer || ""}
                 onChange={(e) => onFormChange({ ...formData, correctAnswer: e.target.value })}
               />
@@ -292,7 +296,7 @@ export function QuestionBankFormDialog({
             value="ai"
             className="mt-4 space-y-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900 dark:bg-indigo-950/20">
             <div className="space-y-1.5">
-              <Label>Các Topic liên quan (cách nhau bởi dấu phẩy)</Label>
+              <Label>{t("question.relatedTopics")}</Label>
               <Input
                 placeholder="VD: Spring Boot, AOP, Transactional..."
                 value={aiTopics}
@@ -300,9 +304,9 @@ export function QuestionBankFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Yêu cầu thêm (Prompt)</Label>
+              <Label>{t("question.additionalPrompt")}</Label>
               <Textarea
-                placeholder="VD: Tập trung vào các lỗi bảo mật thường gặp..."
+                placeholder={t("question.promptExample")}
                 rows={2}
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
@@ -318,7 +322,7 @@ export function QuestionBankFormDialog({
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
               )}
-              {aiLoading ? "Đang sinh câu hỏi..." : "Bắt đầu sinh"}
+              {aiLoading ? t("ai.generatingQuestion") : t("ai.startGenerating")}
             </Button>
           </TabsContent>
         </Tabs>

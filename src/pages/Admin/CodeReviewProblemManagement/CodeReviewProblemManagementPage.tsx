@@ -193,7 +193,7 @@ export function CodeReviewProblemManagementPage() {
             <div>
               <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                 <Bot className="h-5 w-5 text-indigo-500" />
-                {t("adminCodeReviewProblem.pageTitle") || "Quản lý bài tập Code Review"}
+                {t("adminCodeReviewProblem.pageTitle") || t("adminCodeReviewProblem.pageTitle")}
               </h1>
             </div>
             {/* The CodeReviewProblemBuilder has its own Cancel button, but we can add a Back button here if needed.
@@ -222,7 +222,7 @@ export function CodeReviewProblemManagementPage() {
           <div>
             <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white">
               <Bot className="h-5 w-5 text-indigo-500" />
-              {t("adminCodeReviewProblem.pageTitle") || "Quản lý bài tập Code Review"}
+              {t("adminCodeReviewProblem.pageTitle") || t("adminCodeReviewProblem.pageTitle")}
             </h1>
           </div>
         </div>
@@ -238,7 +238,8 @@ export function CodeReviewProblemManagementPage() {
               <div className="relative flex-1">
                 <Input
                   placeholder={
-                    t("adminCodeReviewProblem.searchPlaceholder") || "Tìm theo tên, ngôn ngữ, ID..."
+                    t("adminCodeReviewProblem.searchPlaceholder") ||
+                    t("adminCodeReviewProblem.searchPlaceholder")
                   }
                   value={searchQuery}
                   onChange={(e) => {
@@ -255,13 +256,13 @@ export function CodeReviewProblemManagementPage() {
                   pagination.goToFirstPage();
                 }}>
                 <SelectTrigger className="h-9 w-24 shrink-0 border-slate-200 bg-slate-100/50 text-xs dark:border-slate-700 dark:bg-slate-800/50">
-                  <SelectValue placeholder="Độ khó" />
+                  <SelectValue placeholder={t("common.difficulty")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="EASY">Dễ</SelectItem>
-                  <SelectItem value="MEDIUM">Trung bình</SelectItem>
-                  <SelectItem value="HARD">Khó</SelectItem>
+                  <SelectItem value="all">{t("common.all")}</SelectItem>
+                  <SelectItem value="EASY">{t("common.difficultyEasy")}</SelectItem>
+                  <SelectItem value="MEDIUM">{t("common.difficultyMedium")}</SelectItem>
+                  <SelectItem value="HARD">{t("common.difficultyHard")}</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -272,7 +273,9 @@ export function CodeReviewProblemManagementPage() {
             </div>
             <div className="flex items-center justify-end">
               <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                <span>{filteredProblems.length} bài tập</span>
+                <span>
+                  {filteredProblems.length} {t("common.exercises", t("common.exercises"))}
+                </span>
                 {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
               </div>
             </div>
@@ -289,10 +292,10 @@ export function CodeReviewProblemManagementPage() {
                   <AlertTriangle className="h-5 w-5 text-slate-400" />
                 </div>
                 <h3 className="text-sm font-medium text-slate-900 dark:text-white">
-                  Không có dữ liệu
+                  {t("adminDashboardoverview.noDataAvailable")}
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  Thử thay đổi bộ lọc hoặc tạo bài tập mới.
+                  {/*Thử thay đổi bộ lọc hoặc tạo*/} {t("common.exercises")} {/*mới.*/}
                 </p>
               </div>
             ) : (
@@ -322,7 +325,7 @@ export function CodeReviewProblemManagementPage() {
                     </div>
 
                     <p className="mb-3 line-clamp-2 h-8 text-xs text-slate-500 dark:text-slate-400">
-                      {problem.problemStatement || "Không có mô tả..."}
+                      {problem.problemStatement || t("general.noDescription")}
                     </p>
 
                     <div className="flex items-center justify-between text-xs text-slate-400">
@@ -369,14 +372,14 @@ export function CodeReviewProblemManagementPage() {
                     <DialogTrigger asChild>
                       <button className="flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20">
                         <Lightbulb className="h-4 w-4" />
-                        Mô tả bài tập
+                        {/*Mô tả*/} {t("common.exercises")}
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
                           <Lightbulb className="h-5 w-5 text-amber-500" />
-                          Mô tả bài tập
+                          Mô tả {t("common.exercises")}
                         </DialogTitle>
                       </DialogHeader>
                       <div className="prose prose-sm dark:prose-invert mt-4 max-w-none font-sans whitespace-pre-wrap text-slate-700 dark:text-slate-300">
@@ -417,7 +420,12 @@ export function CodeReviewProblemManagementPage() {
                   <div className="flex-1 overflow-y-auto bg-slate-50 p-4 leading-relaxed select-text dark:bg-slate-950/50">
                     {(() => {
                       const file = (selectedProblem.files || [])[viewActiveFileIdx];
-                      if (!file) return <div className="p-4 text-slate-500 italic">File trống</div>;
+                      if (!file)
+                        return (
+                          <div className="p-4 text-slate-500 italic">
+                            {t("adminCodeReviewProblem.emptyFile")}
+                          </div>
+                        );
 
                       return (
                         <SyntaxHighlighter
@@ -536,7 +544,8 @@ export function CodeReviewProblemManagementPage() {
                                                   <div className="flex flex-col gap-1">
                                                     <div className="flex items-center gap-2">
                                                       <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                                        Lỗi dòng {iss.lineNumber}
+                                                        {t("common.error")} {/*dòng*/}{" "}
+                                                        {iss.lineNumber}
                                                       </span>
                                                       <Badge
                                                         variant="outline"
@@ -586,11 +595,11 @@ export function CodeReviewProblemManagementPage() {
                 <Bot className="h-10 w-10 text-slate-300 dark:text-slate-600" />
               </div>
               <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
-                Chưa chọn bài tập
+                {/*Chưa chọn*/} {t("common.exercises")}
               </h3>
               <p className="max-w-sm text-slate-500 dark:text-slate-400">
-                Chọn một bài tập từ danh sách bên trái để xem chi tiết thông tin, mã nguồn và các
-                lỗi cần tìm.
+                {/*Chọn một*/} {t("common.exercises")} từ danh sách bên trái để xem chi tiết thông
+                tin, mã nguồn và các lỗi cần tìm.
               </p>
             </div>
           )}

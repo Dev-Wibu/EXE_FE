@@ -30,12 +30,14 @@ export function DeleteQuestionBankDialog({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("common.delete", "Xóa câu hỏi")}</AlertDialogTitle>
+          <AlertDialogTitle>{t("common.delete", t("question.deleteQuestion"))}</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa câu hỏi này không? Thao tác này không thể hoàn tác.
+            {/*Bạn có chắc chắn muốn xóa câu hỏi này không?*/} {t("common.operation")} này không thể
+            hoàn tác.
             <br />
             <br />
-            <strong>Nội dung:</strong> {question?.questionText?.substring(0, 50)}...
+            <strong>{t("general.contentWithColon")}</strong>{" "}
+            {question?.questionText?.substring(0, 50)}...
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

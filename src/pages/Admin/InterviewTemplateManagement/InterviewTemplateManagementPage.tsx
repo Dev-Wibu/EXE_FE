@@ -39,7 +39,8 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 // Available round types configurations for UI mapping
@@ -85,7 +86,9 @@ interface UIRound {
   configData?: UIRoundConfig;
 }
 
-const AVAILABLE_ROUNDS_TEMPLATES: {
+const getAvailableRoundsTemplates = (
+  t: (key: string) => string
+): {
   type: RoundType;
   title: string;
   description: string;
@@ -93,66 +96,66 @@ const AVAILABLE_ROUNDS_TEMPLATES: {
   bgColor: string;
   icon: React.ReactNode;
   defaultConfig: UIRoundConfig;
-}[] = [
+}[] => [
   {
     type: "CV_SCREENING",
-    title: "Lọc CV",
-    description: "Đánh giá hồ sơ và kỹ năng ứng viên.",
+    title: t("adminInterviewTemplate.cvScreening.title"),
+    description: t("adminInterviewTemplate.cvScreening.description"),
     color: "text-blue-500 border-blue-500/20",
     bgColor: "bg-blue-500/10",
     icon: <FileText className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Vui lòng tải lên CV định dạng PDF.",
+      instruction: t("cv.uploadPdfOnly"),
       submissionFormat: "pdf",
     },
   },
   {
     type: "EMAIL_SIMULATOR",
-    title: "Mô phỏng Email",
-    description: "Kiểm tra kỹ năng viết và giao tiếp qua Email.",
+    title: t("adminInterviewTemplate.emailSimulator.title"),
+    description: t("adminInterviewTemplate.emailSimulator.description"),
     color: "text-purple-500 border-purple-500/20",
     bgColor: "bg-purple-500/10",
     icon: <Mail className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Hãy trả lời email của khách hàng phàn nàn về sản phẩm.",
+      instruction: t("task.replyComplaintEmail"),
       timeLimitMinutes: 15,
     },
   },
   {
     type: "QUIZ",
-    title: "Trắc nghiệm",
-    description: "Bài đánh giá năng lực trắc nghiệm.",
+    title: t("adminInterviewTemplate.quiz.title"),
+    description: t("adminInterviewTemplate.quiz.description"),
     color: "text-amber-500 border-amber-500/20",
     bgColor: "bg-amber-500/10",
     icon: <HelpCircle className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Làm bài kiểm tra trắc nghiệm lý thuyết.",
+      instruction: t("task.takeTheoryQuiz"),
       timeLimitMinutes: 20,
       quizQuestions: [],
     },
   },
   {
     type: "CODING",
-    title: "Lập trình",
-    description: "Đánh giá kỹ năng viết mã nguồn giải thuật.",
+    title: t("adminInterviewTemplate.coding.title"),
+    description: t("adminInterviewTemplate.coding.description"),
     color: "text-emerald-500 border-emerald-500/20",
     bgColor: "bg-emerald-500/10",
     icon: <Code2 className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Hoàn thành các bài tập lập trình yêu cầu.",
+      instruction: t("task.completeCodingExercises"),
       timeLimitMinutes: 45,
       codingProblemsId: [],
     },
   },
   {
     type: "CODE_REVIEW",
-    title: "Đánh giá Code",
-    description: "Kiểm tra tư duy phản biện và tối ưu hóa code.",
+    title: t("adminInterviewTemplate.codeReview.title"),
+    description: t("adminInterviewTemplate.codeReview.description"),
     color: "text-teal-500 border-teal-500/20",
     bgColor: "bg-teal-500/10",
     icon: <Eye className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Review đoạn mã nguồn sau và chỉ ra các điểm cần tối ưu.",
+      instruction: t("task.reviewSourceCode"),
       timeLimitMinutes: 30,
       codeReviewProblemsId: [],
       codeReviewProblems: [],
@@ -160,28 +163,27 @@ const AVAILABLE_ROUNDS_TEMPLATES: {
   },
   {
     type: "MENTROR_REVIEW",
-    title: "Đánh giá Mentor",
-    description: "Buổi phỏng vấn trực tiếp với Mentor.",
+    title: t("adminInterviewTemplate.mentorReview.title"),
+    description: t("adminInterviewTemplate.mentorReview.description"),
     color: "text-rose-500 border-rose-500/20",
     bgColor: "bg-rose-500/10",
     icon: <UserCheck className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Thực hiện phỏng vấn trực tiếp với Mentor.",
+      instruction: t("task.interviewWithMentor"),
     },
   },
   {
     type: "AI_INTERVIEW",
-    title: "Phỏng vấn AI",
-    description: "Phỏng vấn giả lập tự động với Trợ lý AI.",
+    title: t("adminInterviewTemplate.aiInterview.title"),
+    description: t("adminInterviewTemplate.aiInterview.description"),
     color: "text-indigo-500 border-indigo-500/20",
     bgColor: "bg-indigo-500/10",
     icon: <Bot className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Trả lời các câu hỏi phỏng vấn bằng giọng nói/văn bản với AI.",
+      instruction: t("task.interviewWithAI"),
       timeLimitMinutes: 20,
-      aiSystemPrompt: "Bạn là một nhà tuyển dụng kỹ thuật chuyên hỏi về Java/NodeJS...",
-      evaluationCriteria:
-        "Đánh giá dựa trên kỹ năng giao tiếp, giải quyết vấn đề và kiến thức cốt lõi.",
+      aiSystemPrompt: t("task.techRecruiterRole"),
+      evaluationCriteria: t("task.evaluationCriteria"),
     },
   },
 ];
@@ -263,6 +265,8 @@ const getBestConnection = (fromPos: { x: number; y: number }, toPos: { x: number
 };
 
 export function InterviewTemplateManagementPage() {
+  const { t } = useTranslation();
+  const AVAILABLE_ROUNDS_TEMPLATES = useMemo(() => getAvailableRoundsTemplates(t), [t]);
   const [templates, setTemplates] = useState<SummaryResponse[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<DetailResponse | null>(null);
@@ -602,7 +606,7 @@ export function InterviewTemplateManagementPage() {
     } else if (selectedRoundIndex !== null && selectedRoundIndex > index) {
       setSelectedRoundIndex(selectedRoundIndex - 1);
     }
-    toast.info("Đã xóa vòng khỏi mẫu.");
+    toast.info(t("template.roundRemoved"));
   };
 
   const updateRoundField = (index: number, field: keyof UIRound, value: unknown) => {
@@ -634,7 +638,7 @@ export function InterviewTemplateManagementPage() {
     if (res.success && res.data) {
       setTemplates(res.data);
     } else {
-      toast.error(res.error || "Không thể tải danh sách mẫu quy trình");
+      toast.error(res.error || t("adminCompanymanagement.unableToLoadProcessTemplates"));
     }
     setIsLoadingList(false);
   };
@@ -653,7 +657,7 @@ export function InterviewTemplateManagementPage() {
           if (res.success && res.data) {
             setSelectedTemplate(res.data);
           } else {
-            toast.error(res.error || "Không thể tải chi tiết mẫu quy trình");
+            toast.error(res.error || t("adminCompanymanagement.unableToLoadTemplateDetails"));
             setSelectedTemplate(null);
           }
         })
@@ -667,18 +671,18 @@ export function InterviewTemplateManagementPage() {
 
   const handleDeleteTemplate = async (id: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!confirm("Bạn có chắc chắn muốn xóa mẫu quy trình này không?")) return;
+    if (!confirm(t("adminCompanymanagement.confirmDeleteTemplate"))) return;
 
     setIsDeleting(true);
     const res = await interviewTemplateManager.deleteTemplate(id);
     if (res.success) {
-      toast.success("Đã xóa mẫu quy trình tuyển dụng thành công!");
+      toast.success(t("adminCompanymanagement.deletedRecruitmentTemplateSuccessfully"));
       if (selectedTemplateId === id) {
         setSelectedTemplateId(null);
       }
       loadTemplates();
     } else {
-      toast.error(res.error || "Không thể xóa mẫu quy trình");
+      toast.error(res.error || t("adminCompanymanagement.unableToDeleteProcessTemplate"));
     }
     setIsDeleting(false);
   };
@@ -690,11 +694,11 @@ export function InterviewTemplateManagementPage() {
     setTemplateDescription("");
     setRounds([
       {
-        name: "Lọc CV",
+        name: t("adminInterviewTemplate.cvScreening.title"),
         roundType: "CV_SCREENING",
         passThreshold: 0.8,
         configData: {
-          instruction: "Vui lòng tải lên CV định dạng PDF.",
+          instruction: t("cv.uploadPdfOnly"),
           submissionFormat: "pdf",
           timeLimitMinutes: 30,
           maxScore: 100,
@@ -795,16 +799,16 @@ export function InterviewTemplateManagementPage() {
 
   const handleSaveTemplate = async (shouldCloseParent = true, customRounds?: UIRound[]) => {
     if (!templateName.trim()) {
-      toast.error("Vui lòng nhập tên mẫu");
+      toast.error(t("adminCompanymanagement.pleaseEnterTemplateName"));
       return;
     }
     if (!templateCategory.trim()) {
-      toast.error("Vui lòng nhập danh mục");
+      toast.error(t("adminCompanymanagement.pleaseEnterCategory"));
       return;
     }
     const roundsToSave = customRounds || rounds;
     if (roundsToSave.length === 0) {
-      toast.error("Vui lòng thêm ít nhất một vòng phỏng vấn cho mẫu này");
+      toast.error(t("template.addAtLeastOneRound"));
       return;
     }
 
@@ -888,9 +892,7 @@ export function InterviewTemplateManagementPage() {
 
       if (res.success) {
         toast.success(
-          editorMode === "create"
-            ? "Tạo mẫu quy trình thành công!"
-            : "Cập nhật mẫu quy trình thành công!"
+          editorMode === "create" ? t("template.createSuccess") : t("template.updateSuccess")
         );
         if (shouldCloseParent) {
           setIsEditorOpen(false);
@@ -906,11 +908,11 @@ export function InterviewTemplateManagementPage() {
           setTimeout(() => setSelectedTemplateId(selectedTemplateId), 50);
         }
       } else {
-        toast.error(res.error || "Không thể lưu mẫu quy trình");
+        toast.error(res.error || t("adminCompanymanagement.unableToSaveProcessTemplate"));
       }
     } catch (err) {
       console.error(err);
-      toast.error("Đã xảy ra lỗi khi lưu mẫu");
+      toast.error(t("adminCompanymanagement.errorOccurredWhileSavingTemplate"));
     } finally {
       setIsSaving(false);
     }
@@ -936,14 +938,14 @@ export function InterviewTemplateManagementPage() {
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
               <LayoutTemplate className="h-5 w-5 text-indigo-500" />
-              Mẫu Quy trình
+              {t("adminAdmindashboard.processTemplate")}
             </h2>
             <Button
               size="sm"
               onClick={handleCreateClick}
               className="h-8 gap-1.5 rounded-lg !bg-indigo-600 px-3 text-xs font-semibold !text-white shadow-sm hover:!bg-indigo-700">
               <PlusCircle className="h-3.5 w-3.5" />
-              Tạo mẫu
+              {t("general.createTemplate")}
             </Button>
           </div>
 
@@ -952,7 +954,7 @@ export function InterviewTemplateManagementPage() {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm mẫu, danh mục..."
+              placeholder={t("adminCompanymanagement.searchTemplateAndCategory")}
               className="h-9 border-slate-200 bg-slate-50 pl-9 text-xs dark:border-slate-800 dark:bg-slate-950"
             />
           </div>
@@ -963,12 +965,12 @@ export function InterviewTemplateManagementPage() {
           {isLoadingList ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-slate-400">
               <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-              <span className="text-xs">Đang tải danh sách mẫu...</span>
+              <span className="text-xs">{t("adminCompanymanagement.loadingTemplateList")}</span>
             </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 py-16 text-center text-slate-400 dark:text-slate-500">
               <LayoutTemplate className="mb-2 h-10 w-10 text-slate-300" />
-              <span className="text-xs font-bold">Không tìm thấy mẫu nào</span>
+              <span className="text-xs font-bold">{t("template.noTemplateFound")}</span>
             </div>
           ) : (
             <div className="space-y-1 p-2">
@@ -1030,7 +1032,7 @@ export function InterviewTemplateManagementPage() {
           isLoadingDetail ? (
             <div className="flex h-full flex-col items-center justify-center text-slate-400">
               <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-              <span className="mt-2 text-sm">Đang tải thông tin chi tiết...</span>
+              <span className="mt-2 text-sm">{t("general.loadingDetails")}</span>
             </div>
           ) : selectedTemplate ? (
             <div className="flex h-full flex-col">
@@ -1044,7 +1046,7 @@ export function InterviewTemplateManagementPage() {
                     <button
                       onClick={() => setSelectedTemplateId(null)}
                       className="text-xs text-indigo-500 hover:underline md:hidden">
-                      &larr; Quay lại
+                      &larr; {t("common.goBack")}
                     </button>
                   </div>
                   <h2 className="mt-1.5 truncate text-xl font-bold text-slate-900 dark:text-white">
@@ -1064,7 +1066,7 @@ export function InterviewTemplateManagementPage() {
                     onClick={() => handleEditClick(selectedTemplate)}
                     className="h-9 gap-1.5 border-slate-200 px-3 font-semibold hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:text-white">
                     <Edit3 className="h-4 w-4" />
-                    Chỉnh sửa
+                    {t("common.edit")}
                   </Button>
                   <Button
                     variant="outline"
@@ -1073,7 +1075,7 @@ export function InterviewTemplateManagementPage() {
                     disabled={isDeleting}
                     className="h-9 gap-1.5 border-red-200 px-3 font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 dark:border-red-950/40 dark:hover:bg-red-950/30">
                     <Trash2 className="h-4 w-4" />
-                    Xóa mẫu
+                    {t("common.clear")} {/*mẫu*/}
                   </Button>
                 </div>
               </div>
@@ -1083,7 +1085,8 @@ export function InterviewTemplateManagementPage() {
                 <div className="max-w-3xl space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold tracking-wider text-slate-800 uppercase dark:text-slate-300">
-                      Quy trình gồm {selectedTemplate.rounds?.length || 0} vòng phỏng vấn
+                      {t("template.processContains")} {selectedTemplate.rounds?.length || 0}{" "}
+                      {t("userApplicationhistory.rounds")} {/*phỏng vấn*/}
                     </h3>
                   </div>
 
@@ -1135,10 +1138,11 @@ export function InterviewTemplateManagementPage() {
                                   <Clock className="h-3.5 w-3.5 opacity-70" />
                                   {round.configData?.timeLimitMinutes
                                     ? `${round.configData.timeLimitMinutes} phút`
-                                    : "Không giới hạn"}
+                                    : t("enterpriseJobdescriptiondetailpage.unlimited")}
                                 </span>
                                 <span className="font-bold text-slate-700 dark:text-slate-300">
-                                  Đạt {Math.round((round.passThreshold ?? 0.8) * 100)}%
+                                  {t("common.obtain")}{" "}
+                                  {Math.round((round.passThreshold ?? 0.8) * 100)}%
                                 </span>
                               </div>
                             </div>
@@ -1146,7 +1150,7 @@ export function InterviewTemplateManagementPage() {
                             {round.configData?.instruction && (
                               <div className="border-slate-150/40 mt-3 rounded-lg border bg-slate-50/50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-slate-950/40 dark:text-slate-400">
                                 <span className="mb-1 block font-bold text-slate-800 dark:text-slate-300">
-                                  Hướng dẫn ứng viên:
+                                  {t("template.candidateInstructions")}
                                 </span>
                                 {round.configData.instruction}
                               </div>
@@ -1158,8 +1162,9 @@ export function InterviewTemplateManagementPage() {
                               round.configData.quizQuestions.length > 0 && (
                                 <div className="mt-3 border-t border-slate-100/10 pt-2 dark:border-slate-800/20">
                                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500">
-                                    Đã cấu hình {round.configData.quizQuestions.length} câu hỏi trắc
-                                    nghiệm
+                                    {t("template.configured")}{" "}
+                                    {round.configData.quizQuestions.length}{" "}
+                                    {t("question.multipleChoice")}
                                   </span>
                                 </div>
                               )}
@@ -1174,7 +1179,7 @@ export function InterviewTemplateManagementPage() {
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-8 text-center text-slate-400">
               <AlertTriangle className="mb-2 h-8 w-8 text-amber-500" />
-              <span>Không tải được chi tiết mẫu quy trình này.</span>
+              <span>{t("template.failedToLoadDetails")}</span>
             </div>
           )
         ) : (
@@ -1183,11 +1188,10 @@ export function InterviewTemplateManagementPage() {
               <LayoutTemplate className="h-10 w-10 text-indigo-500" />
             </div>
             <h2 className="mb-2 text-2xl font-bold text-slate-800 dark:text-white">
-              Chi tiết Mẫu quy trình
+              {t("adminCompanymanagement.processTemplate")}
             </h2>
             <p className="max-w-sm text-sm text-slate-400 dark:text-slate-500">
-              Chọn một mẫu quy trình phỏng vấn ở danh sách bên trái để xem nội dung cấu hình chi
-              tiết của mẫu đó.
+              {t("template.selectFromList")}
             </p>
           </div>
         )}
@@ -1211,10 +1215,10 @@ export function InterviewTemplateManagementPage() {
           <div className="flex h-full w-[28%] max-w-[340px] min-w-[300px] shrink-0 flex-col border-r border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30">
             <div className="flex h-[72px] shrink-0 flex-col justify-center border-b border-slate-200 bg-slate-100/30 px-5 dark:border-slate-800 dark:bg-slate-900/20">
               <h3 className="text-slate-750 text-xs font-bold tracking-wider uppercase dark:text-slate-400">
-                Mẫu vòng tuyển dụng
+                {t("adminCompanymanagement.recruitmentRoundTemplate")}
               </h3>
               <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-500">
-                Kéo các mẫu này thả vào quy trình ở giữa
+                {t("template.dragToCenter")}
               </p>
             </div>
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5">
@@ -1256,7 +1260,7 @@ export function InterviewTemplateManagementPage() {
                   <Input
                     value={templateName}
                     onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Tên mẫu quy trình *"
+                    placeholder={t("adminCompanymanagement.templateNamePlaceholder")}
                     className="h-9 border-slate-200 bg-slate-50 text-xs font-bold dark:border-slate-800 dark:bg-slate-950"
                   />
                 </div>
@@ -1264,7 +1268,7 @@ export function InterviewTemplateManagementPage() {
                   <Input
                     value={templateCategory}
                     onChange={(e) => setTemplateCategory(e.target.value)}
-                    placeholder="Danh mục *"
+                    placeholder={t("template.categoryRequired")}
                     className="h-9 border-slate-200 bg-slate-50 text-xs dark:border-slate-800 dark:bg-slate-950"
                   />
                 </div>
@@ -1272,7 +1276,7 @@ export function InterviewTemplateManagementPage() {
                   <Input
                     value={templateDescription}
                     onChange={(e) => setTemplateDescription(e.target.value)}
-                    placeholder="Mô tả mẫu quy trình..."
+                    placeholder={t("template.descriptionPlaceholder")}
                     className="h-9 border-slate-200 bg-slate-50 text-xs dark:border-slate-800 dark:bg-slate-950"
                   />
                 </div>
@@ -1281,12 +1285,12 @@ export function InterviewTemplateManagementPage() {
               {/* Zoom controls + round count */}
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  {rounds.length} vòng
+                  {rounds.length} {t("userApplicationhistory.rounds")}
                 </span>
                 <div className="flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-1 dark:border-slate-700 dark:bg-slate-800">
                   <button
                     onClick={handleZoomOut}
-                    title="Thu nhỏ (Ctrl+Scroll)"
+                    title={t("adminCompanymanagement.zoomOut")}
                     className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
                     <ZoomOut className="h-3.5 w-3.5" />
                   </button>
@@ -1295,13 +1299,13 @@ export function InterviewTemplateManagementPage() {
                   </span>
                   <button
                     onClick={handleZoomIn}
-                    title="Phóng to (Ctrl+Scroll)"
+                    title={t("adminCompanymanagement.zoomIn")}
                     className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
                     <ZoomIn className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={handleZoomReset}
-                    title="Đặt lại zoom"
+                    title={t("adminCompanymanagement.resetZoom")}
                     className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
                     <RotateCcw className="h-3 w-3" />
                   </button>
@@ -1331,10 +1335,11 @@ export function InterviewTemplateManagementPage() {
                       <ArrowRight className="h-6 w-6 text-slate-400 dark:text-slate-500" />
                     </div>
                     <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                      Mẫu trống
+                      {t("template.emptyTemplate")}
                     </h4>
                     <p className="mt-1.5 max-w-[200px] text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-                      Kéo các vòng từ cột bên trái và thả vào đây để thiết lập
+                      {/*Kéo các*/} {t("userApplicationhistory.rounds")} từ cột bên trái và thả vào
+                      đây để thiết lập
                     </p>
                   </div>
                 </div>
@@ -1463,7 +1468,7 @@ export function InterviewTemplateManagementPage() {
                                 <button
                                   onClick={(e) => handleRemoveRound(idx, e)}
                                   className="absolute -top-2.5 -right-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 opacity-0 shadow-md transition-all group-hover:opacity-100 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-red-800 dark:hover:bg-red-950 dark:hover:text-red-400"
-                                  title="Xóa vòng">
+                                  title={t("adminCompanymanagement.deleteRound")}>
                                   <Trash2 className="h-3 w-3" />
                                 </button>
 
@@ -1498,7 +1503,8 @@ export function InterviewTemplateManagementPage() {
                                     </span>
                                   </div>
                                   <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                    Đạt {Math.round((round.passThreshold ?? 0.8) * 100)}%
+                                    {t("common.obtain")}{" "}
+                                    {Math.round((round.passThreshold ?? 0.8) * 100)}%
                                   </span>
                                 </div>
 
@@ -1508,7 +1514,7 @@ export function InterviewTemplateManagementPage() {
                                     round.configData.quizQuestions.length === 0) && (
                                     <div className="mt-2 flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-1.5 text-[10px] font-medium text-amber-500">
                                       <AlertTriangle className="h-3 w-3 shrink-0" />
-                                      <span>Chưa có câu hỏi</span>
+                                      <span>{t("adminCompanymanagement.noQuestionsYet")}</span>
                                     </div>
                                   )}
                               </div>
@@ -1534,14 +1540,14 @@ export function InterviewTemplateManagementPage() {
                     setIsEditorOpen(false);
                   }
                 }}>
-                Hủy
+                {t("common.cancel")}
               </Button>
               <Button
                 onClick={() => handleSaveTemplate(true)}
                 disabled={isSaving}
                 className="gap-2 bg-indigo-600 font-bold text-white shadow-md hover:bg-indigo-700">
                 <Save className="h-4 w-4" />
-                {isSaving ? "Đang lưu..." : "Lưu mẫu quy trình"}
+                {isSaving ? t("common.saving") : t("template.saveTemplate")}
               </Button>
             </div>
           </div>
@@ -1582,13 +1588,15 @@ export function InterviewTemplateManagementPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-sm font-bold text-slate-900 dark:text-slate-100">
-                    <span>Vòng {selectedRoundIndex + 1}:</span>
+                    <span>
+                      {t("userApplicationhistory.round")} {selectedRoundIndex + 1}:
+                    </span>
                     <input
                       type="text"
                       value={selectedRound.name || ""}
                       onChange={(e) => updateRoundField(selectedRoundIndex, "name", e.target.value)}
                       className="-ml-1 w-48 rounded border-b border-transparent bg-transparent px-1 py-0.5 font-bold text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
-                      placeholder="Tên vòng tuyển dụng"
+                      placeholder={t("adminCompanymanagement.recruitmentRoundName")}
                     />
                   </div>
                   <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -1607,7 +1615,7 @@ export function InterviewTemplateManagementPage() {
                   setConfigModalOpen(false);
                   setSelectedRoundIndex(null);
                 }}>
-                Đóng
+                {t("compUi.close")}
               </Button>
             </div>
 
@@ -1704,7 +1712,7 @@ export function InterviewTemplateManagementPage() {
                   <div className="space-y-5 lg:col-span-5">
                     <div className="border-b border-slate-100 pb-2 dark:border-slate-800/40">
                       <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                        Cấu hình chung
+                        {t("general.generalConfiguration")}
                       </h4>
                     </div>
 
@@ -1720,7 +1728,7 @@ export function InterviewTemplateManagementPage() {
                               : "w-[55%]"
                           )}>
                           <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                            Điểm tối đa
+                            {t("adminCompanymanagement.maximumScore")}
                           </Label>
                           <ScoreInput
                             value={selectedRound.configData?.maxScore ?? 100}
@@ -1739,7 +1747,7 @@ export function InterviewTemplateManagementPage() {
                           selectedRound.roundType !== "EMAIL_SIMULATOR" && (
                             <div className="w-[45%] space-y-1">
                               <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                Thời gian
+                                {t("common.time")}
                               </Label>
                               {dialogEditingTime ? (
                                 <div className="flex items-center gap-1">
@@ -1761,7 +1769,9 @@ export function InterviewTemplateManagementPage() {
                                     }
                                     className="h-11 w-full [appearance:textfield] border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                   />
-                                  <span className="shrink-0 text-[9px] text-slate-400">phút</span>
+                                  <span className="shrink-0 text-[9px] text-slate-400">
+                                    {t("common.minute")}
+                                  </span>
                                 </div>
                               ) : (
                                 <button
@@ -1771,7 +1781,7 @@ export function InterviewTemplateManagementPage() {
                                   <Clock className="h-4 w-4 text-slate-400" />
                                   {(selectedRound.configData?.timeLimitMinutes ?? 0) > 0
                                     ? `${selectedRound.configData?.timeLimitMinutes} phút`
-                                    : "Không hạn chế"}
+                                    : t("adminCompanymanagement.noLimit")}
                                 </button>
                               )}
                             </div>
@@ -1781,7 +1791,7 @@ export function InterviewTemplateManagementPage() {
                       {/* Pass Score - circular */}
                       <div className="space-y-1">
                         <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                          Điểm đạt tối thiểu
+                          {t("adminCompanymanagement.minimumPassingScore")}
                         </Label>
                         <div className="flex justify-center">
                           <ScoreInput
@@ -1811,7 +1821,7 @@ export function InterviewTemplateManagementPage() {
                       {selectedRound.roundType === "CV_SCREENING" && (
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Định dạng nộp hồ sơ
+                            {t("adminCompanymanagement.submissionFormat")}
                           </Label>
                           <Select
                             value={selectedRound.configData?.submissionFormat || "pdf"}
@@ -1822,9 +1832,15 @@ export function InterviewTemplateManagementPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                              <SelectItem value="pdf">Tệp PDF (.pdf)</SelectItem>
-                              <SelectItem value="doc">Tệp Word (.doc, .docx)</SelectItem>
-                              <SelectItem value="any">Tất cả định dạng tài liệu</SelectItem>
+                              <SelectItem value="pdf">
+                                {t("adminCompanymanagement.pdfFile")}
+                              </SelectItem>
+                              <SelectItem value="doc">
+                                {t("adminCompanymanagement.wordFile")}
+                              </SelectItem>
+                              <SelectItem value="any">
+                                {t("adminCompanymanagement.allDocumentFormats")}
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1834,7 +1850,7 @@ export function InterviewTemplateManagementPage() {
                     {/* Lời Hướng dẫn cho ứng viên */}
                     <div className="space-y-1.5 border-t border-slate-100 pt-4 dark:border-slate-800/40">
                       <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Lời Hướng dẫn cho ứng viên
+                        {t("adminCompanymanagement.instructionsForCandidates")}
                       </Label>
                       <Textarea
                         value={selectedRound.configData?.instruction || ""}
@@ -1843,10 +1859,10 @@ export function InterviewTemplateManagementPage() {
                         }
                         placeholder={
                           selectedRound.roundType === "CV_SCREENING"
-                            ? "Ví dụ: Vui lòng tải lên CV định dạng PDF của bạn để hệ thống tự động đánh giá và chấm điểm."
+                            ? t("template.exampleCvUpload")
                             : selectedRound.roundType === "EMAIL_SIMULATOR"
-                              ? "Ví dụ: Hãy đóng vai một nhân viên chăm sóc khách hàng, phản hồi lại email khiếu nại của khách hàng dưới đây. Chú ý thái độ ôn hòa, xin lỗi về sự cố và đề xuất hướng giải quyết cụ thể."
-                              : "Hướng dẫn ứng viên làm bài..."
+                              ? t("template.exampleCustomerService")
+                              : t("adminCompanymanagement.instructionsForCandidatesPlaceholder")
                         }
                         rows={4}
                         className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
@@ -1858,7 +1874,7 @@ export function InterviewTemplateManagementPage() {
                   <div className="space-y-5 lg:col-span-7 lg:border-l lg:border-slate-200 lg:pl-6 lg:dark:border-slate-800">
                     <div className="border-b border-slate-100 pb-2 dark:border-slate-800/40">
                       <h4 className="text-slate-450 text-xs font-bold tracking-wider uppercase dark:text-slate-500">
-                        Cấu hình chi tiết
+                        {t("general.detailedConfiguration")}
                       </h4>
                     </div>
 
@@ -1867,7 +1883,7 @@ export function InterviewTemplateManagementPage() {
                       <div className="space-y-4">
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Tiêu chí chấm điểm bổ sung của HR (Add-on Criteria)
+                            {t("template.hrAddonCriteria")}
                           </Label>
                           <Textarea
                             value={selectedRound.configData?.aiSystemPrompt || ""}
@@ -1878,13 +1894,12 @@ export function InterviewTemplateManagementPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="Ví dụ:&#10;- Cộng thêm 10 điểm cho ứng viên có chứng chỉ AWS/Google Cloud.&#10;- Ưu tiên các hồ sơ có bài báo khoa học (paper) đã xuất bản hoặc đạt giải thưởng học thuật.&#10;- Trừ 5 điểm nếu ứng viên không ghi rõ thời gian làm việc tại mỗi công ty."
+                            placeholder={t("template.exampleHrCriteria")}
                             rows={6}
                             className="border-slate-200 bg-white text-xs text-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                           />
                           <p className="text-[10px] leading-normal text-slate-500">
-                            Các tiêu chí bổ sung này sẽ được gửi kèm cùng với cấu hình gốc của hệ
-                            thống để AI tự động cộng/trừ điểm theo khẩu vị tuyển dụng của bạn.
+                            {t("template.addonCriteriaExplanation")}
                           </p>
                         </div>
                       </div>
@@ -1896,7 +1911,7 @@ export function InterviewTemplateManagementPage() {
                         {/* Đề bài / Tình huống giả lập Email */}
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Đề bài / Tình huống giả lập Email (Scenario)
+                            {t("template.emailScenario")}
                           </Label>
                           <Textarea
                             value={selectedRound.configData?.evaluationCriteria || ""}
@@ -1907,7 +1922,7 @@ export function InterviewTemplateManagementPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="Ví dụ:&#10;From: guest_kdz@domain.com&#10;Subject: Phàn nàn về chất lượng đơn hàng #12345&#10;&#10;Nội dung: Tôi nhận được đơn hàng trễ 2 ngày, hộp bị móp méo. Khi tôi hỏi lý do thì shipper tỏ thái độ rất cộc cằn..."
+                            placeholder={t("template.exampleEmailScenario")}
                             rows={6}
                             className="border-slate-200 bg-white text-xs text-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                           />
@@ -1916,7 +1931,7 @@ export function InterviewTemplateManagementPage() {
                         {/* Tiêu chí chấm điểm bổ sung của HR */}
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Tiêu chí chấm điểm bổ sung của HR (Add-on Criteria)
+                            {t("template.hrAddonCriteria")}
                           </Label>
                           <Textarea
                             value={selectedRound.configData?.aiSystemPrompt || ""}
@@ -1927,13 +1942,12 @@ export function InterviewTemplateManagementPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="Ví dụ:&#10;- Cộng thêm 10 điểm nếu viết thư đầy đủ lời chào mở đầu và lời chúc kết thúc lịch sự.&#10;- Trừ 5 điểm nếu viết sai chính tả quá 3 lỗi.&#10;- Ưu tiên cách giải quyết thông minh, linh hoạt."
+                            placeholder={t("template.exampleEmailCriteria")}
                             rows={6}
                             className="border-slate-200 bg-white text-xs text-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                           />
                           <p className="text-[10px] leading-normal text-slate-500">
-                            Các tiêu chí bổ sung này sẽ được gửi kèm cùng với cấu hình gốc của hệ
-                            thống để AI tự động cộng/trừ điểm theo khẩu vị tuyển dụng của bạn.
+                            {t("template.addonCriteriaExplanation")}
                           </p>
                         </div>
                       </div>
@@ -1957,14 +1971,14 @@ export function InterviewTemplateManagementPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="Cung cấp prompt cấu hình vai trò AI..."
+                            placeholder={t("adminCompanymanagement.provideAiRoleConfigPrompt")}
                             rows={5}
                             className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                           />
                         </div>
                         <div className="mt-4 space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Tiêu chuẩn Đánh giá
+                            {t("adminCompanymanagement.evaluationCriteria")}
                           </Label>
                           <Textarea
                             value={selectedRound.configData?.evaluationCriteria || ""}
@@ -1975,7 +1989,9 @@ export function InterviewTemplateManagementPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="Các tiêu chuẩn đánh giá kết quả của ứng viên..."
+                            placeholder={t(
+                              "adminCompanymanagement.candidateEvaluationCriteriaPlaceholder"
+                            )}
                             rows={4}
                             className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                           />
@@ -2034,7 +2050,7 @@ export function InterviewTemplateManagementPage() {
                   // Save template configurations immediately to backend
                   await handleSaveTemplate(false, finalRounds);
                 }}>
-                Xác nhận thiết lập vòng
+                {t("template.saveTemplate")} {t("userApplicationhistory.rounds")}
               </Button>
             </div>
           </DialogContent>
@@ -2045,11 +2061,10 @@ export function InterviewTemplateManagementPage() {
         <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
           <DialogContent className="max-w-md border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Thay đổi chưa được lưu
+              {t("adminCompanymanagement.unsavedChanges")}
             </h3>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Bạn có các thay đổi chưa được lưu trong quy trình tuyển dụng này. Bạn có muốn lưu lại
-              thiết lập phỏng vấn trước khi thoát không?
+              {t("template.unsavedChangesWarning2")}
             </p>
             <div className="mt-5 flex justify-end gap-2.5">
               <Button
@@ -2057,7 +2072,7 @@ export function InterviewTemplateManagementPage() {
                 size="sm"
                 className="h-8 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                 onClick={() => setShowExitConfirm(false)}>
-                Quay lại
+                {t("common.goBack")}
               </Button>
               <Button
                 variant="outline"
@@ -2067,7 +2082,7 @@ export function InterviewTemplateManagementPage() {
                   setShowExitConfirm(false);
                   setIsEditorOpen(false);
                 }}>
-                Không lưu
+                {t("adminCompanymanagement.doNotSave")}
               </Button>
               <Button
                 size="sm"
@@ -2076,7 +2091,7 @@ export function InterviewTemplateManagementPage() {
                   setShowExitConfirm(false);
                   await handleSaveTemplate();
                 }}>
-                Lưu và Thoát
+                {t("adminCompanymanagement.saveAndExit")}
               </Button>
             </div>
           </DialogContent>

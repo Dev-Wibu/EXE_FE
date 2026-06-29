@@ -254,10 +254,10 @@ export function PracticeSetManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("common.allLevels")}</SelectItem>
-              <SelectItem value="INTERN">{t("common.intern")}</SelectItem>
-              <SelectItem value="FRESHER">{t("common.fresher")}</SelectItem>
-              <SelectItem value="JUNIOR">{t("common.junior")}</SelectItem>
-              <SelectItem value="MIDDLE">{t("common.middle")}</SelectItem>
+              <SelectItem value="INTERN">{"Intern"}</SelectItem>
+              <SelectItem value="FRESHER">Fresher</SelectItem>
+              <SelectItem value="JUNIOR">{"Junior"}</SelectItem>
+              <SelectItem value="MIDDLE">{"Middle"}</SelectItem>
             </SelectContent>
           </Select>
         </div>

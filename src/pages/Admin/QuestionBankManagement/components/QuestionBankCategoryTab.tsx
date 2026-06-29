@@ -19,10 +19,12 @@ import { extractDataArray } from "@/lib/utils";
 import { questionCategoryManager } from "@/services/question-category.manager";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { QuestionCategory } from "../types";
 
 export function QuestionBankCategoryTab() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<QuestionCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,7 +47,7 @@ export function QuestionBankCategoryTab() {
         setCategories(extractDataArray(res));
       }
     } catch {
-      toast.error("Không thể tải danh sách chuyên mục");
+      toast.error(t("category.loadListFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +72,7 @@ export function QuestionBankCategoryTab() {
 
   const handleSubmit = async () => {
     if (!nameInput.trim()) {
-      toast.error("Vui lòng nhập tên chuyên mục");
+      toast.error(t("category.enterName"));
       return;
     }
     setIsSubmitting(true);
@@ -80,26 +82,26 @@ export function QuestionBankCategoryTab() {
           categoryName: nameInput.trim(),
         });
         if (res.success) {
-          toast.success("Cập nhật thành công");
+          toast.success(t("general.updateSuccess"));
           setIsDialogOpen(false);
           fetchCategories();
         } else {
-          toast.error(res.error || "Cập nhật thất bại");
+          toast.error(res.error || t("general.updateFailed"));
         }
       } else {
         const res = await questionCategoryManager.create({
           categoryName: nameInput.trim(),
         });
         if (res.success) {
-          toast.success("Thêm mới thành công");
+          toast.success(t("general.addSuccess"));
           setIsDialogOpen(false);
           fetchCategories();
         } else {
-          toast.error(res.error || "Thêm mới thất bại");
+          toast.error(res.error || t("general.addFailed"));
         }
       }
     } catch {
-      toast.error("Có lỗi xảy ra");
+      toast.error(t("compCodingSubmissionModal.errorOccurred"));
     } finally {
       setIsSubmitting(false);
     }
@@ -111,14 +113,14 @@ export function QuestionBankCategoryTab() {
     try {
       const res = await questionCategoryManager.delete(editingCategory.id);
       if (res.success) {
-        toast.success("Xóa thành công");
+        toast.success(t("general.deleteSuccess"));
         setIsDeleteDialogOpen(false);
         fetchCategories();
       } else {
-        toast.error(res.error || "Xóa thất bại");
+        toast.error(res.error || t("general.deleteFailed"));
       }
     } catch {
-      toast.error("Có lỗi xảy ra");
+      toast.error(t("compCodingSubmissionModal.errorOccurred"));
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +131,7 @@ export function QuestionBankCategoryTab() {
       <div className="flex justify-end">
         <Button onClick={handleOpenCreate} className="bg-indigo-600 text-white hover:bg-indigo-700">
           <Plus className="mr-2 h-4 w-4" />
-          Thêm chuyên mục
+          {t("adminQuestionbankmanagement.addCategory")}
         </Button>
       </div>
 
@@ -142,15 +144,19 @@ export function QuestionBankCategoryTab() {
           {categories.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center gap-4">
               <Search className="h-12 w-12 text-gray-400" />
-              <p className="font-['Inter'] text-lg text-gray-500">Không tìm thấy dữ liệu</p>
+              <p className="font-['Inter'] text-lg text-gray-500">
+                {t("adminQuestionbankmanagement.noDataFound")}
+              </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-24">ID</TableHead>
-                  <TableHead>Tên chuyên mục</TableHead>
-                  <TableHead className="w-24 text-center">Thao tác</TableHead>
+                  <TableHead>{t("adminQuestionbankmanagement.categoryName")}</TableHead>
+                  <TableHead className="w-24 text-center">
+                    {t("adminQuestionbankmanagement.actions")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,25 +197,31 @@ export function QuestionBankCategoryTab() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {editingCategory ? "Cập nhật chuyên mục" : "Thêm chuyên mục mới"}
+              {editingCategory
+                ? t("adminQuestionbankmanagement.updateCategory")
+                : t("adminQuestionbankmanagement.addNewCategory")}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tên chuyên mục</label>
+              <label className="text-sm font-medium">
+                {t("adminQuestionbankmanagement.categoryName")}
+              </label>
               <Input
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                placeholder="Nhập tên chuyên mục..."
+                placeholder={t("adminQuestionbankmanagement.enterCategoryName")}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Hủy
+              {t("adminQuestionbankmanagement.cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Đang xử lý..." : "Lưu"}
+              {isSubmitting
+                ? t("adminQuestionbankmanagement.processing")
+                : t("adminQuestionbankmanagement.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -219,20 +231,23 @@ export function QuestionBankCategoryTab() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Xóa chuyên mục</DialogTitle>
+            <DialogTitle>{t("adminQuestionbankmanagement.deleteCategory")}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p>
-              Bạn có chắc chắn muốn xóa chuyên mục <strong>{editingCategory?.categoryName}</strong>?
-              Hành động này không thể hoàn tác.
+              {t("adminQuestionbankmanagement.areYouSureDeleteCategory")}{" "}
+              <strong>{editingCategory?.categoryName}</strong>?
+              {t("adminQuestionbankmanagement.actionCannotBeUndone")}
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Hủy
+              {t("adminQuestionbankmanagement.cancel")}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              {isSubmitting ? "Đang xóa..." : "Xóa"}
+              {isSubmitting
+                ? t("adminQuestionbankmanagement.deleting")
+                : t("adminQuestionbankmanagement.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
