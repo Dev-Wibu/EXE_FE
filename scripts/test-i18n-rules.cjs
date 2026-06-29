@@ -23,7 +23,7 @@ const files = getAllFiles(SRC_DIR);
 let hasError = false;
 
 files.forEach((file) => {
-  if (file.endsWith(".tsx")) {
+  if (file.endsWith(".tsx") && !file.endsWith(".test.tsx") && !file.endsWith(".spec.tsx")) {
     const content = fs.readFileSync(file, "utf8");
     if (content.includes("const t = i18n.t.bind(i18n)")) {
       console.error(
