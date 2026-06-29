@@ -170,14 +170,14 @@ export function RoundSubmissionDialog({
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(SYSTEM_EMAIL);
     setCopied(true);
-    toast.success("Đã copy email!");
+    toast.success(t("userApplicationhistory.copiedEmail"));
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopySubject = () => {
     const subject = `[INBLUE-APP-${applicationId}]`;
     navigator.clipboard.writeText(subject);
-    toast.success("Đã copy subject!");
+    toast.success(t("userApplicationhistory.copiedSubject"));
   };
 
   const handleOpenEmailClient = () => {
@@ -235,7 +235,7 @@ export function RoundSubmissionDialog({
                     <div className="mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                        Hướng dẫn
+                        {t("userApplicationhistory.instructions")}
                       </span>
                     </div>
                     <p className="text-sm whitespace-pre-wrap text-blue-700 dark:text-blue-300">
@@ -251,19 +251,18 @@ export function RoundSubmissionDialog({
                       <Mail className="h-4 w-4 text-white" />
                     </div>
                     <span className="font-semibold text-amber-800 dark:text-amber-200">
-                      Gửi email thật để nộp bài
+                      {t("userApplicationhistory.sendRealEmail")}
                     </span>
                   </div>
 
                   <p className="mb-4 text-sm text-amber-700 dark:text-amber-300">
-                    Bạn cần soạn và gửi một email thật từ ứng dụng email của bạn (Gmail,
-                    Outlook,...) đến địa chỉ bên dưới:
+                    {t("userApplicationhistory.sendRealEmailDesc")}
                   </p>
 
                   {/* Subject Pattern */}
                   <div className="mb-3 rounded-lg bg-white p-4 dark:bg-slate-800">
                     <p className="mb-2 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
-                      Tiêu đề email (Subject)
+                      {t("userApplicationhistory.emailSubject")}
                     </p>
                     <div className="flex items-center gap-3">
                       <div className="flex flex-1 items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 dark:border-purple-800 dark:bg-purple-900/30">
@@ -281,15 +280,14 @@ export function RoundSubmissionDialog({
                       </Button>
                     </div>
                     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      Lưu ý: Subject phải chứa đúng cú pháp định danh để hệ thống nhận diện đơn ứng
-                      tuyển của bạn
+                      {t("userApplicationhistory.subjectNotice")}
                     </p>
                   </div>
 
                   {/* Target email address */}
                   <div className="mb-4 rounded-lg bg-white p-4 dark:bg-slate-800">
                     <p className="mb-2 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
-                      Địa chỉ nhận bài
+                      {t("userApplicationhistory.targetAddress")}
                     </p>
                     <div className="flex items-center gap-3">
                       <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
@@ -304,7 +302,9 @@ export function RoundSubmissionDialog({
                         onClick={handleCopyEmail}
                         className="shrink-0 gap-2 border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/30">
                         <Copy className="h-4 w-4" />
-                        {copied ? "Đã copy!" : "Copy"}
+                        {copied
+                          ? t("userApplicationhistory.copied")
+                          : t("userApplicationhistory.copy")}
                       </Button>
                     </div>
                   </div>
@@ -315,7 +315,7 @@ export function RoundSubmissionDialog({
                       onClick={handleOpenEmailClient}
                       className="flex-1 gap-2 bg-[#0047AB] hover:bg-[#003d91]">
                       <ExternalLink className="h-4 w-4" />
-                      Mở ứng dụng email
+                      {t("userApplicationhistory.openEmailClient")}
                     </Button>
                     <Button
                       variant="outline"
@@ -325,7 +325,7 @@ export function RoundSubmissionDialog({
                       }}
                       className="flex-1 gap-2 border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/30">
                       <Copy className="h-4 w-4" />
-                      Copy tất cả
+                      {t("userApplicationhistory.copyAll")}
                     </Button>
                   </div>
                 </div>
@@ -338,11 +338,11 @@ export function RoundSubmissionDialog({
                         <Send className="h-3 w-3 text-white" />
                       </div>
                       <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                        Email đã được gửi
+                        {t("userApplicationhistory.emailSent")}
                       </span>
                     </div>
                     <p className="mb-3 text-xs text-green-600 dark:text-green-400">
-                      Hệ thống đã nhận được email của bạn. Vui lòng chờ để được AI và HR chấm điểm.
+                      {t("userApplicationhistory.emailSentDesc")}
                     </p>
                     <Button
                       variant="outline"
@@ -350,7 +350,7 @@ export function RoundSubmissionDialog({
                       onClick={() => setEmailPreviewOpen(true)}
                       className="gap-2 border-green-300 text-green-700 hover:bg-green-100 dark:border-green-600 dark:text-green-300 dark:hover:bg-green-900/30">
                       <Mail className="h-4 w-4" />
-                      Xem lại email đã gửi
+                      {t("userApplicationhistory.viewSentEmail")}
                     </Button>
                   </div>
                 )}
@@ -358,31 +358,31 @@ export function RoundSubmissionDialog({
                 {/* Tips */}
                 <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-800/50">
                   <p className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-                    Lưu ý
+                    {t("userApplicationhistory.note")}
                   </p>
                   <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">1.</span>
-                      Subject bắt buộc phải có:{" "}
+                      {t("userApplicationhistory.note1")}{" "}
                       <code className="rounded bg-slate-200 px-1 dark:bg-slate-700">
                         [INBLUE-APP-{applicationId}]
                       </code>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">2.</span>
-                      Soạn email với nội dung phù hợp theo hướng dẫn
+                      {t("userApplicationhistory.note2")}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">3.</span>
-                      Gửi đến đúng địa chỉ: <strong>{SYSTEM_EMAIL}</strong>
+                      {t("userApplicationhistory.note3")} <strong>{SYSTEM_EMAIL}</strong>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">4.</span>
-                      Có thể đính kèm file CV, portfolio nếu cần
+                      {t("userApplicationhistory.note4")}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-0.5 text-blue-500">5.</span>
-                      Sau khi gửi, hệ thống sẽ tự động nhận và chấm điểm
+                      {t("userApplicationhistory.note5")}
                     </li>
                   </ul>
                 </div>

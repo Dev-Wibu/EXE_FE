@@ -180,7 +180,7 @@ export function PaginationControl({
               size="sm"
               onClick={handleJumpToPage}
               className="h-7 px-1.5 text-xs">
-              {t("compShared.go")}
+              {"Go"}
             </Button>
           </div>
         )}

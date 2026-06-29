@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export interface QuizQuestion {
   questionText?: string;
@@ -46,27 +47,25 @@ interface QuizEditorProps {
   onTimeLimitMinutesChange: (val: number) => void;
 }
 
-const MOCK_QUESTION_BANK = [
+const getMockQuestionBank = (t: (key: string) => string) => [
   {
-    questionText: "Trong JavaScript, kết quả của biểu thức console.log(typeof NaN) là gì?",
+    questionText: t("compQuizEditor.mockQ1"),
     options: ['"number"', '"NaN"', '"undefined"', '"object"'],
     correctAnswer: '"number"',
     points: 10,
     category: "JavaScript",
-    difficulty: "Dễ",
+    difficulty: t("common.difficultyEasy"),
   },
   {
-    questionText:
-      "Đâu là kết quả đúng của đoạn mã sau:\n```javascript\nconst a = [1, 2, 3];\nconst b = a;\nb.push(4);\nconsole.log(a.length);\n```",
+    questionText: t("compQuizEditor.mockQ2"),
     options: ["3", "4", "5", "Undefined"],
     correctAnswer: "4",
     points: 10,
     category: "JavaScript",
-    difficulty: "Trung bình",
+    difficulty: t("common.difficultyMedium"),
   },
   {
-    questionText:
-      "Trong CSS, thuộc tính nào dùng để căn giữa một phần tử con có vị trí tuyệt đối (position: absolute) cả theo chiều dọc và chiều ngang?",
+    questionText: t("compQuizEditor.mockQ3"),
     options: [
       "top: 50%; left: 50%; transform: translate(-50%, -50%);",
       "align-items: center; justify-content: center;",
@@ -76,57 +75,54 @@ const MOCK_QUESTION_BANK = [
     correctAnswer: "top: 50%; left: 50%; transform: translate(-50%, -50%);",
     points: 15,
     category: "CSS",
-    difficulty: "Trung bình",
+    difficulty: t("common.difficultyMedium"),
   },
   {
-    questionText:
-      "Trong React, Hook `useEffect` với mảng phụ thuộc rỗng (empty dependency array `[]`) sẽ thực thi khi nào?",
+    questionText: t("compQuizEditor.mockQ4"),
     options: [
-      "Chỉ chạy một lần duy nhất sau khi component được mount (chèn vào DOM)",
-      "Chạy sau mỗi lần component re-render",
-      "Chạy trước khi component unmount",
-      "Không bao giờ chạy",
+      t("compQuizEditor.mockQ4A"),
+      t("compQuizEditor.mockQ4B"),
+      t("compQuizEditor.mockQ4C"),
+      t("compQuizEditor.mockQ4D"),
     ],
-    correctAnswer: "Chỉ chạy một lần duy nhất sau khi component được mount (chèn vào DOM)",
+    correctAnswer: t("compQuizEditor.mockQ4A"),
     points: 10,
     category: "React",
-    difficulty: "Dễ",
+    difficulty: t("common.difficultyEasy"),
   },
   {
-    questionText: "Câu lệnh SQL nào dùng để đếm số dòng có giá trị khác NULL trong một cột?",
+    questionText: t("compQuizEditor.mockQ5"),
     options: ["COUNT(column_name)", "COUNT(*)", "SUM(column_name)", "TOTAL(column_name)"],
     correctAnswer: "COUNT(column_name)",
     points: 10,
     category: "SQL",
-    difficulty: "Dễ",
+    difficulty: t("common.difficultyEasy"),
   },
   {
-    questionText:
-      "Cho đoạn mã SQL sau:\n```sql\nSELECT name, salary \nFROM employees \nWHERE salary > (SELECT AVG(salary) FROM employees);\n```\nTruy vấn con này được gọi là gì?",
+    questionText: t("compQuizEditor.mockQ6"),
     options: [
-      "Subquery độc lập (Non-correlated Subquery)",
-      "Subquery tương quan (Correlated Subquery)",
-      "Subquery lồng ghép chéo (Cross Join Subquery)",
+      t("compQuizEditor.mockQ6A"),
+      t("compQuizEditor.mockQ6B"),
+      t("compQuizEditor.mockQ6C"),
       "Recursive CTE",
     ],
-    correctAnswer: "Subquery độc lập (Non-correlated Subquery)",
+    correctAnswer: t("compQuizEditor.mockQ6A"),
     points: 20,
     category: "SQL",
-    difficulty: "Khó",
+    difficulty: t("common.difficultyHard"),
   },
   {
-    questionText:
-      "Trong lập trình hướng đối tượng (OOP), tính chất nào cho phép các lớp con định nghĩa lại một phương thức đã có ở lớp cha?",
+    questionText: t("compQuizEditor.mockQ7"),
     options: [
-      "Tính đa hình (Polymorphism / Overriding)",
-      "Tính kế thừa (Inheritance)",
-      "Tính đóng gói (Encapsulation)",
-      "Tính trừu tượng (Abstraction)",
+      t("compQuizEditor.mockQ7A"),
+      t("compQuizEditor.mockQ7B"),
+      t("compQuizEditor.mockQ7C"),
+      t("compQuizEditor.mockQ7D"),
     ],
-    correctAnswer: "Tính đa hình (Polymorphism / Overriding)",
+    correctAnswer: t("compQuizEditor.mockQ7A"),
     points: 10,
     category: "OOP",
-    difficulty: "Dễ",
+    difficulty: t("common.difficultyEasy"),
   },
 ];
 
@@ -143,6 +139,8 @@ export function QuizEditor({
   timeLimitMinutes,
   onTimeLimitMinutesChange,
 }: QuizEditorProps) {
+  const { t } = useTranslation();
+  const MOCK_QUESTION_BANK = React.useMemo(() => getMockQuestionBank(t), [t]);
   // Right pane state
   const [rightView, setRightView] = React.useState<RightPaneView>("idle");
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -277,7 +275,7 @@ export function QuizEditor({
             <div className="flex items-start gap-4">
               <div className="w-[55%] space-y-1">
                 <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Điểm tối đa
+                  {t("adminCodeReviewProblem.maxScore")}
                 </Label>
                 <ScoreInput
                   value={maxScore}
@@ -293,7 +291,7 @@ export function QuizEditor({
               {/* Time - compact badge style */}
               <div className="w-[45%] space-y-1">
                 <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Thời gian
+                  {t("common.time")}
                 </Label>
                 {editingTime ? (
                   <div className="flex items-center gap-1">
@@ -307,7 +305,7 @@ export function QuizEditor({
                       onKeyDown={(e) => e.key === "Enter" && setEditingTime(false)}
                       className="h-11 w-full [appearance:textfield] border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     />
-                    <span className="shrink-0 text-[9px] text-slate-400">phút</span>
+                    <span className="shrink-0 text-[9px] text-slate-400">{t("common.minute")}</span>
                   </div>
                 ) : (
                   <button
@@ -315,7 +313,7 @@ export function QuizEditor({
                     onClick={() => setEditingTime(true)}
                     className="flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400">
                     <Timer className="h-4 w-4 text-slate-400" />
-                    {timeLimitMinutes > 0 ? `${timeLimitMinutes} phút` : "Không hạn chế"}
+                    {timeLimitMinutes > 0 ? `${timeLimitMinutes} phút` : t("common.unlimited")}
                   </button>
                 )}
               </div>
@@ -324,7 +322,7 @@ export function QuizEditor({
             {/* Pass Score - circular */}
             <div className="space-y-1">
               <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Điểm đạt tối thiểu
+                {t("adminCodingProblem.minimumPassingScore")}
               </Label>
               <div className="flex justify-center">
                 <ScoreInput
@@ -350,7 +348,8 @@ export function QuizEditor({
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
-                Câu hỏi ({questions.length})
+                {t("adminQuizProblem.questionWithParen")}
+                {questions.length})
               </h4>
               <span className="text-[10px] font-medium text-slate-400">
                 {questions.reduce((s, q) => s + (q.points || 0), 0)} đ
@@ -370,7 +369,7 @@ export function QuizEditor({
                   "border-indigo-500 bg-indigo-50/50 text-indigo-600 dark:border-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400"
               )}>
               <FolderOpen className="mr-1.5 h-3 w-3 text-indigo-500" />
-              Ngân hàng câu hỏi
+              {t("adminQuizProblem.questionBank")}
             </Button>
 
             {/* Question Number Boxes Grid */}
@@ -411,8 +410,9 @@ export function QuizEditor({
 
             {questions.length === 0 && (
               <p className="text-[10px] leading-relaxed text-slate-400">
-                Chưa có câu hỏi. Nhấn <strong>[ + ]</strong> hoặc mở{" "}
-                <strong>Ngân hàng câu hỏi</strong>.
+                {t("adminQuizProblem.noQuestionPress")}
+                <strong>[ + ]</strong> {t("common.orOpen")}{" "}
+                <strong>{t("adminQuizProblem.questionBank")}</strong>.
               </p>
             )}
           </div>
@@ -428,12 +428,15 @@ export function QuizEditor({
               <div className="rounded-2xl border-2 border-dashed border-slate-200 px-10 py-12 dark:border-slate-800">
                 <HelpCircle className="mx-auto mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
                 <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                  Chọn câu hỏi để xem chi tiết
+                  {t("adminQuizProblem.selectQuestionToViewDetails")}
                 </p>
                 <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-                  Nhấn vào ô số bên trái, hoặc nhấn <strong>[ + ]</strong> để tạo mới,
+                  {t("adminQuizProblem.pressLeftBoxOrPress")}
+                  <strong>[ + ]</strong> {t("adminQuizProblem.toCreateNew")}
                   <br />
-                  hoặc mở <strong>Ngân hàng câu hỏi</strong> để lấy câu hỏi có sẵn.
+                  {t("common.orOpen")}
+                  <strong>{t("adminQuizProblem.questionBank")}</strong>{" "}
+                  {t("adminQuizProblem.toGetExistingQuestion")}
                 </p>
               </div>
             </div>
@@ -453,12 +456,13 @@ export function QuizEditor({
                     </span>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                        Câu hỏi #{selectedIndex + 1}
+                        {t("adminQuizProblem.questionNumber")}
+                        {selectedIndex + 1}
                       </h3>
                       <p className="text-[10px] font-medium text-slate-400">
-                        {questions[selectedIndex].points ?? 10} điểm
+                        {questions[selectedIndex].points ?? 10} {t("common.score")}
                         {(questions[selectedIndex].questionText || "").includes("```") &&
-                          " · Chứa code"}
+                          t("adminQuizProblem.containsCode")}
                       </p>
                     </div>
                   </div>
@@ -472,7 +476,7 @@ export function QuizEditor({
                         onClick={() => handleEditQuestion(selectedIndex)}
                         className="h-8 border-slate-200 text-xs dark:border-slate-800">
                         <Edit2 className="mr-1 h-3.5 w-3.5" />
-                        Sửa
+                        {t("common.editShort")}
                       </Button>
                       <Button
                         type="button"
@@ -481,7 +485,7 @@ export function QuizEditor({
                         onClick={() => handleDeleteQuestion(selectedIndex)}
                         className="h-8 border-red-200 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30">
                         <Trash2 className="mr-1 h-3.5 w-3.5" />
-                        Xóa
+                        {t("common.delete")}
                       </Button>
                     </div>
                   )}
@@ -497,7 +501,7 @@ export function QuizEditor({
                 {/* Options */}
                 <div className="space-y-2">
                   <Label className="text-[11px] font-bold tracking-wide text-slate-400 uppercase">
-                    Các phương án
+                    {t("adminQuizProblem.options")}
                   </Label>
                   <div className="grid grid-cols-1 gap-2">
                     {(questions[selectedIndex].options || []).map((opt, oIdx) => {
@@ -548,7 +552,7 @@ export function QuizEditor({
                 <Sparkles className="h-4 w-4 text-emerald-500" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   {selectedIndex === -1
-                    ? "Thêm câu hỏi mới"
+                    ? t("adminQuizProblem.addNewQuestion")
                     : `Chỉnh sửa câu hỏi #${(selectedIndex || 0) + 1}`}
                 </h3>
               </div>
@@ -556,12 +560,12 @@ export function QuizEditor({
               {/* Question Text */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Nội dung câu hỏi
+                  {t("adminQuizProblem.questionContent")}
                 </Label>
                 <textarea
                   value={editForm.questionText || ""}
                   onChange={(e) => setEditForm({ ...editForm, questionText: e.target.value })}
-                  placeholder="Nhập nội dung câu hỏi (ví dụ: JavaScript là gì?)... Bạn có thể sử dụng ``` để bọc mã code."
+                  placeholder={t("compQuizEditor.placeholderQuestionText")}
                   className="min-h-[160px] w-full rounded-lg border border-slate-200 bg-white p-3 font-mono text-sm font-medium text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 />
               </div>
@@ -569,7 +573,7 @@ export function QuizEditor({
               {/* Options */}
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Các phương án (A, B, C, D)
+                  {t("adminQuizProblem.optionsABCD")}
                 </Label>
                 {(editForm.options || ["", "", "", ""]).map((opt, oIdx) => (
                   <div key={oIdx} className="flex items-center gap-2">
@@ -594,13 +598,13 @@ export function QuizEditor({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Đáp án đúng
+                    {t("adminQuizProblem.correctAnswer")}
                   </Label>
                   <Select
                     value={editForm.correctAnswer || ""}
                     onValueChange={(val) => setEditForm({ ...editForm, correctAnswer: val })}>
                     <SelectTrigger className="h-10 border-slate-200 bg-white text-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white">
-                      <SelectValue placeholder="Chọn đáp án" />
+                      <SelectValue placeholder={t("adminQuizProblem.selectAnswer")} />
                     </SelectTrigger>
                     <SelectContent className="border-slate-200 bg-white text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
                       {(editForm.options || ["", "", "", ""]).map((opt, oIdx) => (
@@ -608,7 +612,8 @@ export function QuizEditor({
                           key={oIdx}
                           value={opt || `Option-${oIdx}`}
                           disabled={!opt.trim()}>
-                          {String.fromCharCode(65 + oIdx)}. {opt || "(Chưa nhập)"}
+                          {String.fromCharCode(65 + oIdx)}.{" "}
+                          {opt || t("adminQuizProblem.notEntered")}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -616,7 +621,7 @@ export function QuizEditor({
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Điểm số
+                    {t("adminQuizProblem.scoreValue")}
                   </Label>
                   <Input
                     type="number"
@@ -643,14 +648,14 @@ export function QuizEditor({
                     }
                   }}
                   className="h-8 border-slate-200 text-xs dark:border-slate-800">
-                  Hủy
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   onClick={handleSaveQuestion}
                   className="h-8 bg-emerald-600 px-4 text-xs text-white hover:bg-emerald-700">
-                  Lưu câu hỏi
+                  {t("adminQuizProblem.saveQuestion")}
                 </Button>
               </div>
             </div>
@@ -663,10 +668,10 @@ export function QuizEditor({
               <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800/60">
                 <FolderOpen className="h-4 w-4 text-indigo-500" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Ngân hàng câu hỏi
+                  {t("adminQuizProblem.questionBank")}
                 </h3>
                 <span className="ml-auto text-xs font-medium text-slate-400">
-                  Đã chọn{" "}
+                  {t("common.selected")}{" "}
                   <strong className="text-indigo-600 dark:text-indigo-400">
                     {selectedBankIndexes.length}
                   </strong>
@@ -680,7 +685,7 @@ export function QuizEditor({
                   <Input
                     value={bankSearch}
                     onChange={(e) => setBankSearch(e.target.value)}
-                    placeholder="Tìm kiếm câu hỏi..."
+                    placeholder={t("adminQuizProblem.searchQuestion")}
                     className="h-8 border-slate-200 bg-white pl-8 text-xs dark:border-slate-800 dark:bg-slate-950"
                   />
                 </div>
@@ -696,7 +701,7 @@ export function QuizEditor({
                           ? "border-indigo-600 bg-indigo-600 text-white"
                           : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
                       )}>
-                      {cat === "All" ? "Tất cả" : cat}
+                      {cat === "All" ? t("common.all") : cat}
                     </button>
                   ))}
                 </div>
@@ -738,17 +743,17 @@ export function QuizEditor({
                           <span
                             className={cn(
                               "inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ring-1 ring-inset",
-                              q.difficulty === "Dễ" &&
+                              q.difficulty === t("common.difficultyEasy") &&
                                 "bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-950/20 dark:text-green-400",
-                              q.difficulty === "Trung bình" &&
+                              q.difficulty === t("common.difficultyMedium") &&
                                 "bg-amber-50 text-amber-700 ring-amber-600/10 dark:bg-amber-950/20 dark:text-amber-400",
-                              q.difficulty === "Khó" &&
+                              q.difficulty === t("common.difficultyHard") &&
                                 "bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-950/20 dark:text-red-400"
                             )}>
                             {q.difficulty}
                           </span>
                           <span className="ml-auto text-[10px] font-semibold text-slate-400">
-                            {q.points} điểm
+                            {q.points} {t("common.score")}
                           </span>
                         </div>
                         <p className="rounded-lg border border-slate-100 bg-slate-50 p-2 font-mono text-xs leading-relaxed font-semibold whitespace-pre-wrap dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
@@ -763,7 +768,7 @@ export function QuizEditor({
 
                 {filteredBank.length === 0 && (
                   <div className="py-10 text-center text-xs text-slate-500">
-                    Không tìm thấy câu hỏi phù hợp.
+                    {t("adminQuizProblem.noMatchingQuestion")}
                   </div>
                 )}
               </div>
@@ -779,7 +784,7 @@ export function QuizEditor({
                     setSelectedIndex(null);
                   }}
                   className="h-8 border-slate-200 text-xs dark:border-slate-800">
-                  Hủy
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   type="button"
@@ -787,8 +792,9 @@ export function QuizEditor({
                   disabled={selectedBankIndexes.length === 0}
                   onClick={addSelectedFromBank}
                   className="h-8 bg-indigo-600 px-4 text-xs text-white hover:bg-indigo-700">
-                  Thêm{selectedBankIndexes.length > 0 ? ` (${selectedBankIndexes.length})` : ""} vào
-                  vòng thi
+                  {t("common.add")}
+                  {selectedBankIndexes.length > 0 ? ` (${selectedBankIndexes.length})` : ""}{" "}
+                  {t("adminQuizProblem.intoRound")}
                 </Button>
               </div>
             </div>

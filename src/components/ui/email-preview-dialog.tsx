@@ -67,7 +67,7 @@ export function EmailPreviewDialog({
             </div>
             <DialogPrimitive.Close className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300">
               <X className="h-5 w-5" />
-              <span className="sr-only">Đóng</span>
+              <span className="sr-only">{t("emailPreview.close")}</span>
             </DialogPrimitive.Close>
           </div>
 
@@ -77,7 +77,7 @@ export function EmailPreviewDialog({
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-16">
                 <Spinner size="lg" />
-                <p className="mt-3 text-sm text-slate-500">Đang tải email...</p>
+                <p className="mt-3 text-sm text-slate-500">{t("emailPreview.loading")}</p>
               </div>
             )}
 
@@ -90,7 +90,7 @@ export function EmailPreviewDialog({
                 <p className="font-medium text-red-600 dark:text-red-400">
                   {t("emailPreview.fetchError")}
                 </p>
-                <p className="mt-1 text-sm text-slate-500">Vui lòng thử lại sau</p>
+                <p className="mt-1 text-sm text-slate-500">{t("emailPreview.fetchErrorRetry")}</p>
               </div>
             )}
 
@@ -110,7 +110,7 @@ export function EmailPreviewDialog({
                           {email.subject || t("emailPreview.noSubject")}
                         </h3>
                         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-slate-500 dark:text-slate-400">
-                          <span className="font-medium">Từ:</span>
+                          <span className="font-medium">{t("emailPreview.from")}:</span>
                           <span className="truncate">{email.senderEmail}</span>
                           {email.receivedAt && (
                             <>
@@ -139,7 +139,7 @@ export function EmailPreviewDialog({
                             onClick={() => setIsContentExpanded(true)}
                             className="flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-medium text-[#0047AB] shadow-md transition-colors hover:bg-slate-50 dark:bg-slate-800 dark:text-blue-400 dark:hover:bg-slate-700">
                             <ChevronDown className="h-4 w-4" />
-                            Xem thêm nội dung
+                            {t("emailPreview.readMore")}
                           </button>
                         </div>
                       )}
@@ -151,7 +151,7 @@ export function EmailPreviewDialog({
                         onClick={() => setIsContentExpanded(false)}
                         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700">
                         <ChevronUp className="h-4 w-4" />
-                        Thu gọn
+                        {t("emailPreview.collapse")}
                       </button>
                     )}
                   </div>
@@ -184,7 +184,8 @@ export function EmailPreviewDialog({
                                 )}>
                                 <Paperclip className="h-4 w-4" />
                                 <span className="max-w-[200px] truncate">
-                                  {url.split("/").pop() ?? `Tệp đính kèm ${i + 1}`}
+                                  {url.split("/").pop() ??
+                                    t("emailPreview.attachment", { index: i + 1 })}
                                 </span>
                               </a>
                             ));
@@ -219,9 +220,9 @@ export function EmailPreviewDialog({
                           )}
                         />
                         {email.status === "PROCESSED"
-                          ? "Đã xử lý"
+                          ? t("emailPreview.statusProcessed")
                           : email.status === "ERROR"
-                            ? "Lỗi"
+                            ? t("emailPreview.statusError")
                             : email.status}
                       </span>
                       <span className="text-xs text-slate-400">ID: {emailSubmissionId}</span>
@@ -236,7 +237,7 @@ export function EmailPreviewDialog({
           <div className="border-t border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
             <div className="flex items-center justify-end">
               <Button variant="outline" onClick={() => handleClose(false)}>
-                Đóng
+                {t("emailPreview.close")}
               </Button>
             </div>
           </div>

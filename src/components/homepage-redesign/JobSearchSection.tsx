@@ -147,10 +147,10 @@ export function JobSearchSection() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("general.all")}</SelectItem>
-                  <SelectItem value="intern">{t("common.intern")}</SelectItem>
-                  <SelectItem value="fresher">{t("common.fresher")}</SelectItem>
-                  <SelectItem value="junior">{t("common.junior")}</SelectItem>
-                  <SelectItem value="middle">{t("common.middle")}</SelectItem>
+                  <SelectItem value="intern">{"Intern"}</SelectItem>
+                  <SelectItem value="fresher">Fresher</SelectItem>
+                  <SelectItem value="junior">{"Junior"}</SelectItem>
+                  <SelectItem value="middle">{"Middle"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
