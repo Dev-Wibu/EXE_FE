@@ -5,7 +5,6 @@ import "@uppy/dashboard/css/style.min.css";
 import "@uppy/image-editor/css/style.min.css";
 import Dashboard from "@uppy/react/dashboard";
 import DashboardModal from "@uppy/react/dashboard-modal";
-import "@uppy/screen-capture/css/style.min.css";
 import "@uppy/webcam/css/style.min.css";
 import { FileText, Upload, X, ZoomIn } from "lucide-react";
 import * as React from "react";
