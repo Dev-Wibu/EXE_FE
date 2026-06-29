@@ -14,6 +14,7 @@
     "format:check": "prettier --check .",
     "generate-schema": "node scripts/generate-schema.cjs",
     "i18n:scan": "node scripts/i18n-audit/scan-hardcoded.cjs",
+    "i18n:test": "node scripts/test-i18n-rules.cjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "husky install",

@@ -50,7 +50,14 @@
     },
     "validate": {
       "executor": "nx:run-commands",
-      "dependsOn": ["format:check", "lint", "typecheck", "build", "i18n:check-missing"],
+      "dependsOn": [
+        "format:check",
+        "lint",
+        "typecheck",
+        "build",
+        "i18n:check-missing",
+        "i18n:test"
+      ],
       "options": {
         "command": "echo Validation complete"
       }
@@ -59,6 +66,12 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node scripts/i18n-audit/scan-missing-keys.cjs"
+      }
+    },
+    "i18n:test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/test-i18n-rules.cjs"
       }
     },
     "test": {

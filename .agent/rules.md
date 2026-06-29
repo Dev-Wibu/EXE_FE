@@ -305,6 +305,10 @@ Translation files are stored in `src/locales/en.json`, `src/locales/vi.json`, an
 Use the `useTranslation` hook inside React components, and `i18n.t()` directly for non-component utilities. Language toggle is handled via `LanguageToggle` component.
 Translation keys must follow the `{namespace}.{descriptiveCamelCaseKey}` convention (e.g., `adminCompanymanagement.createJd`).
 
+**Untranslatable Terms & Technical Dictionary**:
+To prevent translation errors, we maintain a strict dictionary of terms that MUST NOT be translated (hardcoded) and terms that MUST be translated (via JSON).
+👉 **See the full dictionary and rules here: [.agent/i18n-rules.md]**
+
 ### Video Call Architecture
 
 Daily.co integration in `components/video-call/` uses React context pattern:
