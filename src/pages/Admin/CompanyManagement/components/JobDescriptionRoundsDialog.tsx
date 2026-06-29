@@ -42,7 +42,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import type { JobDescription } from "../types";
@@ -102,7 +102,9 @@ interface JobDescriptionRoundsDialogProps {
 }
 
 // Available rounds configurations
-const AVAILABLE_ROUNDS_TEMPLATES: {
+const getAvailableRoundsTemplates = (
+  t: (key: string) => string
+): {
   type: RoundType;
   title: string;
   description: string;
@@ -110,66 +112,66 @@ const AVAILABLE_ROUNDS_TEMPLATES: {
   bgColor: string;
   icon: React.ReactNode;
   defaultConfig: UIRoundConfig;
-}[] = [
+}[] => [
   {
     type: "CV_SCREENING",
-    title: "Lọc CV",
-    description: "Đánh giá hồ sơ và kỹ năng ứng viên.",
+    title: t("adminInterviewTemplate.cvScreening.title"),
+    description: t("adminInterviewTemplate.cvScreening.description"),
     color: "text-blue-500 border-blue-500/20",
     bgColor: "bg-blue-500/10",
     icon: <FileText className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Vui lòng tải lên CV định dạng PDF.",
+      instruction: t("cv.uploadPdfOnly"),
       submissionFormat: "pdf",
     },
   },
   {
     type: "EMAIL_SIMULATOR",
-    title: "Mô phỏng Email",
-    description: "Kiểm tra kỹ năng viết và giao tiếp qua Email.",
+    title: t("adminInterviewTemplate.emailSimulator.title"),
+    description: t("adminInterviewTemplate.emailSimulator.description"),
     color: "text-purple-500 border-purple-500/20",
     bgColor: "bg-purple-500/10",
     icon: <Mail className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Hãy trả lời email của khách hàng phàn nàn về sản phẩm.",
+      instruction: t("task.replyComplaintEmail"),
       timeLimitMinutes: 15,
     },
   },
   {
     type: "QUIZ",
-    title: "Trắc nghiệm",
-    description: "Bài đánh giá năng lực trắc nghiệm.",
+    title: t("adminInterviewTemplate.quiz.title"),
+    description: t("adminInterviewTemplate.quiz.description"),
     color: "text-amber-500 border-amber-500/20",
     bgColor: "bg-amber-500/10",
     icon: <HelpCircle className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Làm bài kiểm tra trắc nghiệm lý thuyết.",
+      instruction: t("task.takeTheoryQuiz"),
       timeLimitMinutes: 20,
       quizQuestions: [],
     },
   },
   {
     type: "CODING",
-    title: "Lập trình",
-    description: "Đánh giá kỹ năng viết mã nguồn giải thuật.",
+    title: t("adminInterviewTemplate.coding.title"),
+    description: t("adminInterviewTemplate.coding.description"),
     color: "text-emerald-500 border-emerald-500/20",
     bgColor: "bg-emerald-500/10",
     icon: <Code2 className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Hoàn thành các bài tập lập trình yêu cầu.",
+      instruction: t("task.completeCodingExercises"),
       timeLimitMinutes: 45,
       codingProblemsId: [],
     },
   },
   {
     type: "CODE_REVIEW",
-    title: "Đánh giá Code",
-    description: "Kiểm tra tư duy phản biện và tối ưu hóa code.",
+    title: t("adminInterviewTemplate.codeReview.title"),
+    description: t("adminInterviewTemplate.codeReview.description"),
     color: "text-teal-500 border-teal-500/20",
     bgColor: "bg-teal-500/10",
     icon: <Eye className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Review đoạn mã nguồn sau và chỉ ra các điểm cần tối ưu.",
+      instruction: t("task.reviewSourceCode"),
       timeLimitMinutes: 30,
       codeReviewProblemsId: [],
       codeReviewProblems: [],
@@ -177,28 +179,27 @@ const AVAILABLE_ROUNDS_TEMPLATES: {
   },
   {
     type: "MENTROR_REVIEW",
-    title: "Đánh giá Mentor",
-    description: "Buổi đánh giá trực tiếp cùng hội đồng chuyên gia.",
+    title: t("adminInterviewTemplate.mentorReview.title"),
+    description: t("adminInterviewTemplate.mentorReview.description"),
     color: "text-rose-500 border-rose-500/20",
     bgColor: "bg-rose-500/10",
     icon: <UserCheck className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Thực hiện phỏng vấn trực tiếp với Mentor.",
+      instruction: t("task.interviewWithMentor"),
     },
   },
   {
     type: "AI_INTERVIEW",
-    title: "Phỏng vấn AI",
-    description: "Phỏng vấn giả lập tự động với Trợ lý AI.",
+    title: t("adminInterviewTemplate.aiInterview.title"),
+    description: t("adminInterviewTemplate.aiInterview.description"),
     color: "text-indigo-500 border-indigo-500/20",
     bgColor: "bg-indigo-500/10",
     icon: <Bot className="h-5 w-5" />,
     defaultConfig: {
-      instruction: "Trả lời các câu hỏi phỏng vấn bằng giọng nói/văn bản với AI.",
+      instruction: t("task.interviewWithAI"),
       timeLimitMinutes: 20,
-      aiSystemPrompt: "Bạn là một nhà tuyển dụng kỹ thuật chuyên hỏi về Java/NodeJS...",
-      evaluationCriteria:
-        "Đánh giá dựa trên kỹ năng giao tiếp, giải quyết vấn đề và kiến thức cốt lõi.",
+      aiSystemPrompt: t("task.techRecruiterRole"),
+      evaluationCriteria: t("task.evaluationCriteria"),
     },
   },
 ];
@@ -298,6 +299,7 @@ export function JobDescriptionRoundsDialog({
   onSaved,
 }: JobDescriptionRoundsDialogProps) {
   const { t } = useTranslation();
+  const AVAILABLE_ROUNDS_TEMPLATES = useMemo(() => getAvailableRoundsTemplates(t), [t]);
   const [rounds, setRounds] = useState<UIRound[]>([]);
   const [staffUsers, setStaffUsers] = useState<User[]>([]);
   const [selectedRoundIndex, setSelectedRoundIndex] = useState<number | null>(null);
@@ -549,7 +551,7 @@ export function JobDescriptionRoundsDialog({
         })
         .catch((err) => {
           console.error("Error loading JD rounds/types:", err);
-          toast.error("Không thể tải thông tin quy trình phỏng vấn.");
+          toast.error(t("adminCompanymanagement.unableToLoadInterviewProcess"));
         })
         .finally(() => {
           setIsLoading(false);
@@ -563,7 +565,7 @@ export function JobDescriptionRoundsDialog({
     if (res.success && res.data) {
       setTemplates(res.data);
     } else {
-      toast.error(res.error || "Không thể tải danh sách mẫu quy trình");
+      toast.error(res.error || t("adminCompanymanagement.unableToLoadProcessTemplates"));
     }
     setIsTemplatesLoading(false);
   };
@@ -575,13 +577,13 @@ export function JobDescriptionRoundsDialog({
   }, [isOpen, activeTab]);
 
   const handleDeleteTemplate = async (id: number) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa mẫu quy trình này không?")) return;
+    if (!confirm(t("adminCompanymanagement.confirmDeleteTemplate"))) return;
     const res = await interviewTemplateManager.deleteTemplate(id);
     if (res.success) {
-      toast.success("Đã xóa mẫu quy trình tuyển dụng thành công!");
+      toast.success(t("adminCompanymanagement.deletedRecruitmentTemplateSuccessfully"));
       fetchTemplates();
     } else {
-      toast.error(res.error || "Không thể xóa mẫu quy trình");
+      toast.error(res.error || t("adminCompanymanagement.unableToDeleteProcessTemplate"));
     }
   };
 
@@ -590,7 +592,7 @@ export function JobDescriptionRoundsDialog({
     if (res.success && res.data) {
       const template = res.data;
       if (!template.rounds || template.rounds.length === 0) {
-        toast.error("Mẫu quy trình này không có vòng nào.");
+        toast.error(t("adminCompanymanagement.templateHasNoRounds"));
         return;
       }
 
@@ -627,23 +629,25 @@ export function JobDescriptionRoundsDialog({
 
       setRounds(uiRounds);
       setPositions(newPositions);
-      toast.success(`Đã áp dụng mẫu "${template.name}" thành công!`);
+      toast.success(
+        t("adminCompanymanagement.appliedTemplateSuccessfully", { templateName: template.name })
+      );
     } else {
-      toast.error(res.error || "Không thể tải chi tiết mẫu quy trình");
+      toast.error(res.error || t("adminCompanymanagement.unableToLoadTemplateDetails"));
     }
   };
 
   const handleSaveAsTemplate = async () => {
     if (!templateName.trim()) {
-      toast.error("Vui lòng nhập tên mẫu");
+      toast.error(t("adminCompanymanagement.pleaseEnterTemplateName"));
       return;
     }
     if (!templateCategory.trim()) {
-      toast.error("Vui lòng nhập danh mục");
+      toast.error(t("adminCompanymanagement.pleaseEnterCategory"));
       return;
     }
     if (rounds.length === 0) {
-      toast.error("Quy trình trống, không có vòng nào để lưu làm mẫu!");
+      toast.error(t("adminCompanymanagement.emptyProcessCannotSaveAsTemplate"));
       return;
     }
 
@@ -688,18 +692,18 @@ export function JobDescriptionRoundsDialog({
 
       const res = await interviewTemplateManager.createTemplate(payload);
       if (res.success) {
-        toast.success("Đã lưu quy trình làm mẫu tuyển dụng thành công!");
+        toast.success(t("adminCompanymanagement.savedProcessAsTemplateSuccessfully"));
         setTemplateName("");
         setTemplateCategory("");
         setTemplateDescription("");
         setSaveTemplateDialogOpen(false);
         fetchTemplates();
       } else {
-        toast.error(res.error || "Không thể lưu mẫu quy trình");
+        toast.error(res.error || t("adminCompanymanagement.unableToSaveProcessTemplate"));
       }
     } catch (err) {
       console.error("Error saving template:", err);
-      toast.error("Đã xảy ra lỗi khi lưu mẫu");
+      toast.error(t("adminCompanymanagement.errorOccurredWhileSavingTemplate"));
     } finally {
       setIsSavingTemplate(false);
     }
@@ -725,7 +729,7 @@ export function JobDescriptionRoundsDialog({
       setRounds([newRound].map((r, idx) => ({ ...r, roundOrder: idx + 1 })));
       setPositions([{ x: 80, y: 80 }]);
       setActiveDragType(null);
-      toast.success(`Đã thêm vòng ${template.title}`);
+      toast.success(t("adminCompanymanagement.addedRound", { roundTitle: template.title }));
       return;
     }
 
@@ -772,7 +776,7 @@ export function JobDescriptionRoundsDialog({
     setRounds(updatedRounds.map((r, idx) => ({ ...r, roundOrder: idx + 1 })));
     setPositions(newPositions);
     setActiveDragType(null);
-    toast.success(`Đã thêm vòng ${template.title}`);
+    toast.success(t("adminCompanymanagement.addedRound", { roundTitle: template.title }));
   };
 
   // Pointer handlers for moving cards on the free-form canvas
@@ -850,7 +854,9 @@ export function JobDescriptionRoundsDialog({
 
           setRounds(newRounds.map((r, i) => ({ ...r, roundOrder: i + 1 })));
           setPositions(newPositions);
-          toast.success(`Đã đổi vị trí vòng ${idx + 1} và vòng ${overlapIdx + 1}`);
+          toast.success(
+            t("adminCompanymanagement.swappedRounds", { round1: idx + 1, round2: overlapIdx + 1 })
+          );
         }
       }
     }
@@ -868,7 +874,7 @@ export function JobDescriptionRoundsDialog({
     } else if (selectedRoundIndex !== null && selectedRoundIndex > index) {
       setSelectedRoundIndex(selectedRoundIndex - 1);
     }
-    toast.info("Đã xóa vòng khỏi quy trình.");
+    toast.info(t("adminCompanymanagement.removedRoundFromProcess"));
   };
 
   // Update specific round field
@@ -905,7 +911,7 @@ export function JobDescriptionRoundsDialog({
     try {
       // Validate rounds
       if (roundsToSave.length === 0) {
-        toast.error("Vui lòng thêm ít nhất 1 vòng phỏng vấn.");
+        toast.error(t("adminCompanymanagement.pleaseAddAtLeastOneRound"));
         setIsSaving(false);
         return;
       }
@@ -917,7 +923,9 @@ export function JobDescriptionRoundsDialog({
           (!r.configData?.quizQuestions || r.configData.quizQuestions.length === 0)
       );
       if (invalidQuizIndex !== -1) {
-        toast.error(`Vòng ${invalidQuizIndex + 1} (Trắc nghiệm) chưa cấu hình câu hỏi.`);
+        toast.error(
+          t("adminCompanymanagement.quizRoundNotConfigured", { round: invalidQuizIndex + 1 })
+        );
         setSelectedRoundIndex(invalidQuizIndex);
         setIsSaving(false);
         return;
@@ -991,7 +999,7 @@ export function JobDescriptionRoundsDialog({
           `inblue_jd_rounds_positions_${jobDescription.id}`,
           JSON.stringify(positions)
         );
-        toast.success("Đã lưu thiết lập quy trình phỏng vấn thành công!");
+        toast.success(t("adminCompanymanagement.savedInterviewProcessSetupSuccessfully"));
         onSaved?.();
         if (shouldCloseParent) {
           onOpenChange(false);
@@ -1037,11 +1045,11 @@ export function JobDescriptionRoundsDialog({
           }
         }
       } else {
-        toast.error(response.error || "Không thể lưu thiết lập quy trình.");
+        toast.error(response.error || t("adminCompanymanagement.unableToSaveProcessSetup"));
       }
     } catch (err) {
       console.error("Error saving rounds:", err);
-      toast.error("Đã xảy ra lỗi khi lưu quy trình.");
+      toast.error(t("adminCompanymanagement.errorOccurredWhileSavingProcess"));
     } finally {
       setIsSaving(false);
     }
@@ -1067,7 +1075,7 @@ export function JobDescriptionRoundsDialog({
         {isLoading ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 text-slate-400">
             <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
-            <span>Đang tải thông tin cấu hình...</span>
+            <span>{t("adminCompanymanagement.loadingConfiguration")}</span>
           </div>
         ) : (
           <>
@@ -1084,7 +1092,7 @@ export function JobDescriptionRoundsDialog({
                         ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
                         : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     )}>
-                    Vòng đơn lẻ
+                    {t("adminCompanymanagement.singleRound")}
                   </button>
                   <button
                     onClick={() => setActiveTab("templates")}
@@ -1094,7 +1102,7 @@ export function JobDescriptionRoundsDialog({
                         ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
                         : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                     )}>
-                    Mẫu quy trình
+                    {t("adminAdmindashboard.processTemplate")}
                   </button>
                 </div>
               </div>
@@ -1135,17 +1143,18 @@ export function JobDescriptionRoundsDialog({
                     {isTemplatesLoading ? (
                       <div className="text-slate-450 flex flex-col items-center justify-center gap-2 py-10 dark:text-slate-400">
                         <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-                        <span className="text-xs">Đang tải danh sách mẫu...</span>
+                        <span className="text-xs">
+                          {t("adminCompanymanagement.loadingTemplateList")}
+                        </span>
                       </div>
                     ) : templates.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-10 text-center text-slate-400 dark:text-slate-500">
                         <Save className="text-slate-350 mb-2 h-8 w-8 dark:text-slate-600" />
                         <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                          Chưa có mẫu nào
+                          {t("adminCompanymanagement.noTemplatesYet")}
                         </span>
                         <p className="text-slate-450 mt-1 max-w-[200px] text-[11px] leading-normal dark:text-slate-500">
-                          Thiết lập quy trình rồi bấm "Lưu quy trình làm mẫu" để lưu lại dùng cho
-                          các lần sau.
+                          {t("adminCompanymanagement.setupProcessAndSaveAsTemplate")}
                         </p>
                       </div>
                     ) : (
@@ -1178,14 +1187,14 @@ export function JobDescriptionRoundsDialog({
                               size="sm"
                               onClick={() => handleDeleteTemplate(tpl.id!)}
                               className="h-7 px-2 text-xs text-red-500 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-950/40">
-                              Xóa
+                              {t("common.clear")}
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleApplyTemplate(tpl.id!)}
                               className="h-7 border-slate-200 px-2.5 text-xs hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:text-white">
-                              Áp dụng
+                              {t("compShared.apply")}
                             </Button>
                           </div>
                         </div>
@@ -1201,14 +1210,14 @@ export function JobDescriptionRoundsDialog({
                   <Button
                     onClick={() => {
                       if (rounds.length === 0) {
-                        toast.error("Quy trình trống, không thể lưu làm mẫu!");
+                        toast.error(t("adminCompanymanagement.emptyProcessCannotSaveAsTemplate"));
                         return;
                       }
                       setSaveTemplateDialogOpen(true);
                     }}
                     className="w-full gap-2 bg-blue-600 font-bold text-white hover:bg-blue-700">
                     <Save className="h-4 w-4" />
-                    Lưu quy trình làm mẫu
+                    {t("adminCompanymanagement.saveProcessAsTemplate")}
                   </Button>
                 </div>
               )}
@@ -1220,10 +1229,10 @@ export function JobDescriptionRoundsDialog({
               <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900/50">
                 <div>
                   <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
-                    Thiết lập Quy trình Tuyển dụng
+                    {t("adminCompanymanagement.setupRecruitmentProcess")}
                   </h2>
                   <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    Kéo thả từ danh sách bên trái vào pipeline &middot;{" "}
+                    {t("pipeline.dragDropInstruction")}{" "}
                     <span className="font-semibold text-blue-600 dark:text-blue-400">
                       {jobDescription?.title}
                     </span>
@@ -1232,12 +1241,12 @@ export function JobDescriptionRoundsDialog({
                 {/* Zoom controls + round count — moved to header */}
                 <div className="flex items-center gap-2">
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    {rounds.length} vòng
+                    {rounds.length} {t("userApplicationhistory.rounds")}
                   </span>
                   <div className="flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-1 dark:border-slate-700 dark:bg-slate-800">
                     <button
                       onClick={handleZoomOut}
-                      title="Thu nhỏ (Ctrl+Scroll)"
+                      title={t("adminCompanymanagement.zoomOut")}
                       className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
                       <ZoomOut className="h-3.5 w-3.5" />
                     </button>
@@ -1246,13 +1255,13 @@ export function JobDescriptionRoundsDialog({
                     </span>
                     <button
                       onClick={handleZoomIn}
-                      title="Phóng to (Ctrl+Scroll)"
+                      title={t("adminCompanymanagement.zoomIn")}
                       className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
                       <ZoomIn className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={handleZoomReset}
-                      title="Đặt lại zoom"
+                      title={t("adminCompanymanagement.resetZoom")}
                       className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white">
                       <RotateCcw className="h-3 w-3" />
                     </button>
@@ -1283,10 +1292,10 @@ export function JobDescriptionRoundsDialog({
                         <ArrowRight className="h-6 w-6 text-slate-400 dark:text-slate-500" />
                       </div>
                       <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                        Quy trình trống
+                        {t("adminCompanymanagement.emptyProcess")}
                       </h4>
                       <p className="mt-1.5 max-w-[200px] text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-                        Kéo các vòng từ danh sách bên trái và thả vào đây để bắt đầu
+                        {t("adminCompanymanagement.dragRoundsFromLeftToStart")}
                       </p>
                     </div>
                   </div>
@@ -1418,7 +1427,7 @@ export function JobDescriptionRoundsDialog({
                                   <button
                                     onClick={(e) => handleRemoveRound(idx, e)}
                                     className="absolute -top-2.5 -right-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 opacity-0 shadow-md transition-all group-hover:opacity-100 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-red-800 dark:hover:bg-red-950 dark:hover:text-red-400"
-                                    title="Xóa vòng">
+                                    title={t("adminCompanymanagement.deleteRound")}>
                                     <Trash2 className="h-3 w-3" />
                                   </button>
 
@@ -1453,7 +1462,8 @@ export function JobDescriptionRoundsDialog({
                                       </span>
                                     </div>
                                     <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                      Đạt {Math.round((round.passThreshold ?? 0.8) * 100)}%
+                                      {t("common.obtain")}{" "}
+                                      {Math.round((round.passThreshold ?? 0.8) * 100)}%
                                     </span>
                                   </div>
 
@@ -1474,7 +1484,7 @@ export function JobDescriptionRoundsDialog({
                                       round.configData.quizQuestions.length === 0) && (
                                       <div className="mt-2 flex items-center gap-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-1.5 text-[10px] font-medium text-amber-500">
                                         <AlertTriangle className="h-3 w-3 shrink-0" />
-                                        <span>Chưa có câu hỏi</span>
+                                        <span>{t("adminCompanymanagement.noQuestionsYet")}</span>
                                       </div>
                                     )}
                                 </div>
@@ -1528,7 +1538,9 @@ export function JobDescriptionRoundsDialog({
                         </div>
                         <div>
                           <div className="flex items-center gap-1 text-sm font-bold text-slate-900 dark:text-slate-100">
-                            <span>Vòng {selectedRoundIndex + 1}:</span>
+                            <span>
+                              {t("userApplicationhistory.round")} {selectedRoundIndex + 1}:
+                            </span>
                             <input
                               type="text"
                               value={selectedRound.name || ""}
@@ -1536,7 +1548,7 @@ export function JobDescriptionRoundsDialog({
                                 updateRoundField(selectedRoundIndex, "name", e.target.value)
                               }
                               className="-ml-1 w-48 rounded border-b border-transparent bg-transparent px-1 py-0.5 font-bold text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
-                              placeholder="Tên vòng tuyển dụng"
+                              placeholder={t("adminCompanymanagement.recruitmentRoundName")}
                             />
                           </div>
                           <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -1556,7 +1568,7 @@ export function JobDescriptionRoundsDialog({
                           setConfigModalOpen(false);
                           setSelectedRoundIndex(null);
                         }}>
-                        Đóng
+                        {t("compUi.close")}
                       </Button>
                     </div>
 
@@ -1701,7 +1713,7 @@ export function JobDescriptionRoundsDialog({
                                       : "w-[55%]"
                                   )}>
                                   <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                    Điểm tối đa
+                                    {t("adminCompanymanagement.maximumScore")}
                                   </Label>
                                   <ScoreInput
                                     value={selectedRound.configData?.maxScore ?? 100}
@@ -1720,7 +1732,7 @@ export function JobDescriptionRoundsDialog({
                                   selectedRound.roundType !== "EMAIL_SIMULATOR" && (
                                     <div className="w-[45%] space-y-1">
                                       <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                        Thời gian
+                                        {t("common.time")}
                                       </Label>
                                       {dialogEditingTime ? (
                                         <div className="flex items-center gap-1">
@@ -1743,7 +1755,7 @@ export function JobDescriptionRoundsDialog({
                                             className="h-11 w-full [appearance:textfield] border-slate-200 bg-white text-center text-xs font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-white [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                           />
                                           <span className="shrink-0 text-[9px] text-slate-400">
-                                            phút
+                                            {t("common.minute")}
                                           </span>
                                         </div>
                                       ) : (
@@ -1754,7 +1766,7 @@ export function JobDescriptionRoundsDialog({
                                           <Clock className="h-4 w-4 text-slate-400" />
                                           {(selectedRound.configData?.timeLimitMinutes ?? 0) > 0
                                             ? `${selectedRound.configData?.timeLimitMinutes} phút`
-                                            : "Không hạn chế"}
+                                            : t("adminCompanymanagement.noLimit")}
                                         </button>
                                       )}
                                     </div>
@@ -1764,7 +1776,7 @@ export function JobDescriptionRoundsDialog({
                               {/* Pass Score - circular */}
                               <div className="space-y-1">
                                 <Label className="text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                  Điểm đạt tối thiểu
+                                  {t("adminCompanymanagement.minimumPassingScore")}
                                 </Label>
                                 <div className="flex justify-center">
                                   <ScoreInput
@@ -1798,7 +1810,7 @@ export function JobDescriptionRoundsDialog({
                                 <>
                                   <div className="space-y-1.5">
                                     <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                      Định dạng nộp hồ sơ
+                                      {t("adminCompanymanagement.submissionFormat")}
                                     </Label>
                                     <Select
                                       value={selectedRound.configData?.submissionFormat || "pdf"}
@@ -1813,10 +1825,14 @@ export function JobDescriptionRoundsDialog({
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                                        <SelectItem value="pdf">Tệp PDF (.pdf)</SelectItem>
-                                        <SelectItem value="doc">Tệp Word (.doc, .docx)</SelectItem>
+                                        <SelectItem value="pdf">
+                                          {t("adminCompanymanagement.pdfFile")}
+                                        </SelectItem>
+                                        <SelectItem value="doc">
+                                          {t("adminCompanymanagement.wordFile")}
+                                        </SelectItem>
                                         <SelectItem value="any">
-                                          Tất cả định dạng tài liệu
+                                          {t("adminCompanymanagement.allDocumentFormats")}
                                         </SelectItem>
                                       </SelectContent>
                                     </Select>
@@ -1842,7 +1858,9 @@ export function JobDescriptionRoundsDialog({
                                           e.target.value
                                         )
                                       }
-                                      placeholder="Cung cấp prompt cấu hình vai trò AI..."
+                                      placeholder={t(
+                                        "adminCompanymanagement.provideAiRoleConfigPrompt"
+                                      )}
                                       rows={5}
                                       className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                                     />
@@ -1850,7 +1868,7 @@ export function JobDescriptionRoundsDialog({
 
                                   <div className="space-y-1.5">
                                     <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                      Tiêu chuẩn Đánh giá
+                                      {t("adminCompanymanagement.evaluationCriteria")}
                                     </Label>
                                     <Textarea
                                       value={selectedRound.configData?.evaluationCriteria || ""}
@@ -1861,7 +1879,9 @@ export function JobDescriptionRoundsDialog({
                                           e.target.value
                                         )
                                       }
-                                      placeholder="Các tiêu chuẩn đánh giá kết quả của ứng viên..."
+                                      placeholder={t(
+                                        "adminCompanymanagement.candidateEvaluationCriteriaPlaceholder"
+                                      )}
                                       rows={4}
                                       className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                                     />
@@ -1872,7 +1892,7 @@ export function JobDescriptionRoundsDialog({
                               {/* Instruction (Common for all) */}
                               <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                  Lời Hướng dẫn cho ứng viên
+                                  {t("adminCompanymanagement.instructionsForCandidates")}
                                 </Label>
                                 <Textarea
                                   value={selectedRound.configData?.instruction || ""}
@@ -1883,7 +1903,9 @@ export function JobDescriptionRoundsDialog({
                                       e.target.value
                                     )
                                   }
-                                  placeholder="Hướng dẫn ứng viên làm bài..."
+                                  placeholder={t(
+                                    "adminCompanymanagement.instructionsForCandidatesPlaceholder"
+                                  )}
                                   rows={4}
                                   className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                                 />
@@ -1940,7 +1962,7 @@ export function JobDescriptionRoundsDialog({
                           // Save immediately to backend without closing the main diagram
                           await handleSave(false, finalRounds);
                         }}>
-                        Xác nhận thiết lập vòng
+                        {t("adminCompanymanagement.confirmRoundSetup")}
                       </Button>
                     </div>
                   </DialogContent>
@@ -1954,50 +1976,53 @@ export function JobDescriptionRoundsDialog({
                   className="flex max-h-[85vh] w-[450px] max-w-[96vw] flex-col gap-0 overflow-hidden border-slate-200 bg-white p-0 dark:border-slate-800 dark:bg-slate-950">
                   <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-900/30">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                      Lưu quy trình phỏng vấn làm mẫu
+                      {t("adminCompanymanagement.saveInterviewProcessAsTemplate")}
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 rounded-full px-3 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                       onClick={() => setSaveTemplateDialogOpen(false)}>
-                      Đóng
+                      {t("compUi.close")}
                     </Button>
                   </div>
 
                   <div className="flex-1 space-y-4 p-5">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Tên mẫu <span className="text-red-500">*</span>
+                        {t("adminCompanymanagement.templateName")}{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
-                        placeholder="Ví dụ: FAANG Software Engineer..."
+                        placeholder={t("adminCompanymanagement.templateNameExample")}
                         className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Danh mục <span className="text-red-500">*</span>
+                        {t("common.category")} <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         value={templateCategory}
                         onChange={(e) => setTemplateCategory(e.target.value)}
-                        placeholder="Ví dụ: Backend, Fullstack, DevOps..."
+                        placeholder={t("adminCompanymanagement.categoryExample")}
                         className="border-slate-200 bg-white text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Mô tả mẫu quy trình
+                        {t("adminCompanymanagement.processTemplateDescription")}
                       </Label>
                       <Textarea
                         value={templateDescription}
                         onChange={(e) => setTemplateDescription(e.target.value)}
-                        placeholder="Mô tả mục đích hoặc tiêu chí của mẫu quy trình này..."
+                        placeholder={t(
+                          "adminCompanymanagement.processTemplateDescriptionPlaceholder"
+                        )}
                         rows={4}
                         className="border-slate-200 bg-white text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       />
@@ -2009,14 +2034,16 @@ export function JobDescriptionRoundsDialog({
                       variant="outline"
                       size="sm"
                       onClick={() => setSaveTemplateDialogOpen(false)}>
-                      Hủy
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       size="sm"
                       disabled={isSavingTemplate}
                       onClick={handleSaveAsTemplate}
                       className="bg-blue-600 font-bold text-white hover:bg-blue-700">
-                      {isSavingTemplate ? "Đang lưu..." : "Lưu mẫu"}
+                      {isSavingTemplate
+                        ? t("common.saving")
+                        : t("adminCompanymanagement.saveTemplate")}
                     </Button>
                   </div>
                 </DialogContent>
@@ -2034,14 +2061,14 @@ export function JobDescriptionRoundsDialog({
                       onOpenChange(false);
                     }
                   }}>
-                  Hủy
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={() => handleSave(true)}
                   disabled={isSaving || isLoading}
                   className="bg-primary text-primary-foreground hover:bg-primary/95 gap-2 font-bold">
                   <Save className="h-4 w-4" />
-                  {isSaving ? "Đang lưu..." : "Lưu thiết lập"}
+                  {isSaving ? t("common.saving") : t("adminCompanymanagement.saveSettings")}
                 </Button>
               </div>
             </div>
@@ -2053,11 +2080,10 @@ export function JobDescriptionRoundsDialog({
         <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
           <DialogContent className="max-w-md border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-              Thay đổi chưa được lưu
+              {t("adminCompanymanagement.unsavedChanges")}
             </h3>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Bạn có các thay đổi chưa được lưu trong quy trình tuyển dụng này. Bạn có muốn lưu lại
-              thiết lập trước khi thoát không?
+              {t("adminCompanymanagement.unsavedChangesWarning")}
             </p>
             <div className="mt-5 flex justify-end gap-2.5">
               <Button
@@ -2065,7 +2091,7 @@ export function JobDescriptionRoundsDialog({
                 size="sm"
                 className="h-8 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                 onClick={() => setShowExitConfirm(false)}>
-                Quay lại
+                {t("common.goBack")}
               </Button>
               <Button
                 variant="outline"
@@ -2075,7 +2101,7 @@ export function JobDescriptionRoundsDialog({
                   setShowExitConfirm(false);
                   onOpenChange(false);
                 }}>
-                Không lưu
+                {t("adminCompanymanagement.doNotSave")}
               </Button>
               <Button
                 size="sm"
@@ -2084,7 +2110,7 @@ export function JobDescriptionRoundsDialog({
                   setShowExitConfirm(false);
                   await handleSave();
                 }}>
-                Lưu và Thoát
+                {t("adminCompanymanagement.saveAndExit")}
               </Button>
             </div>
           </DialogContent>

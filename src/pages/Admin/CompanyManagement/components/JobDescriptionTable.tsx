@@ -78,7 +78,7 @@ export function JobDescriptionTable({
       {getSortProps && (
         <div className="border-border/50 bg-muted/20 flex flex-wrap items-center gap-2 border-b px-6 py-2.5 text-xs">
           <span className="text-muted-foreground mr-2 text-[10px] font-semibold tracking-wider uppercase">
-            Sắp xếp theo:
+            {t("adminCompanymanagement.sortBy")}
           </span>
           <div className="flex flex-wrap gap-1.5">
             <SortButton {...getSortProps("idSortValue")}>{t("common.id")}</SortButton>
@@ -127,7 +127,7 @@ export function JobDescriptionTable({
                     size="icon"
                     onClick={() => onConfigureRounds(job)}
                     className="h-7 w-7 rounded-lg text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950"
-                    title="Cấu hình quy trình tuyển dụng">
+                    title={t("adminCompanymanagement.configureRecruitmentProcess")}>
                     <Workflow className="h-4 w-4" />
                   </Button>
                 )}
@@ -154,7 +154,7 @@ export function JobDescriptionTable({
                     size="icon"
                     onClick={() => onToggleStatus && onToggleStatus(job, "OPEN")}
                     className="h-7 w-7 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
-                    title={t("adminCompanymanagement.openJd", "Mở tuyển dụng")}>
+                    title={t("adminCompanymanagement.openJd", t("recruitment.openRecruitment"))}>
                     <Power className="h-4 w-4" />
                   </Button>
                 )}
@@ -174,7 +174,9 @@ export function JobDescriptionTable({
               {/* Deadline */}
               <div className="text-muted-foreground/80 flex shrink-0 items-center gap-1 font-medium">
                 <Calendar className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                <span>Hạn: {formatDate(job.deadlineAt)}</span>
+                <span>
+                  {t("adminCompanymanagement.deadline")} {formatDate(job.deadlineAt)}
+                </span>
               </div>
             </div>
           </div>

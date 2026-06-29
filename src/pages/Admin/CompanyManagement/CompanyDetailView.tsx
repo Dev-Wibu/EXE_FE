@@ -289,27 +289,21 @@ export function CompanyDetailView({ companyId, onCompanyUpdate }: CompanyDetailV
       if (response.success) {
         const msg =
           nextStatus === "OPEN"
-            ? t("adminCompanymanagement.successfullyOpenedJd", "Mở tuyển dụng thành công")
-            : t("adminCompanymanagement.successfullyClosedJd", "Đóng tuyển dụng thành công");
+            ? t("adminCompanymanagement.successfullyOpenedJd", t("recruitment.openSuccess"))
+            : t("adminCompanymanagement.successfullyClosedJd", t("recruitment.closeSuccess"));
         toast.success(msg);
         void loadJobDescriptions();
         onCompanyUpdate?.();
       } else {
         toast.error(
           response.error ||
-            t(
-              "adminCompanymanagement.unableToUpdateJdStatus",
-              "Không thể cập nhật trạng thái tuyển dụng"
-            )
+            t("adminCompanymanagement.unableToUpdateJdStatus", t("recruitment.updateStatusFailed"))
         );
       }
     } catch (error) {
       console.error("Error updating job status:", error);
       toast.error(
-        t(
-          "adminCompanymanagement.unableToUpdateJdStatus",
-          "Không thể cập nhật trạng thái tuyển dụng"
-        )
+        t("adminCompanymanagement.unableToUpdateJdStatus", t("recruitment.updateStatusFailed"))
       );
     }
   };
@@ -442,8 +436,7 @@ export function CompanyDetailView({ companyId, onCompanyUpdate }: CompanyDetailV
             <p className="text-muted-foreground mt-1 max-w-xl text-sm">{company.description}</p>
           ) : (
             <p className="text-muted-foreground/50 mt-1 max-w-xl text-sm italic">
-              Chưa có mô tả cho đối tác này. Bạn có thể cập nhật thông tin bằng cách nhấn nút Chỉnh
-              sửa.
+              {t("adminCompanymanagement.noCompanyDescription")}
             </p>
           )}
         </div>

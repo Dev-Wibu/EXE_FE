@@ -184,7 +184,7 @@ export function JobDescriptionDetailDialog({
           <div className="flex flex-col gap-4 md:col-span-1">
             <div className="border-border/50 bg-muted/20 dark:bg-muted/5 space-y-4 rounded-2xl border p-5">
               <h4 className="text-foreground text-muted-foreground/80 mb-2 text-xs font-bold tracking-wider uppercase">
-                Thông tin chung
+                {t("adminCompanymanagement.generalInfo")}
               </h4>
               <div className="flex flex-col gap-4">
                 <InfoRow

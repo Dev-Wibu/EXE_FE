@@ -27,6 +27,7 @@ import {
 import { usePagination } from "@/hooks/usePagination";
 import { useSortable } from "@/hooks/useSortable";
 import { formatDateTime } from "@/lib/formatting";
+import i18n from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -44,10 +45,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { components } from "../../../../schema-from-be";
+const t = i18n.t.bind(i18n);
 
 type ApplicationDetail = components["schemas"]["ApplicationDetail"];
 type SubmissionData = components["schemas"]["SubmissionData"];
@@ -68,34 +69,34 @@ interface GradingListItem {
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   PENDING: {
-    label: "Chờ nộp",
+    label: t("status.pendingSubmit"),
     className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   },
   SUBMITTED: {
-    label: "Đã nộp",
+    label: t("adminQuizsetmanagement.submitted"),
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
   },
   AI_EVALUATED: {
-    label: "AI đã chấm",
+    label: t("status.aiGraded"),
     className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   },
   COMPLETED: {
-    label: "Hoàn thành",
+    label: t("general.completed"),
     className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   },
   ERROR: {
-    label: "Lỗi",
+    label: t("common.error"),
     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
   },
 };
 
 const RESULT_CONFIG: Record<string, { label: string; className: string }> = {
   PASSED: {
-    label: "Đậu",
+    label: t("userApplicationhistory.passed"),
     className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   },
   FAILED: {
-    label: "Tạch",
+    label: t("userApplicationhistory.failed"),
     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
   },
 };
@@ -149,7 +150,7 @@ function RoundCard({
   const handleSubmit = () => {
     const scoreNum = parseFloat(score);
     if (isNaN(scoreNum) || score.trim() === "") {
-      toast.error("Vui lòng nhập điểm hợp lệ (0 - 100)");
+      toast.error(t("grading.invalidScore"));
       return;
     }
     const clampedScore = Math.min(100, Math.max(0, scoreNum));
@@ -181,7 +182,7 @@ function RoundCard({
               onClick={onStartGrading}
               className="h-8 gap-1.5 bg-amber-500 px-3 text-xs font-medium text-white hover:bg-amber-600">
               <ClipboardCheck className="h-3.5 w-3.5" />
-              Chấm
+              {t("grading.grade")}
             </Button>
           ) : (
             <button
@@ -203,7 +204,7 @@ function RoundCard({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                Vòng #{detail.roundId}
+                {t("userApplicationhistory.round")} #{detail.roundId}
               </h3>
               <Badge className={cn("px-1.5 py-0 text-[10px]", statusCfg.className)}>
                 {statusCfg.label}
@@ -217,7 +218,7 @@ function RoundCard({
                 <Badge
                   variant="outline"
                   className="border-amber-400 px-1.5 py-0 text-[10px] text-amber-600">
-                  Cần chấm
+                  {t("grading.needsGrading")}
                 </Badge>
               )}
             </div>
@@ -263,7 +264,7 @@ function RoundCard({
             {data && (
               <div>
                 <h4 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  Nội dung bài nộp
+                  {t("submission.content")}
                 </h4>
                 <SubmissionPreview detail={detail} onViewEmailSubmission={onViewEmailSubmission} />
               </div>
@@ -273,7 +274,7 @@ function RoundCard({
             {(detail.aiScore !== undefined || detail.aiFeedback) && (
               <div>
                 <h4 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  Phản hồi AI
+                  {t("grading.aiFeedback")}
                 </h4>
                 <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
                   <AIFeedbackPanel feedback={detail.aiFeedback} score={detail.aiScore} />
@@ -287,7 +288,11 @@ function RoundCard({
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  {hasExistingGrade ? (isEditing ? "Sửa điểm" : "Kết quả HR") : "Chấm điểm HR"}
+                  {hasExistingGrade
+                    ? isEditing
+                      ? t("grading.editScore")
+                      : t("grading.hrResult")
+                    : t("grading.hrGrading")}
                 </h4>
                 {hasExistingGrade && isEditing && (
                   <Button
@@ -299,7 +304,7 @@ function RoundCard({
                       setNote(detail.hrNote ?? "");
                     }}
                     className="h-7 gap-1.5 text-xs">
-                    Hủy
+                    {t("common.cancel")}
                   </Button>
                 )}
               </div>
@@ -320,7 +325,9 @@ function RoundCard({
                           ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
                           : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                       }>
-                      {detail.finalResult === "PASSED" ? "Đậu" : "Tạch"}
+                      {detail.finalResult === "PASSED"
+                        ? t("userApplicationhistory.passed")
+                        : t("userApplicationhistory.failed")}
                     </Badge>
                   </div>
                   <Button
@@ -328,7 +335,7 @@ function RoundCard({
                     size="sm"
                     onClick={() => setIsEditing(true)}
                     className="gap-1.5 text-xs">
-                    Sửa
+                    {t("adminPracticequestionmanagement.fix")}
                   </Button>
                 </div>
               )}
@@ -341,7 +348,7 @@ function RoundCard({
                     <div className="rounded-lg bg-purple-50 p-2.5 dark:bg-purple-900/20">
                       <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                         <Star className="h-3.5 w-3.5 fill-purple-400 text-purple-400" />
-                        Điểm AI tham khảo:{" "}
+                        {t("grading.aiScoreReference")}{" "}
                         <span className="font-bold text-purple-600 dark:text-purple-400">
                           {detail.aiScore}
                         </span>
@@ -352,7 +359,7 @@ function RoundCard({
                   {/* Decision */}
                   <div>
                     <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Quyết định
+                      {t("grading.decision")}
                     </label>
                     <div className="flex gap-3">
                       <Button
@@ -365,7 +372,7 @@ function RoundCard({
                         )}
                         onClick={() => setIsPass(true)}>
                         <ThumbsUp className="h-4 w-4" />
-                        Đậu
+                        {t("userApplicationhistory.passed")}
                       </Button>
                       <Button
                         type="button"
@@ -377,7 +384,7 @@ function RoundCard({
                         )}
                         onClick={() => setIsPass(false)}>
                         <ThumbsDown className="h-4 w-4" />
-                        Tạch
+                        {t("userApplicationhistory.failed")}
                       </Button>
                     </div>
                   </div>
@@ -385,7 +392,7 @@ function RoundCard({
                   {/* Score Input */}
                   <div>
                     <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Điểm HR (0-100)
+                      {t("grading.hrScore")}
                     </label>
                     <Input
                       type="number"
@@ -393,7 +400,7 @@ function RoundCard({
                       max="100"
                       value={score}
                       onChange={(e) => setScore(e.target.value)}
-                      placeholder="Nhập điểm..."
+                      placeholder={t("grading.enterScore")}
                       className="w-full"
                     />
                   </div>
@@ -401,12 +408,12 @@ function RoundCard({
                   {/* Note */}
                   <div>
                     <label className="mb-2 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Ghi chú
+                      {t("general.notes")}
                     </label>
                     <Textarea
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="Nhập ghi chú HR (không bắt buộc)..."
+                      placeholder={t("grading.enterHrNotes")}
                       rows={3}
                       className="resize-none"
                     />
@@ -423,7 +430,7 @@ function RoundCard({
                     {isSubmitting ? (
                       <>
                         <Spinner className="h-4 w-4" />
-                        Đang lưu...
+                        {t("common.saving")}
                       </>
                     ) : (
                       <>
@@ -432,7 +439,7 @@ function RoundCard({
                         ) : (
                           <ThumbsDown className="h-4 w-4" />
                         )}
-                        Lưu kết quả
+                        {t("general.save")} {t("grading.hrResult")}
                       </>
                     )}
                   </Button>
@@ -442,7 +449,9 @@ function RoundCard({
               {/* Existing HR Note */}
               {detail.hrNote && !isEditing && (
                 <div className="mt-4">
-                  <h5 className="mb-2 text-xs font-semibold text-slate-500">Ghi chú HR</h5>
+                  <h5 className="mb-2 text-xs font-semibold text-slate-500">
+                    {t("general.notes")} HR
+                  </h5>
                   <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
                     <p className="text-sm whitespace-pre-wrap text-blue-700 dark:text-blue-300">
                       {detail.hrNote}
@@ -468,7 +477,6 @@ interface SubmissionPreviewProps {
 }
 
 function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewProps) {
-  const { t } = useTranslation();
   const data = detail.submissionData as SubmissionData | undefined;
   const [localExpanded, setLocalExpanded] = useState(false);
 
@@ -481,7 +489,7 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
     const isEmail =
       data.textContent.includes("To:") ||
       data.textContent.includes("Subject:") ||
-      data.textContent.includes("Kính gửi") ||
+      data.textContent.includes(t("email.dear")) ||
       data.textContent.includes("Dear");
     const lines = data.textContent.split("\n");
     const shouldTruncate = lines.length > 12;
@@ -494,7 +502,7 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
           <div className="flex items-center gap-2">
             <Mail className="h-4 w-4 text-blue-500" />
             <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-              Email nộp bài
+              {t("email.submissionEmail")}
             </span>
           </div>
         )}
@@ -513,7 +521,7 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
           ))}
           {shouldTruncate && !localExpanded && (
             <p className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-400 dark:border-slate-700">
-              ... +{lines.length - 12} dòng còn lại
+              ... +{lines.length - 12} {t("general.linesRemaining")}
             </p>
           )}
         </div>
@@ -535,12 +543,13 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
               {localExpanded ? (
                 <>
                   <ChevronRight className="h-3.5 w-3.5 rotate-180" />
-                  Thu gọn
+                  {t("common.collapse")}
                 </>
               ) : (
                 <>
                   <ChevronRight className="h-3.5 w-3.5" />
-                  Xem đầy đủ ({lines.length} dòng)
+                  {t("general.viewFull")}
+                  {lines.length} {t("compCodeSubmissionViewer.lines")}
                 </>
               )}
             </button>
@@ -573,7 +582,7 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-orange-500" />
           <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
-            File đã nộp
+            {t("submission.submittedFile")}
           </span>
         </div>
         <a
@@ -587,7 +596,7 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
             "transition-colors"
           )}>
           <FileText className="h-3.5 w-3.5" />
-          Xem file đã nộp
+          {t("submission.viewSubmittedFile")}
         </a>
       </div>
     );
@@ -600,7 +609,7 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
       <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
         <CheckCircle2 className="h-4 w-4" />
         <span>
-          {correct}/{data.quizAnswers.length} câu đúng
+          {correct}/{data.quizAnswers.length} {t("userApplicationQuiz.correctAnswers")}
         </span>
       </div>
     );
@@ -616,7 +625,9 @@ function SubmissionPreview({ detail, onViewEmailSubmission }: SubmissionPreviewP
     return (
       <div className="flex items-center gap-2 text-sm text-cyan-600 dark:text-cyan-400">
         <ClipboardCheck className="h-4 w-4" />
-        <span>{data.codeReviewSubmissions.length} issues đã review</span>
+        <span>
+          {data.codeReviewSubmissions.length} {t("review.issuesReviewed")}
+        </span>
       </div>
     );
   }
@@ -726,7 +737,9 @@ function AIFeedbackPanel({ feedback, score }: { feedback?: AiFeedback; score?: n
 
       {feedback?.strengths && feedback.strengths.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-semibold text-green-700 dark:text-green-400">Điểm mạnh</p>
+          <p className="mb-2 text-xs font-semibold text-green-700 dark:text-green-400">
+            {t("common.strengths")}
+          </p>
           <ul className="space-y-1.5">
             {feedback.strengths.slice(0, 4).map((s, i) => (
               <li
@@ -743,7 +756,7 @@ function AIFeedbackPanel({ feedback, score }: { feedback?: AiFeedback; score?: n
       {feedback?.weaknesses && feedback.weaknesses.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-semibold text-red-700 dark:text-red-400">
-            Điểm cần cải thiện
+            {t("common.pointsForImprovement")}
           </p>
           <ul className="space-y-1.5">
             {feedback.weaknesses.slice(0, 4).map((w, i) => (
@@ -760,7 +773,7 @@ function AIFeedbackPanel({ feedback, score }: { feedback?: AiFeedback; score?: n
 
       {keywordDensity && (
         <div>
-          <p className="mb-2 text-xs font-medium text-slate-500">Từ khóa trong CV</p>
+          <p className="mb-2 text-xs font-medium text-slate-500">{t("cv.keywords")}</p>
           <div className="flex flex-wrap gap-1.5">
             {Object.entries(keywordDensity)
               .filter(([, count]) => count > 0)
@@ -779,7 +792,7 @@ function AIFeedbackPanel({ feedback, score }: { feedback?: AiFeedback; score?: n
 
       {redFlags && redFlags.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-medium text-red-500">Cảnh báo</p>
+          <p className="mb-2 text-xs font-medium text-red-500">{t("general.warning")}</p>
           <ul className="space-y-1">
             {redFlags.slice(0, 3).map((flag, i) => (
               <li
@@ -807,7 +820,6 @@ export function ApplicationGradingPage({
   onOpenGradingDetail?: (_appId: number) => void;
   basePath?: string;
 }) {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const dashboardBase = basePath ?? (location.pathname.startsWith("/staff") ? "/staff" : "/admin");
@@ -920,7 +932,9 @@ export function ApplicationGradingPage({
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Card>
             <CardContent className="pt-4">
-              <p className="text-xs text-slate-500">{isStaff ? "Bài cần chấm" : "Tổng đơn"}</p>
+              <p className="text-xs text-slate-500">
+                {isStaff ? t("grading.submissionsToGrade") : t("userApplicationhistory.totalOrder")}
+              </p>
               <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {isStaff ? reviewerDetails.length : applications.length}
               </p>
@@ -930,7 +944,7 @@ export function ApplicationGradingPage({
             <CardContent className="pt-4">
               <p className="flex items-center gap-1 text-xs text-amber-600">
                 <XCircle className="h-3.5 w-3.5" />
-                Đang xử lý
+                {t("common.processing1")}
               </p>
               <p className="mt-1 text-2xl font-bold text-amber-600">{inProgressCount}</p>
             </CardContent>
@@ -939,7 +953,7 @@ export function ApplicationGradingPage({
             <CardContent className="pt-4">
               <p className="flex items-center gap-1 text-xs text-purple-600">
                 <ClipboardCheck className="h-3.5 w-3.5" />
-                Đã hoàn thành
+                {t("common.completed1")}
               </p>
               <p className="mt-1 text-2xl font-bold text-purple-600">
                 {isStaff
@@ -953,7 +967,7 @@ export function ApplicationGradingPage({
             <CardContent className="pt-4">
               <p className="flex items-center gap-1 text-xs text-green-600">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Đậu
+                {t("userApplicationhistory.passed")}
               </p>
               <p className="mt-1 text-2xl font-bold text-green-600">
                 {isStaff
@@ -970,7 +984,7 @@ export function ApplicationGradingPage({
             <div className="relative max-w-sm">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Tìm theo ID đơn..."
+                placeholder={t("application.searchById")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -990,7 +1004,7 @@ export function ApplicationGradingPage({
                 <EmptyState
                   icon={ClipboardCheck}
                   title={t("common.noDataAvailable")}
-                  description="Không có đơn ứng tuyển nào cần chấm."
+                  description={t("grading.noApplicationsToGrade")}
                 />
               </div>
             ) : (
@@ -1003,18 +1017,20 @@ export function ApplicationGradingPage({
                         {isStaff ? (
                           <>
                             <TableHead>ID Detail</TableHead>
-                            <TableHead>Trạng thái</TableHead>
-                            <TableHead>Vòng</TableHead>
+                            <TableHead>{t("common.status")}</TableHead>
+                            <TableHead>{t("userApplicationhistory.round")}</TableHead>
                           </>
                         ) : (
                           <>
                             <TableHead>ID JD</TableHead>
-                            <TableHead>Trạng thái</TableHead>
-                            <TableHead>Vòng hiện tại</TableHead>
+                            <TableHead>{t("common.status")}</TableHead>
+                            <TableHead>
+                              {t("userApplicationhistory.round")} {t("round.currentRound")}
+                            </TableHead>
                           </>
                         )}
-                        <TableHead>Điểm tổng</TableHead>
-                        <TableHead className="text-right">Thao tác</TableHead>
+                        <TableHead>{t("userApplicationhistory.totalScore")}</TableHead>
+                        <TableHead className="text-right">{t("common.operation")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1038,7 +1054,7 @@ export function ApplicationGradingPage({
                                 </TableCell>
                                 <TableCell>
                                   <span className="text-sm font-medium">
-                                    Vòng #{roundId ?? "-"}
+                                    {t("userApplicationhistory.round")} #{roundId ?? "-"}
                                   </span>
                                 </TableCell>
                               </>
@@ -1051,7 +1067,9 @@ export function ApplicationGradingPage({
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <span className="text-sm font-medium">Vòng {roundId ?? 1}</span>
+                                  <span className="text-sm font-medium">
+                                    {t("userApplicationhistory.round")} {roundId ?? 1}
+                                  </span>
                                 </TableCell>
                               </>
                             )}
@@ -1069,7 +1087,7 @@ export function ApplicationGradingPage({
                                 className="gap-1.5 bg-[#0047AB] text-xs hover:bg-[#003d91]"
                                 onClick={() => handleOpenGrading(item.id, item.detailId)}>
                                 <ClipboardCheck className="h-3.5 w-3.5" />
-                                Chấm điểm
+                                {t("grading.grade")} {t("general.score")}
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -1103,7 +1121,6 @@ export function ApplicationGradingDetailPage({
   detailId?: string;
   basePath?: string;
 }) {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -1224,12 +1241,12 @@ export function ApplicationGradingDetailPage({
       <div className="flex h-screen items-center justify-center">
         <EmptyState
           icon={ClipboardCheck}
-          title="ID không hợp lệ"
-          description="Vui lòng chọn một đơn ứng tuyển hợp lệ."
+          title={t("error.invalidId")}
+          description={t("application.selectValid")}
           action={
             <Button onClick={() => navigate(`${dashboardBase}?tab=applicationGrading`)}>
               <ChevronLeft className="h-4 w-4" />
-              Quay lại danh sách
+              {t("common.backToTheList")}
             </Button>
           }
         />
@@ -1242,7 +1259,7 @@ export function ApplicationGradingDetailPage({
       <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="flex flex-col items-center gap-3">
           <Spinner className="h-8 w-8" />
-          <p className="text-sm text-slate-500">Đang tải dữ liệu...</p>
+          <p className="text-sm text-slate-500">{t("general.loadingData")}</p>
         </div>
       </div>
     );
@@ -1258,15 +1275,16 @@ export function ApplicationGradingDetailPage({
           className="gap-1.5 text-slate-600 dark:text-slate-400"
           onClick={() => navigate(`${dashboardBase}?tab=applicationGrading`)}>
           <ChevronLeft className="h-4 w-4" />
-          Quay lại
+          {t("common.goBack")}
         </Button>
         <Separator orientation="vertical" className="h-5" />
         <div>
           <h1 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Chi tiết đơn #{singleDetail?.applicationId ?? appIdProp}
+            {t("application.detailsId")}
+            {singleDetail?.applicationId ?? appIdProp}
           </h1>
           <p className="text-xs text-slate-500">
-            {singleDetail ? "Vòng chi tiết" : `${details.length} vòng thi`}
+            {singleDetail ? t("round.roundDetails") : `${details.length} vòng thi`}
           </p>
         </div>
 
@@ -1301,7 +1319,9 @@ export function ApplicationGradingDetailPage({
         <div className="shrink-0 border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Tổng vòng:</span>
+              <span className="text-xs text-slate-500">
+                {t("round.totalRounds")} {t("userApplicationhistory.rounds")}:
+              </span>
               <span className="font-semibold text-slate-900 dark:text-slate-100">
                 {summaryStats.total}
               </span>
@@ -1309,21 +1329,21 @@ export function ApplicationGradingDetailPage({
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-xs text-amber-600">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                Cần chấm:
+                {t("grading.needsGrading")}:
               </span>
               <span className="font-semibold text-amber-600">{summaryStats.pending}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-xs text-green-600">
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Đã chấm:
+                {t("grading.gradedCount")}
               </span>
               <span className="font-semibold text-green-600">{summaryStats.completed}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-xs text-[#0047AB]">
                 <Star className="h-3.5 w-3.5 fill-[#0047AB] text-[#0047AB]" />
-                Điểm TB HR:
+                {t("grading.hrAverageScore")}
               </span>
               <span className="font-semibold text-[#0047AB]">{summaryStats.avgScore}</span>
             </div>
@@ -1343,15 +1363,15 @@ export function ApplicationGradingDetailPage({
                   showPendingOnly && "bg-amber-600 hover:bg-amber-700"
                 )}>
                 <AlertTriangle className="h-3.5 w-3.5" />
-                Cần chấm ({summaryStats.pending})
+                {t("grading.needsGrading")} ({summaryStats.pending})
               </Button>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={expandAll} className="gap-1.5 text-xs">
-                Mở tất cả
+                {t("userPractice.openAll")}
               </Button>
               <Button variant="outline" size="sm" onClick={collapseAll} className="gap-1.5 text-xs">
-                Thu gọn
+                {t("common.collapse")}
               </Button>
             </div>
           </div>
@@ -1362,7 +1382,7 @@ export function ApplicationGradingDetailPage({
           {filteredDetails.length === 0 ? (
             <div className="flex h-64 flex-col items-center justify-center text-center">
               <ClipboardCheck className="mb-4 h-12 w-12 text-slate-300" />
-              <p className="text-sm text-slate-400">Chưa có vòng thi nào cho đơn ứng tuyển này.</p>
+              <p className="text-sm text-slate-400">{t("application.noRounds")}</p>
             </div>
           ) : (
             <div className="space-y-3">

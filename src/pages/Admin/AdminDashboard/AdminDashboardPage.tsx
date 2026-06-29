@@ -176,23 +176,23 @@ const getAvailableTabs = (
   },
   {
     type: "interviewTemplates",
-    label: "Mẫu quy trình",
+    label: t("adminAdmindashboard.processTemplate"),
   },
   {
     type: "applicationGrading",
-    label: "Chấm bài ứng viên",
+    label: t("adminAdmindashboard.candidateGrading"),
   },
   {
     type: "grading-detail",
-    label: "Chi tiết chấm bài",
+    label: t("grading.details"),
   },
   {
     type: "gradingTemplates",
-    label: "Mẫu chấm điểm",
+    label: t("grading.template"),
   },
   {
     type: "practiceExam",
-    label: "Bài thi thử",
+    label: t("quiz.practiceTest"),
   },
   {
     type: "codeReviewProblems",
@@ -292,7 +292,7 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
       },
       {
         type: "interviewTemplates",
-        label: "Mẫu quy trình",
+        label: t("adminAdmindashboard.processTemplate"),
         icon: LayoutTemplate,
         iconColor: "text-violet-600",
       },
@@ -316,7 +316,7 @@ const getChromeTabsMenuGroups = (t: (key: string) => string): ChromeTabMenuGroup
       },
       {
         type: "applicationGrading",
-        label: "Chấm bài ứng viên",
+        label: t("adminAdmindashboard.candidateGrading"),
         icon: ClipboardCheck,
         iconColor: "text-rose-600",
       },
@@ -383,7 +383,7 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
       {
         type: "recruitment",
         icon: Briefcase,
-        label: "Tuyển dụng",
+        label: t("adminAdmindashboard.recruitment"),
         color: "text-emerald-600",
         children: [
           {
@@ -395,7 +395,7 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
           {
             type: "interviewTemplates",
             icon: LayoutTemplate,
-            label: "Mẫu quy trình",
+            label: t("adminAdmindashboard.processTemplate"),
             color: "text-violet-600",
           },
           {
@@ -419,7 +419,7 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
           {
             type: "applicationGrading",
             icon: ClipboardCheck,
-            label: "Chấm bài ứng viên",
+            label: t("adminAdmindashboard.candidateGrading"),
             color: "text-rose-600",
           },
         ],
@@ -427,7 +427,7 @@ const getSidebarMenuGroups = (t: (key: string) => string): SidebarMenuGroup[] =>
       {
         type: "testing",
         icon: BrainCircuit,
-        label: "Khảo thí & Đào tạo",
+        label: t("adminAdmindashboard.testingAndTraining"),
         color: "text-purple-600",
         children: [
           {
@@ -591,7 +591,7 @@ export function AdminDashboardPage() {
     (tabType: string) => {
       // Prevent opening grading-detail tab without appId (would show blank page)
       if (tabType === "grading-detail" && !searchParams.get("appId")) {
-        toast.error("Vui lòng chọn một đơn ứng tuyển cụ thể từ danh sách");
+        toast.error(t("application.selectFromList"));
         navigate("/admin?tab=applicationGrading", { replace: true });
         return;
       }
