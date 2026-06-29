@@ -188,3 +188,10 @@ if (results.length > 0) {
 } else {
   console.log("🎉 Outstanding! No hardcoded user-facing strings found in the codebase!");
 }
+
+if (viResults.length > 0) {
+  console.error(
+    `\n❌ Error: Found ${viResults.length} hardcoded Vietnamese strings. Please use t() from react-i18next.`
+  );
+  process.exit(1);
+}
