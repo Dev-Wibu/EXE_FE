@@ -77,7 +77,7 @@ export function QuestionBankManagementPage() {
   const handleEdit = (q: QuestionBank) => {
     setEditingQuestion(q);
     setFormData({
-      questionCategory: q.questionCategory?.id ? { id: q.questionCategory.id } : undefined,
+      questionCategoryId: q.questionCategory?.id,
       questionLevel: q.questionLevel,
       questionText: q.questionText,
       options: q.options || [],
@@ -92,7 +92,7 @@ export function QuestionBankManagementPage() {
   };
 
   const handleFormSubmit = async () => {
-    if (!formData.questionCategory?.id || !formData.questionLevel || !formData.questionText) {
+    if (!formData.questionCategoryId || !formData.questionLevel || !formData.questionText) {
       toast.error(t("question.enterAllFields"));
       return;
     }

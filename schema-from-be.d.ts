@@ -3226,10 +3226,12 @@ export interface components {
             error?: boolean;
         };
         JspConfigDescriptor: {
-            taglibs?: components["schemas"]["TaglibDescriptor"][];
             jspPropertyGroups?: components["schemas"]["JspPropertyGroupDescriptor"][];
+            taglibs?: components["schemas"]["TaglibDescriptor"][];
         };
         JspPropertyGroupDescriptor: {
+            elIgnored?: string;
+            isXml?: string;
             trimDirectiveWhitespaces?: string;
             errorOnELNotFound?: string;
             pageEncoding?: string;
@@ -3238,8 +3240,6 @@ export interface components {
             includeCodas?: string[];
             deferredSyntaxAllowedAsLiteral?: string;
             errorOnUndeclaredNamespace?: string;
-            elIgnored?: string;
-            isXml?: string;
             urlPatterns?: string[];
             defaultContentType?: string;
             buffer?: string;
@@ -3276,9 +3276,11 @@ export interface components {
             };
         };
         ServletContext: {
-            serverInfo?: string;
+            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             /** Format: int32 */
             sessionTimeout?: number;
+            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
+            serverInfo?: string;
             requestCharacterEncoding?: string;
             responseCharacterEncoding?: string;
             /** Format: int32 */
@@ -3293,10 +3295,8 @@ export interface components {
                 [key: string]: components["schemas"]["FilterRegistration"];
             };
             jspConfigDescriptor?: components["schemas"]["JspConfigDescriptor"];
-            defaultSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             effectiveSessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             virtualServerName?: string;
-            sessionTrackingModes?: ("COOKIE" | "URL" | "SSL")[];
             sessionCookieConfig?: components["schemas"]["SessionCookieConfig"];
             initParameterNames?: unknown;
             contextPath?: string;
@@ -3376,9 +3376,9 @@ export interface components {
             className?: string;
         };
         SessionCookieConfig: {
+            secure?: boolean;
             /** Format: int32 */
             maxAge?: number;
-            secure?: boolean;
             domain?: string;
             httpOnly?: boolean;
             path?: string;

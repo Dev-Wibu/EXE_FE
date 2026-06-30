@@ -68,16 +68,14 @@ export function QuestionBankFormDialog({
     const newId = await onCreateCategory(newCategoryName.trim());
     setIsSubmittingCategory(false);
     if (newId) {
-      onFormChange({ ...formData, questionCategory: { id: newId } });
+      onFormChange({ ...formData, questionCategoryId: newId });
       setIsCreatingCategory(false);
       setNewCategoryName("");
     }
   };
 
   const handleGenerate = async () => {
-    const categoryName = categories.find(
-      (c) => c.id === formData.questionCategory?.id
-    )?.categoryName;
+    const categoryName = categories.find((c) => c.id === formData.questionCategoryId)?.categoryName;
     if (!categoryName) {
       toast.error(t("ai.selectCategoryFirst"));
       return;
@@ -195,9 +193,9 @@ export function QuestionBankFormDialog({
               </div>
             ) : (
               <Select
-                value={formData.questionCategory?.id?.toString() || ""}
+                value={formData.questionCategoryId?.toString() || ""}
                 onValueChange={(val) =>
-                  onFormChange({ ...formData, questionCategory: { id: parseInt(val) } })
+                  onFormChange({ ...formData, questionCategoryId: parseInt(val) })
                 }>
                 <SelectTrigger>
                   <SelectValue placeholder={t("category.selectCategory")} />
@@ -331,7 +329,7 @@ export function QuestionBankFormDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("general.cancel")}
           </Button>
-          <Button onClick={onSubmit} disabled={aiLoading || !formData.questionCategory?.id}>
+          <Button onClick={onSubmit} disabled={aiLoading || !formData.questionCategoryId}>
             {submitLabel}
           </Button>
         </DialogFooter>
