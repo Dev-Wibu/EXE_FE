@@ -27,7 +27,7 @@ export interface QuestionGenerateResponse {
 }
 
 export interface QuestionBankFormData {
-  questionCategory?: { id: number };
+  questionCategoryId?: number;
   questionLevel?: "EASY" | "MEDIUM" | "HARD";
   questionText?: string;
   options?: string[];
@@ -73,8 +73,15 @@ export class QuestionBankManager {
 
   async create(payload: QuestionBankFormData): Promise<ApiResponse<QuestionBank>> {
     try {
+      const body = {
+        questionCategoryId: payload.questionCategoryId ?? 0,
+        questionLevel: payload.questionLevel ?? "EASY",
+        questionText: payload.questionText ?? "",
+        options: payload.options ?? [],
+        correctAnswer: payload.correctAnswer ?? "",
+      };
       const { data, error } = await fetchClient.POST(this.baseEndpoint, {
-        body: payload as never,
+        body: body as never,
       });
       if (error) throw new Error(JSON.stringify(error));
       return {
@@ -92,9 +99,16 @@ export class QuestionBankManager {
   async update(id: number, payload: QuestionBankFormData): Promise<ApiResponse<QuestionBank>> {
     try {
       const endpoint = buildEndpoint(API_ENDPOINTS.QUESTION_BANKS.DETAIL, { id });
+      const body = {
+        questionCategoryId: payload.questionCategoryId ?? 0,
+        questionLevel: payload.questionLevel ?? "EASY",
+        questionText: payload.questionText ?? "",
+        options: payload.options ?? [],
+        correctAnswer: payload.correctAnswer ?? "",
+      };
       // @ts-expect-error dynamic path
       const { data, error } = await fetchClient.PUT(endpoint, {
-        body: payload as never,
+        body: body as never,
       });
       if (error) throw new Error(JSON.stringify(error));
       return {
