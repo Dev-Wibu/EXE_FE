@@ -856,7 +856,6 @@ export function CodeReviewProblemBuilder({
           )}
         </div>
       </div>
-      </div>
 
       <Dialog open={issueModalOpen} onOpenChange={setIssueModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
