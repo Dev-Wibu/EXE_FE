@@ -835,7 +835,7 @@ function ApplicationDetailPanel({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { id } = application;
+  const { id, status } = application;
   const rounds = useMemo(() => application.rounds ?? [], [application.rounds]);
   const totalRounds = rounds.length;
 
@@ -1009,11 +1009,10 @@ function ApplicationDetailPanel({
       // completed when BE auto-advances after AI scoring a previous round.
       const isCompleted = hasSubmission;
 
-      // This round is current (show Enter Room button) if:
-      // 1. No submission yet (user hasn't done this round)
-      // 2. All rounds before this one have submissions (they are done)
-      // Note: we allow entering even if application is PASSED/FAILED/SOFT_FAILED because
-      // BE may have prematurely marked application complete before user finished all rounds.
+      // This round is current if:
+      // 1. Application is still IN_PROGRESS (not yet finished)
+      // 2. No submission yet
+      // 3. All rounds before this one have submissions (they are done)
       const roundsBefore = sortedRounds.slice(
         0,
         sortedRounds.findIndex((r) => r.id === round.id)
@@ -1023,16 +1022,20 @@ function ApplicationDetailPanel({
         const o = optimisticDetails.find((opt) => opt.roundId === r.id);
         return !!d || !!o;
       });
-      const isCurrent = !hasSubmission && allBeforeCompleted;
+      const isCurrent = status === "IN_PROGRESS" && !hasSubmission && allBeforeCompleted;
 
       // This round is locked if:
-      // 1. No submission yet
-      // 2. Some round before this one is still missing submission (gaps)
-      const isLocked = !hasSubmission && !allBeforeCompleted;
+      // 1. Application still active (not finished)
+      // 2. No submission yet
+      // 3. This round is after the current round order, OR BE has advanced past all rounds
+      const isLocked =
+        status === "IN_PROGRESS" &&
+        !hasSubmission &&
+        (round.roundOrder ?? 0) > apiCurrentRoundOrder;
 
       return { round, detail, optimistic, isCompleted, isCurrent, isLocked };
     });
-  }, [rounds, detailsData, optimisticDetails]);
+  }, [rounds, detailsData, optimisticDetails, apiCurrentRoundOrder, status]);
 
   const handleEnterRoom = (round: JdRound, detail?: ApplicationDetail) => {
     // If this is a QUIZ round, navigate to the quiz page
