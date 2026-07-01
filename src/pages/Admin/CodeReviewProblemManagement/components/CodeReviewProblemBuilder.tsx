@@ -287,13 +287,15 @@ export function CodeReviewProblemBuilder({
             </div>
           `;
 
-          domNode.querySelector(`#edit-btn-${issue.lineNumber}`)?.addEventListener("click", () => {
+          domNode.querySelector(`#edit-btn-${issue.lineNumber}`)?.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
             setIssueModalData({ ...issue });
             setEditingIssueIndex(issueIndex);
             setIssueModalOpen(true);
           });
 
-          domNode.querySelector(`#del-btn-${issue.lineNumber}`)?.addEventListener("click", () => {
+          domNode.querySelector(`#del-btn-${issue.lineNumber}`)?.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
             setNewProblem((prev) => ({
               ...prev,
               expectedIssues: prev.expectedIssues.filter((_, i) => i !== issueIndex),
