@@ -1017,22 +1017,18 @@ function ApplicationDetailPanel({
           : (round.roundOrder ?? 0) < apiCurrentRoundOrder;
 
       // This round is current if:
-      // 1. Application is still IN_PROGRESS
-      // 2. No submission yet
-      // 3. BE says this is the current round (roundOrder === currentRoundOrder)
-      const isCurrent =
-        status === "PASSED" || status === "FAILED" || status === "SOFT_FAILED"
-          ? false
-          : hasSubmission
-            ? false // already submitted
-            : round.roundOrder === apiCurrentRoundOrder;
+      // 1. No submission yet for this round
+      // 2. BE says this is the current round (roundOrder === currentRoundOrder)
+      // Note: We use currentRoundOrder as the source of truth for which round is active,
+      // regardless of application status. BE may advance currentRoundOrder to next round
+      // while keeping status=IN_PROGRESS, OR status may be PASSED/FAILED/SOFT_FAILED
+      // while user still hasn't submitted all rounds. In both cases we show Enter Room.
+      const isCurrent = !hasSubmission && round.roundOrder === apiCurrentRoundOrder;
 
       // This round is locked if:
-      // 1. Application still active
-      // 2. This round's roundOrder is after the BE's current round
-      const isLocked =
-        !(status === "PASSED" || status === "FAILED" || status === "SOFT_FAILED") &&
-        (round.roundOrder ?? 0) > apiCurrentRoundOrder;
+      // 1. No submission yet
+      // 2. BE says this round is after the current round (roundOrder > currentRoundOrder)
+      const isLocked = !hasSubmission && (round.roundOrder ?? 0) > apiCurrentRoundOrder;
 
       return { round, detail, optimistic, isCompleted, isCurrent, isLocked };
     });
