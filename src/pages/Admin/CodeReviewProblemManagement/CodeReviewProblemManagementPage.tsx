@@ -29,6 +29,7 @@ import {
 } from "@/services/code-review-problem.manager";
 import { useThemeStore } from "@/stores/themeStore";
 import Editor from "@monaco-editor/react";
+import { MonacoCodeReviewViewer } from "@/components/ui/monaco-code-review-viewer";
 import {
   AlertTriangle,
   Bot,
@@ -524,139 +525,18 @@ export function CodeReviewProblemManagementPage() {
 
                     {/* Monaco Editor */}
                     <div className="relative flex-1 overflow-hidden">
-                      <Editor
-                        height="100%"
-                        language={(
-                          selectedProblem.files[viewActiveFileIdx]?.language || "java"
-                        ).toLowerCase()}
-                        value={selectedProblem.files[viewActiveFileIdx]?.content || ""}
+                      <MonacoCodeReviewViewer
+                        content={selectedProblem.files[viewActiveFileIdx]?.content || ""}
+                        language={(selectedProblem.files[viewActiveFileIdx]?.language || "java").toLowerCase()}
+                        issues={(selectedProblem.expectedIssues || []).filter(
+                          (iss) => iss.filename === selectedProblem.files[viewActiveFileIdx]?.filename
+                        )}
                         theme={monacoTheme}
-                        options={{
-                          readOnly: true,
-                          minimap: { enabled: false },
-                          scrollBeyondLastLine: false,
-                          fontSize: 13,
-                          lineNumbers: "on",
-                          folding: true,
-                          wordWrap: "on",
-                          padding: { top: 12, bottom: 12 },
-                          scrollbar: {
-                            verticalScrollbarSize: 6,
-                            horizontalScrollbarSize: 6,
-                          },
-                          renderLineHighlight: "none",
-                          overviewRulerLanes: 0,
-                          hideCursorInOverviewRuler: true,
-                          overviewRulerBorder: false,
-                          glyphMargin: false,
-                        }}
                       />
                     </div>
                   </div>
 
-                  {/* Issue Annotations Sidebar */}
-                  <div
-                    className={cn(
-                      "w-[280px] shrink-0 overflow-y-auto border-l p-3",
-                      isDark ? "border-slate-800 bg-slate-900/80" : "border-slate-300 bg-slate-100"
-                    )}>
-                    <div
-                      className={cn(
-                        "mb-3 flex items-center gap-2 text-xs font-bold",
-                        isDark ? "text-slate-300" : "text-slate-700"
-                      )}>
-                      <Bug className="h-4 w-4 text-rose-500" />
-                      {t("adminCodeReviewProblem.expectedIssues")} (
-                      {selectedProblem.expectedIssues?.length || 0})
-                    </div>
-                    <div className="space-y-2">
-                      {(() => {
-                        const file = (selectedProblem.files || [])[viewActiveFileIdx];
-                        const fileIssues = (selectedProblem.expectedIssues || []).filter(
-                          (iss) => iss.filename === file?.filename
-                        );
-                        if (fileIssues.length === 0) {
-                          return (
-                            <p
-                              className={cn(
-                                "text-xs",
-                                isDark ? "text-slate-600" : "text-slate-500"
-                              )}>
-                              {t("adminCodeReviewProblem.noIssues", "No issues in this file")}
-                            </p>
-                          );
-                        }
-                        return fileIssues.map((issue, idx) => {
-                          const toggleKey = `view-${issue.filename}-${issue.lineNumber}`;
-                          const isExpanded = !!expandedIssues[toggleKey];
-                          return (
-                            <div key={idx}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setExpandedIssues((prev) => ({
-                                    ...prev,
-                                    [toggleKey]: !prev[toggleKey],
-                                  }));
-                                }}
-                                className={cn(
-                                  "flex w-full items-center gap-2 rounded-md border px-2.5 py-2 text-left text-xs transition-colors",
-                                  issue.severity === "CRITICAL"
-                                    ? isDark
-                                      ? "border-red-900/60 bg-red-950/30 text-red-300 hover:bg-red-950/60"
-                                      : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
-                                    : issue.severity === "WARNING"
-                                      ? isDark
-                                        ? "border-amber-900/60 bg-amber-950/30 text-amber-300 hover:bg-amber-950/60"
-                                        : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                      : isDark
-                                        ? "border-blue-900/60 bg-blue-950/30 text-blue-300 hover:bg-blue-950/60"
-                                        : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                )}>
-                                <Bug className="h-3.5 w-3.5 shrink-0" />
-                                <span className="flex-1 truncate">
-                                  {t("general.lineNumber")} {issue.lineNumber}
-                                </span>
-                                {isExpanded ? (
-                                  <Eye className="h-3.5 w-3.5 shrink-0" />
-                                ) : (
-                                  <EyeOff className="h-3.5 w-3.5 shrink-0" />
-                                )}
-                              </button>
-                              {isExpanded && (
-                                <div
-                                  className={cn(
-                                    "mt-1.5 rounded-md border p-2.5 text-xs",
-                                    isDark
-                                      ? "border-slate-700 bg-slate-900/50"
-                                      : "border-slate-200 bg-white"
-                                  )}>
-                                  <div
-                                    className={cn(
-                                      "mb-1.5 font-semibold uppercase",
-                                      issue.severity === "CRITICAL"
-                                        ? "text-red-500"
-                                        : issue.severity === "WARNING"
-                                          ? "text-amber-500"
-                                          : "text-blue-500"
-                                    )}>
-                                    {issue.severity}
-                                  </div>
-                                  <p
-                                    className={cn(
-                                      "leading-relaxed",
-                                      isDark ? "text-slate-300" : "text-slate-600"
-                                    )}>
-                                    {issue.description}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
+
                 </div>
               )}
             </div>
