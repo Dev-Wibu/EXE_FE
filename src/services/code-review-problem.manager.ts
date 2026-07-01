@@ -107,10 +107,10 @@ export class CodeReviewProblemManager {
     data: Partial<CodeReviewProblem>
   ): Promise<ApiResponse<CodeReviewProblem>> {
     try {
+      const payload = { ...data, id };
       const response = await fetchClient
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .PUT(`/api/code-review-problems/${encodeURIComponent(id)}` as any, {
-          body: data as never,
+        .POST("/api/code-review-problems", {
+          body: payload as never,
         })
         .then((res) => ({
           data: res.data,
