@@ -102,15 +102,13 @@ export class CodingProblemManager {
 
   /**
    * Update a coding problem
-   * POST /api/coding-problems/{id}
+   * POST /api/coding-problems
    */
   async update(id: number, data: Partial<CodingProblem>): Promise<ApiResponse<CodingProblem>> {
     try {
       const response = await fetchClient
-        // @ts-expect-error: Backend might not have this typed properly yet
-        .POST("/api/coding-problems/{id}", {
-          params: { path: { id } },
-          body: data as never,
+        .POST("/api/coding-problems", {
+          body: { ...data, id } as never,
         })
         .then((res) => ({
           data: res.data,
