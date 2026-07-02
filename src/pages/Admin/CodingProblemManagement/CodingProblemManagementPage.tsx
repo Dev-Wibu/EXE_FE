@@ -333,98 +333,136 @@ export function CodingProblemManagementPage() {
 
       {/* ── AI GENERATE MODAL ───────────────────────────────────────────────── */}
       <Dialog open={isAiModalOpen} onOpenChange={setIsAiModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-indigo-500" />
-              Tạo bài tập tự động với AI
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-2 space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Chủ đề bài toán <span className="text-rose-500">*</span></label>
-              <Input
-                placeholder="Ví dụ: Sắp xếp mảng hai chiều, quy hoạch động..."
-                value={aiTopic}
-                onChange={(e) => setAiTopic(e.target.value)}
-                className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-indigo-500 dark:border-slate-700"
-              />
+        <DialogContent className="sm:max-w-2xl gap-0 p-0 overflow-hidden border-0 shadow-2xl">
+          {/* Header section with gradient background */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-violet-700 px-6 py-8 dark:from-indigo-900 dark:to-violet-950">
+            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
+            <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-indigo-400/20 blur-2xl"></div>
+            <div className="relative z-10 flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-md">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-white">
+                  Tạo Đề Bài Tự Động
+                </DialogTitle>
+                <p className="mt-1 text-sm text-indigo-100">
+                  Cung cấp chủ đề và ngữ cảnh, AI của chúng tôi sẽ thiết kế một đề bài hoàn chỉnh gồm mô tả, test cases và giới hạn cấu hình.
+                </p>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Độ khó mong muốn</label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-slate-900">
+            {/* Left Column: Essential Info */}
+            <div className="p-6 space-y-5 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500"></div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Thông tin bắt buộc
+                </h3>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Chủ đề bài toán</label>
+                <Input
+                  placeholder="VD: Quy hoạch động, Đồ thị..."
+                  value={aiTopic}
+                  onChange={(e) => setAiTopic(e.target.value)}
+                  className="h-10 border-slate-200 bg-slate-50 focus-visible:bg-white focus-visible:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950/50"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Độ khó mong muốn</label>
                 <Select value={aiDifficulty} onValueChange={(v: "EASY" | "MEDIUM" | "HARD") => setAiDifficulty(v)}>
-                  <SelectTrigger className="h-9 border-slate-200 dark:border-slate-700">
+                  <SelectTrigger className="h-10 border-slate-200 bg-slate-50 focus-visible:bg-white focus-visible:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="EASY">EASY (Dễ)</SelectItem>
-                    <SelectItem value="MEDIUM">MEDIUM (Trung bình)</SelectItem>
-                    <SelectItem value="HARD">HARD (Khó)</SelectItem>
+                    <SelectItem value="EASY">Dễ (EASY)</SelectItem>
+                    <SelectItem value="MEDIUM">Trung bình (MEDIUM)</SelectItem>
+                    <SelectItem value="HARD">Khó (HARD)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Vị trí tuyển dụng <span className="font-normal text-slate-400">(Tuỳ chọn)</span></label>
-                <Input
-                  placeholder="VD: Backend Developer"
-                  value={aiJobTitle}
-                  onChange={(e) => setAiJobTitle(e.target.value)}
-                  className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-indigo-500 dark:border-slate-700"
-                />
+
+              <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10">
+                <p className="text-[11px] leading-relaxed text-indigo-700 dark:text-indigo-300">
+                  <strong className="block mb-1">💡 Mẹo nhỏ:</strong>
+                  Bạn có thể chỉ cần nhập chủ đề. Phần ngữ cảnh nâng cao bên phải là không bắt buộc nhưng sẽ giúp AI tạo đề thi sát với thực tế dự án hơn.
+                </p>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Yêu cầu kỹ năng / Bài toán thực tế <span className="font-normal text-slate-400">(Tuỳ chọn)</span></label>
-              <Input
-                placeholder="VD: Cần tối ưu O(N), xử lý concurrency..."
-                value={aiRequirement}
-                onChange={(e) => setAiRequirement(e.target.value)}
-                className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-indigo-500 dark:border-slate-700"
-              />
-            </div>
+            {/* Right Column: Advanced Context */}
+            <div className="bg-slate-50/50 p-6 space-y-5 dark:bg-slate-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-600"></div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Ngữ cảnh tuỳ chỉnh <span className="text-slate-400 font-normal">(Tuỳ chọn)</span>
+                </h3>
+              </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Ghi chú thêm cho AI <span className="font-normal text-slate-400">(Tuỳ chọn)</span></label>
-              <Input
-                placeholder="VD: Đề bài ngắn gọn, nhiều test case edge..."
-                value={aiPrompting}
-                onChange={(e) => setAiPrompting(e.target.value)}
-                className="h-9 border-slate-200 focus-visible:ring-1 focus-visible:ring-indigo-500 dark:border-slate-700"
-              />
-            </div>
-            
-            <div className="mt-2 rounded-lg bg-indigo-50 p-3 text-[11px] leading-relaxed text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-              Hệ thống sẽ tự động sinh tiêu đề, nội dung, bộ test case và các cấu hình liên quan dựa trên chủ đề và bối cảnh (context) bạn cung cấp. Quá trình này có thể mất khoảng 10-20 giây.
-            </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Vị trí tuyển dụng</label>
+                <Input
+                  placeholder="VD: Backend Developer, Data Engineer"
+                  value={aiJobTitle}
+                  onChange={(e) => setAiJobTitle(e.target.value)}
+                  className="h-10 border-slate-200 bg-white focus-visible:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900"
+                />
+              </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsAiModalOpen(false)}
-                disabled={aiLoading}
-                className="h-9 px-4 text-xs">
-                Hủy
-              </Button>
-              <Button
-                onClick={handleGenerateAI}
-                disabled={aiLoading}
-                className="h-9 bg-indigo-600 px-4 text-xs font-semibold text-white hover:bg-indigo-700">
-                {aiLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang tạo...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Tạo Tự Động
-                  </>
-                )}
-              </Button>
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Yêu cầu kỹ năng</label>
+                <Input
+                  placeholder="VD: Tối ưu O(N), xử lý Concurrency..."
+                  value={aiRequirement}
+                  onChange={(e) => setAiRequirement(e.target.value)}
+                  className="h-10 border-slate-200 bg-white focus-visible:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Ghi chú riêng cho AI</label>
+                <textarea
+                  placeholder="Nhập bất cứ yêu cầu đặc biệt nào (VD: Đề bài yêu cầu dùng mảng 2 chiều, kèm nhiều test case bẫy...)"
+                  value={aiPrompting}
+                  onChange={(e) => setAiPrompting(e.target.value)}
+                  className="h-24 w-full resize-none rounded-md border border-slate-200 bg-white p-3 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900"
+                />
+              </div>
             </div>
+          </div>
+
+          {/* Footer actions */}
+          <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white p-4 px-6 dark:border-slate-800 dark:bg-slate-950">
+            <Button
+              variant="ghost"
+              onClick={() => setIsAiModalOpen(false)}
+              disabled={aiLoading}
+              className="h-9 px-4 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+              Huỷ
+            </Button>
+            <Button
+              onClick={handleGenerateAI}
+              disabled={aiLoading}
+              className="group relative h-9 overflow-hidden bg-indigo-600 px-6 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30">
+              {/* Shine effect */}
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"></div>
+              {aiLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang sinh đề thi...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Bắt đầu tạo
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
