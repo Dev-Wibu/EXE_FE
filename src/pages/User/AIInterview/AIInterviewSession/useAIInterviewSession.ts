@@ -684,6 +684,13 @@ export function useAIInterviewSession(isSessionActivated = false) {
       } catch {
         /* ignore */
       }
+      // Nếu session được tạo từ Application, quay về application history
+      const appReturn = sessionStorage.getItem(`app-session-return:${sessionKey}`);
+      if (appReturn) {
+        sessionStorage.removeItem(`app-session-return:${sessionKey}`);
+        navigate(appReturn);
+        return;
+      }
     }
     const resolvedId =
       sessionId ?? (sessionKey ? localStorage.getItem(`interview-session-id-${sessionKey}`) : null);
@@ -696,6 +703,7 @@ export function useAIInterviewSession(isSessionActivated = false) {
 
   // Invalidate danh sách phiên và cache chat rồi quay lại
   // Invalidate cache để lần "Tiếp tục" tiếp theo luôn tải lịch sử mới nhất từ server
+  // Ưu tiên quay về trang Application nếu session được tạo từ Application
   const handleNavigateBack = useCallback(() => {
     void queryClient.invalidateQueries({
       queryKey: ["get", "/api/interview-sessions/user/{userId}"],
@@ -703,8 +711,18 @@ export function useAIInterviewSession(isSessionActivated = false) {
     void queryClient.invalidateQueries({
       queryKey: ["get", "/api/interview-sessions/cache/{sessionKey}"],
     });
+
+    // Nếu session được tạo từ Application, quay về application history
+    if (sessionKey) {
+      const appReturn = sessionStorage.getItem(`app-session-return:${sessionKey}`);
+      if (appReturn) {
+        sessionStorage.removeItem(`app-session-return:${sessionKey}`);
+        navigate(appReturn);
+        return;
+      }
+    }
     navigate("/user?tab=aiInterview");
-  }, [navigate]);
+  }, [navigate, sessionKey]);
   return {
     navigate,
     user,

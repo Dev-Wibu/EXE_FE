@@ -45,8 +45,15 @@ export {
   QuizResultPage,
 } from "./Practice";
 
+// Application Quiz exports
+export { ApplicationQuizPage } from "./ApplicationQuiz";
+
 // Mentor detail exports
 export { MentorDetailPage } from "./MentorDetail";
 
 // Application History exports
-export { ApplicationHistoryPage } from "./ApplicationHistory";
+export {
+  ApplicationAIInterviewPage,
+  ApplicationHistoryPage,
+  ApplicationMentorReviewPage,
+} from "./ApplicationHistory";

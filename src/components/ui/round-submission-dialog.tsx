@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { CodeReviewSubmissionModal } from "@/components/ui/code-review-submission-modal";
 import { CodingSubmissionModal } from "@/components/ui/coding-submission-modal";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import type { components } from "../../../schema-from-be";
 
 type ApplicationDetail = components["schemas"]["ApplicationDetail"];
 type CodingProblemSnapshot = components["schemas"]["CodingProblemSnapshot"];
+type CodeReviewProblemSnapshot = components["schemas"]["CodeReviewProblemSnapshot"];
 
 export interface RoundSubmissionDialogProps {
   open: boolean;
@@ -37,6 +39,8 @@ export interface RoundSubmissionDialogProps {
   codingProblems?: CodingProblemSnapshot[];
   codingProblemsId?: number[];
   timeLimitMinutes?: number;
+  // CODE_REVIEW round specific
+  codeReviewProblems?: CodeReviewProblemSnapshot[];
   onSuccess?: (_result: { status?: string; message?: string; detail?: ApplicationDetail }) => void;
 }
 
@@ -57,6 +61,7 @@ export function RoundSubmissionDialog({
   codingProblems,
   codingProblemsId,
   timeLimitMinutes,
+  codeReviewProblems,
   onSuccess,
 }: RoundSubmissionDialogProps) {
   const { t } = useTranslation();
@@ -73,6 +78,7 @@ export function RoundSubmissionDialog({
 
   const isEmailMode = roundType === "EMAIL_SIMULATOR";
   const isCodingMode = roundType === "CODING";
+  const isCodeReviewMode = roundType === "CODE_REVIEW";
 
   // Filter old emails from instruction and replace with system email
   const filteredInstruction = instruction
@@ -198,6 +204,28 @@ export function RoundSubmissionDialog({
         codingProblemsId={codingProblemsId}
         instruction={instruction}
         timeLimitMinutes={timeLimitMinutes}
+        onSuccess={(message) => {
+          onOpenChange(false);
+          onSuccess?.({ message });
+        }}
+      />
+    );
+  }
+
+  // If CODE_REVIEW mode, render the code review modal
+  if (isCodeReviewMode) {
+    return (
+      <CodeReviewSubmissionModal
+        open={open}
+        onOpenChange={onOpenChange}
+        applicationId={applicationId}
+        roundId={roundId}
+        roundName={roundName}
+        codeReviewProblems={codeReviewProblems}
+        codeReviewProblemsId={
+          codeReviewProblems?.map((p) => p.problemId).filter(Boolean) as number[]
+        }
+        instruction={instruction}
         onSuccess={(message) => {
           onOpenChange(false);
           onSuccess?.({ message });

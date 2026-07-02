@@ -71,6 +71,7 @@ interface JdRound {
     codingProblemsId?: number[];
     codingProblems?: components["schemas"]["CodingProblemSnapshot"][];
     quizQuestions?: components["schemas"]["QuizQuestion"][];
+    codeReviewProblemsId?: number[];
     codeReviewProblems?: components["schemas"]["CodeReviewProblemSnapshot"][];
     mentorInterview?: components["schemas"]["MentorInterviewDto"];
   };
@@ -1043,6 +1044,18 @@ function ApplicationDetailPanel({
       return;
     }
 
+    // If this is a MENTOR_REVIEW round, navigate to mentor review page
+    if (round.roundType === "MENTOR_REVIEW") {
+      navigate(`/user/application/${application.id}/mentor-review?roundId=${round.id}`);
+      return;
+    }
+
+    // If this is an AI_INTERVIEW round, navigate to AI interview page
+    if (round.roundType === "AI_INTERVIEW") {
+      navigate(`/user/application/${application.id}/ai-interview?roundId=${round.id}`);
+      return;
+    }
+
     setSubmissionRound(round);
     setSubmissionDetail(detail);
     setSubmissionOpen(true);
@@ -1216,6 +1229,7 @@ function ApplicationDetailPanel({
         emailSubmissionId={submissionDetail?.submissionData?.emailSubmissionId}
         codingProblems={submissionRound?.configData?.codingProblems}
         codingProblemsId={submissionRound?.configData?.codingProblemsId}
+        codeReviewProblems={submissionRound?.configData?.codeReviewProblems}
         timeLimitMinutes={submissionRound?.configData?.timeLimitMinutes}
         onSuccess={handleSubmissionSuccess}
       />

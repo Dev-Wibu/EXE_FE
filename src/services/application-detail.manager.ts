@@ -187,6 +187,37 @@ export class ApplicationDetailManager {
   }
 
   /**
+   * Submit Code Review evaluation
+   * POST /api/application-details/code-review/evaluate
+   */
+  async submitCodeReview(params: CodeReviewEvaluateParams): Promise<ApiResponse<SubmissionResult>> {
+    try {
+      const response = await fetchClient.POST("/api/application-details/code-review/evaluate", {
+        body: {
+          applicationId: params.applicationId,
+          roundId: params.roundId,
+          submissions: params.submissions.map((s) => ({
+            filename: s.filename,
+            lineNumber: s.lineNumber,
+            severity: s.severity,
+            description: s.description,
+          })),
+        } as never,
+      });
+      return {
+        success: true,
+        data: response.data as SubmissionResult,
+      };
+    } catch (error) {
+      console.error("[ApplicationDetailManager] submitCodeReview error:", error);
+      return {
+        success: false,
+        error: this.extractErrorMessage(error),
+      };
+    }
+  }
+
+  /**
    * Get all application details assigned to current reviewer (Staff)
    * GET /api/application-details/reviewer
    */

@@ -82,10 +82,10 @@ function StyledSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 w-full appearance-none rounded-md border border-slate-200 bg-white py-1 pr-8 pl-3 text-xs shadow-sm transition-colors focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+        className="h-9 w-full appearance-none rounded-md border border-slate-200 bg-white py-1 pr-8 pl-3 text-xs text-slate-900 shadow-sm transition-colors focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute top-2.5 right-2.5 h-3.5 w-3.5 text-slate-400" />
+      <ChevronDown className="pointer-events-none absolute top-2.5 right-2.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
     </div>
   );
 }
@@ -182,7 +182,11 @@ export const CodeReviewEditor = React.forwardRef<
         if (rightView === "create") {
           return await handleSaveProblem();
         }
-        return true;
+        // In "bank" or "idle" mode, return current selections so parent updates state
+        return {
+          ids: codeReviewProblemsId,
+          problems: codeReviewProblems,
+        };
       },
     }));
 
@@ -767,16 +771,16 @@ export const CodeReviewEditor = React.forwardRef<
         </div>
 
         {/* ==================== RIGHT COLUMN (IDE WORKSPACE) ==================== */}
-        <div className="col-span-9 flex flex-col overflow-hidden bg-slate-900 text-slate-100">
+        <div className="col-span-9 flex flex-col overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
           {/* --- IDLE STATE --- */}
           {rightView === "idle" && (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <div className="max-w-md p-6">
                 <Code2 className="text-slate-650 mx-auto mb-4 h-12 w-12 dark:text-slate-500" />
-                <h3 className="text-sm font-semibold text-slate-300">
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {t("adminCodeReviewProblem.noFileOpen")}
                 </h3>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
                   {t("adminCodeReviewProblem.selectProblemHint")}
                 </p>
               </div>
@@ -787,16 +791,18 @@ export const CodeReviewEditor = React.forwardRef<
           {rightView === "view" && selectedIndex !== null && selectedProblemDetails && (
             <div className="flex h-full flex-col overflow-hidden">
               {/* Workspace Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-4 py-3">
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center rounded-lg bg-indigo-900/60 px-2 py-1 text-xs font-bold text-indigo-400 ring-1 ring-indigo-500/20">
+                  <span className="inline-flex items-center rounded-lg bg-indigo-100 px-2 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200 dark:bg-indigo-900/60 dark:text-indigo-400 dark:ring-indigo-500/20">
                     #{selectedIndex + 1}
                   </span>
                   <div>
-                    <h3 className="text-xs font-bold text-white">{selectedProblemDetails.title}</h3>
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                      {selectedProblemDetails.title}
+                    </h3>
                     <div className="mt-0.5 flex items-center gap-2">
                       {difficultyBadge(selectedProblemDetails.difficulty)}
-                      <span className="text-[10px] font-semibold text-slate-400">
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                         {selectedProblemDetails.language}
                       </span>
                     </div>
@@ -837,7 +843,7 @@ export const CodeReviewEditor = React.forwardRef<
                         setCreateTabMode("code");
                         setActiveFileEditMode("bugs");
                       }}
-                      className="hover:bg-slate-750 h-8 border-slate-700 bg-slate-800 text-xs text-indigo-400 hover:text-indigo-300">
+                      className="h-8 border-slate-300 bg-white text-xs text-indigo-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-indigo-400 dark:hover:bg-slate-700">
                       <Pencil className="mr-1 h-3.5 w-3.5" />
                       {t("common.edit")}
                     </Button>
@@ -846,7 +852,7 @@ export const CodeReviewEditor = React.forwardRef<
                       variant="outline"
                       size="sm"
                       onClick={() => handleDeleteProblem(selectedIndex)}
-                      className="h-8 border-red-950 bg-red-950/20 text-xs text-red-400 hover:bg-red-950/40 hover:text-red-300">
+                      className="h-8 border-red-200 bg-white text-xs text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40">
                       <Trash2 className="mr-1 h-3.5 w-3.5" />
                       {t("common.delete")}
                     </Button>
@@ -855,18 +861,18 @@ export const CodeReviewEditor = React.forwardRef<
               </div>
 
               {/* Editor Right-Panel (takes up full width) */}
-              <div className="flex flex-1 flex-col overflow-hidden bg-slate-950/50">
+              <div className="flex flex-1 flex-col overflow-hidden bg-slate-100 dark:bg-slate-950/50">
                 {/* File Tabs */}
-                <div className="flex overflow-x-auto border-b border-slate-800 bg-slate-900/60">
+                <div className="flex overflow-x-auto border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60">
                   {(selectedProblemDetails.files || []).map((f, fIdx) => (
                     <button
                       key={fIdx}
                       onClick={() => setViewActiveFileIdx(fIdx)}
                       className={cn(
-                        "flex items-center gap-2 border-r border-slate-800 px-4 py-2.5 text-xs font-semibold transition-all",
+                        "flex items-center gap-2 border-r border-slate-200 px-4 py-2.5 text-xs font-semibold transition-all dark:border-slate-800",
                         viewActiveFileIdx === fIdx
-                          ? "bg-slate-955 border-b-2 border-b-indigo-500 bg-slate-950 text-indigo-400"
-                          : "hover:bg-slate-850 text-slate-400 hover:text-slate-200"
+                          ? "border-b-2 border-b-indigo-500 bg-white text-indigo-600 dark:bg-slate-950 dark:text-indigo-400"
+                          : "text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                       )}>
                       <FileCode2 className="h-3.5 w-3.5 text-indigo-500" />
                       {f.filename || "Untitled"}
@@ -875,12 +881,12 @@ export const CodeReviewEditor = React.forwardRef<
                 </div>
 
                 {/* Code Workspace view with annotations */}
-                <div className="flex-1 overflow-y-auto p-4 font-mono text-[11px] leading-relaxed select-text">
+                <div className="flex-1 overflow-y-auto bg-white p-4 font-mono text-[11px] leading-relaxed select-text dark:bg-slate-950">
                   {(() => {
                     const file = (selectedProblemDetails.files || [])[viewActiveFileIdx];
                     if (!file)
                       return (
-                        <div className="p-4 text-slate-500 italic">
+                        <div className="p-4 text-slate-500 italic dark:text-slate-500">
                           {t("adminCodeReviewProblem.emptyFile")}
                         </div>
                       );
@@ -902,9 +908,9 @@ export const CodeReviewEditor = React.forwardRef<
                             <React.Fragment key={lineIdx}>
                               <div
                                 className={cn(
-                                  "group relative flex items-center rounded-sm px-1 py-0.5 hover:bg-slate-800/40",
+                                  "group relative flex items-center rounded-sm px-1 py-0.5 hover:bg-slate-100 dark:hover:bg-slate-800/40",
                                   lineIssues.length > 0 &&
-                                    "border-l-2 border-l-red-500 bg-red-950/10"
+                                    "border-l-2 border-l-red-500 bg-red-50 dark:bg-red-950/10"
                                 )}>
                                 {/* Gutter Gutter on the LEFT side */}
                                 <div className="flex w-20 shrink-0 items-center justify-end gap-1.5 pr-2.5 select-none">
@@ -918,7 +924,7 @@ export const CodeReviewEditor = React.forwardRef<
                                         }));
                                       }}
                                       className={cn(
-                                        "rounded p-0.5 text-indigo-400 transition-colors hover:bg-slate-800"
+                                        "rounded p-0.5 text-indigo-500 transition-colors hover:bg-slate-200 dark:text-indigo-400 dark:hover:bg-slate-800"
                                       )}>
                                       {isExpanded ? (
                                         <EyeOff className="h-3.5 w-3.5" />
@@ -927,12 +933,12 @@ export const CodeReviewEditor = React.forwardRef<
                                       )}
                                     </button>
                                   )}
-                                  <span className="w-6 text-right font-semibold text-slate-600">
+                                  <span className="w-6 text-right font-semibold text-slate-400 dark:text-slate-600">
                                     {currentLineNum}
                                   </span>
                                 </div>
 
-                                <span className="flex-1 font-mono break-all whitespace-pre-wrap text-slate-200">
+                                <span className="flex-1 font-mono break-all whitespace-pre-wrap text-slate-800 dark:text-slate-200">
                                   {lineText || " "}
                                 </span>
                               </div>
@@ -944,39 +950,39 @@ export const CodeReviewEditor = React.forwardRef<
                                     className={cn(
                                       "my-1.5 mr-2 ml-20 flex items-start gap-2.5 rounded-lg border p-3 font-sans text-xs shadow-sm",
                                       issue.severity === "CRITICAL"
-                                        ? "border-red-900 bg-red-950/40 text-red-200"
+                                        ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
                                         : issue.severity === "WARNING"
-                                          ? "border-amber-900 bg-amber-950/40 text-amber-200"
-                                          : "border-blue-900 bg-blue-950/40 text-blue-200"
+                                          ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                                          : "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
                                     )}>
                                     <Bug
                                       className={cn(
                                         "mt-0.5 h-4 w-4 shrink-0",
                                         issue.severity === "CRITICAL"
-                                          ? "text-red-400"
+                                          ? "text-red-500 dark:text-red-400"
                                           : issue.severity === "WARNING"
-                                            ? "text-amber-400"
-                                            : "text-blue-400"
+                                            ? "text-amber-500 dark:text-amber-400"
+                                            : "text-blue-500 dark:text-blue-400"
                                       )}
                                     />
                                     <div className="flex-1">
                                       <div className="mb-1 flex items-center gap-1.5">
-                                        <span className="font-semibold text-slate-100">
+                                        <span className="font-semibold text-slate-900 dark:text-slate-100">
                                           {t("adminCodeReviewProblem.detectedSampleBugs")}
                                         </span>
                                         <span
                                           className={cn(
                                             "rounded-full px-1.5 py-0.5 text-[8px] font-bold tracking-wider uppercase",
                                             issue.severity === "CRITICAL"
-                                              ? "bg-red-900/60 text-red-300 ring-1 ring-red-500/20"
+                                              ? "bg-red-100 text-red-700 ring-1 ring-red-200 dark:bg-red-900/60 dark:text-red-300 dark:ring-red-500/20"
                                               : issue.severity === "WARNING"
-                                                ? "bg-amber-900/60 text-amber-300 ring-1 ring-amber-500/20"
-                                                : "bg-blue-900/60 text-blue-300 ring-1 ring-blue-500/20"
+                                                ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/60 dark:text-amber-300 dark:ring-amber-500/20"
+                                                : "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/60 dark:text-blue-300 dark:ring-blue-500/20"
                                           )}>
                                           {issue.severity}
                                         </span>
                                       </div>
-                                      <p className="leading-relaxed text-slate-300">
+                                      <p className="leading-relaxed text-slate-700 dark:text-slate-300">
                                         {issue.description}
                                       </p>
                                     </div>
@@ -995,27 +1001,29 @@ export const CodeReviewEditor = React.forwardRef<
 
           {/* --- BANK STATE --- */}
           {rightView === "bank" && (
-            <div className="flex h-full flex-col overflow-hidden bg-slate-950/30 p-5">
-              <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
-                <FolderOpen className="h-4 w-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">
+            <div className="flex h-full flex-col overflow-hidden bg-white p-5 dark:bg-slate-900">
+              <div className="flex items-center gap-2.5 border-b border-slate-200 pb-3 dark:border-slate-800">
+                <FolderOpen className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                   {t("adminCodeReviewProblem.codeReviewBank")}
                 </h3>
-                <span className="ml-auto text-xs font-semibold text-slate-400">
+                <span className="ml-auto text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {t("common.selected")}
-                  <strong className="text-indigo-400">{selectedBankIds.length}</strong>
+                  <strong className="text-indigo-600 dark:text-indigo-400">
+                    {selectedBankIds.length}
+                  </strong>
                 </span>
               </div>
 
               {/* Filters */}
-              <div className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900 p-3.5 md:flex-row">
+              <div className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3.5 md:flex-row dark:border-slate-800 dark:bg-slate-900">
                 <div className="relative flex-1">
                   <Search className="absolute top-2.5 left-2.5 h-3.5 w-3.5 text-slate-500" />
                   <Input
                     value={bankSearch}
                     onChange={(e) => setBankSearch(e.target.value)}
                     placeholder={t("adminCodeReviewProblem.searchProblem")}
-                    className="bg-slate-955 h-9 border-slate-800 bg-slate-950 pl-8 text-xs text-white"
+                    className="h-9 border-slate-200 bg-white pl-8 text-xs text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -1028,7 +1036,7 @@ export const CodeReviewEditor = React.forwardRef<
                         "rounded-full border px-3 py-1 text-[10px] font-bold transition-all",
                         bankDifficulty === diff
                           ? "border-indigo-500 bg-indigo-600 text-white"
-                          : "hover:bg-slate-850 border-slate-800 bg-slate-950 text-slate-400"
+                          : "border-slate-300 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                       )}>
                       {diff === "ALL"
                         ? t("common.all")
@@ -1072,20 +1080,20 @@ export const CodeReviewEditor = React.forwardRef<
                         className={cn(
                           "flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all",
                           isAdded
-                            ? "cursor-not-allowed border-slate-800/40 bg-slate-900/40 opacity-40"
+                            ? "cursor-not-allowed border-slate-200/40 bg-slate-100/40 opacity-40 dark:border-slate-800/40 dark:bg-slate-900/40"
                             : isSelected
-                              ? "border-indigo-500 bg-indigo-950/20"
-                              : "border-slate-855 bg-slate-900 hover:border-slate-700"
+                              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20"
+                              : "border-slate-200 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
                         )}>
                         <div className="mt-0.5">
                           <div
                             className={cn(
                               "flex h-4 w-4 items-center justify-center rounded border transition-colors",
                               isAdded
-                                ? "border-slate-700 bg-slate-800 text-white"
+                                ? "border-slate-300 bg-slate-200 text-slate-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300"
                                 : isSelected
                                   ? "border-indigo-500 bg-indigo-500 text-white"
-                                  : "border-slate-700 bg-slate-950"
+                                  : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800"
                             )}>
                             {(isSelected || isAdded) && <Check className="h-3 w-3 stroke-[3]" />}
                           </div>
@@ -1094,18 +1102,20 @@ export const CodeReviewEditor = React.forwardRef<
                           <div className="flex flex-wrap items-center gap-1.5">
                             {difficultyBadge(p.difficulty)}
                             {p.language && (
-                              <span className="bg-slate-855 text-slate-305 rounded px-1 py-0.5 text-[9px] font-bold text-slate-300">
+                              <span className="rounded bg-slate-100 px-1 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 {p.language}
                               </span>
                             )}
-                            <span className="text-xs font-semibold text-white">{p.title}</span>
+                            <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                              {p.title}
+                            </span>
                             {isAdded && (
-                              <span className="ml-auto text-[10px] text-slate-500 italic">
+                              <span className="ml-auto text-[10px] text-slate-400 italic dark:text-slate-500">
                                 {t("common.added")}
                               </span>
                             )}
                           </div>
-                          <p className="line-clamp-2 text-xs text-slate-400">
+                          <p className="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                             {p.problemStatement}
                           </p>
                         </div>
@@ -1122,7 +1132,7 @@ export const CodeReviewEditor = React.forwardRef<
               </div>
 
               {/* Actions */}
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-800 bg-slate-950/20 pt-3">
+              <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
@@ -1131,7 +1141,7 @@ export const CodeReviewEditor = React.forwardRef<
                     setRightView("idle");
                     setSelectedIndex(null);
                   }}
-                  className="hover:bg-slate-805 h-8 border-slate-800 bg-slate-900 text-xs hover:bg-slate-800">
+                  className="h-8 border-slate-300 bg-white text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
                   {t("common.cancel")}
                 </Button>
                 <Button
@@ -1150,7 +1160,7 @@ export const CodeReviewEditor = React.forwardRef<
 
           {/* --- CREATE / EDIT STATE (MODERN CODE BUILDER) --- */}
           {rightView === "create" && (
-            <div className="bg-slate-955 relative flex h-full flex-col overflow-hidden bg-slate-950/20">
+            <div className="relative flex h-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-950/20">
               {isGenerating && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-[2px]">
                   <div className="flex flex-col items-center gap-3">
@@ -1163,15 +1173,15 @@ export const CodeReviewEditor = React.forwardRef<
               )}
 
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-4 py-3">
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-100 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50">
                 <div className="flex items-center gap-3">
-                  <Plus className="h-4 w-4 text-emerald-400" />
-                  <h3 className="text-xs font-bold text-white">
+                  <Plus className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                     {editingIndex !== null
                       ? t("adminCodeReviewProblem.editProblem")
                       : t("adminCodeReviewProblem.designNewProblem")}
                   </h3>
-                  <div className="rounded-lg bg-slate-900 p-0.5">
+                  <div className="rounded-lg border border-slate-200 bg-white p-0.5 dark:border-slate-700 dark:bg-slate-900">
                     <div className="flex gap-0.5">
                       <button
                         type="button"
@@ -1181,7 +1191,9 @@ export const CodeReviewEditor = React.forwardRef<
                         }}
                         className={cn(
                           "rounded px-2.5 py-1 text-[10px] font-bold transition-all",
-                          creationMode === "ai" ? "bg-slate-800 text-indigo-400" : "text-slate-400"
+                          creationMode === "ai"
+                            ? "bg-slate-800 text-indigo-400"
+                            : "text-slate-500 dark:text-slate-400"
                         )}>
                         {t("adminCodeReviewProblem.generateByAi")}
                       </button>
@@ -1195,7 +1207,7 @@ export const CodeReviewEditor = React.forwardRef<
                           "rounded px-2.5 py-1 text-[10px] font-bold transition-all",
                           creationMode === "manual"
                             ? "bg-slate-800 text-indigo-400"
-                            : "text-slate-400"
+                            : "text-slate-500 dark:text-slate-400"
                         )}>
                         {t("adminCodeReviewProblem.manual")}
                       </button>
@@ -1208,18 +1220,18 @@ export const CodeReviewEditor = React.forwardRef<
               <div className="flex flex-1 overflow-hidden">
                 {/* Mode AI View */}
                 {creationMode === "ai" && !aiGeneratedLoaded ? (
-                  <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-slate-900 p-6 font-sans text-slate-100">
-                    <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950/40 p-8 shadow-2xl backdrop-blur-sm">
+                  <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-slate-50 p-6 font-sans text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+                    <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl dark:border-slate-800 dark:bg-slate-900/50">
                       <div className="mb-8 flex flex-col items-center space-y-4 text-center">
-                        <div className="relative inline-flex items-center justify-center rounded-2xl border border-indigo-800/40 bg-indigo-950/40 p-4 text-indigo-400 shadow-inner">
-                          <Sparkles className="h-10 w-10 animate-pulse text-indigo-400" />
-                          <Wand2 className="absolute -top-1 -right-1 h-5 w-5 text-emerald-400" />
+                        <div className="relative inline-flex items-center justify-center rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-indigo-600 shadow-inner dark:border-indigo-800/40 dark:bg-indigo-950/40 dark:text-indigo-400">
+                          <Sparkles className="h-10 w-10 animate-pulse text-indigo-500 dark:text-indigo-400" />
+                          <Wand2 className="absolute -top-1 -right-1 h-5 w-5 text-emerald-500 dark:text-emerald-400" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold tracking-wide text-white">
+                          <h3 className="text-lg font-bold tracking-wide text-slate-900 dark:text-white">
                             {t("adminCodeReviewProblem.designByAi")}
                           </h3>
-                          <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-400">
+                          <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                             {t("adminCodeReviewProblem.aiGenerateInstruction")}
                           </p>
                         </div>
@@ -1227,7 +1239,7 @@ export const CodeReviewEditor = React.forwardRef<
 
                       <div className="space-y-4 text-left">
                         <div>
-                          <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                          <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                             {t("adminCodeReviewProblem.topicSecurityVulnerability")}
                           </Label>
                           <Input
@@ -1235,18 +1247,18 @@ export const CodeReviewEditor = React.forwardRef<
                             onChange={(e) => setAiTopic(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAiGenerate()}
                             placeholder={t("compCodeReviewEditor.exampleVulnerabilities")}
-                            className="mt-1.5 h-10 border-slate-800 bg-slate-950/60 px-3 text-xs text-white focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                            className="mt-1.5 h-10 border-slate-200 bg-white px-3 text-xs text-slate-900 focus:ring-1 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                           />
                         </div>
 
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                               {t("adminCodeReviewProblem.problemDifficulty")}
                             </Label>
                             <StyledSelect
                               value={aiDifficulty}
-                              className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
+                              className="mt-1.5 h-10 text-xs"
                               onChange={(v) => setAiDifficulty(v as "EASY" | "MEDIUM" | "HARD")}>
                               <option value="EASY">{t("common.difficultyEasy")}</option>
                               <option value="MEDIUM">{t("common.difficultyMedium")}</option>
@@ -1254,12 +1266,12 @@ export const CodeReviewEditor = React.forwardRef<
                             </StyledSelect>
                           </div>
                           <div>
-                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                               {t("common.language")}
                             </Label>
                             <StyledSelect
                               value={aiLanguage}
-                              className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
+                              className="mt-1.5 h-10 text-xs"
                               onChange={setAiLanguage}>
                               <option value="Java">Java</option>
                               <option value="Javascript">Javascript</option>
@@ -1271,12 +1283,12 @@ export const CodeReviewEditor = React.forwardRef<
                             </StyledSelect>
                           </div>
                           <div>
-                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                            <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                               {t("adminCodeReviewProblem.candidateLevel")}
                             </Label>
                             <StyledSelect
                               value={aiLevel}
-                              className="border-slate-850 mt-1.5 h-10 bg-slate-950/60 text-xs"
+                              className="mt-1.5 h-10 text-xs"
                               onChange={setAiLevel}>
                               <option value="Intern">Intern</option>
                               <option value="Junior">Junior</option>
@@ -1286,7 +1298,7 @@ export const CodeReviewEditor = React.forwardRef<
                         </div>
 
                         <div>
-                          <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                          <Label className="font-sans text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                             {t("adminCodeReviewProblem.specialContextAdditionalRequirements")}
                           </Label>
                           <textarea
@@ -1294,7 +1306,7 @@ export const CodeReviewEditor = React.forwardRef<
                             onChange={(e) => setAiRequirement(e.target.value)}
                             rows={4}
                             placeholder={t("compCodeReviewEditor.projectContextAiPlaceholder")}
-                            className="border-slate-850 mt-1.5 flex w-full rounded-md border bg-slate-950/60 px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                            className="mt-1.5 flex w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                           />
                         </div>
 
@@ -1390,10 +1402,10 @@ export const CodeReviewEditor = React.forwardRef<
                               <div
                                 key={fIdx}
                                 className={cn(
-                                  "flex items-center gap-1.5 border-r border-slate-800/80 px-3.5 py-2 font-sans text-xs transition-all",
+                                  "flex items-center gap-1.5 border-r border-slate-200 px-3.5 py-2 font-sans text-xs transition-all dark:border-slate-800",
                                   createActiveFileIdx === fIdx
-                                    ? "bg-slate-900 font-bold text-white"
-                                    : "bg-slate-950/50 text-slate-400 hover:bg-slate-900/30"
+                                    ? "bg-white font-bold text-slate-900 dark:bg-slate-900 dark:text-white"
+                                    : "bg-slate-50 text-slate-500 hover:bg-slate-100 dark:bg-slate-950/50 dark:text-slate-400 dark:hover:bg-slate-900/30"
                                 )}>
                                 <button
                                   type="button"
@@ -1406,7 +1418,7 @@ export const CodeReviewEditor = React.forwardRef<
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveFile(fIdx)}
-                                    className="rounded p-0.5 text-slate-500 hover:bg-slate-800 hover:text-red-400">
+                                    className="rounded p-0.5 text-slate-400 hover:bg-slate-200 hover:text-red-500 dark:hover:bg-slate-800 dark:hover:text-red-400">
                                     <X className="h-3 w-3" />
                                   </button>
                                 )}
@@ -1422,9 +1434,9 @@ export const CodeReviewEditor = React.forwardRef<
                             return (
                               <div className="flex flex-1 flex-col overflow-hidden">
                                 {/* Config panel */}
-                                <div className="flex items-center gap-4 border-b border-slate-800 bg-slate-900/30 px-4 py-2 font-sans text-xs">
+                                <div className="flex items-center gap-4 border-b border-slate-200 bg-slate-100 px-4 py-2 font-sans text-xs dark:border-slate-800 dark:bg-slate-900/30">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="font-medium text-slate-400">
+                                    <span className="font-medium text-slate-500 dark:text-slate-400">
                                       {t("adminCodeReviewProblem.filename")}
                                     </span>
                                     <input
@@ -1448,11 +1460,13 @@ export const CodeReviewEditor = React.forwardRef<
 
                                         setNewProblem({ ...newProblem, files, expectedIssues });
                                       }}
-                                      className="h-7 w-48 rounded border border-slate-800 bg-slate-900 px-2 font-mono text-white focus:border-indigo-500 focus:outline-none"
+                                      className="h-7 w-48 rounded border border-slate-300 bg-white px-2 font-mono text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-white"
                                     />
                                   </div>
                                   <div className="flex items-center gap-1.5">
-                                    <span className="font-medium text-slate-400">Highlight:</span>
+                                    <span className="font-medium text-slate-500 dark:text-slate-400">
+                                      Highlight:
+                                    </span>
                                     <select
                                       value={activeFile.language || "java"}
                                       onChange={(e) => {
@@ -1460,7 +1474,7 @@ export const CodeReviewEditor = React.forwardRef<
                                         files[createActiveFileIdx].language = e.target.value;
                                         setNewProblem({ ...newProblem, files });
                                       }}
-                                      className="h-7 rounded border border-slate-800 bg-slate-900 px-2 text-white focus:border-indigo-500 focus:outline-none">
+                                      className="h-7 rounded border border-slate-300 bg-white px-2 text-xs text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">
                                       <option value="java">java</option>
                                       <option value="javascript">javascript</option>
                                       <option value="typescript">typescript</option>
@@ -1476,7 +1490,7 @@ export const CodeReviewEditor = React.forwardRef<
                                 {/* Code Space depending on Sub Edit Mode */}
                                 {activeFileEditMode === "text" ? (
                                   <div className="flex flex-1 flex-col space-y-2 p-4">
-                                    <Label className="font-sans text-[10px] font-bold text-slate-400 uppercase">
+                                    <Label className="font-sans text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">
                                       {t("adminCodeReviewProblem.enterSourceCode")}
                                     </Label>
                                     <textarea
@@ -1486,7 +1500,7 @@ export const CodeReviewEditor = React.forwardRef<
                                         files[createActiveFileIdx].content = e.target.value;
                                         setNewProblem({ ...newProblem, files });
                                       }}
-                                      className="w-full flex-1 rounded-md border border-slate-800 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-slate-200 focus:outline-none"
+                                      className="w-full flex-1 rounded-md border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-800 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
                                       placeholder={t(
                                         "compCodeReviewEditor.sourceCodeBugPlaceholder"
                                       )}
@@ -1562,16 +1576,16 @@ export const CodeReviewEditor = React.forwardRef<
                                                             [toggleKey]: true,
                                                           }));
                                                         }}
-                                                        className="rounded p-0.5 text-emerald-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-800">
+                                                        className="rounded p-0.5 text-emerald-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-200 dark:text-emerald-400 dark:hover:bg-slate-800">
                                                         <Plus className="h-3.5 w-3.5" />
                                                       </button>
                                                     )}
-                                                    <span className="text-slate-655 w-6 text-right font-semibold text-slate-600">
+                                                    <span className="w-6 text-right font-semibold text-slate-400 dark:text-slate-600">
                                                       {currentLineNum}
                                                     </span>
                                                   </div>
 
-                                                  <span className="flex-1 font-mono break-all whitespace-pre text-slate-200">
+                                                  <span className="flex-1 font-mono break-all whitespace-pre text-slate-800 dark:text-slate-200">
                                                     {lineText || " "}
                                                   </span>
                                                 </div>
@@ -1598,16 +1612,16 @@ export const CodeReviewEditor = React.forwardRef<
                                                         className={cn(
                                                           "my-1.5 mr-2 ml-20 flex flex-col gap-3 rounded-lg border p-3.5 font-sans text-xs shadow-sm",
                                                           issue.severity === "CRITICAL"
-                                                            ? "border-red-900 bg-red-950/40 text-red-200"
+                                                            ? "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
                                                             : issue.severity === "WARNING"
-                                                              ? "border-amber-900 bg-amber-950/40 text-amber-200"
-                                                              : "border-blue-900 bg-blue-950/40 text-blue-200"
+                                                              ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                                                              : "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
                                                         )}>
                                                         {/* Header of the bug card */}
-                                                        <div className="border-slate-850 flex items-center justify-between border-b pb-2">
+                                                        <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-700">
                                                           <div className="flex items-center gap-3">
-                                                            <Bug className="h-4.5 w-4.5 text-slate-400" />
-                                                            <span className="font-bold text-slate-200">
+                                                            <Bug className="h-4.5 w-4.5 text-slate-500 dark:text-slate-400" />
+                                                            <span className="font-bold text-slate-800 dark:text-slate-200">
                                                               {t(
                                                                 "adminCodeReviewProblem.bugConfig"
                                                               )}
@@ -1630,7 +1644,7 @@ export const CodeReviewEditor = React.forwardRef<
                                                                   expectedIssues,
                                                                 });
                                                               }}
-                                                              className="border-slate-850 h-7 rounded border bg-slate-900 px-2 text-xs font-semibold text-white focus:outline-none">
+                                                              className="h-7 rounded border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
                                                               <option value="CRITICAL">
                                                                 🔴 Critical
                                                               </option>
@@ -1645,7 +1659,7 @@ export const CodeReviewEditor = React.forwardRef<
                                                             onClick={() =>
                                                               handleRemoveExpectedIssue(targetIdx)
                                                             }
-                                                            className="flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300">
+                                                            className="flex items-center gap-1 text-[10px] text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                                                             <Trash className="h-3.5 w-3.5" />
                                                             <span>
                                                               {t(
@@ -1675,7 +1689,7 @@ export const CodeReviewEditor = React.forwardRef<
                                                             placeholder={t(
                                                               "compCodeReviewEditor.describeBugAiGradingPlaceholder"
                                                             )}
-                                                            className="border-slate-850 w-full rounded border bg-slate-950 px-2.5 py-1.5 font-sans text-xs text-white focus:outline-none"
+                                                            className="w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 font-sans text-xs text-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                                                           />
                                                         </div>
                                                       </div>
@@ -1696,7 +1710,7 @@ export const CodeReviewEditor = React.forwardRef<
                       ) : (
                         /* Summary of Expected Issues list only */
                         <div className="flex-1 space-y-3 overflow-y-auto p-4 font-sans">
-                          <div className="mb-2 text-xs font-medium text-slate-400">
+                          <div className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                             {t("adminCodeReviewProblem.clickIssueToEdit")}
                           </div>
 
@@ -1721,26 +1735,26 @@ export const CodeReviewEditor = React.forwardRef<
                                     }));
                                   }
                                 }}
-                                className="group hover:bg-slate-850 flex cursor-pointer items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-4 shadow-sm transition-all hover:border-indigo-500">
+                                className="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-indigo-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800">
                                 <div className="flex items-center gap-3">
-                                  <div className="rounded-lg border border-slate-800 bg-slate-950 p-2">
+                                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800">
                                     <Bug
                                       className={cn(
                                         "h-4.5 w-4.5",
                                         issue.severity === "CRITICAL"
-                                          ? "text-red-400"
+                                          ? "text-red-500 dark:text-red-400"
                                           : issue.severity === "WARNING"
-                                            ? "text-amber-400"
-                                            : "text-blue-400"
+                                            ? "text-amber-500 dark:text-amber-400"
+                                            : "text-blue-500 dark:text-blue-400"
                                       )}
                                     />
                                   </div>
                                   <div>
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <span className="font-mono text-xs font-semibold text-white">
+                                      <span className="font-mono text-xs font-semibold text-slate-800 dark:text-white">
                                         {issue.filename || "Solution.java"}
                                       </span>
-                                      <span className="rounded bg-slate-950 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                                      <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                                         {t("common.line")}
                                         {issue.lineNumber}
                                       </span>
@@ -1748,22 +1762,22 @@ export const CodeReviewEditor = React.forwardRef<
                                         className={cn(
                                           "rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase",
                                           issue.severity === "CRITICAL"
-                                            ? "bg-red-955 border border-red-900/60 bg-red-950/80 text-red-400"
+                                            ? "bg-red-100 text-red-700 ring-1 ring-red-200 dark:bg-red-900/60 dark:text-red-300 dark:ring-red-500/20"
                                             : issue.severity === "WARNING"
-                                              ? "bg-amber-955 border border-amber-900/60 bg-amber-950/80 text-amber-400"
-                                              : "bg-blue-955 border border-blue-900/60 bg-blue-950/80 text-blue-400"
+                                              ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/60 dark:text-amber-300 dark:ring-amber-500/20"
+                                              : "bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/60 dark:text-blue-300 dark:ring-blue-500/20"
                                         )}>
                                         {issue.severity}
                                       </span>
                                     </div>
-                                    <p className="mt-1 line-clamp-1 text-xs text-slate-400 group-hover:text-slate-300">
+                                    <p className="mt-1 line-clamp-1 text-xs text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300">
                                       {issue.description ||
                                         t("adminCodeReviewProblem.noDetailedDescription")}
                                     </p>
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 transition-colors group-hover:text-indigo-400">
+                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 transition-colors group-hover:text-indigo-500 dark:text-slate-500 dark:group-hover:text-indigo-400">
                                   <span>{t("adminCodeReviewProblem.editInCode")}</span>
                                   <ArrowRight className="h-3.5 w-3.5" />
                                 </div>
@@ -1774,7 +1788,7 @@ export const CodeReviewEditor = React.forwardRef<
                           {newProblem.expectedIssues.length === 0 && (
                             <div className="py-10 text-center">
                               <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-amber-500/80" />
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
                                 {t("adminCodeReviewProblem.noSampleBugsSet")}
                               </p>
                             </div>

@@ -213,7 +213,11 @@ export const CodingEditor = React.forwardRef<
         if (rightView === "create") {
           return await handleSaveProblem();
         }
-        return true;
+        // In "bank" or "idle" mode, return current selections so parent updates state
+        return {
+          ids: codingProblemsId,
+          problems: codingProblems,
+        };
       },
     }));
 
