@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { SpinnerBlock } from "@/components/ui/spinner";
 import { useMonacoTheme } from "@/hooks/useMonacoTheme";
 import { useHybridPageSize, usePagination } from "@/hooks/usePagination";
@@ -29,16 +28,7 @@ import {
   type CodeReviewProblem,
 } from "@/services/code-review-problem.manager";
 import { useThemeStore } from "@/stores/themeStore";
-import {
-  AlertTriangle,
-  Bot,
-  ChevronRight,
-  FileCode2,
-  Lightbulb,
-  Loader2,
-  Pencil,
-  Plus,
-} from "lucide-react";
+import { AlertTriangle, Bot, FileCode2, Lightbulb, Loader2, Pencil, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -199,7 +189,6 @@ export function CodeReviewProblemManagementPage() {
   if (view.mode === "create") {
     return (
       <div className="flex h-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-
         <div className="flex-1 overflow-hidden">
           <CodeReviewProblemBuilder
             onSuccess={() => {
@@ -216,7 +205,6 @@ export function CodeReviewProblemManagementPage() {
   if (view.mode === "edit") {
     return (
       <div className="flex h-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
-
         <div className="flex-1 overflow-hidden">
           <CodeReviewProblemBuilder
             initialData={view.problem}

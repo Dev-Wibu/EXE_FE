@@ -1,4 +1,3 @@
-import type { SortDirection } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ApiResponse } from "@/interfaces";
@@ -12,7 +11,7 @@ import { toast } from "sonner";
 import { DeleteQuestionBankDialog } from "./components/DeleteQuestionBankDialog";
 import { QuestionBankCategoryTab } from "./components/QuestionBankCategoryTab";
 import { QuestionBankFormDialog } from "./components/QuestionBankFormDialog";
-import { QuestionBankTable } from "./components/QuestionBankTable";
+import { QuestionBankGrid } from "./components/QuestionBankGrid";
 import type { QuestionBank, QuestionBankFormData, QuestionCategory } from "./types";
 
 export function QuestionBankManagementPage() {
@@ -137,11 +136,6 @@ export function QuestionBankManagementPage() {
     }
   };
 
-  const getSortProps = () => ({
-    direction: "asc" as SortDirection,
-    onChange: () => {},
-  });
-
   return (
     <div className="flex h-full flex-col">
       <div className="border-b bg-white px-6 py-5 dark:border-slate-800 dark:bg-slate-900">
@@ -188,12 +182,11 @@ export function QuestionBankManagementPage() {
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
                 </div>
               ) : (
-                <div className="rounded-xl border bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <QuestionBankTable
+                <div className="pt-2">
+                  <QuestionBankGrid
                     questions={questions}
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
-                    getSortProps={getSortProps}
                   />
                 </div>
               )}
@@ -201,7 +194,11 @@ export function QuestionBankManagementPage() {
           </TabsContent>
 
           <TabsContent value="categories" className="mt-0 flex-1">
-            <QuestionBankCategoryTab />
+            <QuestionBankCategoryTab
+              questions={questions}
+              onEditQuestion={handleEdit}
+              onDeleteQuestion={handleDeleteClick}
+            />
           </TabsContent>
         </Tabs>
       </div>

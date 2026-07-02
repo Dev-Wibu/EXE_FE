@@ -1,4 +1,11 @@
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMonacoTheme } from "@/hooks/useMonacoTheme";
@@ -10,13 +17,6 @@ import {
   type CodeReviewProblem,
   type ExpectedIssue,
 } from "@/services/code-review-problem.manager";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import Editor, { useMonaco } from "@monaco-editor/react";
 import {
   ChevronDown,
@@ -294,20 +294,24 @@ export function CodeReviewProblemBuilder({
             </div>
           `;
 
-          domNode.querySelector(`#edit-btn-${issue.lineNumber}`)?.addEventListener("mousedown", (e) => {
-            e.stopPropagation();
-            setIssueModalData({ ...issue });
-            setEditingIssueIndex(issueIndex);
-            setIssueModalOpen(true);
-          });
+          domNode
+            .querySelector(`#edit-btn-${issue.lineNumber}`)
+            ?.addEventListener("mousedown", (e) => {
+              e.stopPropagation();
+              setIssueModalData({ ...issue });
+              setEditingIssueIndex(issueIndex);
+              setIssueModalOpen(true);
+            });
 
-          domNode.querySelector(`#del-btn-${issue.lineNumber}`)?.addEventListener("mousedown", (e) => {
-            e.stopPropagation();
-            setNewProblem((prev) => ({
-              ...prev,
-              expectedIssues: prev.expectedIssues.filter((_, i) => i !== issueIndex),
-            }));
-          });
+          domNode
+            .querySelector(`#del-btn-${issue.lineNumber}`)
+            ?.addEventListener("mousedown", (e) => {
+              e.stopPropagation();
+              setNewProblem((prev) => ({
+                ...prev,
+                expectedIssues: prev.expectedIssues.filter((_, i) => i !== issueIndex),
+              }));
+            });
 
           const charsPerLine = 90;
           const descLines = Math.ceil(issue.description.length / charsPerLine);
@@ -880,7 +884,9 @@ export function CodeReviewProblemBuilder({
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
                 placeholder="Issue description"
                 value={issueModalData.description || ""}
-                onChange={(e) => setIssueModalData({ ...issueModalData, description: e.target.value })}
+                onChange={(e) =>
+                  setIssueModalData({ ...issueModalData, description: e.target.value })
+                }
               />
             </div>
           </div>
