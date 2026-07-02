@@ -362,36 +362,40 @@ export function DashboardSidebar({
           </div>
         )}
 
-        {!isCollapsed && isExpandedDropdownOpen && item.children && (
+        {!isCollapsed && item.children && (
           <div
-            className="mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700/80"
-            style={{
-              willChange: "opacity, transform",
-            }}>
-            {item.children.map((child) => {
-              const isChildActive = activeTab === child.type;
-              return (
-                <button
-                  key={child.type}
-                  type="button"
-                  onClick={() => handleNavigate(child.type)}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
-                    isChildActive
-                      ? theme.flyoutActiveItem || theme.activeItem
-                      : theme.flyoutInactiveItem ||
-                          "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
-                  )}>
-                  <child.icon
-                    className={cn(
-                      "h-4 w-4 shrink-0",
-                      isChildActive && theme.flyoutActiveIcon ? theme.flyoutActiveIcon : child.color
-                    )}
-                  />
-                  <span className="truncate">{child.label}</span>
-                </button>
-              );
-            })}
+            className={cn(
+              "grid transition-all duration-300 ease-in-out",
+              isExpandedDropdownOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
+            )}>
+            <div className="overflow-hidden">
+              <div className="ml-6 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700/80">
+                {item.children.map((child) => {
+                  const isChildActive = activeTab === child.type;
+                  return (
+                    <button
+                      key={child.type}
+                      type="button"
+                      onClick={() => handleNavigate(child.type)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                        isChildActive
+                          ? theme.flyoutActiveItem || theme.activeItem
+                          : theme.flyoutInactiveItem ||
+                              "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
+                      )}>
+                      <child.icon
+                        className={cn(
+                          "h-4 w-4 shrink-0",
+                          isChildActive && theme.flyoutActiveIcon ? theme.flyoutActiveIcon : child.color
+                        )}
+                      />
+                      <span className="truncate">{child.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </div>
