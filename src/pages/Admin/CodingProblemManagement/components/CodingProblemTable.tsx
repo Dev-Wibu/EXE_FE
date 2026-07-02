@@ -1,7 +1,6 @@
-import type { CodingProblem } from "@/services/coding-problem.manager";
-import { format, formatDistanceToNow } from "date-fns";
-import { vi } from "date-fns/locale";
 import { Switch } from "@/components/ui/switch";
+import type { CodingProblem } from "@/services/coding-problem.manager";
+import { format } from "date-fns";
 import {
   BookOpen,
   Circle,
@@ -49,16 +48,12 @@ function formatDate(s?: string) {
   }
 }
 
-function timeAgo(s?: string) {
-  if (!s) return null;
-  try {
-    return formatDistanceToNow(new Date(s), { addSuffix: true, locale: vi });
-  } catch {
-    return null;
-  }
-}
-
-export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus }: CodingProblemTableProps) {
+export function CodingProblemTable({
+  problems,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+}: CodingProblemTableProps) {
   if (problems.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
@@ -70,27 +65,31 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
 
   // Column definitions (9 columns)
   // [ID, Title, Difficulty, Config, Score, Status, Created, Updated, Actions]
-  const GRID_COLS = "grid-cols-[60px_minmax(0,2fr)_110px_minmax(180px,1fr)_90px_90px_130px_130px_80px]";
+  const GRID_COLS =
+    "grid-cols-[60px_minmax(0,2fr)_110px_minmax(180px,1fr)_90px_90px_130px_130px_80px]";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       {/* Table header */}
-      <div className={`grid ${GRID_COLS} items-center border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50`}>
-        {["ID", "Bài tập", "Độ khó", "Cấu hình", "Điểm", "Bật/Tắt", "Ngày tạo", "Cập nhật", ""].map((h, i) => (
-          <div key={i} className={`text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 
-            ${i === 4 ? "text-center" : ""} 
-            ${i === 5 ? "text-center" : ""} 
-            ${i === 8 ? "text-right" : ""}`}>
-            {h}
-          </div>
-        ))}
+      <div
+        className={`grid ${GRID_COLS} items-center border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50`}>
+        {["ID", "Bài tập", "Độ khó", "Cấu hình", "Điểm", "Bật/Tắt", "Ngày tạo", "Cập nhật", ""].map(
+          (h, i) => (
+            <div
+              key={i}
+              className={`text-xs font-semibold text-slate-500 dark:text-slate-400 ${i === 4 ? "text-center" : ""} ${i === 5 ? "text-center" : ""} ${i === 8 ? "text-right" : ""}`}>
+              {h}
+            </div>
+          )
+        )}
       </div>
 
       {/* Rows */}
       <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
         {problems.map((p) => {
           const diff = DIFF_CONFIG[p.difficulty] ?? DIFF_CONFIG.MEDIUM;
-          const totalPoints = p.hiddenTestCases?.reduce((s, tc) => s + (tc.weightPoints || 0), 0) ?? 0;
+          const totalPoints =
+            p.hiddenTestCases?.reduce((s, tc) => s + (tc.weightPoints || 0), 0) ?? 0;
           const langs = p.codeStubs ? Object.keys(p.codeStubs) : [];
           const isActive = !p.isDeleted;
 
@@ -107,7 +106,9 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
 
               {/* Title + metadata */}
               <div className="min-w-0 pr-6">
-                <p className="truncate text-[14px] font-semibold text-slate-900 dark:text-slate-100" title={p.title}>
+                <p
+                  className="truncate text-[14px] font-semibold text-slate-900 dark:text-slate-100"
+                  title={p.title}>
                   {p.title}
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -124,7 +125,9 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
                   {langs.length > 0 && (
                     <div className="flex items-center gap-1">
                       {langs.slice(0, 3).map((l) => (
-                        <span key={l} className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        <span
+                          key={l}
+                          className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                           {l}
                         </span>
                       ))}
@@ -170,11 +173,11 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
 
               {/* Score Column */}
               <div className="flex justify-center pr-2">
-                <div className="flex flex-col items-center justify-center rounded-lg bg-emerald-50 px-2.5 py-1.5 min-w-[56px] border border-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-                  <span className="font-mono text-[15px] font-bold leading-none text-emerald-600 dark:text-emerald-400">
+                <div className="flex min-w-[56px] flex-col items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                  <span className="font-mono text-base leading-none font-bold text-emerald-600 dark:text-emerald-400">
                     {totalPoints}
                   </span>
-                  <span className="mt-1 text-[9px] font-bold tracking-widest text-emerald-700/60 uppercase dark:text-emerald-400/60">
+                  <span className="mt-1 text-xs font-medium text-emerald-700/80 dark:text-emerald-400/80">
                     PTS
                   </span>
                 </div>
@@ -185,7 +188,7 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
                 <Switch
                   checked={isActive}
                   onCheckedChange={(val) => onToggleStatus?.(p, val)}
-                  className="data-[state=checked]:bg-emerald-500 shadow-sm"
+                  className="shadow-sm data-[state=checked]:bg-emerald-500"
                 />
               </div>
 
@@ -243,7 +246,9 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
           {problems.some((p) => p.isDeleted) && (
             <>
               {" · "}
-              <strong className="text-slate-400">{problems.filter((p) => p.isDeleted).length} đã tắt</strong>
+              <strong className="text-slate-400">
+                {problems.filter((p) => p.isDeleted).length} đã tắt
+              </strong>
             </>
           )}
         </p>
