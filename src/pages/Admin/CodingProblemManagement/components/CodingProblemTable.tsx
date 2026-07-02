@@ -4,6 +4,7 @@ import { vi } from "date-fns/locale";
 import { Switch } from "@/components/ui/switch";
 import {
   BookOpen,
+  Circle,
   Clock,
   Code2,
   Cpu,
@@ -24,21 +25,18 @@ interface CodingProblemTableProps {
 const DIFF_CONFIG = {
   EASY: {
     label: "Easy",
-    cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/60",
-    bar: "bg-emerald-500",
-    barW: "w-1/3",
+    cls: "text-emerald-600 dark:text-emerald-400",
+    fill: "fill-emerald-500 text-emerald-500",
   },
   MEDIUM: {
     label: "Medium",
-    cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/60",
-    bar: "bg-amber-500",
-    barW: "w-2/3",
+    cls: "text-amber-600 dark:text-amber-400",
+    fill: "fill-amber-500 text-amber-500",
   },
   HARD: {
     label: "Hard",
-    cls: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/60",
-    bar: "bg-rose-500",
-    barW: "w-full",
+    cls: "text-rose-600 dark:text-rose-400",
+    fill: "fill-rose-500 text-rose-500",
   },
 } as const;
 
@@ -70,12 +68,19 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
     );
   }
 
+  // Column definitions (9 columns)
+  // [ID, Title, Difficulty, Config, Score, Status, Created, Updated, Actions]
+  const GRID_COLS = "grid-cols-[56px_minmax(0,1fr)_90px_160px_70px_70px_110px_110px_70px]";
+
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm">
       {/* Table header */}
-      <div className="grid grid-cols-[56px_1fr_100px_160px_90px_120px_120px_70px] items-center border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
-        {["ID", "Bài tập", "Độ khó", "Tests & Limits", "Trạng thái", "Ngày tạo", "Cập nhật", ""].map((h, i) => (
-          <div key={i} className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 ${i === 7 ? "text-right" : ""}`}>
+      <div className={`grid ${GRID_COLS} items-center border-b border-slate-100 bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-800/50`}>
+        {["ID", "Bài tập", "Độ khó", "Cấu hình", "Điểm", "Bật/Tắt", "Ngày tạo", "Cập nhật", ""].map((h, i) => (
+          <div key={i} className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 
+            ${i === 4 ? "text-right pr-2" : ""} 
+            ${i === 5 ? "text-center" : ""} 
+            ${i === 8 ? "text-right" : ""}`}>
             {h}
           </div>
         ))}
@@ -92,40 +97,39 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
           return (
             <div
               key={p.id}
-              className={`group grid grid-cols-[56px_1fr_100px_160px_90px_120px_120px_70px] items-center px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
-                !isActive ? "opacity-60" : ""
+              className={`group grid ${GRID_COLS} items-center px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
+                !isActive ? "opacity-60 grayscale-[30%]" : ""
               }`}>
               {/* ID */}
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-slate-400">#{p.id}</span>
+                <span className="font-mono text-[11px] font-bold text-slate-400">#{p.id}</span>
               </div>
 
               {/* Title + metadata */}
-              <div className="min-w-0 space-y-1 pr-4">
-                <div className="flex items-center gap-2">
-                  <span className="truncate font-semibold text-slate-900 dark:text-slate-100">
-                    {p.title}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="min-w-0 pr-4">
+                <p className="truncate font-semibold text-slate-900 dark:text-slate-100" title={p.title}>
+                  {p.title}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
                   {/* Param types */}
                   {p.paramTypes && p.paramTypes.length > 0 && (
                     <span className="flex items-center gap-1 text-[10px] text-slate-500">
                       <Code2 className="h-3 w-3" />
                       {p.paramTypes.slice(0, 2).join(", ")}
+                      {p.paramTypes.length > 2 && "..."}
                       {p.returnType && <span className="text-slate-400"> → {p.returnType}</span>}
                     </span>
                   )}
                   {/* Languages */}
                   {langs.length > 0 && (
                     <div className="flex items-center gap-1">
-                      {langs.slice(0, 4).map((l) => (
+                      {langs.slice(0, 3).map((l) => (
                         <span key={l} className="rounded bg-slate-100 px-1 py-px font-mono text-[9px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                           {l}
                         </span>
                       ))}
-                      {langs.length > 4 && (
-                        <span className="text-[10px] text-slate-400">+{langs.length - 4}</span>
+                      {langs.length > 3 && (
+                        <span className="text-[10px] text-slate-400">+{langs.length - 3}</span>
                       )}
                     </div>
                   )}
@@ -133,25 +137,23 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
               </div>
 
               {/* Difficulty */}
-              <div className="pr-4">
-                <div className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-bold ${diff.cls}`}>
-                  <div className={`h-1.5 w-8 rounded-full bg-slate-200 overflow-hidden dark:bg-slate-700`}>
-                    <div className={`h-full rounded-full ${diff.bar} ${diff.barW}`} />
-                  </div>
+              <div className="pr-2">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold ${diff.cls}`}>
+                  <Circle className={`h-2 w-2 ${diff.fill}`} />
                   {diff.label}
                 </div>
               </div>
 
-              {/* Tests + Limits */}
-              <div className="space-y-1.5 pr-4">
+              {/* Config (Tests + Limits) */}
+              <div className="space-y-1.5 pr-2">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400">
                     <FlaskConical className="h-3 w-3" />
-                    <span>{p.hiddenTestCases?.length ?? 0} hidden</span>
+                    <span>{p.hiddenTestCases?.length ?? 0}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-slate-500">
                     <Eye className="h-3 w-3" />
-                    <span>{p.visibleExamples?.length ?? 0} vis</span>
+                    <span>{p.visibleExamples?.length ?? 0}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -163,53 +165,55 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
                     <Cpu className="h-2.5 w-2.5" />
                     <span>{p.memoryLimitMb ?? 256}M</span>
                   </div>
-                  {totalPoints > 0 && (
-                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      {totalPoints}đ
-                    </span>
-                  )}
                 </div>
               </div>
 
-              {/* Status Toggle */}
-              <div className="pr-4">
-                <div className="flex flex-col gap-1">
-                  <Switch
-                    checked={isActive}
-                    onCheckedChange={(val) => onToggleStatus?.(p, val)}
-                    className="data-[state=checked]:bg-emerald-500"
-                  />
-                  <span className={`text-[10px] font-semibold ${isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
-                    {isActive ? "Đang bật" : "Đã tắt"}
+              {/* Score Column */}
+              <div className="flex justify-end pr-4">
+                <div className="flex flex-col items-center justify-center rounded-lg bg-emerald-50 px-2 py-1 min-w-[48px] dark:bg-emerald-950/30">
+                  <span className="font-mono text-sm font-bold leading-none text-emerald-600 dark:text-emerald-400">
+                    {totalPoints}
+                  </span>
+                  <span className="mt-0.5 text-[8px] font-bold tracking-wider text-emerald-700/50 uppercase dark:text-emerald-400/50">
+                    PTS
                   </span>
                 </div>
               </div>
 
+              {/* Status Toggle */}
+              <div className="flex justify-center pr-2">
+                <Switch
+                  checked={isActive}
+                  onCheckedChange={(val) => onToggleStatus?.(p, val)}
+                  className="data-[state=checked]:bg-emerald-500 shadow-sm"
+                />
+              </div>
+
               {/* Created At */}
-              <div className="space-y-0.5 pr-4">
+              <div className="space-y-0.5 pr-2">
                 {p.createdAt ? (
                   <>
-                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    <p className="text-[11px] font-medium text-slate-700 dark:text-slate-300">
                       {formatDate(p.createdAt)}
                     </p>
                     <p className="text-[10px] text-slate-400">{timeAgo(p.createdAt)}</p>
                   </>
                 ) : (
-                  <p className="text-xs text-slate-400">—</p>
+                  <p className="text-[11px] text-slate-400">—</p>
                 )}
               </div>
 
               {/* Updated At */}
-              <div className="space-y-0.5 pr-4">
+              <div className="space-y-0.5 pr-2">
                 {p.updatedAt ? (
                   <>
-                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    <p className="text-[11px] font-medium text-slate-700 dark:text-slate-300">
                       {formatDate(p.updatedAt)}
                     </p>
                     <p className="text-[10px] text-slate-400">{timeAgo(p.updatedAt)}</p>
                   </>
                 ) : (
-                  <p className="text-xs text-slate-400">—</p>
+                  <p className="text-[11px] text-slate-400">—</p>
                 )}
               </div>
 
@@ -245,7 +249,7 @@ export function CodingProblemTable({ problems, onEdit, onDelete, onToggleStatus 
           {problems.some((p) => p.isDeleted) && (
             <>
               {" · "}
-              <strong className="text-rose-500">{problems.filter((p) => p.isDeleted).length}</strong> đã tắt
+              <strong className="text-slate-400">{problems.filter((p) => p.isDeleted).length} đã tắt</strong>
             </>
           )}
         </p>
