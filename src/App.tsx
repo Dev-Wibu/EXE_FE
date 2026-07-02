@@ -316,58 +316,12 @@ function App() {
 
             {/* Admin Management routes */}
             <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-              <Route path="/admin" element={<AdminDashboardPage />} />
-              <Route path="/admin/companies/:companyId" element={<AdminDashboardPage />} />
+              <Route path="/admin/*" element={<AdminDashboardPage />} />
               <Route
                 path="/admin/application-grading/:appId"
                 element={<ApplicationGradingDetailPage />}
               />
             </Route>
-            {/* Redirect routes for backward compatibility - redirect /admin/* to /admin?tab=* */}
-            <Route
-              path="/admin/dashboard"
-              element={<Navigate to="/admin?tab=dashboard" replace />}
-            />
-            <Route path="/admin/mentors" element={<Navigate to="/admin?tab=mentors" replace />} />
-            <Route path="/admin/users" element={<Navigate to="/admin?tab=users" replace />} />
-            <Route path="/admin/sessions" element={<Navigate to="/admin?tab=sessions" replace />} />
-            <Route path="/admin/reviews" element={<Navigate to="/admin?tab=reviews" replace />} />
-            <Route path="/admin/feedback" element={<Navigate to="/admin?tab=feedback" replace />} />
-            <Route
-              path="/admin/notifications"
-              element={<Navigate to="/admin?tab=notifications" replace />}
-            />
-            <Route
-              path="/admin/questionCategories"
-              element={<Navigate to="/admin?tab=questionCategories" replace />}
-            />
-            <Route
-              path="/admin/questionMajors"
-              element={<Navigate to="/admin?tab=questionMajors" replace />}
-            />
-            <Route
-              path="/admin/practiceSets"
-              element={<Navigate to="/admin?tab=practiceSets" replace />}
-            />
-            {/* Backward compatibility redirect */}
-            <Route
-              path="/admin/questionSets"
-              element={<Navigate to="/admin?tab=practiceSets" replace />}
-            />
-            <Route
-              path="/admin/practiceQuestions"
-              element={<Navigate to="/admin?tab=practiceQuestions" replace />}
-            />
-            <Route path="/admin/quizSets" element={<Navigate to="/admin?tab=quizSets" replace />} />
-            <Route path="/admin/posts" element={<Navigate to="/admin?tab=posts" replace />} />
-            <Route
-              path="/admin/companies"
-              element={<Navigate to="/admin?tab=companies" replace />}
-            />
-            <Route
-              path="/admin/candidateProfiles"
-              element={<Navigate to="/admin?tab=candidateProfiles" replace />}
-            />
 
             {/* Staff Dashboard routes */}
             <Route element={<ProtectedRoute allowedRoles={["STAFF"]} />}>
