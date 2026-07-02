@@ -56,6 +56,43 @@ export function QuestionBankFormDialog({
   const [aiTopics, setAiTopics] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
 
+  // Markdown Preview State
+  const [textTab, setTextTab] = useState<"write" | "preview">("write");
+
+  // Simple Markdown Parser for Code Blocks
+  const renderMarkdown = (rawText: string) => {
+    if (!rawText) return null;
+    
+    // Normalize literal "\n" strings (often returned by raw AI responses) into actual newlines
+    const text = rawText.replace(/\\n/g, '\n');
+
+    const parts = text.split(/(```[\s\S]*?```)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("```") && part.endsWith("```")) {
+        const match = part.match(/```([^\n]*)\n([\s\S]*?)```/);
+        const code = match ? match[2] : part.slice(3, -3);
+        const lang = match && match[1] ? match[1].trim() : "";
+        return (
+          <div key={index} className="relative my-3 overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
+            {lang && (
+              <div className="border-b border-slate-700/50 bg-slate-800/50 px-3 py-1 text-xs font-mono text-slate-400">
+                {lang}
+              </div>
+            )}
+            <pre className="overflow-x-auto p-3 text-[13px] font-mono leading-relaxed text-slate-100">
+              <code>{code}</code>
+            </pre>
+          </div>
+        );
+      }
+      return (
+        <p key={index} className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
+          {part}
+        </p>
+      );
+    });
+  };
+
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
@@ -312,13 +349,45 @@ export function QuestionBankFormDialog({
             {/* Manual Fields (Hidden when AI Panel is active) */}
             {!showAI && (
               <div className="space-y-8 animate-in fade-in">
-                <Textarea
-                  placeholder={t("adminPracticequestionmanagement.enterQuestionContent")}
-                  rows={4}
-                  value={formData.questionText || ""}
-                  onChange={(e) => onFormChange({ ...formData, questionText: e.target.value })}
-                  className="resize-none text-[15px] focus-visible:ring-indigo-500"
-                />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                      {t("adminPracticequestionmanagement.enterQuestionContent", "Nội dung câu hỏi")}
+                    </Label>
+                    <div className="flex rounded-md bg-slate-100 p-0.5 dark:bg-slate-800/80">
+                      <button 
+                        type="button"
+                        onClick={() => setTextTab('write')}
+                        className={`rounded-sm px-3 py-1 text-xs font-medium transition-all ${textTab === 'write' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                      >
+                        Write
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setTextTab('preview')}
+                        className={`rounded-sm px-3 py-1 text-xs font-medium transition-all ${textTab === 'preview' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                      >
+                        Preview
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {textTab === 'write' ? (
+                    <Textarea
+                      placeholder={t("adminPracticequestionmanagement.enterQuestionContent")}
+                      rows={5}
+                      value={formData.questionText || ""}
+                      onChange={(e) => onFormChange({ ...formData, questionText: e.target.value })}
+                      className="resize-none font-mono text-[14px] leading-relaxed focus-visible:ring-indigo-500"
+                    />
+                  ) : (
+                    <div className="min-h-[126px] rounded-md border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+                      {formData.questionText ? renderMarkdown(formData.questionText) : (
+                        <span className="text-sm font-medium italic text-slate-400">Nothing to preview</span>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
